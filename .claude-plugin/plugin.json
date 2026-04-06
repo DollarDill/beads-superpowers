@@ -5,7 +5,7 @@
   "author": {
     "name": "Dillon Frawley"
   },
-  "repository": "https://github.com/dollardill/beads-superpowers",
+  "repository": "https://github.com/DollarDill/beads-superpowers",
   "license": "MIT",
   "keywords": ["beads", "superpowers", "tdd", "debugging", "issue-tracking", "agents"],
   "skills": "./skills/",
