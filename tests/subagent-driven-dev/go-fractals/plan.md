@@ -13,7 +13,7 @@ Building a CLI tool that generates ASCII fractals. See `design.md` for full spec
 Create the Go module and directory structure.
 
 **Do:**
-- Initialize `go.mod` with module name `github.com/superpowers-test/fractals`
+- Initialize `go.mod` with module name `github.com/beads-superpowers-test/fractals`
 - Create directory structure: `cmd/fractals/`, `internal/sierpinski/`, `internal/mandelbrot/`, `internal/cli/`
 - Create minimal `cmd/fractals/main.go` that prints "fractals cli"
 - Add `github.com/spf13/cobra` dependency

@@ -43,7 +43,7 @@ fi
 
 # Create timestamped output directory
 TIMESTAMP=$(date +%s)
-OUTPUT_BASE="/tmp/superpowers-tests/$TIMESTAMP/subagent-driven-development"
+OUTPUT_BASE="/tmp/beads-superpowers-tests/$TIMESTAMP/subagent-driven-development"
 OUTPUT_DIR="$OUTPUT_BASE/$TEST_NAME"
 mkdir -p "$OUTPUT_DIR"
 

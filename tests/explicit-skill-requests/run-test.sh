@@ -21,11 +21,11 @@ fi
 
 # Get the directory where this script lives
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Get the superpowers plugin root (two levels up)
+# Get the beads-superpowers plugin root (two levels up)
 PLUGIN_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 TIMESTAMP=$(date +%s)
-OUTPUT_DIR="/tmp/superpowers-tests/${TIMESTAMP}/explicit-skill-requests/${SKILL_NAME}"
+OUTPUT_DIR="/tmp/beads-superpowers-tests/${TIMESTAMP}/explicit-skill-requests/${SKILL_NAME}"
 mkdir -p "$OUTPUT_DIR"
 
 # Read prompt from file

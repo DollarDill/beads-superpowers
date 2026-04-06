@@ -11,7 +11,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 TIMESTAMP=$(date +%s)
-OUTPUT_DIR="/tmp/superpowers-tests/${TIMESTAMP}/explicit-skill-requests/multiturn"
+OUTPUT_DIR="/tmp/beads-superpowers-tests/${TIMESTAMP}/explicit-skill-requests/multiturn"
 mkdir -p "$OUTPUT_DIR"
 
 # Create project directory (conversation is cwd-based)
