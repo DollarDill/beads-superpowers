@@ -33,13 +33,14 @@ Neither system alone is complete. Together, they are.
 ### Install the Plugin
 
 ```bash
-# From the Claude Code marketplace (when published)
-/plugin install beads-superpowers
+# Step 1: Add the marketplace (one-time setup)
+claude plugin marketplace add DollarDill/beads-superpowers
 
-# Or from GitHub directly
-/plugin marketplace add dollardill/beads-superpowers
-/plugin install beads-superpowers@beads-superpowers
+# Step 2: Install the plugin
+claude plugin install beads-superpowers@beads-superpowers-marketplace
 ```
+
+> **Note:** You can also run these as slash commands inside Claude Code: `/plugin marketplace add DollarDill/beads-superpowers` and `/plugin install beads-superpowers@beads-superpowers-marketplace`
 
 ### Initialize Beads in Your Project
 
