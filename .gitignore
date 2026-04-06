@@ -17,3 +17,6 @@ docs/09-*.md
 
 # Session work logs (internal, not part of the plugin)
 SESSION-SUMMARY.md
+
+# Dependencies
+node_modules/
