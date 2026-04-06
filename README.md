@@ -212,8 +212,7 @@ beads-superpowers/
 │   ├── SETUP-GUIDE.md           # Detailed installation and configuration
 │   ├── testing.md               # Test methodology
 │   ├── windows/                 # Cross-platform hook docs
-│   ├── upstream-reference/      # Key design docs from upstream
-│   └── 01-09 analysis docs      # Research analysis (superpowers + beads)
+│   └── upstream-reference/      # Key design docs from upstream
 ├── tests/
 │   ├── brainstorm-server/       # WebSocket server tests
 │   ├── claude-code/             # Claude Code integration tests
