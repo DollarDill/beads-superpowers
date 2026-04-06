@@ -3,3 +3,14 @@
 .dolt/
 *.db
 .beads-credential-key
+
+# Research/analysis docs (internal working notes, not part of the plugin)
+docs/01-*.md
+docs/02-*.md
+docs/03-*.md
+docs/04-*.md
+docs/05-*.md
+docs/06-*.md
+docs/07-*.md
+docs/08-*.md
+docs/09-*.md
