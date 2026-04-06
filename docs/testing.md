@@ -1,6 +1,8 @@
-# Testing Superpowers Skills
+# Testing beads-superpowers Skills
 
-This document describes how to test Superpowers skills, particularly the integration tests for complex skills like `subagent-driven-development`.
+> **Note:** This testing guide is adapted from [obra/superpowers](https://github.com/obra/superpowers). Tests verify beads-superpowers skills, which use `bd` (beads) for task tracking instead of TodoWrite.
+
+This document describes how to test beads-superpowers skills, particularly the integration tests for complex skills like `subagent-driven-development`.
 
 ## Overview
 
@@ -33,9 +35,9 @@ cd tests/claude-code
 
 ### Requirements
 
-- Must run from the **superpowers plugin directory** (not from temp directories)
+- Must run from the **beads-superpowers plugin directory** (not from temp directories)
 - Claude Code must be installed and available as `claude` command
-- Local dev marketplace must be enabled: `"superpowers@superpowers-dev": true` in `~/.claude/settings.json`
+- Local dev marketplace must be enabled: `"beads-superpowers@beads-superpowers": true` in `~/.claude/settings.json`
 
 ## Integration Test: subagent-driven-development
 
@@ -57,7 +59,7 @@ The integration test verifies the `subagent-driven-development` skill correctly:
 3. **Verification**: Parses the session transcript (`.jsonl` file) to verify:
    - Skill tool was invoked
    - Subagents were dispatched (Task tool)
-   - TodoWrite was used for tracking
+   - beads (bd) was used for tracking
    - Implementation files were created
    - Tests pass
    - Git commits show proper workflow
@@ -81,7 +83,7 @@ Test 2: Subagents dispatched...
   [PASS] 7 subagents dispatched
 
 Test 3: Task tracking...
-  [PASS] TodoWrite used 5 time(s)
+  [PASS] bd create/close used for task tracking
 
 Test 6: Implementation verification...
   [PASS] src/math.js created
@@ -149,8 +151,8 @@ python3 tests/claude-code/analyze-token-usage.py ~/.claude/projects/<project-dir
 Session transcripts are stored in `~/.claude/projects/` with the working directory path encoded:
 
 ```bash
-# Example for /Users/jesse/Documents/GitHub/superpowers/superpowers
-SESSION_DIR="$HOME/.claude/projects/-Users-jesse-Documents-GitHub-superpowers-superpowers"
+# Example for /home/user/workplace/beads-superpowers
+SESSION_DIR="$HOME/.claude/projects/-home-user-workplace-beads-superpowers"
 
 # Find recent sessions
 ls -lt "$SESSION_DIR"/*.jsonl | head -5
@@ -182,8 +184,8 @@ ls -lt "$SESSION_DIR"/*.jsonl | head -5
 **Problem**: Skill not found when running headless tests
 
 **Solutions**:
-1. Ensure you're running FROM the superpowers directory: `cd /path/to/superpowers && tests/...`
-2. Check `~/.claude/settings.json` has `"superpowers@superpowers-dev": true` in `enabledPlugins`
+1. Ensure you're running FROM the beads-superpowers directory: `cd /path/to/beads-superpowers && tests/...`
+2. Check `~/.claude/settings.json` has `"beads-superpowers": true` in `enabledPlugins`
 3. Verify skill exists in `skills/` directory
 
 ### Permission Errors
@@ -258,7 +260,7 @@ python3 "$SCRIPT_DIR/analyze-token-usage.py" "$SESSION_FILE"
 1. **Always cleanup**: Use trap to cleanup temp directories
 2. **Parse transcripts**: Don't grep user-facing output - parse the `.jsonl` session file
 3. **Grant permissions**: Use `--permission-mode bypassPermissions` and `--add-dir`
-4. **Run from plugin dir**: Skills only load when running from the superpowers directory
+4. **Run from plugin dir**: Skills only load when running from the beads-superpowers directory
 5. **Show token usage**: Always include token analysis for cost visibility
 6. **Test real behavior**: Verify actual files created, tests passing, commits made
 

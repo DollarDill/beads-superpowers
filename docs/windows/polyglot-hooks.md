@@ -1,4 +1,6 @@
-# Cross-Platform Polyglot Hooks for Claude Code
+# Cross-Platform Polyglot Hooks for beads-superpowers
+
+> **Note:** This document is adapted from [obra/superpowers](https://github.com/obra/superpowers). The polyglot hook technique enables beads-superpowers to work on Windows via Git Bash.
 
 Claude Code plugins need hooks that work on Windows, macOS, and Linux. This document explains the polyglot wrapper technique that makes this possible.
 

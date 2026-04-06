@@ -24,6 +24,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Test infrastructure from upstream (skill triggering, explicit requests, integration tests)
 - Upstream reference docs (skills improvements feedback, document review system design)
 - Marketplace configuration for Claude Code plugin discovery
+- `auditing-upstream-drift` skill — 4-phase structured audit for detecting staleness and capability drift
+- Test infrastructure from upstream: brainstorm server, skill triggering, explicit requests, subagent-driven-dev, claude-code helpers
+- `scripts/bump-version.sh` for version drift detection across manifests
+- `.gitattributes` for cross-platform line ending normalization
+- `LICENSE` (MIT — required for fork attribution)
+- `docs/testing.md` — adapted test methodology guide
+- `docs/windows/polyglot-hooks.md` — cross-platform hook engineering reference
+- `docs/upstream-reference/` — key design docs from upstream (skills improvements, document review system)
 
 ### Changed
 - All 14 Superpowers skills: replaced TodoWrite with `bd` commands throughout
