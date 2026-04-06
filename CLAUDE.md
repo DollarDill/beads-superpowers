@@ -50,6 +50,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 | Add dependency | `bd dep add <child> <depends-on>` |
 | Store learning | `bd remember "insight"` |
 | Sync beads | `bd dolt push` |
+| Sync to GitHub Issues | `bd github sync` |
 
 ### Rules
 
@@ -57,6 +58,19 @@ This plugin uses `bd` (beads) for ALL task tracking.
 - Only the orchestrating agent manages beads — subagents do NOT touch beads
 - Include bead IDs in commit messages: `git commit -m "Add feature (bd-a1b2)"`
 - Every session ends with Land the Plane: `bd close` → `bd dolt push` → `git push`
+
+### GitHub Issue Sync
+
+This project syncs beads to GitHub Issues via `bd github sync`. Issues appear at https://github.com/DollarDill/beads-superpowers/issues.
+
+```bash
+bd github sync              # Push all beads to GitHub Issues
+bd github status            # Check sync configuration
+```
+
+GitHub sync is configured via:
+- `bd config set github.token <token>` (or `GITHUB_TOKEN` env var)
+- `bd config set github.repository DollarDill/beads-superpowers`
 
 ### Duplicate Hook Warning
 
