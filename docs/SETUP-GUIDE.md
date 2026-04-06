@@ -29,36 +29,64 @@
 
 ## Installation
 
-### Method 1: Claude Code Marketplace (Recommended)
+### Method 1: From GitHub (Recommended)
 
-When the plugin is published to the marketplace:
+This is the tested, working installation method:
 
 ```bash
-# In Claude Code
-/plugin install beads-superpowers
+# Step 1: Add the marketplace (one-time setup)
+claude plugin marketplace add DollarDill/beads-superpowers
+
+# Step 2: Install the plugin
+claude plugin install beads-superpowers@beads-superpowers-marketplace
 ```
 
-### Method 2: From GitHub Repository
+You can also run these as slash commands inside an active Claude Code session:
+```
+/plugin marketplace add DollarDill/beads-superpowers
+/plugin install beads-superpowers@beads-superpowers-marketplace
+```
+
+### Method 2: Update an Existing Installation
 
 ```bash
-# Add the marketplace
-/plugin marketplace add dollardill/beads-superpowers
+# Update the marketplace cache (pulls latest from GitHub)
+claude plugin marketplace update beads-superpowers-marketplace
 
-# Install the plugin
-/plugin install beads-superpowers@beads-superpowers
+# Update the plugin
+claude plugin update beads-superpowers@beads-superpowers-marketplace
 ```
 
 ### Method 3: Local Development
 
-Clone the repo and register it locally:
+For contributing or testing local changes:
 
 ```bash
-git clone https://github.com/dollardill/beads-superpowers.git
+git clone https://github.com/DollarDill/beads-superpowers.git
 cd beads-superpowers
 
-# Register as a local plugin in Claude Code
-# (Follow Claude Code's local plugin registration docs)
+# Validate the plugin locally
+claude plugin validate .claude-plugin/plugin.json
+
+# Register as a local marketplace for development
+claude plugin marketplace add /path/to/beads-superpowers
+claude plugin install beads-superpowers@beads-superpowers-marketplace
 ```
+
+### Verify Installation
+
+```bash
+# Check plugin is installed and enabled
+claude plugin list
+
+# Expected output:
+#   ❯ beads-superpowers@beads-superpowers-marketplace
+#     Version: 0.1.0
+#     Scope: user
+#     Status: ✔ enabled
+```
+
+Start a new Claude Code session — the SessionStart hook will automatically inject the `using-superpowers` skill and run `bd prime`.
 
 ## Post-Installation Setup
 
@@ -291,8 +319,11 @@ grep -r "TodoWrite" skills/ | grep -v "Do NOT use" | grep -v "replaces"
 ### Plugin Updates
 
 ```bash
-# In Claude Code
-/plugin update beads-superpowers
+# Update marketplace cache first
+claude plugin marketplace update beads-superpowers-marketplace
+
+# Then update the plugin
+claude plugin update beads-superpowers@beads-superpowers-marketplace
 ```
 
 ### Beads Updates
@@ -308,8 +339,10 @@ npm update -g @beads/bd
 ### Remove the Plugin
 
 ```bash
-# In Claude Code
-/plugin uninstall beads-superpowers
+claude plugin uninstall beads-superpowers@beads-superpowers-marketplace
+
+# Optionally remove the marketplace too
+claude plugin marketplace remove beads-superpowers-marketplace
 ```
 
 ### Restore bd setup claude Hooks (if desired)
