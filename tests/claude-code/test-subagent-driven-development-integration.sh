@@ -135,7 +135,7 @@ EOF
 
 # Note: We use a longer timeout since this is integration testing
 # Use --allowed-tools to enable tool usage in headless mode
-# IMPORTANT: Run from superpowers directory so local dev skills are available
+# IMPORTANT: Run from beads-superpowers directory so local dev skills are available
 PROMPT="Change to directory $TEST_PROJECT and then execute the implementation plan at docs/beads-superpowers/plans/implementation-plan.md using the subagent-driven-development skill.
 
 IMPORTANT: Follow the skill exactly. I will be verifying that you:
