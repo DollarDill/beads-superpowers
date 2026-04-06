@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# SessionStart hook for beads-superpowers plugin
+# This hook subsumes both superpowers skill injection AND beads context (bd prime).
+# Users should run `bd setup claude --remove` to avoid duplicate hooks.
+
+set -euo pipefail
+
+# Determine plugin root directory
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Check if legacy skills directory exists and build warning
+warning_message=""
+legacy_skills_dir="${HOME}/.config/superpowers/skills"
+if [ -d "$legacy_skills_dir" ]; then
+    warning_message="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **WARNING:** Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead. To make this message go away, remove ~/.config/superpowers/skills</important-reminder>"
+fi
+
+# Check if bd setup claude hooks are still installed (duplicate detection)
+bd_hooks_warning=""
+if [ -f ".claude/settings.json" ] 2>/dev/null; then
+    if grep -q '"bd prime"' ".claude/settings.json" 2>/dev/null; then
+        bd_hooks_warning="\n\n<important-reminder>⚠️ **DUPLICATE HOOKS DETECTED:** bd setup claude hooks are still installed in .claude/settings.json. The beads-superpowers plugin already handles bd prime. Run \`bd setup claude --remove\` to remove the duplicate hooks and avoid redundant context injection.</important-reminder>"
+    fi
+fi
+
+# Read using-superpowers content
+using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
+
+# Run bd prime if available (captures beads workflow context)
+beads_context=""
+if command -v bd &>/dev/null; then
+    beads_context=$(bd prime 2>/dev/null || true)
+fi
+
+# Escape string for JSON embedding using bash parameter substitution.
+escape_for_json() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\r'/\\r}"
+    s="${s//$'\t'/\\t}"
+    printf '%s' "$s"
+}
+
+using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
+beads_escaped=$(escape_for_json "$beads_context")
+warning_escaped=$(escape_for_json "$warning_message")
+bd_hooks_escaped=$(escape_for_json "$bd_hooks_warning")
+
+# Build combined session context: skills + beads workflow
+session_context="<EXTREMELY_IMPORTANT>\nYou have beads-superpowers.\n\n**Below is the full content of your 'beads-superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}${bd_hooks_escaped}\n</EXTREMELY_IMPORTANT>"
+
+# Append beads context if available
+if [ -n "$beads_context" ]; then
+    session_context="${session_context}\n\n<beads-context>\n${beads_escaped}\n</beads-context>"
+fi
+
+# Output context injection as JSON.
+# Cursor hooks expect additional_context (snake_case).
+# Claude Code hooks expect hookSpecificOutput.additionalContext (nested).
+# Copilot CLI (v1.0.11+) and others expect additionalContext (top-level, SDK standard).
+if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+  printf '{\n  "additional_context": "%s"\n}\n' "$session_context"
+elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ]; then
+  printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context"
+else
+  printf '{\n  "additionalContext": "%s"\n}\n' "$session_context"
+fi
+
+exit 0

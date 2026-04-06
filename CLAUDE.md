@@ -1,69 +1,47 @@
-# Project Instructions for AI Agents
+# beads-superpowers — Claude Code Plugin
 
-This file provides instructions and context for AI coding agents working on this project.
+This project IS a Claude Code marketplace plugin that merges [Superpowers](https://github.com/obra/superpowers) skills with [Beads](https://github.com/gastownhall/beads) issue tracking.
 
-<!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
-## Beads Issue Tracker
+## Plugin Structure
 
-This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.
-
-### Quick Reference
-
-```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --claim  # Claim work
-bd close <id>         # Complete work
+```
+.claude-plugin/plugin.json   # Plugin manifest
+hooks/                       # SessionStart hook (injects skills + bd prime)
+skills/                      # 14 beads-native skills
+agents/                      # Code reviewer agent
+commands/                    # Deprecated slash commands
+docs/                        # Analysis documentation
 ```
 
-### Rules
+## Beads Integration
 
-- Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
-- Run `bd prime` for detailed command reference and session close protocol
-- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
+This plugin's skills use `bd` (beads) for ALL task tracking. The SessionStart hook runs `bd prime` automatically. Skills reference `bd create`, `bd close`, `bd update --claim`, `bd ready`, and `bd dep add` throughout.
 
-## Session Completion
-
-**When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
-
-**MANDATORY WORKFLOW:**
-
-1. **File issues for remaining work** - Create issues for anything that needs follow-up
-2. **Run quality gates** (if code changed) - Tests, linters, builds
-3. **Update issue status** - Close finished work, update in-progress items
-4. **PUSH TO REMOTE** - This is MANDATORY:
-   ```bash
-   git pull --rebase
-   bd dolt push
-   git push
-   git status  # MUST show "up to date with origin"
-   ```
-5. **Clean up** - Clear stashes, prune remote branches
-6. **Verify** - All changes committed AND pushed
-7. **Hand off** - Provide context for next session
-
-**CRITICAL RULES:**
-- Work is NOT complete until `git push` succeeds
-- NEVER stop before pushing - that leaves work stranded locally
-- NEVER say "ready to push when you are" - YOU must push
-- If push fails, resolve and retry until it succeeds
-<!-- END BEADS INTEGRATION -->
-
+**If you have `bd setup claude` hooks installed:** Run `bd setup claude --remove` to avoid duplicate SessionStart hooks. This plugin already handles `bd prime` injection.
 
 ## Build & Test
 
-_Add your build and test commands here_
+This is a documentation-only plugin (Markdown skills, no build step). To test:
 
 ```bash
-# Example:
-# npm install
-# npm test
+# Verify plugin structure
+cat .claude-plugin/plugin.json | python3 -m json.tool
+ls skills/*/SKILL.md | wc -l   # Should be 14
+
+# Verify zero TodoWrite usage
+grep -r "TodoWrite" skills/ | grep -v "Do NOT use TodoWrite" | grep -v "replaces TodoWrite"
+# Should return empty
+
+# Verify beads integration
+grep -r "bd create\|bd close\|bd ready" skills/ | wc -l   # Should be 30+
+
+# Test hook
+bash hooks/session-start 2>&1 | python3 -m json.tool
 ```
 
-## Architecture Overview
+## Conventions
 
-_Add a brief overview of your project architecture_
-
-## Conventions & Patterns
-
-_Add your project-specific conventions here_
+- Skills are plain Markdown with YAML frontmatter — no code, no build step
+- Every task reference uses `bd` commands, never TodoWrite
+- Subagent prompts (implementer, spec-reviewer, code-quality-reviewer) do NOT touch beads — orchestrator only
+- The "Land the Plane" protocol is in `finishing-a-development-branch` Step 6
