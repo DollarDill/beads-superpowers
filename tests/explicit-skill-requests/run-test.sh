@@ -43,10 +43,10 @@ cp "$PROMPT_FILE" "$OUTPUT_DIR/prompt.txt"
 
 # Create a minimal project directory for the test
 PROJECT_DIR="$OUTPUT_DIR/project"
-mkdir -p "$PROJECT_DIR/docs/superpowers/plans"
+mkdir -p "$PROJECT_DIR/docs/beads-superpowers/plans"
 
 # Create a dummy plan file for mid-conversation tests
-cat > "$PROJECT_DIR/docs/superpowers/plans/auth-system.md" << 'EOF'
+cat > "$PROJECT_DIR/docs/beads-superpowers/plans/auth-system.md" << 'EOF'
 # Auth System Implementation Plan
 
 ## Task 1: Add User Model
@@ -103,11 +103,12 @@ echo "Checking for premature action..."
 FIRST_SKILL_LINE=$(grep -n '"name":"Skill"' "$LOG_FILE" | head -1 | cut -d: -f1)
 if [ -n "$FIRST_SKILL_LINE" ]; then
     # Check if any non-Skill, non-system tools were invoked before the first Skill invocation
-    # Filter out system messages, TodoWrite (planning is ok), and other non-action tools
+    # Filter out system messages, TaskCreate/TaskUpdate (planning is ok), and other non-action tools
     PREMATURE_TOOLS=$(head -n "$FIRST_SKILL_LINE" "$LOG_FILE" | \
         grep '"type":"tool_use"' | \
         grep -v '"name":"Skill"' | \
-        grep -v '"name":"TodoWrite"' || true)
+        grep -v '"name":"TaskCreate"' | \
+            grep -v '"name":"TaskUpdate"' || true)
     if [ -n "$PREMATURE_TOOLS" ]; then
         echo "WARNING: Tools invoked BEFORE Skill tool:"
         echo "$PREMATURE_TOOLS" | head -5

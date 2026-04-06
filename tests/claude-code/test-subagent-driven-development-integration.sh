@@ -42,10 +42,10 @@ cat > package.json <<'EOF'
 }
 EOF
 
-mkdir -p src test docs/superpowers/plans
+mkdir -p src test docs/beads-superpowers/plans
 
 # Create a simple implementation plan
-cat > docs/superpowers/plans/implementation-plan.md <<'EOF'
+cat > docs/beads-superpowers/plans/implementation-plan.md <<'EOF'
 # Test Implementation Plan
 
 This is a minimal plan to test the subagent-driven-development workflow.
@@ -121,7 +121,7 @@ OUTPUT_FILE="$TEST_PROJECT/claude-output.txt"
 
 # Create prompt file
 cat > "$TEST_PROJECT/prompt.txt" <<'EOF'
-I want you to execute the implementation plan at docs/superpowers/plans/implementation-plan.md using the subagent-driven-development skill.
+I want you to execute the implementation plan at docs/beads-superpowers/plans/implementation-plan.md using the subagent-driven-development skill.
 
 IMPORTANT: Follow the skill exactly. I will be verifying that you:
 1. Read the plan once at the beginning
@@ -136,7 +136,7 @@ EOF
 # Note: We use a longer timeout since this is integration testing
 # Use --allowed-tools to enable tool usage in headless mode
 # IMPORTANT: Run from superpowers directory so local dev skills are available
-PROMPT="Change to directory $TEST_PROJECT and then execute the implementation plan at docs/superpowers/plans/implementation-plan.md using the subagent-driven-development skill.
+PROMPT="Change to directory $TEST_PROJECT and then execute the implementation plan at docs/beads-superpowers/plans/implementation-plan.md using the subagent-driven-development skill.
 
 IMPORTANT: Follow the skill exactly. I will be verifying that you:
 1. Read the plan once at the beginning
@@ -186,7 +186,7 @@ echo ""
 
 # Test 1: Skill was invoked
 echo "Test 1: Skill tool invoked..."
-if grep -q '"name":"Skill".*"skill":"superpowers:subagent-driven-development"' "$SESSION_FILE"; then
+if grep -q '"name":"Skill".*"skill":"beads-superpowers:subagent-driven-development"' "$SESSION_FILE"; then
     echo "  [PASS] subagent-driven-development skill was invoked"
 else
     echo "  [FAIL] Skill was not invoked"
@@ -205,14 +205,20 @@ else
 fi
 echo ""
 
-# Test 3: TodoWrite was used for tracking
-echo "Test 3: Task tracking..."
-todo_count=$(grep -c '"name":"TodoWrite"' "$SESSION_FILE" || echo "0")
-if [ "$todo_count" -ge 1 ]; then
-    echo "  [PASS] TodoWrite used $todo_count time(s) for task tracking"
+# Test 3: Beads (bd) was used for task tracking
+echo "Test 3: Task tracking via beads..."
+if command -v bd &>/dev/null; then
+    bd_create_count=$(grep -c '"bd create"' "$SESSION_FILE" || echo "0")
+    bd_close_count=$(grep -c '"bd close"' "$SESSION_FILE" || echo "0")
+    bd_total=$((bd_create_count + bd_close_count))
+    if [ "$bd_total" -ge 2 ]; then
+        echo "  [PASS] Beads used for task tracking: $bd_create_count creates, $bd_close_count closes"
+    else
+        echo "  [FAIL] Beads commands not found in session (found $bd_total bd create/close invocations)"
+        FAILED=$((FAILED + 1))
+    fi
 else
-    echo "  [FAIL] TodoWrite not used"
-    FAILED=$((FAILED + 1))
+    echo "  [SKIP] bd CLI not available, cannot verify beads tracking"
 fi
 echo ""
 
