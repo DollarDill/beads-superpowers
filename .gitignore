@@ -14,3 +14,6 @@ docs/06-*.md
 docs/07-*.md
 docs/08-*.md
 docs/09-*.md
+
+# Session work logs (internal, not part of the plugin)
+SESSION-SUMMARY.md
