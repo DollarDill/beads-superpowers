@@ -4,7 +4,7 @@
 #
 # Example:
 #   ./run-test.sh go-fractals
-#   ./run-test.sh svelte-todo --plugin-dir /path/to/superpowers
+#   ./run-test.sh svelte-todo --plugin-dir /path/to/beads-superpowers
 
 set -e
 
@@ -60,7 +60,7 @@ echo ""
 
 # Prepare the prompt
 PLAN_PATH="$OUTPUT_DIR/project/plan.md"
-PROMPT="Execute this plan using superpowers:subagent-driven-development. The plan is at: $PLAN_PATH"
+PROMPT="Execute this plan using beads-superpowers:subagent-driven-development. The plan is at: $PLAN_PATH"
 
 # Run Claude with JSON output for token tracking
 LOG_FILE="$OUTPUT_DIR/claude-output.json"

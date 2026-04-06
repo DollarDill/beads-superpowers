@@ -130,7 +130,7 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 ```
 You: I'm using Subagent-Driven Development to execute this plan.
 
-[Read plan file once: docs/superpowers/plans/feature-plan.md]
+[Read plan file once: docs/beads-superpowers/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]
 [Create epic bead: bd create "Feature: hook installation" -t epic -p 2]
 [Create child beads for each task:]

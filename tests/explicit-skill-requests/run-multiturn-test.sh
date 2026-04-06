@@ -16,7 +16,7 @@ mkdir -p "$OUTPUT_DIR"
 
 # Create project directory (conversation is cwd-based)
 PROJECT_DIR="$OUTPUT_DIR/project"
-mkdir -p "$PROJECT_DIR/docs/superpowers/plans"
+mkdir -p "$PROJECT_DIR/docs/beads-superpowers/plans"
 
 echo "=== Multi-Turn Explicit Skill Request Test ==="
 echo "Output dir: $OUTPUT_DIR"
@@ -27,7 +27,7 @@ echo ""
 cd "$PROJECT_DIR"
 
 # Create a dummy plan file
-cat > "$PROJECT_DIR/docs/superpowers/plans/auth-system.md" << 'EOF'
+cat > "$PROJECT_DIR/docs/beads-superpowers/plans/auth-system.md" << 'EOF'
 # Auth System Implementation Plan
 
 ## Task 1: Add User Model
@@ -59,7 +59,7 @@ echo ""
 # Turn 2: Continue with more planning detail
 echo ">>> Turn 2: Continuing planning..."
 TURN2_LOG="$OUTPUT_DIR/turn2.json"
-claude -p "Good analysis. I've already written the plan to docs/superpowers/plans/auth-system.md. Now I'm ready to implement. What are my options for execution?" \
+claude -p "Good analysis. I've already written the plan to docs/beads-superpowers/plans/auth-system.md. Now I'm ready to implement. What are my options for execution?" \
     --continue \
     --plugin-dir "$PLUGIN_DIR" \
     --dangerously-skip-permissions \
@@ -109,7 +109,8 @@ if [ -n "$FIRST_SKILL_LINE" ]; then
     PREMATURE_TOOLS=$(head -n "$FIRST_SKILL_LINE" "$TURN3_LOG" | \
         grep '"type":"tool_use"' | \
         grep -v '"name":"Skill"' | \
-        grep -v '"name":"TodoWrite"' || true)
+        grep -v '"name":"TaskCreate"' | \
+            grep -v '"name":"TaskUpdate"' || true)
     if [ -n "$PREMATURE_TOOLS" ]; then
         echo "WARNING: Tools invoked BEFORE Skill tool in Turn 3:"
         echo "$PREMATURE_TOOLS" | head -5
