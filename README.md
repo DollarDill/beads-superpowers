@@ -8,7 +8,7 @@ Every task is a bead. Every session starts with context. Every session ends with
 
 This plugin merges two proven systems into one:
 
-- **[Superpowers](https://github.com/obra/superpowers)** (v5.0.7) — 14 composable skills that enforce professional software development workflows: brainstorming, TDD, systematic debugging, two-stage code review, and more. Created by Jesse Vincent.
+- **[Superpowers](https://github.com/obra/superpowers)** (v5.0.7) — 15 composable skills that enforce professional software development workflows: brainstorming, TDD, systematic debugging, two-stage code review, and more. Created by Jesse Vincent.
 - **[Beads](https://github.com/gastownhall/beads)** (v1.0.0) — A persistent, Dolt-backed issue tracker designed as memory for AI coding agents. Hash-based IDs, dependency graphs, and cross-session persistence. Created by Steve Yegge.
 
 The result: skills that don't just tell agents *how* to work — they give agents a persistent ledger to track *what* they're working on, across sessions, with full audit trails and dependency awareness.
@@ -17,7 +17,7 @@ The result: skills that don't just tell agents *how* to work — they give agent
 
 AI coding agents have two problems:
 
-1. **No process discipline.** Without explicit workflow enforcement, agents skip tests, rush to code, and claim work is done without verification. Superpowers solves this with 14 mandatory skills backed by empirically-tested anti-rationalization techniques.
+1. **No process discipline.** Without explicit workflow enforcement, agents skip tests, rush to code, and claim work is done without verification. Superpowers solves this with 15 mandatory skills backed by empirically-tested anti-rationalization techniques.
 
 2. **No persistent memory.** When a session ends, todo lists vanish. Task context disappears. The next session starts blind. Beads solves this with a version-controlled SQL database that survives across sessions, agents, and projects.
 
@@ -68,7 +68,7 @@ If you skip this step, the plugin will detect the duplication and warn you.
 #   beads-superpowers:brainstorming
 #   beads-superpowers:test-driven-development
 #   beads-superpowers:systematic-debugging
-#   ... (14 skills total)
+#   ... (15 skills total)
 ```
 
 ## How It Works
@@ -140,7 +140,7 @@ brainstorming → writing-plans → subagent-driven-development → finishing-a-
                                  (or executing-plans)
 ```
 
-### All 14 Skills
+### All 15 Skills
 
 | Skill | Category | When to Use |
 |-------|----------|-------------|
@@ -158,6 +158,7 @@ brainstorming → writing-plans → subagent-driven-development → finishing-a-
 | **finishing-a-development-branch** | Infrastructure | Merge/PR decision tree + Land the Plane protocol |
 | **dispatching-parallel-agents** | Advanced | 2+ independent tasks without shared state |
 | **writing-skills** | Meta | Creating or modifying skills — TDD for process docs |
+| **auditing-upstream-drift** | Meta | Periodic audit for staleness vs upstream superpowers and beads |
 
 ### Beads Commands Used in Skills
 
@@ -197,7 +198,8 @@ beads-superpowers/
 │   ├── using-superpowers/       # 4 files — Bootstrap + beads awareness
 │   ├── verification-before-completion/  # 1 file — Evidence before claims
 │   ├── writing-plans/           # 2 files — Detailed implementation plans
-│   └── writing-skills/          # 6 files — Skill creation meta-skill
+│   ├── writing-skills/          # 6 files — Skill creation meta-skill
+│   └── auditing-upstream-drift/ # 1 file  — Upstream staleness detection
 ├── agents/
 │   └── code-reviewer.md         # Senior code reviewer agent
 ├── commands/
@@ -207,10 +209,22 @@ beads-superpowers/
 ├── docs/
 │   ├── METHODOLOGY.md           # Design philosophy and research basis
 │   ├── SETUP-GUIDE.md           # Detailed installation and configuration
+│   ├── testing.md               # Test methodology
+│   ├── windows/                 # Cross-platform hook docs
+│   ├── upstream-reference/      # Key design docs from upstream
 │   └── 01-09 analysis docs      # Research analysis (superpowers + beads)
+├── tests/
+│   ├── brainstorm-server/       # WebSocket server tests
+│   ├── claude-code/             # Claude Code integration tests
+│   ├── explicit-skill-requests/ # Skill explicit invocation tests
+│   ├── skill-triggering/        # Automatic skill detection tests
+│   └── subagent-driven-dev/     # End-to-end workflow tests
+├── scripts/
+│   └── bump-version.sh          # Version management across manifests
 ├── package.json
 ├── CLAUDE.md                    # Plugin development instructions
 ├── AGENTS.md                    # Agent instructions
+├── LICENSE                      # MIT License
 └── README.md                    # This file
 ```
 
