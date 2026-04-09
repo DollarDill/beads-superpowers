@@ -1,5 +1,25 @@
 {
   "hooks": {
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "command": "bash ./hooks/session-start",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      },
+      {
+        "hooks": [
+          {
+            "command": "bd prime",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [
@@ -9,13 +29,11 @@
           }
         ],
         "matcher": "startup|clear|compact"
-      }
-    ],
-    "PreCompact": [
+      },
       {
         "hooks": [
           {
-            "command": "bash ./hooks/session-start",
+            "command": "bd prime",
             "type": "command"
           }
         ],
