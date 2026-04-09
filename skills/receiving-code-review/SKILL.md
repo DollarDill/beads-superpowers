@@ -77,7 +77,9 @@ IF suggestion seems wrong:
   Push back with technical reasoning
 
 IF can't easily verify:
-  Say so: "I can't verify this without [X]. Should I [investigate/ask/proceed]?"
+  Use `AskUserQuestion` tool to ask for direction:
+  Question: "I can't verify this suggestion without [X]. How should I proceed?"
+  Options: "Investigate" (dig deeper to verify), "Ask reviewer" (request clarification from reviewer), "Proceed anyway" (implement without full verification)
 
 IF conflicts with your human partner's prior decisions:
   Stop and discuss with your human partner first

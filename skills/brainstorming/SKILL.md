@@ -73,21 +73,34 @@ digraph brainstorming {
 - Before asking detailed questions, assess scope: if the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Don't spend questions refining details of a project that needs to be decomposed first.
 - If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then brainstorm the first sub-project through the normal design flow. Each sub-project gets its own spec → plan → implementation cycle.
 - For appropriately-scoped projects, ask questions one at a time to refine the idea
-- Prefer multiple choice questions when possible, but open-ended is fine too
+- Prefer multiple choice questions when possible — **use the `AskUserQuestion` tool** for these (structured options are faster to answer than reading text and typing a response). Open-ended questions that don't have clear discrete options can remain as text.
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
 
 **Exploring approaches:**
 
 - Propose 2-3 different approaches with trade-offs
-- Present options conversationally with your recommendation and reasoning
-- Lead with your recommended option and explain why
+- **Use the `AskUserQuestion` tool** to present the approaches as structured options. Put your recommended option first with "(Recommended)" in the label. Use the `description` field for trade-offs and reasoning. This is more efficient than text blocks that require the user to read and type a response.
+- If approaches need detailed explanation beyond what fits in option descriptions, present the analysis as text first, THEN follow up with an `AskUserQuestion` invocation for the actual selection
 
 **Presenting the design:**
 
 - Once you believe you understand what you're building, present the design
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
-- Ask after each section whether it looks right so far
+- After presenting each section, **use the `AskUserQuestion` tool** to check approval:
+  ```json
+  {
+    "questions": [{
+      "question": "Does the <section-name> section look right?",
+      "header": "Design",
+      "options": [
+        {"label": "Looks good", "description": "Approve this section and move to the next one"},
+        {"label": "Needs changes", "description": "I have feedback or revisions for this section"}
+      ],
+      "multiSelect": false
+    }]
+  }
+  ```
 - Cover: architecture, components, data flow, error handling, testing
 - Be ready to go back and clarify if something doesn't make sense
 
@@ -124,11 +137,34 @@ After writing the spec document, look at it with fresh eyes:
 Fix any issues inline. No need to re-review — just fix and move on.
 
 **User Review Gate:**
-After the spec review loop passes, ask the user to review the written spec before proceeding:
+After the spec review loop passes, **open the spec file in the user's editor** so they can review it, then gate progression with `AskUserQuestion`:
 
-> "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
+```bash
+# Auto-open spec in user's editor (platform-detected)
+# macOS:
+open "<spec-file-path>"
+# Linux (fallback):
+xdg-open "<spec-file-path>" 2>/dev/null
+# If neither available: just report the path
+```
 
-Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
+Then immediately use the `AskUserQuestion` tool:
+
+```json
+{
+  "questions": [{
+    "question": "Spec opened in your editor at `<path>`. Review it and let me know when ready.",
+    "header": "Spec review",
+    "options": [
+      {"label": "Approved", "description": "Spec looks good — proceed to writing the implementation plan"},
+      {"label": "Needs changes", "description": "I want to revise the spec before proceeding"}
+    ],
+    "multiSelect": false
+  }]
+}
+```
+
+If the user selects "Needs changes", make the requested changes and re-run the spec review loop. Only proceed to writing-plans once approved.
 
 **Implementation:**
 
@@ -149,10 +185,23 @@ Wait for the user's response. If they request changes, make them and re-run the 
 
 A browser-based companion for showing mockups, diagrams, and visual options during brainstorming. Available as a tool — not a mode. Accepting the companion means it's available for questions that benefit from visual treatment; it does NOT mean every question goes through the browser.
 
-**Offering the companion:** When you anticipate that upcoming questions will involve visual content (mockups, layouts, diagrams), offer it once for consent:
-> "Some of what we're working on might be easier to explain if I can show it to you in a web browser. I can put together mockups, diagrams, comparisons, and other visuals as we go. This feature is still new and can be token-intensive. Want to try it? (Requires opening a local URL)"
+**Offering the companion:** When you anticipate that upcoming questions will involve visual content (mockups, layouts, diagrams), offer it once for consent using the `AskUserQuestion` tool. **This offer MUST be its own message.** Do not combine it with clarifying questions, context summaries, or any other content.
 
-**This offer MUST be its own message.** Do not combine it with clarifying questions, context summaries, or any other content. The message should contain ONLY the offer above and nothing else. Wait for the user's response before continuing. If they decline, proceed with text-only brainstorming.
+```json
+{
+  "questions": [{
+    "question": "Some upcoming questions might be easier to explain visually. I can show mockups, diagrams, and comparisons in a web browser as we go. This feature is still new and can be token-intensive. Want to try it? (Requires opening a local URL)",
+    "header": "Visual",
+    "options": [
+      {"label": "Yes, use visuals", "description": "Open a browser companion for mockups and diagrams during brainstorming"},
+      {"label": "No, text only", "description": "Continue with text-based brainstorming in the terminal"}
+    ],
+    "multiSelect": false
+  }]
+}
+```
+
+Wait for the user's response before continuing. If they decline, proceed with text-only brainstorming.
 
 **Per-question decision:** Even after the user accepts, decide FOR EACH QUESTION whether to use the browser or the terminal. The test: **would the user understand this better by seeing it than reading it?**
 

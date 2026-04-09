@@ -13,6 +13,26 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
+## Iron Law: Use `bd worktree`, NOT `git worktree`
+
+```
+ALWAYS use bd worktree commands. NEVER use raw git worktree commands.
+```
+
+**Why:** `bd worktree create` does everything `git worktree add` does PLUS:
+- Sets up `.beads/redirect` so the worktree shares the main repo's beads database
+- Adds the worktree path to `.gitignore` automatically
+- Ensures consistent issue state across all worktrees
+
+Raw `git worktree add` creates an orphaned worktree with no beads access — agents in that worktree cannot run `bd` commands, track tasks, or close beads.
+
+| Action | Use This | NOT This |
+|--------|----------|----------|
+| Create worktree | `bd worktree create <name>` | ~~`git worktree add`~~ |
+| List worktrees | `bd worktree list` | ~~`git worktree list`~~ |
+| Remove worktree | `bd worktree remove <name>` | ~~`git worktree remove`~~ |
+| Worktree info | `bd worktree info` | ~~(no equivalent)~~ |
+
 ## Directory Selection Process
 
 Follow this priority order:
@@ -37,34 +57,45 @@ grep -i "worktree.*director" CLAUDE.md 2>/dev/null
 
 ### 3. Ask User
 
-If no directory exists and no CLAUDE.md preference:
+If no directory exists and no CLAUDE.md preference, **use the `AskUserQuestion` tool**:
 
-```
-No worktree directory found. Where should I create worktrees?
-
-1. .worktrees/ (project-local, hidden)
-2. ~/.config/superpowers/worktrees/<project-name>/ (global location)
-
-Which would you prefer?
+```json
+{
+  "questions": [{
+    "question": "No worktree directory found. Where should I create worktrees?",
+    "header": "Worktree dir",
+    "options": [
+      {
+        "label": ".worktrees/ (Recommended)",
+        "description": "Project-local hidden directory — keeps worktrees near the code"
+      },
+      {
+        "label": "~/.config/superpowers/worktrees/",
+        "description": "Global location outside the project — no .gitignore needed"
+      }
+    ],
+    "multiSelect": false
+  }]
+}
 ```
 
 ## Safety Verification
 
+**Note:** `bd worktree create` automatically adds the worktree path to `.gitignore` when inside the repo root. Manual verification is a safety net, not the primary mechanism.
+
 ### For Project-Local Directories (.worktrees or worktrees)
 
-**MUST verify directory is ignored before creating worktree:**
+**Verify directory is ignored after creation:**
 
 ```bash
 # Check if directory is ignored (respects local, global, and system gitignore)
 git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
 ```
 
-**If NOT ignored:**
+**If NOT ignored** (edge case — `bd worktree create` should have handled this):
 
-Per Jesse's rule "Fix broken things immediately":
 1. Add appropriate line to .gitignore
 2. Commit the change
-3. Proceed with worktree creation
 
 **Why critical:** Prevents accidentally committing worktree contents to repository.
 
@@ -74,31 +105,28 @@ No .gitignore verification needed - outside project entirely.
 
 ## Creation Steps
 
-### 1. Detect Project Name
+### 1. Create Worktree with `bd worktree create`
 
 ```bash
-project=$(basename "$(git rev-parse --show-toplevel)")
+# Simple — creates worktree at ./<name> with matching branch
+bd worktree create <feature-name>
+
+# With explicit branch name
+bd worktree create <feature-name> --branch <branch-name>
+
+# At a specific path (e.g., global location)
+bd worktree create ~/.config/superpowers/worktrees/<project>/<feature-name>
+
+# Then cd into it
+cd <worktree-path>
 ```
 
-### 2. Create Worktree
+**What `bd worktree create` does automatically:**
+1. Creates the git worktree with a new branch
+2. Sets up `.beads/redirect` → main repo's `.beads` database
+3. Adds worktree path to `.gitignore` (if inside repo root)
 
-```bash
-# Determine full path
-case $LOCATION in
-  .worktrees|worktrees)
-    path="$LOCATION/$BRANCH_NAME"
-    ;;
-  ~/.config/superpowers/worktrees/*)
-    path="~/.config/superpowers/worktrees/$project/$BRANCH_NAME"
-    ;;
-esac
-
-# Create worktree with new branch
-git worktree add "$path" -b "$BRANCH_NAME"
-cd "$path"
-```
-
-### 3. Run Project Setup
+### 2. Run Project Setup
 
 Auto-detect and run appropriate setup:
 
@@ -117,7 +145,7 @@ if [ -f pyproject.toml ]; then poetry install; fi
 if [ -f go.mod ]; then go mod download; fi
 ```
 
-### 4. Verify Clean Baseline
+### 3. Verify Clean Baseline
 
 Run tests to ensure worktree starts clean:
 
@@ -129,11 +157,13 @@ pytest
 go test ./...
 ```
 
-**If tests fail:** Report failures, ask whether to proceed or investigate.
+**If tests fail:** Report failures, then **use the `AskUserQuestion` tool** to ask:
+  Question: "Baseline tests failing in worktree (<N> failures). How should I proceed?"
+  Options: "Investigate failures" (debug before starting feature work), "Proceed anyway" (start implementation despite pre-existing failures)
 
 **If tests pass:** Report ready.
 
-### 5. Report Location
+### 4. Report Location
 
 ```
 Worktree ready at <full-path>
@@ -155,10 +185,15 @@ Ready to implement <feature-name>
 
 ## Common Mistakes
 
+### Using `git worktree` instead of `bd worktree`
+
+- **Problem:** Raw `git worktree add` creates a worktree with no `.beads/redirect` — beads commands fail, task tracking breaks, agents can't close beads
+- **Fix:** ALWAYS use `bd worktree create`. If you catch yourself typing `git worktree`, stop and use `bd worktree` instead.
+
 ### Skipping ignore verification
 
 - **Problem:** Worktree contents get tracked, pollute git status
-- **Fix:** Always use `git check-ignore` before creating project-local worktree
+- **Fix:** Verify with `git check-ignore` after creation (`bd worktree create` handles this automatically, but verify as a safety net)
 
 ### Assuming directory location
 
@@ -181,8 +216,11 @@ Ready to implement <feature-name>
 You: I'm using the using-git-worktrees skill to set up an isolated workspace.
 
 [Check .worktrees/ - exists]
-[Verify ignored - git check-ignore confirms .worktrees/ is ignored]
-[Create worktree: git worktree add .worktrees/auth -b feature/auth]
+[Create worktree: bd worktree create auth --branch feature/auth]
+  ✓ Created worktree at .worktrees/auth
+  ✓ Set up .beads/redirect
+  ✓ Added to .gitignore
+[cd .worktrees/auth]
 [Run npm install]
 [Run npm test - 47 passing]
 
@@ -194,6 +232,7 @@ Ready to implement auth feature
 ## Red Flags
 
 **Never:**
+- Use raw `git worktree` commands — ALWAYS use `bd worktree`
 - Create worktree without verifying it's ignored (project-local)
 - Skip baseline test verification
 - Proceed with failing tests without asking
@@ -201,6 +240,7 @@ Ready to implement auth feature
 - Skip CLAUDE.md check
 
 **Always:**
+- Use `bd worktree create` / `bd worktree list` / `bd worktree remove`
 - Follow directory priority: existing > CLAUDE.md > ask
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
