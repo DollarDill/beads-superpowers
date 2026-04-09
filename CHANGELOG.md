@@ -7,6 +7,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > **Forked from:** [obra/superpowers](https://github.com/obra/superpowers) v5.0.7 (2026-03-31)
 > **Beads integration based on:** [gastownhall/beads](https://github.com/gastownhall/beads) v1.0.0 (2026-04-03)
 
+## [Unreleased]
+
+### Changed
+- 5 skills refactored to use `AskUserQuestion` tool for structured user input instead of text-based prompts:
+  - `brainstorming` — multiple-choice clarifying questions, approach selection, section approval, spec review gate, visual companion offer
+  - `finishing-a-development-branch` — branch completion options (merge/PR/keep/discard)
+  - `receiving-code-review` — investigate/ask/proceed choice when can't verify a suggestion
+  - `using-git-worktrees` — worktree directory selection, baseline test failure handling
+  - `writing-plans` — execution handoff (subagent-driven vs inline)
+- `brainstorming` and `writing-plans` spec/plan review gates now auto-open file in user's editor (`open`/`xdg-open`) before approval prompt
+- `writing-plans` now has an explicit User Review Gate section (plan approval) before the execution handoff
+- `using-git-worktrees` now enforces `bd worktree` commands over raw `git worktree` — added Iron Law section, command mapping table, and updated all creation/cleanup steps
+- `finishing-a-development-branch` Step 5 (worktree cleanup) updated to use `bd worktree info`/`bd worktree remove`
+
 ## [0.1.0] - 2026-04-06
 
 ### Added
