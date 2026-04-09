@@ -133,17 +133,60 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
+## User Review Gate
+
+After self-review passes, **open the plan file in the user's editor** so they can review it, then gate progression with `AskUserQuestion`:
+
+```bash
+# Auto-open plan in user's editor (platform-detected)
+# macOS:
+open "<plan-file-path>"
+# Linux (fallback):
+xdg-open "<plan-file-path>" 2>/dev/null
+# If neither available: just report the path
+```
+
+Then immediately use the `AskUserQuestion` tool:
+
+```json
+{
+  "questions": [{
+    "question": "Plan opened in your editor at `<path>`. Review it and let me know when ready.",
+    "header": "Plan review",
+    "options": [
+      {"label": "Approved", "description": "Plan looks good — proceed to choose execution method"},
+      {"label": "Needs changes", "description": "I want to revise the plan before proceeding"}
+    ],
+    "multiSelect": false
+  }]
+}
+```
+
+If the user selects "Needs changes", make the requested changes and re-run the self-review. Only proceed to execution handoff once approved.
+
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+After the plan is approved, **use the `AskUserQuestion` tool** to offer the execution choice:
 
-**"Plan complete and saved to `docs/beads-superpowers/plans/<filename>.md`. Two execution options:**
-
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
-
-**2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
-
-**Which approach?"**
+```json
+{
+  "questions": [{
+    "question": "Plan complete and saved. How would you like to execute it?",
+    "header": "Execution",
+    "options": [
+      {
+        "label": "Subagent-Driven (Recommended)",
+        "description": "Fresh subagent per task with two-stage review between tasks — fast iteration, high quality"
+      },
+      {
+        "label": "Inline Execution",
+        "description": "Execute tasks in this session using executing-plans — batch execution with checkpoints"
+      }
+    ],
+    "multiSelect": false
+  }]
+}
+```
 
 **If Subagent-Driven chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development

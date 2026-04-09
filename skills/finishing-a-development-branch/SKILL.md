@@ -48,20 +48,37 @@ Or ask: "This branch split from main - is that correct?"
 
 ### Step 3: Present Options
 
-Present exactly these 4 options:
+**Use the `AskUserQuestion` tool** to present exactly these 4 options. Do NOT output them as text — invoke the tool for structured input:
 
+```json
+{
+  "questions": [{
+    "question": "Implementation complete. How would you like to finish this branch?",
+    "header": "Branch",
+    "options": [
+      {
+        "label": "Merge locally",
+        "description": "Merge back to <base-branch>, run tests on result, delete feature branch"
+      },
+      {
+        "label": "Create Pull Request",
+        "description": "Push branch to origin and open a PR via gh cli"
+      },
+      {
+        "label": "Keep as-is",
+        "description": "Leave the branch and worktree intact — handle it later"
+      },
+      {
+        "label": "Discard work",
+        "description": "Permanently delete this branch and all its commits (requires confirmation)"
+      }
+    ],
+    "multiSelect": false
+  }]
+}
 ```
-Implementation complete. What would you like to do?
 
-1. Merge back to <base-branch> locally
-2. Push and create a Pull Request
-3. Keep the branch as-is (I'll handle it later)
-4. Discard this work
-
-Which option?
-```
-
-**Don't add explanation** - keep options concise.
+**Don't add explanation** — the tool options are self-describing. Map the user's selection to Option 1–4 in Step 4.
 
 ### Step 4: Execute Choice
 
@@ -139,12 +156,12 @@ Then: Cleanup worktree (Step 5)
 
 Check if in worktree:
 ```bash
-git worktree list | grep $(git branch --show-current)
+bd worktree info
 ```
 
 If yes:
 ```bash
-git worktree remove <worktree-path>
+bd worktree remove <worktree-name>
 ```
 
 **For Option 3:** Keep worktree.
@@ -197,7 +214,7 @@ git status    # MUST show "up to date with origin"
 
 **Open-ended questions**
 - **Problem:** "What should I do next?" → ambiguous
-- **Fix:** Present exactly 4 structured options
+- **Fix:** Use `AskUserQuestion` tool with exactly 4 structured options
 
 **Automatic worktree cleanup**
 - **Problem:** Remove worktree when might need it (Option 2, 3)
@@ -217,7 +234,7 @@ git status    # MUST show "up to date with origin"
 
 **Always:**
 - Verify tests before offering options
-- Present exactly 4 options
+- Present exactly 4 options via `AskUserQuestion` tool
 - Get typed confirmation for Option 4
 - Clean up worktree for Options 1 & 4 only
 
