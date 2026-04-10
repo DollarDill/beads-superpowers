@@ -228,6 +228,37 @@ beads-superpowers/
 └── README.md                    # This file
 ```
 
+## Development: Keeping Installed Plugin in Sync
+
+When you edit skills in this repo, the installed plugin cache goes stale. Two options:
+
+### Option A: Symlink (Recommended)
+
+One-time setup — source changes take effect on next Claude Code restart.
+
+```bash
+rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.1.0
+ln -s ~/workplace/beads-superpowers \
+  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.1.0
+```
+
+### Option B: Nuke Cache
+
+Quick one-shot refresh — Claude Code re-copies from marketplace on next start.
+
+```bash
+rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/
+```
+
+### Verify Sync
+
+```bash
+# Should print nothing if in sync
+diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.1.0/skills/
+```
+
+> **Note:** `claude plugin update` exists but has a [cache invalidation bug](https://github.com/anthropics/claude-code/issues/14061). Use the symlink approach instead.
+
 ## Key Design Decisions
 
 | Decision | Rationale |
