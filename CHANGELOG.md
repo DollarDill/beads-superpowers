@@ -9,6 +9,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+(none yet)
+
+## [0.1.1] - 2026-04-11
+
+### Added
+
+- `assets/banner.svg` — 1280×320 hero banner SVG (slate→indigo gradient, mono text, hexagon accent)
+- `.github/workflows/ci.yml` — markdownlint + plugin.json schema validation
+- `.github/dependabot.yml` — weekly grouped Dependabot for github-actions and npm
+- `.github/ISSUE_TEMPLATE/` — bug report and feature request templates plus blank-issue config
+- `.github/PULL_REQUEST_TEMPLATE.md` — PR checklist
+- `CONTRIBUTING.md` — contributor guide
+- `SECURITY.md` — vulnerability reporting policy (private disclosure via GitHub Security Advisories)
+- `.markdownlint.json`, `.markdownlint-cli2.jsonc`, and `.markdownlintignore` — lint config + scope (excludes upstream-derived skill content)
+- README hero band: banner image, tagline, badge row (license, version, CI, stars)
+- README dual-path block: "Try it in 60 seconds" + "Why it exists" side by side
+- README `## Architecture` section with Mermaid diagram and orchestrator-only design summary
+
 ### Changed
 
 - 5 skills refactored to use `AskUserQuestion` tool for structured user input instead of text-based prompts:
@@ -21,6 +39,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `writing-plans` now has an explicit User Review Gate section (plan approval) before the execution handoff
 - `using-git-worktrees` now enforces `bd worktree` commands over raw `git worktree` — added Iron Law section, command mapping table, and updated all creation/cleanup steps
 - `finishing-a-development-branch` Step 5 (worktree cleanup) updated to use `bd worktree info`/`bd worktree remove`
+- README restructured: hero band, badges, dual-path layout, Architecture section, trimmed project tree
+- `plugin.json` description rewritten to match the GitHub repo description (single source of truth)
+- `scripts/bump-version.sh` fixed: `declared_files()` was reading `.field` from `.version-bump.json` but the config uses `.key`, causing `null` keys to be written instead of updating versions
+- Default branch renamed from `master` → `main`
+
+### Deprecated
+
+- `commands/brainstorm.md`, `commands/execute-plan.md`, `commands/write-plan.md` slash command stubs — will be removed in **v0.2.0**. Use the corresponding skills via the `Skill` tool instead.
+
+### Moved
+
+- `SESSION-SUMMARY.md` working file is now gitignored. The `.sessions/` directory exists for future session-summary files but is not tracked. (`SESSION-SUMMARY.md` itself was never tracked in git.)
+
+### Security
+
+- GitHub-side toggles enabled: Dependabot alerts, Dependabot security updates, secret scanning, push protection
+- `SECURITY.md` policy added for private vulnerability disclosure
 
 ## [0.1.0] - 2026-04-06
 
