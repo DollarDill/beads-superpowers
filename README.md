@@ -76,7 +76,7 @@ If you skip this step, the plugin will detect the duplication and warn you.
 
 ### Session Lifecycle
 
-```
+```text
 Session Start
   │
   ▼
@@ -136,7 +136,7 @@ Skills are not suggestions. They use bright-line rules, anti-rationalization tab
 
 ### The Happy Path Pipeline
 
-```
+```text
 brainstorming → writing-plans → subagent-driven-development → finishing-a-development-branch
                                  (or executing-plans)
 ```
@@ -177,7 +177,7 @@ brainstorming → writing-plans → subagent-driven-development → finishing-a-
 
 ## Project Structure
 
-```
+```text
 beads-superpowers/
 ├── .claude-plugin/
 │   └── plugin.json              # Plugin manifest (v0.1.0)

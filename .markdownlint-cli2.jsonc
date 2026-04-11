@@ -1,0 +1,26 @@
+// markdownlint-cli2 configuration
+// Note: .markdownlintignore is NOT supported by markdownlint-cli2; ignores go here.
+{
+  "config": {
+    "default": true,
+    "MD013": false,
+    "MD024": false,
+    "MD033": false,
+    "MD041": false,
+    "MD060": false
+  },
+  "ignores": [
+    // Upstream-derived skill content — not in scope for this repo's lint
+    "skills/**",
+    // Reference docs imported from upstream
+    "docs/upstream-reference/**",
+    // Test fixtures and test infrastructure
+    "tests/**",
+    // Local working files
+    ".sessions/**",
+    // Beads tool internal files (upstream-derived)
+    ".beads/**",
+    // Dependencies (if added in future)
+    "node_modules/**"
+  ]
+}

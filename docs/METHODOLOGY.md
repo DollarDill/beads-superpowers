@@ -9,6 +9,7 @@ AI coding agents in 2025-2026 face two fundamental problems that, until now, hav
 ### Problem 1: No Process Discipline
 
 Without explicit workflow enforcement, AI agents consistently:
+
 - Skip to coding before understanding the problem
 - Write implementation before tests
 - Claim work is "done" without running verification
@@ -21,6 +22,7 @@ Without explicit workflow enforcement, AI agents consistently:
 ### Problem 2: No Persistent Memory
 
 When an AI coding session ends:
+
 - Todo lists created with `TodoWrite` vanish entirely
 - Task dependencies are forgotten
 - Work-in-progress has no audit trail
@@ -28,6 +30,7 @@ When an AI coding session ends:
 - Learned conventions and preferences are lost
 
 **Beads** (by Steve Yegge) solved this with a Dolt-backed issue tracker that provides:
+
 - Hash-based IDs that work without central coordination
 - Cell-level merge for conflict-free multi-agent operation
 - `bd prime` context injection at every session start
@@ -86,6 +89,7 @@ The three subagent prompt files are deliberately not beads-aware. This is the **
 ### 1. Replace at Both Levels
 
 TodoWrite was used at two granularity levels in Superpowers:
+
 - **Task level**: Tracking plan tasks in execution skills
 - **Checklist level**: Tracking internal steps within a skill's own checklist
 
@@ -98,6 +102,7 @@ We replaced **both**. Even the brainstorming 9-step checklist and the writing-sk
 Beads' `bd setup claude` command installs SessionStart hooks that run `bd prime`. Our plugin's SessionStart hook also needs to inject the `using-superpowers` skill content. Having both fire would inject ~3-4k tokens of partially redundant context.
 
 **Solution:** The plugin's `hooks/session-start` script does both:
+
 1. Injects the `using-superpowers` skill (skill routing + beads awareness)
 2. Runs `bd prime` itself (beads CLI context + persistent memories)
 
@@ -106,12 +111,14 @@ It also detects if the `bd setup claude` hooks are still installed and warns the
 ### 3. Land the Plane in the Terminal Skill
 
 The "Land the Plane" session close protocol could live in:
+
 - A separate skill (`session-close`)
 - The user's CLAUDE.md
 - The terminal skill (`finishing-a-development-branch`)
 
 We chose the terminal skill because **every pipeline path already ends there**:
-```
+
+```text
 subagent-driven-development → finishing-a-development-branch
 executing-plans             → finishing-a-development-branch
 ```
@@ -133,6 +140,7 @@ The pattern: orchestrator creates bead → dispatches subagent → subagent impl
 Following Superpowers' zero-dependency philosophy, all skills are plain Markdown files with YAML frontmatter. No build step. No runtime dependencies. No code changes needed.
 
 This means:
+
 - The plugin works on any platform with a file system
 - Skills can be read, understood, and modified by humans
 - No version compatibility issues with runtimes
@@ -145,16 +153,19 @@ This means:
 The skill enforcement language is grounded in two research streams:
 
 **Cialdini (2021) — Influence Principles Applied to AI:**
+
 - **Authority**: Iron Laws and bright-line rules ("NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST")
 - **Consistency**: Once an agent starts following a skill, consistency pressure maintains compliance
 - **Scarcity**: "You cannot rationalize your way out of this" removes alternatives
 
 **Meincke et al. (2025) — AI Agent Compliance:**
+
 - Compliance **doubled from 33% to 72%** when using absolute rules over hedged guidance
 - Pre-emptive rationalization counters outperform reactive correction
 - Specific examples of non-compliance are more effective than generic warnings
 
 This is why every discipline-enforcing skill includes:
+
 - An **Iron Law** (absolute, memorable, no exceptions)
 - A **Red Flags table** (anticipated rationalizations with pre-loaded counter-arguments)
 - **Bright-line rules** (MUST/NEVER/NO EXCEPTIONS instead of "consider"/"prefer"/"try to")
@@ -201,7 +212,7 @@ By integrating beads into every skill, we ensure all seven memory types are popu
 
 ### What Happens When an Agent Receives a Feature Request
 
-```
+```text
 1. SessionStart hook fires
    ├── Loads using-superpowers skill (beads-aware routing)
    └── Runs bd prime (beads context + memories)
@@ -294,5 +305,6 @@ Every step is tracked. Every decision is auditable. Every session starts where t
 ### Analysis Documentation
 
 The complete research that informed this integration is available in `docs/`:
+
 - `01-system-architecture.md` through `05-comparison-and-insights.md` — Superpowers deep dive
 - `06-beads-system-architecture.md` through `09-beads-design-patterns.md` — Beads deep dive

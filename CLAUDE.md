@@ -2,13 +2,14 @@
 
 This project IS a Claude Code marketplace plugin that merges [Superpowers](https://github.com/obra/superpowers) skills (v5.0.7) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.0.0).
 
-**Repository:** https://github.com/DollarDill/beads-superpowers
+**Repository:** <https://github.com/DollarDill/beads-superpowers>
 **Version:** 0.1.0
 **License:** MIT (fork of obra/superpowers, also MIT)
 
 ## Project Context
 
 This plugin gives AI coding agents two things simultaneously:
+
 1. **Process discipline** — 15 composable skills enforcing TDD, brainstorming, systematic debugging, two-stage code review, and verification
 2. **Persistent memory** — Every task is a bead tracked in a Dolt-backed database that survives across sessions
 
@@ -16,7 +17,7 @@ The key modification from upstream superpowers: every `TodoWrite` reference has 
 
 ## Plugin Structure
 
-```
+```text
 .claude-plugin/
   plugin.json              # Plugin manifest (auto-discovered by Claude Code)
   marketplace.json         # Marketplace config for plugin discovery
@@ -61,7 +62,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 
 ### GitHub Issue Sync
 
-This project syncs beads to GitHub Issues via `bd github sync`. Issues appear at https://github.com/DollarDill/beads-superpowers/issues.
+This project syncs beads to GitHub Issues via `bd github sync`. Issues appear at <https://github.com/DollarDill/beads-superpowers/issues>.
 
 ```bash
 bd github sync              # Push all beads to GitHub Issues
@@ -69,6 +70,7 @@ bd github status            # Check sync configuration
 ```
 
 GitHub sync is configured via:
+
 - `bd config set github.token <token>` (or `GITHUB_TOKEN` env var)
 - `bd config set github.repository DollarDill/beads-superpowers`
 
@@ -101,12 +103,14 @@ If `bd setup claude` hooks are installed in `.claude/settings.json`, this plugin
 ### Adding a New Skill
 
 1. Create `skills/<skill-name>/SKILL.md` with YAML frontmatter:
+
    ```yaml
    ---
    name: skill-name
    description: When to use this skill (trigger condition, not workflow summary)
    ---
    ```
+
 2. Make it beads-aware: use `bd create`/`bd close`/`bd ready` for task tracking
 3. If it has a checklist, create beads per checklist item
 4. Update README.md skills table and CHANGELOG.md
@@ -160,11 +164,13 @@ cd tests/claude-code && ./run-skill-tests.sh --integration
 ## Version Management
 
 Version is declared in 3 files that must stay in sync:
+
 - `package.json`
 - `.claude-plugin/plugin.json`
 - `.claude-plugin/marketplace.json`
 
 Use `scripts/bump-version.sh` to update all at once:
+
 ```bash
 ./scripts/bump-version.sh 0.2.0        # Bump to new version
 ./scripts/bump-version.sh --check      # Detect version drift

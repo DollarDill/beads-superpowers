@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+
 - 5 skills refactored to use `AskUserQuestion` tool for structured user input instead of text-based prompts:
   - `brainstorming` — multiple-choice clarifying questions, approach selection, section approval, spec review gate, visual companion offer
   - `finishing-a-development-branch` — branch completion options (merge/PR/keep/discard)
@@ -24,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.0] - 2026-04-06
 
 ### Added
+
 - Claude Code plugin infrastructure (`.claude-plugin/plugin.json`, hooks, package.json)
 - SessionStart hook that injects skills + runs `bd prime` (subsumes `bd setup claude`)
 - Duplicate hook detection — warns if `bd setup claude` hooks are still installed
@@ -48,6 +50,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `docs/upstream-reference/` — key design docs from upstream (skills improvements, document review system)
 
 ### Changed
+
 - All 14 Superpowers skills: replaced TodoWrite with `bd` commands throughout
 - `using-superpowers` flowchart: TodoWrite nodes → `bd create` nodes
 - `subagent-driven-development` flowchart: TodoWrite → epic/child bead lifecycle
@@ -59,10 +62,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `CLAUDE.md` and `AGENTS.md`: rewritten for plugin context
 
 ### Removed
+
 - All active TodoWrite references (2 prohibition references retained: "Do NOT use TodoWrite")
 - Upstream community management files (CODE_OF_CONDUCT, issue templates, funding)
 - Platform-specific files for Cursor, Codex, OpenCode, Gemini (Claude Code only)
 
 ### Attribution
+
 - Superpowers skills: [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent (MIT)
 - Beads issue tracker: [gastownhall/beads](https://github.com/gastownhall/beads) by Steve Yegge (MIT)

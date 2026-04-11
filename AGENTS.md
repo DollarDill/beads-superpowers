@@ -6,7 +6,7 @@ This project is a **Claude Code plugin** (beads-superpowers). It provides 15 ski
 
 This project uses **bd (beads)** for ALL issue tracking. Issues sync to GitHub Issues via `bd github sync`.
 
-- **GitHub Issues:** https://github.com/DollarDill/beads-superpowers/issues
+- **GitHub Issues:** <https://github.com/DollarDill/beads-superpowers/issues>
 - **Issue tracker:** `bd` CLI (beads) with GitHub sync
 - Do NOT use TodoWrite, TaskCreate, or markdown TODO lists
 
