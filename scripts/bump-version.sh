@@ -43,7 +43,7 @@ write_json_field() {
 # Read the list of declared files from config.
 # Outputs lines of "path<TAB>field"
 declared_files() {
-  jq -r '.files[] | "\(.path)\t\(.field)"' "$CONFIG"
+  jq -r '.files[] | "\(.path)\t\(.key)"' "$CONFIG"
 }
 
 # Read the audit exclude patterns from config.

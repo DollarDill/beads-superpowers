@@ -1,0 +1,23 @@
+// markdownlint-cli2 configuration
+// Note: .markdownlintignore is NOT supported by markdownlint-cli2; ignores go here.
+// Inherit rule config from .markdownlint.json so editor plugins
+// (which read .markdownlint.json) and CI (which reads
+// .markdownlint-cli2.jsonc) stay in sync. This file only adds
+// the cli2-specific ignores list.
+{
+  "extends": ".markdownlint.json",
+  "ignores": [
+    // Upstream-derived skill content — not in scope for this repo's lint
+    "skills/**",
+    // Reference docs imported from upstream
+    "docs/upstream-reference/**",
+    // Test fixtures and test infrastructure
+    "tests/**",
+    // Local working files
+    ".sessions/**",
+    // Beads tool internal files (upstream-derived)
+    ".beads/**",
+    // Dependencies (if added in future)
+    "node_modules/**"
+  ]
+}

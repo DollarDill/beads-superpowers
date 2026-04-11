@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" role="img" aria-label="beads-superpowers — Process discipline and persistent memory for AI coding agents">
+  <title>beads-superpowers</title>
+  <desc>Process discipline and persistent memory for AI coding agents</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e1b4b"/>
+    </linearGradient>
+    <style>
+      .title  { font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-weight: 700; fill: #ffffff; }
+      .rule   { stroke: #818cf8; stroke-width: 4; stroke-linecap: round; }
+      .tagline{ font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-weight: 400; fill: #cbd5e1; }
+      .accent { fill: none; stroke: #818cf8; stroke-width: 5; stroke-linejoin: round; }
+    </style>
+  </defs>
+
+  <rect width="1280" height="320" fill="url(#bg)"/>
+
+  <text x="80" y="140" class="title" font-size="64">beads-superpowers</text>
+  <line x1="80" y1="170" x2="640" y2="170" class="rule"/>
+  <text x="80" y="220" class="tagline" font-size="28">Process discipline + persistent memory</text>
+  <text x="80" y="258" class="tagline" font-size="28">for AI coding agents</text>
+
+  <g transform="translate(1080,120)">
+    <polygon class="accent" points="60,0 120,35 120,105 60,140 0,105 0,35"/>
+    <polygon class="accent" points="60,30 90,47 90,93 60,110 30,93 30,47"/>
+  </g>
+</svg>
