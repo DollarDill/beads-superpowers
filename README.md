@@ -15,20 +15,6 @@
 
 ---
 
-## Why it exists
-
-AI coding agents have two recurring failure modes:
-
-1. **No process discipline.** They skip tests, rush to code, and claim work is done without verification.
-2. **No persistent memory.** Todo lists vanish when a session ends. The next session starts blind.
-
-**beads-superpowers** merges two upstream systems to solve both at once:
-
-- **[Superpowers](https://github.com/obra/superpowers)** by Jesse Vincent — 15 mandatory skills enforcing TDD, brainstorming, systematic debugging, and two-stage code review.
-- **[Beads](https://github.com/gastownhall/beads)** by Steve Yegge — a Dolt-backed issue tracker that survives across sessions, agents, and projects.
-
-The result: skills that don't just tell agents *how* to work — they give agents a persistent ledger to track *what* they're working on.
-
 ## Try it in 60 seconds
 
 ```bash
@@ -55,6 +41,20 @@ bd setup claude --remove
 ```
 
 </details>
+
+## Why it exists
+
+AI coding agents have two recurring failure modes:
+
+1. **No process discipline.** They skip tests, rush to code, and claim work is done without verification.
+2. **No persistent memory.** Todo lists vanish when a session ends. The next session starts blind.
+
+**beads-superpowers** merges two upstream systems to solve both at once:
+
+- **[Superpowers](https://github.com/obra/superpowers)** by Jesse Vincent — 15 mandatory skills enforcing TDD, brainstorming, systematic debugging, and two-stage code review.
+- **[Beads](https://github.com/gastownhall/beads)** by Steve Yegge — a Dolt-backed issue tracker that survives across sessions, agents, and projects.
+
+The result: skills that don't just tell agents *how* to work — they give agents a persistent ledger to track *what* they're working on.
 
 ## How it works
 
