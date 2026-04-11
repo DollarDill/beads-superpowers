@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Read the documentation first
+    url: https://github.com/DollarDill/beads-superpowers#readme
+    about: The README, METHODOLOGY, and SETUP-GUIDE answer most questions.
+  - name: Upstream Superpowers
+    url: https://github.com/obra/superpowers
+    about: For issues with the upstream skill content itself.
+  - name: Upstream Beads
+    url: https://github.com/gastownhall/beads
+    about: For issues with the bd CLI or Dolt-backed storage.
