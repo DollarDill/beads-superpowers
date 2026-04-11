@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint Markdown + Validate Plugin Manifest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Lint markdown
+        uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          globs: "**/*.md"
+
+      - name: Validate plugin.json (parses)
+        run: python3 -c "import json; json.load(open('.claude-plugin/plugin.json'))"
+
+      - name: Validate plugin.json (required keys present)
+        run: |
+          python3 <<'PY'
+          import json, sys
+          m = json.load(open('.claude-plugin/plugin.json'))
+          required = {'name', 'description', 'version', 'author', 'license'}
+          missing = required - set(m.keys())
+          if missing:
+              sys.exit(f'plugin.json missing required keys: {missing}')
+          print('plugin.json: all required keys present')
+          PY
