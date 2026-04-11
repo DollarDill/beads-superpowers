@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.1.1-indigo.svg"></a>
+  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.1.1-4f46e5.svg"></a>
   <a href="https://github.com/DollarDill/beads-superpowers/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/DollarDill/beads-superpowers/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <a href="https://github.com/DollarDill/beads-superpowers/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/DollarDill/beads-superpowers?style=social"></a>
 </p>
@@ -145,6 +145,7 @@ flowchart TB
         SP[using-superpowers skill]
         BD[bd prime — beads context]
         SP --> Routing{Route to skill}
+        BD --> Routing
     end
     Routing -->|design| Brainstorm[brainstorming]
     Routing -->|plan| WP[writing-plans]
