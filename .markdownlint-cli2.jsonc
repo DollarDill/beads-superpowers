@@ -1,14 +1,11 @@
 // markdownlint-cli2 configuration
 // Note: .markdownlintignore is NOT supported by markdownlint-cli2; ignores go here.
+// Inherit rule config from .markdownlint.json so editor plugins
+// (which read .markdownlint.json) and CI (which reads
+// .markdownlint-cli2.jsonc) stay in sync. This file only adds
+// the cli2-specific ignores list.
 {
-  "config": {
-    "default": true,
-    "MD013": false,
-    "MD024": false,
-    "MD033": false,
-    "MD041": false,
-    "MD060": false
-  },
+  "extends": ".markdownlint.json",
   "ignores": [
     // Upstream-derived skill content — not in scope for this repo's lint
     "skills/**",
