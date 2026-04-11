@@ -1,0 +1,14 @@
+# Upstream-derived skill content — not in scope for this repo's lint
+skills/
+
+# Reference docs imported from upstream
+docs/upstream-reference/
+
+# Test fixtures and test infrastructure
+tests/
+
+# Local working files
+.sessions/
+
+# Dependencies (if added in future)
+node_modules/

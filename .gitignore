@@ -17,6 +17,8 @@ docs/09-*.md
 
 # Session work logs (internal, not part of the plugin)
 SESSION-SUMMARY.md
+.sessions/
+.claude/session-log.jsonl
 
 # Dependencies
 node_modules/

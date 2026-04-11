@@ -1,5 +1,11 @@
 ---
-description: "Deprecated - use the superpowers:brainstorming skill instead"
+description: DEPRECATED — use the brainstorming skill via the Skill tool instead
 ---
 
-Tell your human partner that this command is deprecated and will be removed in the next major release. They should ask you to use the "superpowers brainstorming" skill instead.
+# DEPRECATED — use the `brainstorming` skill instead
+
+This slash command is preserved for backward compatibility only.
+Use the `beads-superpowers:brainstorming` skill via Claude Code's
+`Skill` tool. The skill provides the full, current workflow.
+
+This stub will be removed in **v0.2.0**.

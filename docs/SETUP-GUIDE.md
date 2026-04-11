@@ -8,6 +8,7 @@
 
 1. **Claude Code** — Install from [claude.ai/claude-code](https://claude.ai/claude-code)
 2. **Beads** — Install the `bd` CLI:
+
    ```bash
    # Homebrew (macOS/Linux)
    brew install beads
@@ -42,7 +43,8 @@ claude plugin install beads-superpowers@beads-superpowers-marketplace
 ```
 
 You can also run these as slash commands inside an active Claude Code session:
-```
+
+```text
 /plugin marketplace add DollarDill/beads-superpowers
 /plugin install beads-superpowers@beads-superpowers-marketplace
 ```
@@ -100,6 +102,7 @@ bd init
 ```
 
 This creates:
+
 - `.beads/` directory with config, metadata, and git hooks
 - `CLAUDE.md` with beads instructions (will be superseded by the plugin)
 - `AGENTS.md` with agent instructions (will be superseded by the plugin)
@@ -175,6 +178,7 @@ This fires on every session start, clear, and compact event. The `hooks/session-
 4. **Outputs platform-specific JSON** — Claude Code, Cursor, and Copilot CLI each expect different formats
 
 The combined output (~2-3k tokens) provides the agent with:
+
 - Skill routing instructions (which skill to invoke when)
 - Beads awareness (key concepts, quick reference, rules)
 - Beads CLI context (commands, workflow, memories)
@@ -206,6 +210,7 @@ The hook outputs JSON in the correct format for each platform:
 ### Windows Support
 
 The `hooks/run-hook.cmd` file is a polyglot wrapper:
+
 - On Windows: `cmd.exe` runs the batch portion, which finds Git Bash and executes the hook
 - On Unix: The shell interprets the file as a bash script (`:` is a no-op)
 
@@ -244,7 +249,8 @@ To modify a skill's behaviour for your project:
 3. Or fork the plugin and modify skills directly
 
 **Instruction priority:**
-```
+
+```text
 1. User's CLAUDE.md instructions — HIGHEST
 2. Plugin skills — override default behaviour
 3. Default system prompt — LOWEST
@@ -255,6 +261,7 @@ To modify a skill's behaviour for your project:
 ### "bd: command not found"
 
 Beads is not installed. Install it:
+
 ```bash
 brew install beads
 # or
@@ -264,6 +271,7 @@ npm install -g @beads/bd
 ### "No .beads directory found"
 
 Initialize beads in your project:
+
 ```bash
 cd your-project
 bd init
@@ -272,6 +280,7 @@ bd init
 ### Skills not showing up
 
 Verify the plugin is installed:
+
 ```bash
 /plugins          # In Claude Code — should list beads-superpowers
 /skills           # Should show beads-superpowers: prefixed skills
@@ -280,6 +289,7 @@ Verify the plugin is installed:
 ### Duplicate context injection (double bd prime)
 
 The plugin's hook already runs `bd prime`. Remove the duplicate:
+
 ```bash
 bd setup claude --remove
 ```
@@ -287,6 +297,7 @@ bd setup claude --remove
 ### Hook not firing
 
 Check that the hook is executable:
+
 ```bash
 ls -la hooks/session-start
 # Should show -rwxr-xr-x
@@ -298,6 +309,7 @@ chmod +x hooks/session-start
 ### "bd dolt push" fails
 
 Set up a Dolt remote first:
+
 ```bash
 bd dolt remote add origin <url>
 ```
@@ -309,6 +321,7 @@ Or if you don't need remote sync, the push failure is harmless — beads still w
 If you see any active TodoWrite references in skills (not "Do NOT use TodoWrite"), report it as a bug. The migration should have caught all instances.
 
 Verify:
+
 ```bash
 grep -r "TodoWrite" skills/ | grep -v "Do NOT use" | grep -v "replaces"
 # Should return empty
@@ -348,6 +361,7 @@ claude plugin marketplace remove beads-superpowers-marketplace
 ### Restore bd setup claude Hooks (if desired)
 
 If you want to go back to standalone beads without the plugin:
+
 ```bash
 bd setup claude
 ```
