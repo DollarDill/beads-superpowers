@@ -5,11 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 > **Forked from:** [obra/superpowers](https://github.com/obra/superpowers) v5.0.7 (2026-03-31)
-> **Beads integration based on:** [gastownhall/beads](https://github.com/gastownhall/beads) v1.0.0 (2026-04-03)
+> **Beads integration based on:** [gastownhall/beads](https://github.com/gastownhall/beads) v1.0.2 (2026-04-15)
 
 ## [Unreleased]
 
-(none yet)
+### Changed
+
+- Updated `using-git-worktrees` skill to reflect bd v1.0.2 worktree mechanism (git common directory discovery replaces obsolete `.beads/redirect`)
+- Added `bd epic status` and `bd epic close-eligible` references to executing-plans, subagent-driven-development, and finishing-a-development-branch skills
+- Added `bd preflight` quality gate to finishing-a-development-branch (runs after tests pass, before merge options)
+- Expanded `using-superpowers` quick reference with 6 new bd commands: `bd q`, `bd blocked`, `bd epic status`, `bd memories`, `bd recall`, `bd preflight`
+- Updated CLAUDE.md beads commands table for bd v1.0.2 (5 new commands, github sync → push/pull, baseline bumped to v1.0.2)
+
+### Added
+
+- `CODE_OF_CONDUCT.md` (Contributor Covenant, from upstream superpowers)
+- Validation commands section in PR template
+- Upstream drift audit report and update plan in `docs/audits/` (git-ignored)
 
 ## [0.1.1] - 2026-04-11
 
