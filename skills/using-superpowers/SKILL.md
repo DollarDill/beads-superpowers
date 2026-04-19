@@ -134,12 +134,18 @@ This skills system uses **bd (beads)** for persistent task tracking across sessi
 |--------|---------|
 | Create epic bead | `bd create "Epic: feature name" -t epic -p 2` |
 | Create task bead | `bd create "Task: title" -t task --parent <epic-id>` |
+| Quick capture (scripting) | `bd q "title"` |
 | Claim work | `bd update <id> --claim` |
 | Complete work | `bd close <id> --reason "description"` |
 | Check remaining work | `bd ready --parent <epic-id>` |
+| Show blocked issues | `bd blocked` |
+| Epic completion status | `bd epic status <id>` |
 | Add dependency | `bd dep add <child-id> <depends-on-id>` |
 | View dependency tree | `bd dep tree <epic-id>` |
 | Store a learning | `bd remember "insight"` |
+| Search memories | `bd memories <keyword>` |
+| Recall specific memory | `bd recall <id>` |
+| PR readiness check | `bd preflight` |
 | Sync to remote | `bd dolt push` |
 
 ### Rules
