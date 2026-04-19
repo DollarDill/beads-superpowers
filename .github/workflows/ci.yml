@@ -1,16 +1,18 @@
 name: CI
 
-# Manual-only trigger to conserve GitHub Actions minutes.
-# Run from the Actions tab → CI → "Run workflow".
 on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  lint:
-    name: Lint Markdown + Validate Plugin Manifest
+  validate:
+    name: Validate Plugin
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,10 +23,7 @@ jobs:
         with:
           globs: "**/*.md"
 
-      - name: Validate plugin.json (parses)
-        run: python3 -c "import json; json.load(open('.claude-plugin/plugin.json'))"
-
-      - name: Validate plugin.json (required keys present)
+      - name: Validate plugin.json (parses + required keys)
         run: |
           python3 <<'PY'
           import json, sys
@@ -33,5 +32,39 @@ jobs:
           missing = required - set(m.keys())
           if missing:
               sys.exit(f'plugin.json missing required keys: {missing}')
-          print('plugin.json: all required keys present')
+          print(f'plugin.json: valid ({m["name"]} v{m["version"]})')
           PY
+
+      - name: Verify skill count
+        run: |
+          count=$(ls -d skills/*/ | wc -l)
+          echo "Skill count: $count"
+          if [ "$count" -lt 15 ]; then
+            echo "::error::Expected at least 15 skills, found $count"
+            exit 1
+          fi
+
+      - name: Verify zero active TodoWrite references
+        run: |
+          results=$(grep -r "TodoWrite" skills/ | grep -v "Do NOT use" | grep -v "replaces" | grep -v "auditing-upstream-drift" || true)
+          if [ -n "$results" ]; then
+            echo "::error::Active TodoWrite references found:"
+            echo "$results"
+            exit 1
+          fi
+          echo "No active TodoWrite references"
+
+      - name: Verify beads integration density
+        run: |
+          count=$(grep -r "bd create\|bd close\|bd ready" skills/ | wc -l)
+          echo "Beads integration references: $count"
+          if [ "$count" -lt 30 ]; then
+            echo "::error::Expected at least 30 beads references, found $count"
+            exit 1
+          fi
+
+      - name: Verify version sync
+        run: bash scripts/bump-version.sh --check
+
+      - name: Validate hook output is JSON
+        run: bash hooks/session-start 2>&1 | python3 -m json.tool > /dev/null
