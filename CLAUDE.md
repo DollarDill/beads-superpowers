@@ -1,16 +1,16 @@
 # beads-superpowers — Claude Code Plugin
 
-This project IS a Claude Code marketplace plugin that merges [Superpowers](https://github.com/obra/superpowers) skills (v5.0.7) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.0.0).
+This project IS a Claude Code marketplace plugin that merges [Superpowers](https://github.com/obra/superpowers) skills (v5.0.7) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.0.2).
 
 **Repository:** <https://github.com/DollarDill/beads-superpowers>
-**Version:** 0.1.0
+**Version:** 0.3.0
 **License:** MIT (fork of obra/superpowers, also MIT)
 
 ## Project Context
 
 This plugin gives AI coding agents two things simultaneously:
 
-1. **Process discipline** — 15 composable skills enforcing TDD, brainstorming, systematic debugging, two-stage code review, and verification
+1. **Process discipline** — 18 composable skills enforcing TDD, brainstorming, systematic debugging, two-stage code review, and verification
 2. **Persistent memory** — Every task is a bead tracked in a Dolt-backed database that survives across sessions
 
 The key modification from upstream superpowers: every `TodoWrite` reference has been replaced with `bd` (beads) commands. The plugin's SessionStart hook runs `bd prime` to inject beads workflow context alongside skills.
@@ -25,7 +25,7 @@ hooks/
   hooks.json               # SessionStart hook registration
   session-start            # Bash: injects using-superpowers + runs bd prime
   run-hook.cmd             # Windows polyglot wrapper
-skills/                    # 15 beads-native skills (auto-discovered)
+skills/                    # 18 beads-native skills (auto-discovered)
 agents/                    # Code reviewer agent (auto-discovered)
 commands/                  # Deprecated slash commands (auto-discovered)
 docs/                      # METHODOLOGY.md, SETUP-GUIDE.md, testing.md, etc.
@@ -194,17 +194,17 @@ claude plugin install beads-superpowers@beads-superpowers-marketplace
 
 ## Syncing Source to Installed Plugin
 
-After modifying skills, the installed plugin cache at `~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.1.0/` goes stale.
+After modifying skills, the installed plugin cache at `~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.3.0/` goes stale.
 
 **Recommended:** Symlink the cache to this repo (one-time, survives edits):
 
 ```bash
-rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.1.0
+rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.3.0
 ln -s ~/workplace/beads-superpowers \
-  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.1.0
+  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.3.0
 ```
 
-**Quick check for drift:** `diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.1.0/skills/`
+**Quick check for drift:** `diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.3.0/skills/`
 
 **Note:** `claude plugin update` has a [cache bug](https://github.com/anthropics/claude-code/issues/14061) — use symlink instead.
 
