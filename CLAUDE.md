@@ -45,13 +45,18 @@ This plugin uses `bd` (beads) for ALL task tracking.
 |--------|---------|
 | Create epic | `bd create "Epic: name" -t epic -p 2` |
 | Create task | `bd create "Task: title" -t task --parent <epic-id>` |
+| Quick capture | `bd q "title"` |
 | Claim work | `bd update <id> --claim` |
 | Complete work | `bd close <id> --reason "description"` |
 | Check remaining | `bd ready --parent <epic-id>` |
+| Show blocked | `bd blocked` |
+| Epic status | `bd epic status <id>` |
 | Add dependency | `bd dep add <child> <depends-on>` |
 | Store learning | `bd remember "insight"` |
+| Search memories | `bd memories <keyword>` |
+| PR readiness | `bd preflight` |
 | Sync beads | `bd dolt push` |
-| Sync to GitHub Issues | `bd github sync` |
+| Sync to GitHub Issues | `bd github push` |
 
 ### Rules
 
@@ -62,10 +67,11 @@ This plugin uses `bd` (beads) for ALL task tracking.
 
 ### GitHub Issue Sync
 
-This project syncs beads to GitHub Issues via `bd github sync`. Issues appear at <https://github.com/DollarDill/beads-superpowers/issues>.
+This project syncs beads to GitHub Issues. Issues appear at <https://github.com/DollarDill/beads-superpowers/issues>.
 
 ```bash
-bd github sync              # Push all beads to GitHub Issues
+bd github push              # Push beads to GitHub Issues
+bd github pull              # Pull GitHub Issues into beads
 bd github status            # Check sync configuration
 ```
 
@@ -204,7 +210,7 @@ ln -s ~/workplace/beads-superpowers \
 | Source | Version | What We Track |
 |--------|---------|---------------|
 | [obra/superpowers](https://github.com/obra/superpowers) | v5.0.7 (baseline) | Skill content, new skills, hook changes |
-| [gastownhall/beads](https://github.com/gastownhall/beads) | v1.0.0 (baseline) | CLI commands, new features, bd prime format |
+| [gastownhall/beads](https://github.com/gastownhall/beads) | v1.0.2 (baseline) | CLI commands, new features, bd prime format |
 
 Use the `auditing-upstream-drift` skill to check for staleness.
 
