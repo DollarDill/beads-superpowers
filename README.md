@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.1.1-4f46e5.svg"></a>
+  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.2.0-4f46e5.svg"></a>
   <a href="https://github.com/DollarDill/beads-superpowers/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/DollarDill/beads-superpowers/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <a href="https://github.com/DollarDill/beads-superpowers/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/DollarDill/beads-superpowers?style=social"></a>
 </p>
@@ -17,19 +17,29 @@
 
 ## Try it in 60 seconds
 
+### Option A: Claude Code Marketplace (recommended)
+
 ```bash
-# Add the marketplace
 claude plugin marketplace add DollarDill/beads-superpowers
-
-# Install the plugin
 claude plugin install beads-superpowers@beads-superpowers-marketplace
+```
 
-# In any project
+### Option B: npx (via Vercel Skills CLI)
+
+```bash
+npx skills add DollarDill/beads-superpowers --all -y
+```
+
+> **Note:** The npx method installs skills only (no hooks or agents). For the full plugin experience including SessionStart hooks and `bd prime` injection, use the marketplace method.
+
+### Then, in any project
+
+```bash
 cd your-project
 bd init
 ```
 
-In Claude Code, run `/skills` and you should see 15 skills prefixed with `beads-superpowers:`.
+In Claude Code, run `/skills` and you should see 15+ skills prefixed with `beads-superpowers:`.
 
 <details>
 <summary>If you previously ran <code>bd setup claude</code></summary>
