@@ -64,7 +64,7 @@ Three files must stay in sync:
 Use the helper script:
 
 ```bash
-./scripts/bump-version.sh 0.2.0   # Bump to a new version
+./scripts/bump-version.sh 0.4.0   # Bump to a new version
 ./scripts/bump-version.sh --check # Detect drift
 ```
 

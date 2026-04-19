@@ -27,12 +27,10 @@ claude plugin install beads-superpowers@beads-superpowers-marketplace
 ### Option B: npx (via Vercel Skills CLI)
 
 ```bash
-npm exec --yes -- skills@latest add DollarDill/beads-superpowers --all -y -g
+npx skills add DollarDill/beads-superpowers --all -y -g
 ```
 
-> **Note:** The `-g` flag installs skills globally to `~/.claude/skills/`. Without it, skills install to the current project only. The npx method installs skills only (no hooks or agents). For the full plugin experience including SessionStart hooks and `bd prime` injection, use the marketplace method.
->
-> **Warning:** Do NOT run this from inside the beads-superpowers source repo — it will replace skill source files with symlinks.
+After installing, tell Claude: **"Run the setup skill"** — this configures the SessionStart hook that makes skills activate automatically.
 
 ### Then, in any project
 
@@ -41,7 +39,7 @@ cd your-project
 bd init
 ```
 
-In Claude Code, run `/skills` and you should see 15+ skills prefixed with `beads-superpowers:`.
+In Claude Code, run `/skills` to verify — you should see 19 skills available.
 
 <details>
 <summary>If you previously ran <code>bd setup claude</code></summary>
@@ -206,15 +204,15 @@ For a deeper directory listing, see [`docs/SETUP-GUIDE.md`](docs/SETUP-GUIDE.md)
 When you edit skills in this repo, the installed plugin cache goes stale. The simplest fix is a one-time symlink:
 
 ```bash
-rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.2.0
+rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.3.1
 ln -s ~/workplace/beads-superpowers \
-  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.2.0
+  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.3.1
 ```
 
 Verify sync:
 
 ```bash
-diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.2.0/skills/
+diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.3.1/skills/
 ```
 
 > `claude plugin update` exists but has a [cache invalidation bug](https://github.com/anthropics/claude-code/issues/14061). Use the symlink approach instead.

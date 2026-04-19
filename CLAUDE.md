@@ -182,7 +182,7 @@ Version is declared in 3 files that must stay in sync:
 Use `scripts/bump-version.sh` to update all at once:
 
 ```bash
-./scripts/bump-version.sh 0.2.0        # Bump to new version
+./scripts/bump-version.sh 0.4.0        # Bump to new version
 ./scripts/bump-version.sh --check      # Detect version drift
 ```
 
