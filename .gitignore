@@ -28,4 +28,5 @@ node_modules/
 
 # Beads workspace — infrastructure for plugin USERS, not tracked here
 .beads/
+issues.jsonl
 docs/audits/
