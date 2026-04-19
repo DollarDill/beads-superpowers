@@ -23,5 +23,9 @@ SESSION-SUMMARY.md
 # Dependencies
 node_modules/
 
+# Worktrees (isolated development branches)
+.worktrees/
+
 # Beads workspace — infrastructure for plugin USERS, not tracked here
 .beads/
+docs/audits/
