@@ -10,7 +10,7 @@ This project IS a Claude Code marketplace plugin that merges [Superpowers](https
 
 This plugin gives AI coding agents two things simultaneously:
 
-1. **Process discipline** — 18 composable skills enforcing TDD, brainstorming, systematic debugging, two-stage code review, and verification
+1. **Process discipline** — 19 composable skills enforcing TDD, brainstorming, systematic debugging, two-stage code review, and verification
 2. **Persistent memory** — Every task is a bead tracked in a Dolt-backed database that survives across sessions
 
 The key modification from upstream superpowers: every `TodoWrite` reference has been replaced with `bd` (beads) commands. The plugin's SessionStart hook runs `bd prime` to inject beads workflow context alongside skills.
@@ -25,7 +25,7 @@ hooks/
   hooks.json               # SessionStart hook registration
   session-start            # Bash: injects using-superpowers + runs bd prime
   run-hook.cmd             # Windows polyglot wrapper
-skills/                    # 18 beads-native skills (auto-discovered)
+skills/                    # 19 beads-native skills (auto-discovered)
 agents/                    # Code reviewer agent (auto-discovered)
 commands/                  # Deprecated slash commands (auto-discovered)
 docs/                      # METHODOLOGY.md, SETUP-GUIDE.md, testing.md, etc.
@@ -84,11 +84,12 @@ GitHub sync is configured via:
 
 If `bd setup claude` hooks are installed in `.claude/settings.json`, this plugin detects them and warns. Run `bd setup claude --remove` — the plugin's hook already handles `bd prime`.
 
-## Skills (18 Total)
+## Skills (19 Total)
 
 | Skill | Purpose |
 |-------|---------|
 | using-superpowers | Bootstrap — loaded at session start, routes to other skills |
+| setup | Post-npx hook installation — configures SessionStart hook |
 | brainstorming | Socratic design before code — creates session beads |
 | stress-test | Adversarial design interrogation with recommended answers |
 | writing-plans | Bite-sized task plans — each task becomes a bead |
