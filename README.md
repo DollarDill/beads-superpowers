@@ -27,10 +27,12 @@ claude plugin install beads-superpowers@beads-superpowers-marketplace
 ### Option B: npx (via Vercel Skills CLI)
 
 ```bash
-npx skills add DollarDill/beads-superpowers --all -y
+npm exec --yes -- skills@latest add DollarDill/beads-superpowers --all -y -g
 ```
 
-> **Note:** The npx method installs skills only (no hooks or agents). For the full plugin experience including SessionStart hooks and `bd prime` injection, use the marketplace method.
+> **Note:** The `-g` flag installs skills globally to `~/.claude/skills/`. Without it, skills install to the current project only. The npx method installs skills only (no hooks or agents). For the full plugin experience including SessionStart hooks and `bd prime` injection, use the marketplace method.
+>
+> **Warning:** Do NOT run this from inside the beads-superpowers source repo — it will replace skill source files with symlinks.
 
 ### Then, in any project
 
