@@ -20,11 +20,11 @@ ALWAYS use bd worktree commands. NEVER use raw git worktree commands.
 ```
 
 **Why:** `bd worktree create` does everything `git worktree add` does PLUS:
-- Sets up `.beads/redirect` so the worktree shares the main repo's beads database
+- Worktree automatically shares the main repo's beads database via git common directory discovery
 - Adds the worktree path to `.gitignore` automatically
 - Ensures consistent issue state across all worktrees
 
-Raw `git worktree add` creates an orphaned worktree with no beads access — agents in that worktree cannot run `bd` commands, track tasks, or close beads.
+Raw `git worktree add` misses `.gitignore` setup and safety checks — while beads database sharing works via git common directory, you lose the automation `bd worktree create` provides.
 
 | Action | Use This | NOT This |
 |--------|----------|----------|
@@ -123,7 +123,7 @@ cd <worktree-path>
 
 **What `bd worktree create` does automatically:**
 1. Creates the git worktree with a new branch
-2. Sets up `.beads/redirect` → main repo's `.beads` database
+2. Worktree automatically discovers the main repo's beads database via git common directory (no redirect file needed)
 3. Adds worktree path to `.gitignore` (if inside repo root)
 
 ### 2. Run Project Setup
@@ -187,7 +187,7 @@ Ready to implement <feature-name>
 
 ### Using `git worktree` instead of `bd worktree`
 
-- **Problem:** Raw `git worktree add` creates a worktree with no `.beads/redirect` — beads commands fail, task tracking breaks, agents can't close beads
+- **Problem:** Raw `git worktree add` misses `.gitignore` setup and safety checks — while beads database sharing works via git common directory, you lose the automation `bd worktree create` provides
 - **Fix:** ALWAYS use `bd worktree create`. If you catch yourself typing `git worktree`, stop and use `bd worktree` instead.
 
 ### Skipping ignore verification
@@ -218,7 +218,7 @@ You: I'm using the using-git-worktrees skill to set up an isolated workspace.
 [Check .worktrees/ - exists]
 [Create worktree: bd worktree create auth --branch feature/auth]
   ✓ Created worktree at .worktrees/auth
-  ✓ Set up .beads/redirect
+  ✓ Beads database shared via git common directory
   ✓ Added to .gitignore
 [cd .worktrees/auth]
 [Run npm install]
