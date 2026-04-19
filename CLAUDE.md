@@ -84,12 +84,13 @@ GitHub sync is configured via:
 
 If `bd setup claude` hooks are installed in `.claude/settings.json`, this plugin detects them and warns. Run `bd setup claude --remove` — the plugin's hook already handles `bd prime`.
 
-## Skills (15 Total)
+## Skills (18 Total)
 
 | Skill | Purpose |
 |-------|---------|
 | using-superpowers | Bootstrap — loaded at session start, routes to other skills |
 | brainstorming | Socratic design before code — creates session beads |
+| stress-test | Adversarial design interrogation with recommended answers |
 | writing-plans | Bite-sized task plans — each task becomes a bead |
 | subagent-driven-development | Fresh agent per task + two-stage review |
 | executing-plans | Batch execution in single session |
@@ -100,6 +101,8 @@ If `bd setup claude` hooks are installed in `.claude/settings.json`, this plugin
 | receiving-code-review | Anti-sycophancy review reception |
 | using-git-worktrees | Isolated development branches |
 | finishing-a-development-branch | Merge/PR + Land the Plane (Step 6) |
+| document-release | Post-ship documentation audit and sync |
+| project-init | Beads/Dolt DB setup, bootstrap, and recovery |
 | dispatching-parallel-agents | 2+ independent tasks without shared state |
 | writing-skills | Meta-skill for creating/modifying skills |
 | auditing-upstream-drift | Detect staleness vs upstream superpowers/beads |
@@ -144,7 +147,7 @@ No build step — skills are plain Markdown.
 # Validate plugin manifests
 claude plugin validate .claude-plugin/plugin.json
 
-# Verify skill count (should be 15)
+# Verify skill count (should be 18)
 ls -d skills/*/ | wc -l
 
 # Verify zero active TodoWrite references

@@ -19,8 +19,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- `document-release` skill — 9-step post-ship documentation audit (adapted from [garrytan/gstack](https://github.com/garrytan/gstack/tree/main/document-release))
+- `project-init` skill — beads/Dolt database setup and recovery with 6 diagnostic paths (based on [beads SYNC_SETUP.md](https://github.com/gastownhall/beads/blob/main/docs/SYNC_SETUP.md))
+- `stress-test` skill — adversarial design interrogation with recommended answers (inspired by [mattpocock/grill-me](https://github.com/mattpocock/skills/blob/main/grill-me/SKILL.md))
+- CI validation on every push to main and PRs (markdownlint, plugin.json, skill count, TodoWrite residue, beads density, version sync, hook JSON)
+- `release.yml` workflow — creates GitHub Release on tag push (v*) with changelog extraction
+- npx installation method via Vercel Skills CLI (`npx skills add DollarDill/beads-superpowers`)
 - `CODE_OF_CONDUCT.md` (Contributor Covenant, from upstream superpowers)
 - Validation commands section in PR template
+- Retroactive version tags: v0.1.0, v0.1.1, v0.2.0
 - Upstream drift audit report and update plan in `docs/audits/` (git-ignored)
 
 ## [0.1.1] - 2026-04-11
