@@ -84,7 +84,7 @@ digraph process {
 }
 ```
 
-**Checking for remaining tasks:** Use `bd ready --parent <epic-id>` to see remaining unblocked child tasks. When `bd ready` returns no results for the epic, all tasks are complete.
+**Checking for remaining tasks:** Use `bd ready --parent <epic-id>` to see remaining unblocked child tasks. Use `bd epic status <epic-id>` for a summary view of completion percentage. When `bd ready` returns no results for the epic, all tasks are complete.
 
 ## Model Selection
 

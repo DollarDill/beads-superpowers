@@ -29,6 +29,7 @@ For each task:
 3. Run verifications as specified
 4. Close the task: `bd close <task-id> --reason "description of what was completed"`
 5. Check for next task: `bd ready --parent <epic-id>`
+6. Check epic progress: `bd epic status <epic-id>` to see overall completion
 
 ### Step 3: Complete Development
 

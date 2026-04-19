@@ -177,8 +177,9 @@ Work is NOT complete until `git push` succeeds.
 bd close <task-id-1> <task-id-2> ... --reason "Completed: description of what was done"
 
 # 2. Close the epic bead (if all child tasks are done)
-bd list --status=open --parent <epic-id>    # Verify empty (all children closed)
-bd close <epic-id> --reason "Epic complete: all tasks finished and reviewed"
+bd epic status <epic-id>                    # Summary view of completion
+bd epic close-eligible                      # Auto-close epics where all children are done
+# Or manually: bd close <epic-id> --reason "Epic complete: all tasks finished and reviewed"
 
 # 3. File remaining work as new beads (if any)
 bd create "Remaining: description of follow-up work" -t task -p 2
