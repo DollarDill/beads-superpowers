@@ -26,6 +26,10 @@ node_modules/
 # Worktrees (isolated development branches)
 .worktrees/
 
+# npx skills install artifacts (symlinks created by Vercel Skills CLI)
+.agents/
+.claude/skills/
+
 # Beads workspace — infrastructure for plugin USERS, not tracked here
 .beads/
 issues.jsonl
