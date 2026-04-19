@@ -128,6 +128,17 @@ git update-ref -d refs/dolt/data
 bd dolt push
 ```
 
+**If `bd dolt push` (or `--force`) fails with GitHub Push Protection:**
+
+GitHub's secret scanner may block the push if a token (e.g., from `bd config set github.token`) is embedded in the Dolt commit history. When this happens, **do NOT try to unblock the secret** — escalate to Path F (nuke + rebuild) to create clean history without the embedded token. This is faster and safer than trying to rewrite Dolt history.
+
+```
+Error: push to origin/main: ... GH013: Repository rule violations found
+       GITHUB PUSH PROTECTION — Push cannot contain secrets
+```
+
+→ **Go to Path F** (export → destroy → re-init → re-import → push clean history)
+
 **If local data should be discarded (remote is authoritative):**
 
 ```bash
@@ -228,6 +239,30 @@ bd config drift 2>/dev/null
 - Use `bd dolt ...` commands instead of raw `dolt` commands
 - Distinguish "database missing" from "server can't connect" (check `bd dolt status`)
 - Commit before pulling: `bd dolt commit` before `bd dolt pull`
+
+## Lessons Learnt (Field-Validated)
+
+These lessons come from real recovery scenarios, not theory.
+
+### GitHub Push Protection blocks `bd dolt push --force`
+
+**Scenario:** Diverged Dolt history → Path C (`git update-ref -d` + `bd dolt push`) fails → try `bd dolt push --force` → GitHub Push Protection blocks it because a GitHub OAuth token is embedded in the Dolt commit history (from a previous `bd config set github.token`).
+
+**Resolution:** Do NOT try to unblock the secret via GitHub's URL. Use Path F (export → destroy → re-init → re-import) to create clean history without the embedded token. This is faster, safer, and produces a clean history.
+
+**Prevention:** Use `GITHUB_TOKEN` env var instead of `bd config set github.token` — env vars don't get persisted into Dolt commit history.
+
+### `bd init --force` after previous init creates diverged history
+
+**Scenario:** Machine A pushed beads. Machine B runs `bd init --force` (or `bd init` on a fresh clone without bootstrapping), creating an independent Dolt history. Machine B's `bd dolt push` then fails with "no common ancestor".
+
+**Resolution:** On cloned repos, always use `bd bootstrap` (not `bd init`). If divergence already happened, use Path C or Path F.
+
+### Auto-export warning is benign when `issues.jsonl` is gitignored
+
+**Scenario:** Every `bd` write command shows `Warning: auto-export: git add failed: exit status 1`. This is because bd v1.0.1+ auto-exports to `issues.jsonl` and tries to `git add` it, but the file is gitignored.
+
+**Resolution:** This warning is harmless. The export still succeeds (file is written), only the `git add` step fails. No action needed.
 
 ## Integration
 
