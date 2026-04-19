@@ -3,7 +3,7 @@
 This project IS a Claude Code marketplace plugin that merges [Superpowers](https://github.com/obra/superpowers) skills (v5.0.7) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.0.2).
 
 **Repository:** <https://github.com/DollarDill/beads-superpowers>
-**Version:** 0.3.0
+**Version:** 0.3.1
 **License:** MIT (fork of obra/superpowers, also MIT)
 
 ## Project Context

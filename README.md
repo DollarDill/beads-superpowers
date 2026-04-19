@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.3.0-4f46e5.svg"></a>
+  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.3.1-4f46e5.svg"></a>
   <a href="https://github.com/DollarDill/beads-superpowers/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/DollarDill/beads-superpowers/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <a href="https://github.com/DollarDill/beads-superpowers/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/DollarDill/beads-superpowers?style=social"></a>
 </p>
@@ -63,7 +63,7 @@ AI coding agents have two recurring failure modes:
 
 **beads-superpowers** merges two upstream systems to solve both at once:
 
-- **[Superpowers](https://github.com/obra/superpowers)** by Jesse Vincent — 18 mandatory skills enforcing TDD, brainstorming, systematic debugging, and two-stage code review.
+- **[Superpowers](https://github.com/obra/superpowers)** by Jesse Vincent — 19 mandatory skills enforcing TDD, brainstorming, systematic debugging, and two-stage code review.
 - **[Beads](https://github.com/gastownhall/beads)** by Steve Yegge — a Dolt-backed issue tracker that survives across sessions, agents, and projects.
 
 The result: skills that don't just tell agents *how* to work — they give agents a persistent ledger to track *what* they're working on.
@@ -124,6 +124,7 @@ Skills are not suggestions. They use bright-line rules, anti-rationalization tab
 | **document-release** | Quality | Post-ship documentation audit — syncs docs to match shipped code |
 | **project-init** | Infrastructure | Beads/Dolt DB setup, bootstrap, and recovery |
 | **stress-test** | Design | Adversarial interrogation of designs/plans with recommended answers |
+| **setup** | Infrastructure | Post-npx hook installation — configures SessionStart for skills auto-activation |
 | **auditing-upstream-drift** | Meta | Periodic audit for staleness vs upstream superpowers and beads |
 
 ### Beads commands used in skills
@@ -183,7 +184,7 @@ beads-superpowers/
 ├── .github/                CI workflow, Dependabot, issue/PR templates
 ├── assets/                 README banner SVG
 ├── hooks/                  SessionStart hook (bash + Windows polyglot wrapper)
-├── skills/                 18 beads-native skills
+├── skills/                 19 beads-native skills
 ├── agents/                 code-reviewer agent
 ├── commands/               Deprecated slash commands (will be removed in a future version)
 ├── docs/                   METHODOLOGY, SETUP-GUIDE, testing, upstream-reference

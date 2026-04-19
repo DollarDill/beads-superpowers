@@ -29,6 +29,37 @@ node_modules/
 # npx skills install artifacts (symlinks created by Vercel Skills CLI)
 .agents/
 .claude/skills/
+skills-lock.json
+
+# Agent-specific directories created by npx skills (28+ dotdirs)
+.adal/
+.augment/
+.bob/
+.codebuddy/
+.commandcode/
+.continue/
+.cortex/
+.crush/
+.factory/
+.goose/
+.iflow/
+.junie/
+.kilocode/
+.kiro/
+.kode/
+.mcpjam/
+.mux/
+.neovate/
+.openhands/
+.pi/
+.pochi/
+.qoder/
+.qwen/
+.roo/
+.trae/
+.vibe/
+.windsurf/
+.zencoder/
 
 # Beads workspace — infrastructure for plugin USERS, not tracked here
 .beads/
