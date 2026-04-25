@@ -190,8 +190,12 @@ Use `scripts/bump-version.sh` to update all at once:
 ## Installation (for users, not contributors)
 
 ```bash
+# Option A: Marketplace
 claude plugin marketplace add DollarDill/beads-superpowers
 claude plugin install beads-superpowers@beads-superpowers-marketplace
+
+# Option B: curl (one command, no dependencies)
+curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
 ```
 
 ## Syncing Source to Installed Plugin
