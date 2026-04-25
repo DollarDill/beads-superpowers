@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.3.1-4f46e5.svg"></a>
+  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.4.0-4f46e5.svg"></a>
   <a href="https://github.com/DollarDill/beads-superpowers/actions/workflows/release.yml"><img alt="Release" src="https://github.com/DollarDill/beads-superpowers/actions/workflows/release.yml/badge.svg"></a>
   <a href="https://github.com/DollarDill/beads-superpowers/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/DollarDill/beads-superpowers?style=social"></a>
 </p>
@@ -205,15 +205,15 @@ For a deeper directory listing, see [`docs/SETUP-GUIDE.md`](docs/SETUP-GUIDE.md)
 When you edit skills in this repo, the installed plugin cache goes stale. The simplest fix is a one-time symlink:
 
 ```bash
-rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.3.1
+rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.4.0
 ln -s ~/workplace/beads-superpowers \
-  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.3.1
+  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.4.0
 ```
 
 Verify sync:
 
 ```bash
-diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.3.1/skills/
+diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.4.0/skills/
 ```
 
 > `claude plugin update` exists but has a [cache invalidation bug](https://github.com/anthropics/claude-code/issues/14061). Use the symlink approach instead.

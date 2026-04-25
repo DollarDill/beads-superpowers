@@ -71,13 +71,13 @@ Use the helper script:
 ## Cache sync during development
 
 When you edit skills locally, the installed plugin cache at
-`~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.3.1/`
+`~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.4.0/`
 goes stale. Symlink the cache to your dev checkout once and you're done:
 
 ```bash
-rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.3.1
+rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.4.0
 ln -s ~/workplace/beads-superpowers \
-  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.3.1
+  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.4.0
 ```
 
 ## Tests

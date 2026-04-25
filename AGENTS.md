@@ -1,6 +1,6 @@
 # Agent Instructions
 
-This project is a **Claude Code plugin** (beads-superpowers). It provides 15 skills for AI coding agents with integrated beads issue tracking.
+This project is a **Claude Code plugin** (beads-superpowers). It provides 20 skills for AI coding agents with integrated beads issue tracking.
 
 ## Beads Issue Tracking
 

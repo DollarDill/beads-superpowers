@@ -3,7 +3,7 @@
 This project IS a Claude Code marketplace plugin that merges [Superpowers](https://github.com/obra/superpowers) skills (v5.0.7) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.0.2).
 
 **Repository:** <https://github.com/DollarDill/beads-superpowers>
-**Version:** 0.3.1
+**Version:** 0.4.0
 **License:** MIT (fork of obra/superpowers, also MIT)
 
 ## Project Context
@@ -196,17 +196,17 @@ claude plugin install beads-superpowers@beads-superpowers-marketplace
 
 ## Syncing Source to Installed Plugin
 
-After modifying skills, the installed plugin cache at `~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.3.1/` goes stale.
+After modifying skills, the installed plugin cache at `~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.4.0/` goes stale.
 
 **Recommended:** Symlink the cache to this repo (one-time, survives edits):
 
 ```bash
-rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.3.1
+rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.4.0
 ln -s ~/workplace/beads-superpowers \
-  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.3.1
+  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.4.0
 ```
 
-**Quick check for drift:** `diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.3.1/skills/`
+**Quick check for drift:** `diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.4.0/skills/`
 
 **Note:** `claude plugin update` has a [cache bug](https://github.com/anthropics/claude-code/issues/14061) — use symlink instead.
 
