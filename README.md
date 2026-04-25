@@ -39,7 +39,7 @@ cd your-project
 bd init
 ```
 
-In Claude Code, run `/skills` to verify — you should see 19 skills available.
+In Claude Code, run `/skills` to verify — you should see 20 skills available.
 
 <details>
 <summary>If you previously ran <code>bd setup claude</code></summary>
@@ -61,7 +61,7 @@ AI coding agents have two recurring failure modes:
 
 **beads-superpowers** merges two upstream systems to solve both at once:
 
-- **[Superpowers](https://github.com/obra/superpowers)** by Jesse Vincent — 19 mandatory skills enforcing TDD, brainstorming, systematic debugging, and two-stage code review.
+- **[Superpowers](https://github.com/obra/superpowers)** by Jesse Vincent — 20 mandatory skills enforcing TDD, brainstorming, systematic debugging, and two-stage code review.
 - **[Beads](https://github.com/gastownhall/beads)** by Steve Yegge — a Dolt-backed issue tracker that survives across sessions, agents, and projects.
 
 The result: skills that don't just tell agents *how* to work — they give agents a persistent ledger to track *what* they're working on.
@@ -124,6 +124,7 @@ Skills are not suggestions. They use bright-line rules, anti-rationalization tab
 | **stress-test** | Design | Adversarial interrogation of designs/plans with recommended answers |
 | **setup** | Infrastructure | Post-npx hook installation — configures SessionStart for skills auto-activation |
 | **auditing-upstream-drift** | Meta | Periodic audit for staleness vs upstream superpowers and beads |
+| **getting-up-to-speed** | Meta | Start of session or post-compaction — runs bd commands, deep-dives the codebase, produces a structured current-state summary |
 
 ### Beads commands used in skills
 
@@ -182,7 +183,7 @@ beads-superpowers/
 ├── .github/                CI workflow, Dependabot, issue/PR templates
 ├── assets/                 README banner SVG
 ├── hooks/                  SessionStart hook (bash + Windows polyglot wrapper)
-├── skills/                 19 beads-native skills
+├── skills/                 20 beads-native skills
 ├── agents/                 code-reviewer agent
 ├── commands/               Deprecated slash commands (will be removed in a future version)
 ├── docs/                   METHODOLOGY, SETUP-GUIDE, testing, upstream-reference
