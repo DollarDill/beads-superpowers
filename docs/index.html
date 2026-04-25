@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>beads-superpowers — Process discipline and persistent memory for AI coding agents</title>
+  <meta name="description" content="Claude Code plugin with 20 mandatory skills: TDD, brainstorming, systematic debugging, two-stage code review, and persistent task tracking via beads. One-command install.">
+  <meta name="keywords" content="claude code, claude code plugin, ai coding agent, tdd, debugging, code review, task tracking, beads, superpowers, developer tools">
+  <meta name="author" content="Dillon Frawley">
+  <link rel="canonical" href="https://dollardill.github.io/beads-superpowers/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="beads-superpowers — AI coding agent skills + persistent memory">
+  <meta property="og:description" content="Claude Code plugin: 20 mandatory skills enforcing TDD, brainstorming, debugging, and code review. Persistent task tracking via beads.">
+  <meta property="og:url" content="https://dollardill.github.io/beads-superpowers/">
+  <meta property="og:site_name" content="beads-superpowers">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="beads-superpowers — AI coding agent skills + persistent memory">
+  <meta name="twitter:description" content="Claude Code plugin: 20 mandatory skills + persistent task tracking. One-command install.">
+
+  <!-- Google Search Console verification (replace content value after verifying) -->
+  <!-- <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE_HERE"> -->
+
+  <!-- Bing Webmaster Tools verification (replace content value after verifying) -->
+  <!-- <meta name="msvalidate.01" content="YOUR_BING_VERIFICATION_CODE_HERE"> -->
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "beads-superpowers",
+    "description": "Claude Code plugin merging Superpowers skills with Beads issue tracking. 20 mandatory skills for AI coding agents — TDD, brainstorming, systematic debugging, two-stage code review, and persistent task memory.",
+    "url": "https://github.com/DollarDill/beads-superpowers",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "macOS, Linux",
+    "softwareVersion": "0.4.0",
+    "author": {
+      "@type": "Person",
+      "name": "Dillon Frawley",
+      "url": "https://github.com/DollarDill"
+    },
+    "license": "https://opensource.org/licenses/MIT",
+    "codeRepository": "https://github.com/DollarDill/beads-superpowers",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --border: #334155;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-light: #818cf8;
+      --green: #22c55e;
+      --code-bg: #0d1117;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    a { color: var(--accent-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { max-width: 800px; margin: 0 auto; padding: 0 24px; }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 80px 24px 60px;
+      background: linear-gradient(180deg, #1e1b4b 0%, var(--bg) 100%);
+    }
+    .hero h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 12px; }
+    .hero .tagline { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 32px; }
+    .install-box {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 24px;
+      display: inline-block;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.95rem;
+      color: var(--green);
+      max-width: 100%;
+      overflow-x: auto;
+    }
+    .install-box .prompt { color: var(--text-muted); }
+
+    /* Sections */
+    section { padding: 60px 0; }
+    section h2 {
+      font-size: 1.6rem;
+      margin-bottom: 20px;
+      color: var(--accent-light);
+    }
+    section p { margin-bottom: 16px; color: var(--text-muted); }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .card h3 { font-size: 1.1rem; margin-bottom: 8px; }
+    .card p { margin-bottom: 0; }
+
+    /* Skills grid */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .skill-tag {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+    }
+    .skill-tag .name { color: var(--accent-light); font-weight: 600; }
+    .skill-tag .desc { color: var(--text-muted); font-size: 0.8rem; }
+
+    /* Install methods */
+    .install-methods { margin-top: 16px; }
+    .install-methods pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px 18px;
+      overflow-x: auto;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+    }
+    .install-methods code { color: var(--green); font-family: 'SF Mono', 'Fira Code', monospace; }
+    .method-label {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+      margin-top: 16px;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--text-muted); }
+
+    /* Badge row */
+    .badges { margin: 24px 0; }
+    .badges img { margin: 0 4px; vertical-align: middle; }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 1.8rem; }
+      .hero .tagline { font-size: 1rem; }
+      .install-box { font-size: 0.8rem; padding: 12px 16px; }
+      .skills-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="container">
+      <h1>beads-superpowers</h1>
+      <p class="tagline">Process discipline and persistent memory for AI coding agents.</p>
+      <div class="install-box">
+        <span class="prompt">$</span> curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
+      </div>
+      <div class="badges">
+        <a href="https://github.com/DollarDill/beads-superpowers/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+        <a href="https://github.com/DollarDill/beads-superpowers"><img alt="Version" src="https://img.shields.io/badge/version-0.4.0-4f46e5.svg"></a>
+        <a href="https://github.com/DollarDill/beads-superpowers/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/DollarDill/beads-superpowers?style=social"></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- What is this? -->
+  <section>
+    <div class="container">
+      <h2>What is this?</h2>
+      <p>AI coding agents have two recurring failure modes: <strong>no process discipline</strong> (they skip tests, rush to code, and claim work is done without verification) and <strong>no persistent memory</strong> (todo lists vanish when a session ends, the next session starts blind).</p>
+      <p><strong>beads-superpowers</strong> is a <a href="https://github.com/DollarDill/beads-superpowers">Claude Code plugin</a> that solves both at once by merging two upstream systems:</p>
+      <div class="card">
+        <h3>Superpowers — Process Discipline</h3>
+        <p>20 mandatory skills enforcing TDD, brainstorming, systematic debugging, two-stage code review, and verification. Skills are not suggestions — they use bright-line rules and anti-rationalization tables.</p>
+      </div>
+      <div class="card">
+        <h3>Beads — Persistent Memory</h3>
+        <p>A Dolt-backed issue tracker that survives across sessions. Every task is a bead tracked in a persistent ledger. The agent doesn't just follow the right process — it leaves a permanent record of having done so.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Skills -->
+  <section>
+    <div class="container">
+      <h2>20 Skills</h2>
+      <p>Each skill is a composable process document that Claude Code loads on demand. The bootstrap skill (<code>using-superpowers</code>) routes to the right skill automatically based on the task.</p>
+      <div class="skills-grid">
+        <div class="skill-tag"><span class="name">brainstorming</span><br><span class="desc">Design before code</span></div>
+        <div class="skill-tag"><span class="name">writing-plans</span><br><span class="desc">Bite-sized task plans</span></div>
+        <div class="skill-tag"><span class="name">test-driven-development</span><br><span class="desc">RED-GREEN-REFACTOR</span></div>
+        <div class="skill-tag"><span class="name">systematic-debugging</span><br><span class="desc">4-phase root cause</span></div>
+        <div class="skill-tag"><span class="name">verification-before-completion</span><br><span class="desc">Evidence before claims</span></div>
+        <div class="skill-tag"><span class="name">requesting-code-review</span><br><span class="desc">Two-stage review</span></div>
+        <div class="skill-tag"><span class="name">receiving-code-review</span><br><span class="desc">Anti-sycophancy</span></div>
+        <div class="skill-tag"><span class="name">subagent-driven-development</span><br><span class="desc">Fresh agent per task</span></div>
+        <div class="skill-tag"><span class="name">executing-plans</span><br><span class="desc">Batch execution</span></div>
+        <div class="skill-tag"><span class="name">using-git-worktrees</span><br><span class="desc">Isolated branches</span></div>
+        <div class="skill-tag"><span class="name">finishing-a-development-branch</span><br><span class="desc">Merge + Land the Plane</span></div>
+        <div class="skill-tag"><span class="name">dispatching-parallel-agents</span><br><span class="desc">Independent tasks</span></div>
+        <div class="skill-tag"><span class="name">document-release</span><br><span class="desc">Post-ship doc audit</span></div>
+        <div class="skill-tag"><span class="name">getting-up-to-speed</span><br><span class="desc">Session orientation</span></div>
+        <div class="skill-tag"><span class="name">stress-test</span><br><span class="desc">Adversarial scrutiny</span></div>
+        <div class="skill-tag"><span class="name">project-init</span><br><span class="desc">Beads DB setup</span></div>
+        <div class="skill-tag"><span class="name">setup</span><br><span class="desc">Post-install config</span></div>
+        <div class="skill-tag"><span class="name">writing-skills</span><br><span class="desc">Meta: create skills</span></div>
+        <div class="skill-tag"><span name="name">auditing-upstream-drift</span><br><span class="desc">Staleness detection</span></div>
+        <div class="skill-tag"><span class="name">using-superpowers</span><br><span class="desc">Bootstrap + routing</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Install -->
+  <section>
+    <div class="container">
+      <h2>Install in 60 seconds</h2>
+      <div class="install-methods">
+        <p class="method-label">Option A: curl (one command, recommended)</p>
+        <pre><code>curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash</code></pre>
+
+        <p class="method-label">Option B: Claude Code Marketplace</p>
+        <pre><code>claude plugin marketplace add DollarDill/beads-superpowers
+claude plugin install beads-superpowers@beads-superpowers-marketplace</code></pre>
+
+        <p class="method-label">Option C: npx (via Vercel Skills CLI)</p>
+        <pre><code>npx skills add DollarDill/beads-superpowers --all -y -g</code></pre>
+      </div>
+      <p>Then in any project:</p>
+      <div class="install-methods">
+        <pre><code>cd your-project
+bd init</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Attribution -->
+  <footer>
+    <div class="container">
+      <p>
+        <a href="https://github.com/obra/superpowers">Superpowers</a> by Jesse Vincent ·
+        <a href="https://github.com/gastownhall/beads">Beads</a> by Steve Yegge ·
+        Integration by <a href="https://github.com/DollarDill">Dillon Frawley</a>
+      </p>
+      <p style="margin-top: 8px;">MIT License · <a href="https://github.com/DollarDill/beads-superpowers">View on GitHub</a></p>
+    </div>
+  </footer>
+
+</body>
+</html>
