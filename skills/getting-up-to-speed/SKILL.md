@@ -61,3 +61,31 @@ Issue all six commands in **one message, multiple Bash tool calls in parallel**:
 If `bd` is not installed or `.beads/` is missing, skip Phase 1 entirely and emit "**Beads:** not installed/initialized — skipped" in the Phase 4 summary.
 
 **Do NOT run `bd dolt status`, `bd dolt show`, or `bd dolt push` here** — these fail in embedded-Dolt-mode repos and are not needed for orientation.
+
+## Phase 2 — Codebase exploration (single parallel batch, content varies by path)
+
+Issue **all reads in one message, multiple tool calls in parallel**. Do NOT serialize.
+
+### Light path
+
+- `find <repo-root> -maxdepth 1 -mindepth 1 | sort`
+- `git log --oneline -15` + `git status -sb` + `git tag --sort=-v:refname | head -5`
+- `Read` of `README.md`
+
+### Medium path *(default)*
+
+Light path, plus:
+
+- `Read` of any of these that exist: `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `Gemfile`, `composer.json`
+- `Read` of any of these that exist: `CHANGELOG.md`, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`
+- `Read` of project-specific manifests when relevant (e.g., `.claude-plugin/plugin.json` for plugin repos)
+- `find` on any of these dirs that exist: `skills/`, `agents/`, `commands/`, `docs/`, `hooks/`, `tests/`, `src/`, `lib/`, `app/`
+
+### Heavy path
+
+Use `dispatching-parallel-agents` to dispatch in one message:
+
+- `@researcher` — read CLAUDE.md/README/CHANGELOG, return architecture summary in <300 words
+- `@explore` — enumerate top-level structure, count source files by language, return layout report in <200 words
+
+After both return, optionally `Read` 1–3 files the agents flagged as critical.
