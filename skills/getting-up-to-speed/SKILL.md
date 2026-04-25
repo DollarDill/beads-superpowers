@@ -89,3 +89,49 @@ Use `dispatching-parallel-agents` to dispatch in one message:
 - `@explore` — enumerate top-level structure, count source files by language, return layout report in <200 words
 
 After both return, optionally `Read` 1–3 files the agents flagged as critical.
+
+## Phase 3 — Top open beads drilldown (all paths)
+
+- Run `bd show <id> | head -30` on the **top 3 open ready beads by priority** from Phase 1's `bd ready` output.
+- This is the agent's drilldown — used to feed the "Known operational quirks" line in the Phase 4 summary.
+- The output table in Phase 4 lists **up to 10 open ready beads** (not just the 3 drilled), so the user sees the whole queue.
+
+If Phase 1 was skipped (no beads), skip Phase 3.
+
+## Phase 4 — Synthesize the structured summary
+
+Produce **exactly this Markdown structure**. Heading levels are H2; tables and lists scale to project content. Sections you cannot fill from earlier phases are marked with the degraded-state language from the Edge Cases table — never invented.
+
+```markdown
+## What `<project>` Is
+<1–3 sentence synthesis. Mentions language/runtime, primary purpose, and any merge/fork lineage if discoverable from CHANGELOG/README.>
+
+| Layer | Source | Role |
+|---|---|---|
+<Optional table — used when project merges/wraps multiple subsystems. Skipped for simple repos.>
+
+## Architecture Highlights
+- **<key design decision 1>** — <one-line consequence>
+- **<key design decision 2>** — <one-line consequence>
+<3–6 bullets, sourced from CLAUDE.md / README / a METHODOLOGY-style doc.>
+
+## Repo Layout (verified)
+<code-fenced tree, ONLY directories actually present per `find` output. Never invented.>
+
+## Current State
+**Git:** <branch> <clean|N changes>, <in sync|N ahead|N behind> origin. Latest = `<sha>` <subject>. Tags: <top 5>.
+**Last release:** <if version detectable> shipped: <CHANGELOG bullet summary>. `[Unreleased]` <empty|has N entries>.
+**Beads ledger:** <total> total · <closed> closed · <open> open · <in-progress> · <blocked>.
+
+| Bead | Pri | Title |
+|---|---|---|
+<Up to 10 open ready beads, sorted by priority. Top 3 were drilled into in Phase 3.>
+
+**Known operational quirks:** <from `bd memories` keyword scan; from docs/known-issues/* if present>
+**Other captured memories:** <one line per memory not surfaced above>
+
+---
+I'm ready for your next instruction. The highest-priority unblocked work right now is **`<bead-id>`** (<priority> — <title>).
+```
+
+The trailing "I'm ready" line is the **terminal contract**: the skill stops here. Do NOT auto-claim the next bead. Do NOT start working on anything. The user drives the next move.
