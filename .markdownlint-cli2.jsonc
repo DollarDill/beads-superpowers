@@ -19,6 +19,10 @@
     "CODE_OF_CONDUCT.md",
     // Beads tool internal files (upstream-derived)
     ".beads/**",
+    // Internal design specs and implementation plans (dense code examples, not user-facing)
+    "docs/beads-superpowers/**",
+    // Known issues (gitignored, but markdownlint still scans on-disk files)
+    "docs/known-issues/**",
     // Dependencies (if added in future)
     "node_modules/**"
   ]
