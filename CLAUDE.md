@@ -10,7 +10,7 @@ This project IS a Claude Code marketplace plugin that merges [Superpowers](https
 
 This plugin gives AI coding agents two things simultaneously:
 
-1. **Process discipline** — 19 composable skills enforcing TDD, brainstorming, systematic debugging, two-stage code review, and verification
+1. **Process discipline** — 20 composable skills enforcing TDD, brainstorming, systematic debugging, two-stage code review, and verification
 2. **Persistent memory** — Every task is a bead tracked in a Dolt-backed database that survives across sessions
 
 The key modification from upstream superpowers: every `TodoWrite` reference has been replaced with `bd` (beads) commands. The plugin's SessionStart hook runs `bd prime` to inject beads workflow context alongside skills.
@@ -25,7 +25,7 @@ hooks/
   hooks.json               # SessionStart hook registration
   session-start            # Bash: injects using-superpowers + runs bd prime
   run-hook.cmd             # Windows polyglot wrapper
-skills/                    # 19 beads-native skills (auto-discovered)
+skills/                    # 20 beads-native skills (auto-discovered)
 agents/                    # Code reviewer agent (auto-discovered)
 commands/                  # Deprecated slash commands (auto-discovered)
 docs/                      # METHODOLOGY.md, SETUP-GUIDE.md, testing.md, etc.
@@ -84,7 +84,7 @@ GitHub sync is configured via:
 
 If `bd setup claude` hooks are installed in `.claude/settings.json`, this plugin detects them and warns. Run `bd setup claude --remove` — the plugin's hook already handles `bd prime`.
 
-## Skills (19 Total)
+## Skills (20 Total)
 
 | Skill | Purpose |
 |-------|---------|
@@ -107,6 +107,7 @@ If `bd setup claude` hooks are installed in `.claude/settings.json`, this plugin
 | dispatching-parallel-agents | 2+ independent tasks without shared state |
 | writing-skills | Meta-skill for creating/modifying skills |
 | auditing-upstream-drift | Detect staleness vs upstream superpowers/beads |
+| getting-up-to-speed | Session orientation — bd context + adaptive codebase deep-dive + structured current-state summary |
 
 ## Modifying Skills
 
@@ -148,7 +149,7 @@ No build step — skills are plain Markdown.
 # Validate plugin manifests
 claude plugin validate .claude-plugin/plugin.json
 
-# Verify skill count (should be 18)
+# Verify skill count (should be 20)
 ls -d skills/*/ | wc -l
 
 # Verify zero active TodoWrite references
