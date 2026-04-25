@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `install.sh` — curl-pipe-bash one-command installer. Downloads skills, configures SessionStart hook, and registers in settings.json in one step. Replaces the 7-step npx + setup-skill flow. Supports `--yes`, `--version`, `--dry-run`, and `--uninstall`.
+
 ## [0.4.0] - 2026-04-25
 
 ### Changed
