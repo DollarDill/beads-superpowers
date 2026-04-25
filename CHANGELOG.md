@@ -9,11 +9,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-04-25
+
 ### Added
 
 - `install.sh` — curl-pipe-bash one-command installer. Downloads skills, configures SessionStart hook, and registers in settings.json in one step. Replaces the 7-step npx + setup-skill flow. Supports `--yes`, `--version`, `--dry-run`, and `--uninstall`.
 - GitHub Pages site at `dollardill.github.io/beads-superpowers` — SEO-optimized landing page with Open Graph, Twitter Card, JSON-LD structured data (`SoftwareApplication` schema), sitemap.xml, and robots.txt. Source: `docs/` folder on `main` branch.
 - 15 GitHub topic tags for search discoverability: `claude-code`, `claude-code-plugin`, `ai-coding-agent`, `ai-agent`, `task-tracking`, `tdd`, `code-review`, `developer-tools`, `beads`, `superpowers`, `issue-tracker`, `productivity`, `systematic-debugging`, `brainstorming`, `markdown`.
+- curl install path documented in SETUP-GUIDE.md (Method 2).
 
 ## [0.4.0] - 2026-04-25
 

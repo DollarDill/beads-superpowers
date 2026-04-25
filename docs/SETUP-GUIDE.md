@@ -49,7 +49,15 @@ You can also run these as slash commands inside an active Claude Code session:
 /plugin install beads-superpowers@beads-superpowers-marketplace
 ```
 
-### Method 2: Update an Existing Installation
+### Method 2: curl (one command, no dependencies)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
+```
+
+Installs 20 skills to `~/.claude/skills/` and configures the SessionStart hook automatically. Supports `--yes` (CI mode), `--version X.Y.Z`, `--dry-run`, and `--uninstall`. See [install.sh](../install.sh) for details.
+
+### Method 3: Update an Existing Installation
 
 ```bash
 # Update the marketplace cache (pulls latest from GitHub)
@@ -59,7 +67,7 @@ claude plugin marketplace update beads-superpowers-marketplace
 claude plugin update beads-superpowers@beads-superpowers-marketplace
 ```
 
-### Method 3: Local Development
+### Method 4: Local Development
 
 For contributing or testing local changes:
 
