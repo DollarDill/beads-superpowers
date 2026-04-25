@@ -32,12 +32,16 @@ Pre-step: Detect repo scale  →  Phase 1: Beads (parallel)  →  Phase 2: Codeb
 
 ## Pre-step: Detect repo scale
 
-Run this single command first to pick a path:
+Run this single command first to pick a path. Uses git plumbing (`rev-parse --is-inside-work-tree`) and a probe of `bd ready` so it works correctly inside git worktrees and submodules — checking for a literal `.git`/`.beads` directory misidentifies worktrees as "no git" because `.git` there is a file, not a directory.
 
 ```bash
 TRACKED=$(git ls-files 2>/dev/null | wc -l | tr -d ' ')
-HAS_BEADS=$([ -d .beads ] && echo 1 || echo 0)
-HAS_GIT=$([ -d .git ] && echo 1 || echo 0)
+HAS_GIT=$(git rev-parse --is-inside-work-tree >/dev/null 2>&1 && echo 1 || echo 0)
+if command -v bd >/dev/null 2>&1; then
+  HAS_BEADS=$(bd ready --limit 1 >/dev/null 2>&1 && echo 1 || echo 0)
+else
+  HAS_BEADS=0
+fi
 echo "tracked=$TRACKED beads=$HAS_BEADS git=$HAS_GIT"
 ```
 
