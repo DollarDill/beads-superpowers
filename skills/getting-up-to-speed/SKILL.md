@@ -135,3 +135,33 @@ I'm ready for your next instruction. The highest-priority unblocked work right n
 ```
 
 The trailing "I'm ready" line is the **terminal contract**: the skill stops here. Do NOT auto-claim the next bead. Do NOT start working on anything. The user drives the next move.
+
+## Edge Cases
+
+| Condition | Behavior |
+|---|---|
+| No `.git` directory | Skip the git phase entirely; emit "**Git:** not a git repo" in the summary |
+| `bd` not installed | Skip Phase 1; emit "**Beads:** not installed — skipped" |
+| `.beads/` missing but `bd` installed | Run `bd ready` (will return empty); note "no beads workspace" |
+| Embedded Dolt mode | Do NOT call `bd dolt status/show/push` — only the safe read commands listed in Phase 1 |
+| Dirty working tree | Show `git status -sb` count in the Current State line |
+| Detached HEAD | Output `HEAD detached at <sha>` instead of branch name |
+| Empty git log | `git log` exits non-zero; catch and emit "no commits yet" |
+| `find` errors on missing dirs | Each `find` is independent and uses `2>/dev/null` — missing dirs skipped silently |
+
+## Red Flags / Anti-Rationalization
+
+These thoughts mean STOP — you're rationalizing skipping orientation:
+
+| Thought | Reality |
+|---|---|
+| "I already explored this last session" | Sessions don't carry state. Re-orient. |
+| "I'll skip beads commands — I'll use TodoWrite" | This project IS beads. `bd prime` is mandatory. TodoWrite is forbidden. |
+| "The README is enough" | README skips beads state, open work, and known issues. Run the full pipeline. |
+| "I'll skip Phase 3 — looking at open beads is busywork" | Phase 3 is what surfaces "this Dolt setup is broken" before you waste 20 minutes on it. |
+| "I'll auto-claim the top P0" | Forbidden. Orient and stop. User drives. |
+| "This is a small repo, I can skim" | Run the Light path of this skill. It's still 30 seconds and produces a summary you can refer back to. |
+
+## Output Contract
+
+The skill is complete when you have produced the structured summary AND emitted the trailing "I'm ready for your next instruction" line. No claiming, no continuation. Wait for user input.
