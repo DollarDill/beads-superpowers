@@ -32,6 +32,14 @@ npx skills add DollarDill/beads-superpowers --all -y -g
 
 After installing, tell Claude: **"Run the setup skill"** — this configures the SessionStart hook that makes skills activate automatically.
 
+### Option C: curl (one command, no dependencies)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
+```
+
+Installs 20 skills to `~/.claude/skills/` and configures the SessionStart hook automatically. Supports `--yes` (CI mode), `--version X.Y.Z`, `--dry-run`, and `--uninstall`. See [install.sh](install.sh) for details.
+
 ### Then, in any project
 
 ```bash
