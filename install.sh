@@ -410,20 +410,24 @@ print_dry_run() {
 main() {
   parse_flags "$@"
   check_prerequisites
-  detect_upstream_conflict
-  resolve_version
-  detect_existing_install
-  detect_beads
 
+  # Handle uninstall early — before version resolution or existing-install detection
   if [ "$FLAG_UNINSTALL" = true ]; then
     do_uninstall
     exit 0
   fi
 
+  detect_upstream_conflict
+  resolve_version
+
+  # Handle dry-run before existing-install detection (which may exit 0)
   if [ "$FLAG_DRY_RUN" = true ]; then
     print_dry_run
     exit 0
   fi
+
+  detect_existing_install
+  detect_beads
 
   print_consent
   wait_for_consent
