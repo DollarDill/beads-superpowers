@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- `getting-up-to-speed` skill — depth-adaptive session orientation: parallel `bd` context commands, parallel codebase deep-dive (light/medium/heavy paths selected by tracked-file count), top-3-open-beads drilldown, mandated structured "current state" summary, terminating without auto-claim. Brings skill total from 19 → 20.
 - `document-release` skill — 9-step post-ship documentation audit (adapted from [garrytan/gstack](https://github.com/garrytan/gstack/tree/main/document-release))
 - `project-init` skill — beads/Dolt database setup and recovery with 6 diagnostic paths (based on [beads SYNC_SETUP.md](https://github.com/gastownhall/beads/blob/main/docs/SYNC_SETUP.md))
 - `stress-test` skill — adversarial design interrogation with recommended answers (inspired by [mattpocock/grill-me](https://github.com/mattpocock/skills/blob/main/grill-me/SKILL.md))
