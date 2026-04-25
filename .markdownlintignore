@@ -5,7 +5,10 @@ skills/
 docs/upstream-reference/
 
 # Internal design specs and implementation plans (dense code examples, not user-facing)
-docs/beads-superpowers/
+docs/beads-superpowers/**
+
+# Known issues (gitignored, but markdownlint still scans on-disk files)
+docs/known-issues/
 
 # Test fixtures and test infrastructure
 tests/
