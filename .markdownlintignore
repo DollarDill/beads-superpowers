@@ -4,6 +4,9 @@ skills/
 # Reference docs imported from upstream
 docs/upstream-reference/
 
+# Internal design specs and implementation plans (dense code examples, not user-facing)
+docs/beads-superpowers/
+
 # Test fixtures and test infrastructure
 tests/
 
