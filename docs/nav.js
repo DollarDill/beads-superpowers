@@ -23,6 +23,23 @@
     });
   }
 
+  // Render "Last updated" from meta tag
+  var lastUpdatedMeta = document.querySelector('meta[name="last-updated"]');
+  if (lastUpdatedMeta && article) {
+    var dateStr = lastUpdatedMeta.getAttribute('content');
+    var parts = dateStr.split('-');
+    var date = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+    var formatted = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    var el = document.createElement('p');
+    el.className = 'last-updated';
+    el.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm.5 4.5v3.793l2.354 2.353a.5.5 0 0 1-.708.708l-2.5-2.5A.5.5 0 0 1 7.5 8.5v-4a.5.5 0 0 1 1 0z"/></svg>' +
+      'Last updated: ' + formatted;
+    var subtitle = article.querySelector('.subtitle');
+    if (subtitle) {
+      subtitle.parentNode.insertBefore(el, subtitle.nextSibling);
+    }
+  }
+
   // Auto-generate "On this page" TOC from h2 elements
   var toc = document.querySelector('.on-this-page');
   var article = document.querySelector('article');

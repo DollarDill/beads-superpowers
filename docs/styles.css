@@ -424,6 +424,22 @@ a.skill-tag:hover { border-color: var(--accent); transform: translateY(-2px); te
 .page-nav .label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; }
 .page-nav .title { color: var(--accent-light); font-weight: 500; }
 
+/* ─── Last Updated ─── */
+.last-updated {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.last-updated svg {
+  width: 14px;
+  height: 14px;
+  fill: var(--text-dim);
+  flex-shrink: 0;
+}
+
 /* ─── Mermaid ─── */
 .mermaid {
   background: var(--surface);
@@ -433,6 +449,11 @@ a.skill-tag:hover { border-color: var(--accent); transform: translateY(-2px); te
   margin: 20px 0;
   text-align: center;
   overflow-x: auto;
+}
+.mermaid svg {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
 }
 
 /* ─── Hamburger (mobile) ─── */
