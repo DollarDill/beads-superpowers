@@ -4,7 +4,7 @@ This project is a **Claude Code plugin** (beads-superpowers). It provides 20 ski
 
 ## Beads Issue Tracking
 
-This project uses **bd (beads)** for ALL issue tracking. Issues sync to GitHub Issues via `bd github sync`.
+This project uses **bd (beads)** for ALL issue tracking. Issues sync to GitHub Issues via `bd github push`.
 
 - **GitHub Issues:** <https://github.com/DollarDill/beads-superpowers/issues>
 - **Issue tracker:** `bd` CLI (beads) with GitHub sync
@@ -15,7 +15,7 @@ bd ready              # Find available work
 bd show <id>          # View issue details
 bd update <id> --claim  # Claim work
 bd close <id> --reason "description"  # Complete work
-bd github sync        # Sync beads to GitHub Issues
+bd github push        # Sync beads to GitHub Issues
 bd dolt push          # Sync beads to Dolt remote
 ```
 
@@ -49,7 +49,7 @@ Work is NOT complete until `git push` succeeds:
 
 ```bash
 bd close <completed-ids> --reason "description"
-bd github sync
+bd github push
 bd dolt push
 git pull --rebase && git push
 git status  # MUST show "up to date with origin"

@@ -104,8 +104,7 @@ The PR template auto-populates this — read it before you push:
 ## Code of conduct
 
 Be kind. Assume good intent. Disagree about technical things directly and
-respectfully. We do not have a separate CODE_OF_CONDUCT document — the
-default is "act like a professional engineer."
+respectfully. See [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) for details.
 
 ## Reporting security issues
 

@@ -23,7 +23,7 @@
 ## Validation (run before submitting)
 
 ```bash
-ls -d skills/*/ | wc -l                                                    # Should be 15
+ls -d skills/*/ | wc -l                                                    # Should be 20
 grep -r "TodoWrite" skills/ | grep -v "Do NOT use" | grep -v "replaces"    # Should be empty
 grep -r "bd create\|bd close\|bd ready" skills/ | wc -l                    # Should be 30+
 bash hooks/session-start 2>&1 | python3 -m json.tool                       # Should be valid JSON

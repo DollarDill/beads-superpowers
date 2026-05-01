@@ -69,7 +69,7 @@ AI coding agents have two recurring failure modes:
 
 **beads-superpowers** merges two upstream systems to solve both at once:
 
-- **[Superpowers](https://github.com/obra/superpowers)** by Jesse Vincent — 20 mandatory skills enforcing TDD, brainstorming, systematic debugging, and two-stage code review.
+- **[Superpowers](https://github.com/obra/superpowers)** by Jesse Vincent — 15 composable skills enforcing TDD, brainstorming, systematic debugging, and two-stage code review (extended to 20 in this fork).
 - **[Beads](https://github.com/gastownhall/beads)** by Steve Yegge — a Dolt-backed issue tracker that survives across sessions, agents, and projects.
 
 The result: skills that don't just tell agents *how* to work — they give agents a persistent ledger to track *what* they're working on.
@@ -156,22 +156,35 @@ flowchart TB
     subgraph Orchestrator [Main Agent — orchestrator-only beads]
         SP[using-superpowers skill]
         BD[bd prime — beads context]
+        GUS[getting-up-to-speed]
         SP --> Routing{Route to skill}
         BD --> Routing
+        GUS -.->|session start| Routing
     end
     Routing -->|design| Brainstorm[brainstorming]
+    Routing -->|scrutinize| Stress[stress-test]
     Routing -->|plan| WP[writing-plans]
     Routing -->|execute| SDD[subagent-driven-development]
     Routing -->|debug| Debug[systematic-debugging]
+    Routing -->|orient| GUS2[getting-up-to-speed]
+    Brainstorm --> Stress
+    Stress --> WP
     SDD --> Sub1[Subagent 1: Task A]
     SDD --> Sub2[Subagent 2: Task B]
     Sub1 -->|results| Review[Two-stage review]
     Sub2 -->|results| Review
-    Review --> Close[bd close + bd dolt push]
-    Close --> Land[Land the Plane: git push]
+    Review --> Verify[verification-before-completion]
+    Verify --> DocAudit[document-release]
+    DocAudit --> Close[bd close + bd dolt push]
+    Close --> Land[finishing-a-development-branch]
+
+    style Stress fill:#f59e0b,color:#000
+    style Verify fill:#22c55e,color:#000
+    style DocAudit fill:#6366f1,color:#fff
+    style GUS2 fill:#06b6d4,color:#000
 ```
 
-The orchestrator is the only agent that touches beads. Subagents focus on implementation and have no concurrent bead-conflict surface. The two-stage review catches both spec deviation (first-stage spec reviewer) and code-quality issues (second-stage code reviewer) before any task is marked complete.
+The orchestrator is the only agent that touches beads. Subagents focus on implementation and have no concurrent bead-conflict surface. The two-stage review catches both spec deviation (first-stage spec reviewer) and code-quality issues (second-stage code reviewer) before any task is marked complete. The pipeline ends with verification, documentation audit, and the Land the Plane protocol.
 
 ## Design decisions
 

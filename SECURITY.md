@@ -7,8 +7,8 @@ latest released version.
 
 | Version | Supported |
 |---------|-----------|
-| 0.1.x   | ✅        |
-| < 0.1   | ❌        |
+| 0.4.x   | ✅        |
+| < 0.4   | ❌        |
 
 ## Reporting a vulnerability
 
