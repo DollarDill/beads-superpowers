@@ -262,22 +262,16 @@ graph TB
 
         <div class="mermaid">
 graph TD
-  Start["User task"] --> Triage{"Triage"}
-  Triage -->|simple| S7["S7: Implement"]
-  Triage -->|non-trivial| S2["S2: Research"]
-  S2 --> S3["S3: Knowledge Capture"]
-  S3 --> S4["S4: Brainstorm"]
-  S4 --> S6["S6: Plan"]
-  S6 --> S7
-  S7 --> S8["S8: Verify"]
-  S8 --> S9["S9: Document"]
-  S9 --> S10["S10: Close Branch"]
-  S10 --> S11["S11: Land the Plane"]
-  S11 --> Done["git push ✓"]
+  Step1["1. Session Start<br/>Hook loads skills + bd prime"] --> Step2["2. Brainstorming<br/>Design before code"]
+  Step2 --> Step3["3. Writing Plans<br/>Bite-sized tasks with beads"]
+  Step3 --> Step4["4. Subagent-Driven Dev<br/>TDD + two-stage review per task"]
+  Step4 --> Step5["5. Finishing Branch<br/>Merge / PR / cleanup"]
+  Step5 --> Step6["6. Land the Plane<br/>bd close + git push"]
+  Step6 --> Step7["7. Next Session<br/>bd prime restores state"]
 
-  style S7 fill:#22c55e,color:#000
-  style S11 fill:#f59e0b,color:#000
-  style Done fill:#6366f1,color:#fff
+  style Step1 fill:#6366f1,color:#fff
+  style Step4 fill:#22c55e,color:#000
+  style Step6 fill:#f59e0b,color:#000
         </div>
 
         <h3>Step 1 — Session Start</h3>

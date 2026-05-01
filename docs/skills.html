@@ -179,15 +179,15 @@
         </table>
 
         <div class="mermaid">
-graph LR
-  subgraph Meta
+graph TD
+  subgraph Meta ["Meta / Entry"]
     US["using-superpowers"]
     WS["writing-skills"]
   end
-  subgraph Design
+  subgraph Design ["Design & Planning"]
     BR["brainstorming"]
-    WP["writing-plans"]
     STR["stress-test"]
+    WP["writing-plans"]
   end
   subgraph Execution
     SDD["subagent-driven-dev"]
@@ -203,6 +203,19 @@ graph LR
     RCR["requesting-review"]
     REC["receiving-review"]
   end
+  subgraph Infra ["Infrastructure"]
+    WT["using-git-worktrees"]
+    FAB["finishing-branch"]
+  end
+  subgraph Lifecycle
+    DR["document-release"]
+    GUS["getting-up-to-speed"]
+    AUD["auditing-upstream-drift"]
+  end
+  subgraph SetupRecovery ["Setup / Recovery"]
+    SET["setup"]
+    PI["project-init"]
+  end
   subgraph Research
     RDD["research-driven-dev"]
   end
@@ -211,12 +224,16 @@ graph LR
   Design --> Execution
   Execution --> Quality
   Quality --> Review
+  Review --> Infra
 
   style Meta fill:#6366f1,color:#fff
   style Design fill:#818cf8,color:#fff
   style Execution fill:#22c55e,color:#000
   style Quality fill:#f59e0b,color:#000
   style Review fill:#06b6d4,color:#000
+  style Infra fill:#14b8a6,color:#000
+  style Lifecycle fill:#64748b,color:#fff
+  style SetupRecovery fill:#64748b,color:#fff
   style Research fill:#8b5cf6,color:#fff
         </div>
 
@@ -532,7 +549,8 @@ graph TD
   SDD --> RCR["requesting-code-review"]
   EP --> RCR
   RCR --> VBC["verification-before-completion"]
-  VBC --> FAB["finishing-a-development-branch"]
+  VBC --> DR["document-release"]
+  DR --> FAB["finishing-a-development-branch"]
 
   style US fill:#6366f1,color:#fff
   style FAB fill:#f59e0b,color:#000
