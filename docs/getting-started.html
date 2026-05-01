@@ -6,6 +6,8 @@
   <title>Getting Started — beads-superpowers</title>
   <meta name="description" content="Install and configure beads-superpowers in 60 seconds">
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({startOnLoad:true, theme:'dark', themeVariables:{primaryColor:'#6366f1',primaryTextColor:'#e2e8f0',primaryBorderColor:'#334155',lineColor:'#64748b',secondaryColor:'#1e293b',tertiaryColor:'#0f172a'}});</script>
 </head>
 <body>
   <button class="hamburger" aria-label="Menu">&#9776;</button>
@@ -151,6 +153,24 @@ bd stats</code></pre>
 
         <h4>UserPromptSubmit hook</h4>
         <p>The plugin also registers a <strong>UserPromptSubmit</strong> hook that fires on every user message. It injects a brief reminder to check if any beads-superpowers skill applies to the current task, with key trigger mappings (bug → systematic-debugging, new feature → brainstorming, etc.). This prevents the agent from forgetting to invoke skills mid-session.</p>
+
+        <div class="mermaid">
+sequenceDiagram
+  participant CC as Claude Code
+  participant SH as SessionStart Hook
+  participant UP as UserPromptSubmit Hook
+  participant Agent as Agent
+
+  CC->>SH: Session begins
+  SH->>SH: Read using-superpowers skill
+  SH->>SH: Run bd prime
+  SH-->>Agent: Inject skills context + beads state
+  Note over Agent: Agent is now skill-aware
+
+  CC->>UP: User sends message
+  UP-->>Agent: Inject superpowers reminder
+  Note over Agent: Agent checks skill triggers
+        </div>
 
         <h3>Duplicate hook warning</h3>
         <p>If you have previously run <code>bd setup claude</code> (or <code>bd init</code>, which calls it), the plugin detects the overlap and displays a warning at session start. To resolve it:</p>

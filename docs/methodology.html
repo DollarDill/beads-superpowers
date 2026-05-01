@@ -6,6 +6,8 @@
   <title>Methodology — beads-superpowers</title>
   <meta name="description" content="Design philosophy behind merging Superpowers skills with Beads issue tracking">
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({startOnLoad:true, theme:'dark', themeVariables:{primaryColor:'#6366f1',primaryTextColor:'#e2e8f0',primaryBorderColor:'#334155',lineColor:'#64748b',secondaryColor:'#1e293b',tertiaryColor:'#0f172a'}});</script>
 </head>
 <body>
   <button class="hamburger" aria-label="Menu">&#9776;</button>
@@ -79,6 +81,28 @@
 
         <h3>Beads — Persistent Memory</h3>
         <p>Beads is a Dolt-backed issue tracker built for AI agents. Every task is a bead — a persistent record with a hash-based ID that survives session boundaries. <code>bd prime</code> injects current task state, remaining work, and learned memories at every session start. The agent never starts blind.</p>
+
+        <div class="mermaid">
+graph TB
+  subgraph Superpowers ["Superpowers (Process Discipline)"]
+    S1["21 Composable Skills"]
+    S2["Bright-line Rules"]
+    S3["Anti-rationalization"]
+    S4["Pressure-tested Enforcement"]
+  end
+  subgraph Beads ["Beads (Persistent Memory)"]
+    B1["Dolt-backed DB"]
+    B2["Cross-session State"]
+    B3["Dependency Tracking"]
+    B4["Persistent Memories"]
+  end
+  Superpowers --> Merge["beads-superpowers"]
+  Beads --> Merge
+  Merge --> Result["Skills + Persistent Ledger"]
+
+  style Merge fill:#6366f1,color:#fff
+  style Result fill:#22c55e,color:#000
+        </div>
 
         <h3>The Integration</h3>
         <p>By replacing every <code>TodoWrite</code> call in every Superpowers skill with the equivalent <code>bd</code> command, the two systems become one. Following process discipline now automatically populates persistent memory. The agent cannot do one without the other.</p>
@@ -234,6 +258,26 @@
 
         <h2 id="walkthrough">End-to-End Workflow</h2>
         <p>The following is what happens when an agent receives a feature request with beads-superpowers active.</p>
+
+        <div class="mermaid">
+graph TD
+  Start["User task"] --> Triage{"Triage"}
+  Triage -->|simple| S7["S7: Implement"]
+  Triage -->|non-trivial| S2["S2: Research"]
+  S2 --> S3["S3: Knowledge Capture"]
+  S3 --> S4["S4: Brainstorm"]
+  S4 --> S6["S6: Plan"]
+  S6 --> S7
+  S7 --> S8["S8: Verify"]
+  S8 --> S9["S9: Document"]
+  S9 --> S10["S10: Close Branch"]
+  S10 --> S11["S11: Land the Plane"]
+  S11 --> Done["git push ✓"]
+
+  style S7 fill:#22c55e,color:#000
+  style S11 fill:#f59e0b,color:#000
+  style Done fill:#6366f1,color:#fff
+        </div>
 
         <h3>Step 1 — Session Start</h3>
         <p>The SessionStart hook fires automatically. It loads the <code>using-superpowers</code> skill (providing beads-aware routing) and runs <code>bd prime</code> (injecting beads context and persistent memories from previous sessions).</p>

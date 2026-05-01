@@ -54,6 +54,8 @@
   </script>
 
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({startOnLoad:true, theme:'dark', themeVariables:{primaryColor:'#6366f1',primaryTextColor:'#e2e8f0',primaryBorderColor:'#334155',lineColor:'#64748b',secondaryColor:'#1e293b',tertiaryColor:'#0f172a'}});</script>
 </head>
 <body>
   <button class="hamburger" aria-label="Menu">&#9776;</button>
@@ -101,6 +103,24 @@
         <p>AI coding agents have two recurring failure modes: <strong>no process discipline</strong> (they skip tests, rush to code, and claim work is done without verification) and <strong>no persistent memory</strong> (todo lists vanish when a session ends, the next session starts blind).</p>
         <p><strong>beads-superpowers</strong> is a <a href="https://github.com/DollarDill/beads-superpowers">Claude Code plugin</a> that solves both at once. It merges <a href="https://github.com/obra/superpowers">Superpowers</a> — a set of composable process skills enforcing TDD, brainstorming, systematic debugging, and two-stage code review — with <a href="https://github.com/gastownhall/beads">Beads</a>, a Dolt-backed issue tracker that gives agents persistent task memory across sessions.</p>
         <p>The upstream Superpowers library ships 15 skills. This plugin extends it to 21, replaces all <code>TodoWrite</code> task tracking with <code>bd</code> beads commands, and wires everything together via a <code>SessionStart</code> hook that injects skills and task context automatically at the start of every session.</p>
+
+        <div class="mermaid">
+graph LR
+  Hook["SessionStart Hook"] --> SP["using-superpowers"]
+  Hook --> BD["bd prime"]
+  SP --> Route{"Route to skill"}
+  BD --> Route
+  Route -->|design| B["brainstorming"]
+  Route -->|plan| W["writing-plans"]
+  Route -->|execute| S["subagent-driven-dev"]
+  Route -->|debug| D["systematic-debugging"]
+  Route -->|research| R["research-driven-dev"]
+  S --> Review["Two-stage review"]
+  Review --> Land["Land the Plane"]
+
+  style Hook fill:#6366f1,color:#fff
+  style Land fill:#f59e0b,color:#000
+        </div>
 
         <h2 id="docs">Documentation</h2>
         <div class="card-grid">
