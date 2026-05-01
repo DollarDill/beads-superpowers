@@ -1,17 +1,22 @@
 ---
 name: setup
-description: Use after installing beads-superpowers skills via npx to configure the SessionStart hook that makes skills auto-activate. Also use when skills are installed but not triggering automatically, or when the user says "set up beads-superpowers", "configure hooks", or "skills aren't activating".
+description: Use after installing beads-superpowers skills via npx to configure the SessionStart and UserPromptSubmit hooks that make skills auto-activate. Also use when skills are installed but not triggering automatically, or when the user says "set up beads-superpowers", "configure hooks", or "skills aren't activating".
 ---
 
 # Setup: Post-Install Hook Configuration
 
-**Announce at start:** "I'm using the setup skill to configure SessionStart hooks for beads-superpowers."
+**Announce at start:** "I'm using the setup skill to configure hooks for beads-superpowers."
 
 ## Purpose
 
-When beads-superpowers skills are installed via `npx skills add` (not the marketplace plugin), the SessionStart hook is missing. Without it, Claude doesn't automatically load the `using-superpowers` bootstrap skill at session start, so skills only activate when manually invoked.
+When beads-superpowers skills are installed via `npx skills add` (not the marketplace plugin), two hooks are missing:
 
-This skill detects the gap and installs the hook.
+1. **SessionStart hook** — injects the `using-superpowers` bootstrap skill + `bd prime` context at session start
+2. **UserPromptSubmit hook** — injects a skill trigger reminder on every user message, preventing mid-session drift
+
+Without these hooks, Claude doesn't automatically load skills or get reminded to use them.
+
+This skill detects the gap and installs both hooks.
 
 ## Detection Phase
 
@@ -132,6 +137,32 @@ HOOKSCRIPT
 chmod +x ~/.claude/hooks/beads-superpowers-session-start.sh
 ```
 
+### Step 1b: Create the UserPromptSubmit hook script
+
+Create `~/.claude/hooks/beads-superpowers-reminder.sh`:
+
+```bash
+cat > ~/.claude/hooks/beads-superpowers-reminder.sh << 'REMINDERSCRIPT'
+#!/usr/bin/env bash
+# UserPromptSubmit hook for beads-superpowers (npx install path)
+# Injects a skill trigger reminder on every user message.
+set -euo pipefail
+
+cat << 'REMINDER'
+{
+  "hookSpecificOutput": {
+    "hookEventName": "UserPromptSubmit",
+    "additionalContext": "SUPERPOWERS REMINDER: Before responding, check if any beads-superpowers skill applies to this task. Key triggers:\n- Bug/test failure → beads-superpowers:systematic-debugging\n- Writing code → beads-superpowers:test-driven-development\n- New feature/design → beads-superpowers:brainstorming\n- Writing a plan → beads-superpowers:writing-plans\n- Executing a plan → beads-superpowers:subagent-driven-development or beads-superpowers:executing-plans\n- Complex task (6+ files) → beads-superpowers:using-git-worktrees\n- About to claim done → beads-superpowers:verification-before-completion\n- Code review needed → beads-superpowers:requesting-code-review\n- Branch complete → beads-superpowers:finishing-a-development-branch\nIf even 1% chance a skill applies, you MUST invoke it via the Skill tool."
+  }
+}
+REMINDER
+
+exit 0
+REMINDERSCRIPT
+
+chmod +x ~/.claude/hooks/beads-superpowers-reminder.sh
+```
+
 ### Step 2: Backup settings.json
 
 **Always back up before modifying.** This is non-negotiable.
@@ -185,40 +216,60 @@ if not already_exists:
             "command": hook_cmd
         }]
     })
-
-    with open(settings_path, "w") as f:
-        json.dump(settings, f, indent=2)
-    print("✓ SessionStart hook registered in ~/.claude/settings.json")
+    print("✓ SessionStart hook registered")
 else:
-    print("✓ SessionStart hook already registered — no changes needed")
+    print("✓ SessionStart hook already registered")
+
+# UserPromptSubmit hook
+reminder_cmd = os.path.expanduser("~/.claude/hooks/beads-superpowers-reminder.sh")
+prompt_hooks = hooks.setdefault("UserPromptSubmit", [])
+reminder_exists = any(
+    "beads-superpowers" in str(h) for h in prompt_hooks
+)
+if not reminder_exists:
+    prompt_hooks.append({
+        "matcher": "",
+        "hooks": [{
+            "type": "command",
+            "command": reminder_cmd
+        }]
+    })
+    print("✓ UserPromptSubmit hook registered")
+else:
+    print("✓ UserPromptSubmit hook already registered")
+
+with open(settings_path, "w") as f:
+    json.dump(settings, f, indent=2)
 PYSETUP
 ```
 
 ### Step 4: Verify
 
 ```bash
-# Test the hook produces valid JSON
-bash ~/.claude/hooks/beads-superpowers-session-start.sh 2>&1 | python3 -m json.tool > /dev/null && echo "✓ Hook output is valid JSON"
+# Test both hooks produce valid JSON
+bash ~/.claude/hooks/beads-superpowers-session-start.sh 2>&1 | python3 -m json.tool > /dev/null && echo "✓ SessionStart hook: valid JSON"
+bash ~/.claude/hooks/beads-superpowers-reminder.sh 2>&1 | python3 -m json.tool > /dev/null && echo "✓ UserPromptSubmit hook: valid JSON"
 
-# Verify settings.json has the hook
-grep -q "beads-superpowers-session-start" ~/.claude/settings.json && echo "✓ Hook registered in settings.json"
+# Verify settings.json has both hooks
+grep -q "beads-superpowers-session-start" ~/.claude/settings.json && echo "✓ SessionStart hook registered"
+grep -q "beads-superpowers-reminder" ~/.claude/settings.json && echo "✓ UserPromptSubmit hook registered"
 ```
 
 ### Step 5: Report
 
 ```
-✓ beads-superpowers SessionStart hook installed.
+✓ beads-superpowers hooks installed.
 
 What was configured:
-  Hook script: ~/.claude/hooks/beads-superpowers-session-start.sh
-  Registered in: ~/.claude/settings.json (hooks.SessionStart)
+  SessionStart hook: ~/.claude/hooks/beads-superpowers-session-start.sh
+  UserPromptSubmit hook: ~/.claude/hooks/beads-superpowers-reminder.sh
+  Registered in: ~/.claude/settings.json (hooks.SessionStart + hooks.UserPromptSubmit)
   Backup at: ~/.claude/settings.json.backup-<timestamp>
 
-Restart Claude Code for the hook to take effect.
+Restart Claude Code for hooks to take effect.
 
-The hook injects the using-superpowers skill at session start,
-enabling automatic skill routing. If beads (bd) is installed,
-it also injects bd prime context.
+SessionStart injects the using-superpowers skill + bd prime context.
+UserPromptSubmit injects a skill trigger reminder on every message.
 ```
 
 ## Uninstall
@@ -226,20 +277,23 @@ it also injects bd prime context.
 To remove the hook:
 
 ```bash
-# Remove the hook script
+# Remove both hook scripts
 rm -f ~/.claude/hooks/beads-superpowers-session-start.sh
+rm -f ~/.claude/hooks/beads-superpowers-reminder.sh
 
-# Remove the hook entry from settings.json (manual edit or python3)
+# Remove both hook entries from settings.json
 python3 -c "
 import json, os
 path = os.path.expanduser('~/.claude/settings.json')
 s = json.load(open(path))
-s.get('hooks',{})['SessionStart'] = [
-    h for h in s.get('hooks',{}).get('SessionStart',[])
-    if 'beads-superpowers' not in str(h)
-]
+for key in ['SessionStart', 'UserPromptSubmit']:
+    if key in s.get('hooks', {}):
+        s['hooks'][key] = [
+            h for h in s['hooks'][key]
+            if 'beads-superpowers' not in str(h)
+        ]
 json.dump(s, open(path,'w'), indent=2)
-print('✓ Hook removed from settings.json')
+print('✓ Both hooks removed from settings.json')
 "
 ```
 

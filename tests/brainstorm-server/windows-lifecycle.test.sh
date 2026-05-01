@@ -20,7 +20,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${SUPERPOWERS_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 START_SCRIPT="$REPO_ROOT/skills/brainstorming/scripts/start-server.sh"
 STOP_SCRIPT="$REPO_ROOT/skills/brainstorming/scripts/stop-server.sh"
-SERVER_JS="$REPO_ROOT/skills/brainstorming/scripts/server.js"
+SERVER_JS="$REPO_ROOT/skills/brainstorming/scripts/server.cjs"
 
 TEST_DIR="${TMPDIR:-/tmp}/brainstorm-win-test-$$"
 
@@ -64,7 +64,7 @@ skip() {
 wait_for_server_info() {
   local dir="$1"
   for _ in $(seq 1 50); do
-    if [[ -f "$dir/.server-info" ]]; then
+    if [[ -f "$dir/state/server-info" ]]; then
       return 0
     fi
     sleep 0.1
@@ -73,9 +73,9 @@ wait_for_server_info() {
 }
 
 get_port_from_info() {
-  # Read the port from .server-info. Use grep/sed instead of Node.js
+  # Read the port from state/server-info. Use grep/sed instead of Node.js
   # to avoid MSYS2-to-Windows path translation issues.
-  grep -o '"port":[0-9]*' "$1/.server-info" | head -1 | sed 's/"port"://'
+  grep -o '"port":[0-9]*' "$1/state/server-info" | head -1 | sed 's/"port"://'
 }
 
 http_check() {
