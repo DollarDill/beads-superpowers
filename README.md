@@ -61,12 +61,6 @@ Contributions are welcome! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the guid
 
 Have an idea for a new skill or improvement? **[Drop a suggestion on Issue #26](https://github.com/DollarDill/beads-superpowers/issues/26)** — we read every one.
 
-## Support
-
-If this plugin saves you time, consider buying me a coffee:
-
-<a href="https://buymeacoffee.com/dollardill"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=dollardill&button_colour=6366f1&font_colour=ffffff&font_family=Inter&outline_colour=ffffff&coffee_colour=FFDD00" alt="Buy Me A Coffee" height="40"></a>
-
 ## License
 
 [MIT](LICENSE)
