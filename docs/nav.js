@@ -24,6 +24,7 @@
   }
 
   // Render "Last updated" from meta tag
+  var article = document.querySelector('article');
   var lastUpdatedMeta = document.querySelector('meta[name="last-updated"]');
   if (lastUpdatedMeta && article) {
     var dateStr = lastUpdatedMeta.getAttribute('content');
@@ -42,7 +43,6 @@
 
   // Auto-generate "On this page" TOC from h2 elements
   var toc = document.querySelector('.on-this-page');
-  var article = document.querySelector('article');
   if (toc && article) {
     var headings = article.querySelectorAll('h2[id]');
     if (headings.length > 1) {
