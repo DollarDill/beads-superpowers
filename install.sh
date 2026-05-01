@@ -13,19 +13,20 @@ set -euo pipefail
 
 # --- Configuration ---
 REPO="DollarDill/beads-superpowers"
-FALLBACK_VERSION="0.4.0"
+FALLBACK_VERSION="0.4.1"
 SKILLS_DIR="${BEADS_SUPERPOWERS_SKILLS_DIR:-$HOME/.claude/skills}"
 HOOKS_DIR="$HOME/.claude/hooks"
 SETTINGS_FILE="$HOME/.claude/settings.json"
 PLUGINS_FILE="$HOME/.claude/plugins/installed_plugins.json"
 HOOK_SCRIPT="$HOOKS_DIR/beads-superpowers-session-start.sh"
+REMINDER_SCRIPT="$HOOKS_DIR/beads-superpowers-reminder.sh"
 VERSION_FILE="$SKILLS_DIR/.beads-superpowers-version"
 
 KNOWN_SKILLS=(
   auditing-upstream-drift brainstorming dispatching-parallel-agents
   document-release executing-plans finishing-a-development-branch
   getting-up-to-speed project-init receiving-code-review
-  requesting-code-review setup stress-test
+  requesting-code-review research-driven-development setup stress-test
   subagent-driven-development systematic-debugging test-driven-development
   using-git-worktrees using-superpowers verification-before-completion
   writing-plans writing-skills
@@ -35,6 +36,7 @@ KNOWN_SKILLS=(
 FLAG_YES=false
 FLAG_DRY_RUN=false
 FLAG_UNINSTALL=false
+FLAG_TEST=false
 FLAG_VERSION=""
 UPGRADING=false
 HAS_BEADS=false
@@ -65,6 +67,7 @@ Usage:
 Flags:
   --yes, -y       Skip consent prompt (CI mode)
   --dry-run       Print what would happen without doing it
+  --test          Install to /tmp/beads-superpowers-test/ (verifies then cleans up)
   --uninstall     Remove beads-superpowers skills, hook, and settings entry
   --version X.Y.Z Pin to a specific version (default: latest GitHub release)
   --help, -h      Show this help
@@ -79,6 +82,7 @@ parse_flags() {
     case "$1" in
       --yes|-y)     FLAG_YES=true ;;
       --dry-run)    FLAG_DRY_RUN=true ;;
+      --test)       FLAG_TEST=true ;;
       --uninstall)  FLAG_UNINSTALL=true ;;
       --version)    shift; FLAG_VERSION="${1:-}"; [ -z "$FLAG_VERSION" ] && { error "--version requires a value"; exit 1; } ;;
       --help|-h)    usage; exit 0 ;;
@@ -165,12 +169,13 @@ print_consent() {
   echo
   echo "This script will:"
   if [ "$UPGRADING" = true ]; then
-    echo "  • Upgrade 20 skills in $SKILLS_DIR/"
+    echo "  • Upgrade 21 skills in $SKILLS_DIR/"
   else
-    echo "  • Download 20 skills to $SKILLS_DIR/"
+    echo "  • Download 21 skills to $SKILLS_DIR/"
   fi
   echo "  • Create SessionStart hook at $HOOK_SCRIPT"
-  echo "  • Register hook in $SETTINGS_FILE (backup created first)"
+  echo "  • Create UserPromptSubmit hook at $REMINDER_SCRIPT"
+  echo "  • Register both hooks in $SETTINGS_FILE (backup created first)"
   echo
 }
 
@@ -216,6 +221,9 @@ do_install() {
 
   info "Creating SessionStart hook..."
   write_hook_script
+
+  info "Creating UserPromptSubmit hook..."
+  write_reminder_script
 
   if [ -f "$SETTINGS_FILE" ]; then
     local backup="${SETTINGS_FILE}.backup-$(date +%Y%m%d-%H%M%S)"
@@ -278,12 +286,34 @@ HOOKEOF
   chmod +x "$HOOK_SCRIPT"
 }
 
+write_reminder_script() {
+  cat > "$REMINDER_SCRIPT" << 'REMINDEREOF'
+#!/usr/bin/env bash
+# beads-superpowers UserPromptSubmit hook (installed by install.sh)
+# Injects a skill trigger reminder on every user message.
+set -euo pipefail
+
+cat << 'REMINDER'
+{
+  "hookSpecificOutput": {
+    "hookEventName": "UserPromptSubmit",
+    "additionalContext": "SUPERPOWERS REMINDER: Before responding, check if any beads-superpowers skill applies to this task. Key triggers:\n- Bug/test failure → beads-superpowers:systematic-debugging\n- Writing code → beads-superpowers:test-driven-development\n- New feature/design → beads-superpowers:brainstorming\n- Writing a plan → beads-superpowers:writing-plans\n- Executing a plan → beads-superpowers:subagent-driven-development or beads-superpowers:executing-plans\n- Complex task (6+ files) → beads-superpowers:using-git-worktrees\n- About to claim done → beads-superpowers:verification-before-completion\n- Code review needed → beads-superpowers:requesting-code-review\n- Branch complete → beads-superpowers:finishing-a-development-branch\nIf even 1% chance a skill applies, you MUST invoke it via the Skill tool."
+  }
+}
+REMINDER
+
+exit 0
+REMINDEREOF
+  chmod +x "$REMINDER_SCRIPT"
+}
+
 register_hook() {
   python3 << PYEOF
 import json, os
 
 sf = "$SETTINGS_FILE"
 hs = "$HOOK_SCRIPT"
+rs = "$REMINDER_SCRIPT"
 
 if os.path.exists(sf):
     with open(sf) as f:
@@ -293,16 +323,26 @@ else:
     settings = {}
 
 hooks = settings.setdefault("hooks", {})
-ss = hooks.setdefault("SessionStart", [])
 
+# SessionStart hook
+ss = hooks.setdefault("SessionStart", [])
 if not any("beads-superpowers" in json.dumps(e) for e in ss):
     ss.append({
         "matcher": "startup|clear|compact",
         "hooks": [{"type": "command", "command": f"bash {hs}"}]
     })
-    with open(sf, "w") as f:
-        json.dump(settings, f, indent=2)
-        f.write("\n")
+
+# UserPromptSubmit hook
+ups = hooks.setdefault("UserPromptSubmit", [])
+if not any("beads-superpowers" in json.dumps(e) for e in ups):
+    ups.append({
+        "matcher": "",
+        "hooks": [{"type": "command", "command": f"bash {rs}"}]
+    })
+
+with open(sf, "w") as f:
+    json.dump(settings, f, indent=2)
+    f.write("\n")
 PYEOF
 }
 
@@ -310,10 +350,10 @@ PYEOF
 do_verify() {
   local count
   count=$(find "$SKILLS_DIR" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-  if [ "$count" -ge 20 ]; then
+  if [ "$count" -ge 21 ]; then
     success "Skill count: $count"
   else
-    warn "Expected >= 20 skills, found $count"
+    warn "Expected >= 21 skills, found $count"
   fi
 
   if bash "$HOOK_SCRIPT" 2>/dev/null | python3 -m json.tool > /dev/null 2>&1; then
@@ -341,7 +381,7 @@ print_next_steps() {
   echo
   echo "Next steps:"
   echo "  1. Restart Claude Code (or start a new session) to activate skills"
-  echo "  2. Run /skills to verify — you should see 20+ skills available"
+  echo "  2. Run /skills to verify — you should see 21+ skills available"
   if [ "$HAS_BEADS" = false ]; then
     echo
     echo "  3. Install beads for persistent task tracking:"
@@ -367,7 +407,12 @@ do_uninstall() {
 
   if [ -f "$HOOK_SCRIPT" ]; then
     rm -f "$HOOK_SCRIPT"
-    info "Removed hook script"
+    info "Removed SessionStart hook script"
+  fi
+
+  if [ -f "$REMINDER_SCRIPT" ]; then
+    rm -f "$REMINDER_SCRIPT"
+    info "Removed UserPromptSubmit hook script"
   fi
 
   if [ -f "$SETTINGS_FILE" ]; then
@@ -377,13 +422,15 @@ import json
 sf = "$SETTINGS_FILE"
 with open(sf) as f:
     settings = json.load(f)
-ss = settings.get("hooks", {}).get("SessionStart", [])
-settings["hooks"]["SessionStart"] = [e for e in ss if "beads-superpowers" not in json.dumps(e)]
+hooks = settings.get("hooks", {})
+for key in ["SessionStart", "UserPromptSubmit"]:
+    if key in hooks:
+        hooks[key] = [e for e in hooks[key] if "beads-superpowers" not in json.dumps(e)]
 with open(sf, "w") as f:
     json.dump(settings, f, indent=2)
     f.write("\n")
 PYEOF
-    info "Removed hook from settings.json"
+    info "Removed hooks from settings.json"
   fi
 
   rm -f "$VERSION_FILE"
@@ -397,7 +444,7 @@ print_dry_run() {
   echo
   echo "Would perform these actions:"
   echo "  1. Download release tarball from GitHub"
-  echo "  2. Copy 20 skills to $SKILLS_DIR/"
+  echo "  2. Copy 21 skills to $SKILLS_DIR/"
   echo "  3. Create hook script at $HOOK_SCRIPT"
   echo "  4. Backup $SETTINGS_FILE"
   echo "  5. Register SessionStart hook in settings.json"
@@ -406,10 +453,88 @@ print_dry_run() {
   echo "No files were modified."
 }
 
+# --- Test Mode ---
+do_test() {
+  local test_home="/tmp/beads-superpowers-test"
+  rm -rf "$test_home"
+
+  info "Test mode: installing to $test_home/"
+  echo
+
+  # Re-run ourselves with overridden HOME and --yes
+  BEADS_SUPERPOWERS_SKILLS_DIR="$test_home/skills" HOME="$test_home" bash "$0" --yes
+
+  echo
+  info "Running verification checks..."
+  local pass=0 fail=0
+
+  # Check skill count
+  local count
+  count=$(find "$test_home/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$count" -ge 20 ]; then
+    success "Skills installed: $count"; pass=$((pass + 1))
+  else
+    error "Skills installed: $count (expected >= 20)"; fail=$((fail + 1))
+  fi
+
+  # Check SessionStart hook
+  if bash "$test_home/.claude/hooks/beads-superpowers-session-start.sh" 2>/dev/null | python3 -m json.tool > /dev/null 2>&1; then
+    success "SessionStart hook: valid JSON"; pass=$((pass + 1))
+  else
+    error "SessionStart hook: invalid JSON"; fail=$((fail + 1))
+  fi
+
+  # Check UserPromptSubmit hook
+  if bash "$test_home/.claude/hooks/beads-superpowers-reminder.sh" 2>/dev/null | python3 -m json.tool > /dev/null 2>&1; then
+    success "UserPromptSubmit hook: valid JSON"; pass=$((pass + 1))
+  else
+    error "UserPromptSubmit hook: invalid JSON"; fail=$((fail + 1))
+  fi
+
+  # Check settings.json
+  if python3 -c "
+import json
+d=json.load(open('$test_home/.claude/settings.json'))
+assert d['hooks']['SessionStart']
+assert d['hooks']['UserPromptSubmit']
+" 2>/dev/null; then
+    success "settings.json: both hooks registered"; pass=$((pass + 1))
+  else
+    error "settings.json: hooks missing"; fail=$((fail + 1))
+  fi
+
+  # Test uninstall
+  BEADS_SUPERPOWERS_SKILLS_DIR="$test_home/skills" HOME="$test_home" bash "$0" --uninstall 2>&1
+
+  if [ ! -f "$test_home/.claude/hooks/beads-superpowers-session-start.sh" ] && \
+     [ ! -f "$test_home/.claude/hooks/beads-superpowers-reminder.sh" ]; then
+    success "Uninstall: hooks removed"; pass=$((pass + 1))
+  else
+    error "Uninstall: hooks still exist"; fail=$((fail + 1))
+  fi
+
+  # Cleanup
+  rm -rf "$test_home"
+
+  echo
+  if [ "$fail" -eq 0 ]; then
+    success "All $pass checks passed"
+  else
+    error "$fail checks failed, $pass passed"
+    exit 1
+  fi
+}
+
 # --- Main ---
 main() {
   parse_flags "$@"
   check_prerequisites
+
+  # Handle test mode — runs install + verify + uninstall in temp dir
+  if [ "$FLAG_TEST" = true ]; then
+    do_test
+    exit 0
+  fi
 
   # Handle uninstall early — before version resolution or existing-install detection
   if [ "$FLAG_UNINSTALL" = true ]; then
