@@ -9,6 +9,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-05-01
+
+### Added
+
+- Wiki-style documentation site at `dollardill.github.io/beads-superpowers` — 6 pages with HashiCorp/Terraform-style left sidebar navigation, dark theme, auto-generated TOC, and 9 Mermaid diagrams: Home, Getting Started, Methodology, Skills Reference, Example Workflow, Tips & Tricks.
+- `research-driven-development` skill (#21) — dispatches parallel `@researcher` + `@explore` agents, synthesizes findings into persistent documents. Iron Law: NO RESEARCH WITHOUT A DOCUMENT.
+- `example-workflow/` directory — ready-to-use CLAUDE.md with the full 11-state FSM development lifecycle, plus `researcher.md` and `implementer.md` agent configurations. Copy into any project for the complete workflow.
+- `UserPromptSubmit` hook (`hooks/superpowers-reminder.sh`) — injects skill trigger reminders on every user message, preventing mid-session drift. Registered in `hooks/hooks.json` alongside SessionStart.
+- `install.sh --test` flag — runs install → verify → uninstall in `/tmp/`, reports pass/fail on 5 checks, cleans up automatically.
+- `bd forget`, `bd note`, and `bd find-duplicates` integrated into skills: using-superpowers quick reference, verification-before-completion evidence trail, finishing-a-development-branch pre-merge gate.
+- GitHub Sponsor button via `.github/FUNDING.yml` (Buy Me a Coffee).
+- Community suggestions issue (#26) for skill proposals.
+
+### Changed
+
+- README simplified — stripped from 255 to 67 lines. All detail now on the docs site. Quick Start + docs table + attribution + contributing invite.
+- Upstream audit synced with superpowers `dev` branch (pre-v5.1.0): removed deprecated `commands/` directory (3 slash commands), removed legacy Integration sections from finishing + worktrees skills, added SDD "continuous execution" directive, updated requesting-code-review agent type and review cadence.
+- `install.sh` updated: installs 21 skills (was 20), writes both SessionStart and UserPromptSubmit hooks, fallback version bumped to 0.4.1.
+- `setup` skill updated to install both hooks (SessionStart + UserPromptSubmit).
+- Skill count updated from 20 → 21 across all docs, HTML pages, SEO meta tags, CI workflow, and install script.
+- All docs pages now have "View on GitHub" button in sidebar (replaces text link).
+- Each skill tag on home page links to its SKILL.md on GitHub.
+
+### Fixed
+
+- `windows-lifecycle.test.sh` — fixed 2 fatal bugs: `server.js` → `server.cjs` (file was renamed), `.server-info` → `state/server-info` (path changed in server refactor).
+- README incorrectly attributed 20 skills to upstream superpowers (correct: 15 upstream, 21 in fork).
+- CONTRIBUTING.md falsely claimed no CODE_OF_CONDUCT.md exists (it does).
+- AGENTS.md used `bd github sync` (correct: `bd github push`).
+- SECURITY.md supported versions table listed 0.1.x (updated to 0.4.x).
+- PR template skill count validation: 15 → 21.
+- Stale claims fixed across 12+ doc files: skill counts, version numbers, TodoWrite refs, OpenViking refs, .beads/redirect refs, steveyegge org URLs.
+
+### Removed
+
+- `commands/` directory — 3 deprecated slash commands (brainstorm, execute-plan, write-plan). Upstream removed in superpowers v5.1.0 dev.
+- `docs/beads-superpowers/` — 4 AI-generated plan/spec files from shipped features.
+- `docs/googlec875b47c36713f6b.html` — Google Search Console verification file.
+
 ## [0.4.1] - 2026-04-25
 
 ### Added
