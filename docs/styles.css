@@ -335,6 +335,8 @@ tr:nth-child(even) td { background: rgba(30, 41, 59, 0.4); }
 }
 .skill-tag .name { color: var(--accent-light); font-weight: 600; }
 .skill-tag .desc { color: var(--text-muted); font-size: 0.78rem; }
+a.skill-tag { text-decoration: none; transition: border-color 0.15s, transform 0.15s; }
+a.skill-tag:hover { border-color: var(--accent); transform: translateY(-2px); text-decoration: none; }
 
 /* ─── Badge row ─── */
 .badges { margin: 16px 0; }
