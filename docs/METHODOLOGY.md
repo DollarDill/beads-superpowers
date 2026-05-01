@@ -75,6 +75,8 @@ Every reference to `TodoWrite` across all 14 Superpowers skills was replaced wit
 - All subagent prompt templates (implementer, spec-reviewer, code-quality-reviewer) — **unchanged**
 - Platform reference files for Gemini, Copilot CLI, and Codex
 
+> **Note:** beads-superpowers has since grown to 20 skills. Six additional skills were created specifically for this project: `auditing-upstream-drift`, `document-release`, `getting-up-to-speed`, `project-init`, `setup`, and `stress-test`.
+
 ### What Was NOT Changed
 
 The three subagent prompt files are deliberately not beads-aware. This is the **orchestrator-only** design decision:
@@ -294,7 +296,7 @@ Every step is tracked. Every decision is auditable. Every session starts where t
 ### Systems Analysed
 
 - [obra/superpowers](https://github.com/obra/superpowers) v5.0.7 — 14 composable skills for AI agents (MIT)
-- [gastownhall/beads](https://github.com/gastownhall/beads) v1.0.0 — Persistent issue tracker for AI agents (MIT)
+- [gastownhall/beads](https://github.com/gastownhall/beads) v1.0.2 — Persistent issue tracker for AI agents (MIT)
 
 ### Research Citations
 

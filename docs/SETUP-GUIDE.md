@@ -17,7 +17,7 @@
    npm install -g @beads/bd
 
    # Direct install script
-   curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
+   curl -fsSL https://raw.githubusercontent.com/gastownhall/beads/main/scripts/install.sh | bash
 
    # Verify installation
    bd version
@@ -91,7 +91,7 @@ claude plugin list
 
 # Expected output:
 #   ❯ beads-superpowers@beads-superpowers-marketplace
-#     Version: 0.1.0
+#     Version: 0.4.1
 #     Scope: user
 #     Status: ✔ enabled
 ```
@@ -150,7 +150,7 @@ bd dolt push
 
 # Verify skills are available
 /skills
-# Should list 14 beads-superpowers: skills
+# Should list 20 beads-superpowers: skills
 
 # Verify bd is working
 bd ready
