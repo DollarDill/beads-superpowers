@@ -88,4 +88,63 @@
       headings.forEach(function (h) { observer.observe(h); });
     }
   }
+  // ─── Mermaid lightbox with panzoom ───
+  var diagrams = document.querySelectorAll('.mermaid');
+  if (diagrams.length > 0) {
+    // Create lightbox DOM
+    var lb = document.createElement('div');
+    lb.className = 'mermaid-lightbox';
+    lb.innerHTML = '<button class="mermaid-lightbox-close" aria-label="Close">&times;</button>' +
+      '<div class="mermaid-lightbox-inner"></div>' +
+      '<div class="mermaid-lightbox-hint">Scroll to zoom · Drag to pan · Click backdrop or Esc to close</div>';
+    document.body.appendChild(lb);
+
+    var lbInner = lb.querySelector('.mermaid-lightbox-inner');
+    var lbClose = lb.querySelector('.mermaid-lightbox-close');
+    var pzInstance = null;
+
+    function closeLightbox() {
+      lb.classList.remove('active');
+      if (pzInstance) { pzInstance.dispose(); pzInstance = null; }
+      lbInner.innerHTML = '';
+      document.body.style.overflow = '';
+    }
+
+    lbClose.addEventListener('click', function (e) { e.stopPropagation(); closeLightbox(); });
+    lb.addEventListener('click', function (e) { if (e.target === lb) closeLightbox(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && lb.classList.contains('active')) closeLightbox(); });
+
+    // Wait for Mermaid to finish rendering, then attach click handlers
+    function attachClickHandlers() {
+      diagrams.forEach(function (d) {
+        d.addEventListener('click', function () {
+          var svg = d.querySelector('svg');
+          if (!svg) return;
+          var clone = svg.cloneNode(true);
+          clone.style.maxWidth = 'none';
+          clone.style.width = 'auto';
+          clone.style.height = 'auto';
+          lbInner.innerHTML = '';
+          lbInner.appendChild(clone);
+          lb.classList.add('active');
+          document.body.style.overflow = 'hidden';
+          // Attach panzoom if available
+          if (typeof panzoom === 'function') {
+            pzInstance = panzoom(clone, { maxZoom: 10, minZoom: 0.5, smoothScroll: false });
+          }
+        });
+      });
+    }
+
+    // Mermaid renders async — wait for SVGs to appear
+    var checkInterval = setInterval(function () {
+      var rendered = document.querySelector('.mermaid svg');
+      if (rendered) {
+        clearInterval(checkInterval);
+        attachClickHandlers();
+      }
+    }, 200);
+    // Safety timeout
+    setTimeout(function () { clearInterval(checkInterval); attachClickHandlers(); }, 5000);
+  }
 })();

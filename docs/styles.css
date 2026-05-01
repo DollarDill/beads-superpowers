@@ -449,11 +449,84 @@ a.skill-tag:hover { border-color: var(--accent); transform: translateY(-2px); te
   margin: 20px 0;
   text-align: center;
   overflow-x: auto;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s;
+}
+.mermaid:hover {
+  border-color: var(--accent);
+}
+.mermaid::after {
+  content: '\2922';
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 1.1rem;
+  color: var(--text-dim);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.mermaid:hover::after {
+  opacity: 1;
 }
 .mermaid svg {
   width: 100%;
   height: auto;
   max-width: 100%;
+}
+
+/* ─── Mermaid Lightbox ─── */
+.mermaid-lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.92);
+  cursor: zoom-out;
+}
+.mermaid-lightbox.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mermaid-lightbox-inner {
+  width: 90vw;
+  height: 90vh;
+  overflow: hidden;
+  cursor: grab;
+}
+.mermaid-lightbox-inner:active {
+  cursor: grabbing;
+}
+.mermaid-lightbox-inner svg {
+  max-width: none;
+  width: auto;
+  height: auto;
+}
+.mermaid-lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 2rem;
+  cursor: pointer;
+  z-index: 10000;
+  line-height: 1;
+  padding: 4px 8px;
+}
+.mermaid-lightbox-close:hover {
+  color: var(--text);
+}
+.mermaid-lightbox-hint {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  pointer-events: none;
 }
 
 /* ─── Hamburger (mobile) ─── */
