@@ -123,6 +123,29 @@ a:hover { text-decoration: underline; }
 }
 .sidebar-external a:hover { color: var(--text-muted); }
 
+.sidebar-github { padding: 16px 16px; }
+.btn-github-sidebar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+}
+.btn-github-sidebar:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+  text-decoration: none;
+}
+.btn-github-sidebar svg { width: 18px; height: 18px; fill: #0f172a; }
+
 /* ─── Main content ─── */
 .content {
   grid-column: 2;
