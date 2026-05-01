@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tips &amp; Tricks — beads-superpowers</title>
+  <meta name="description" content="Beads command cheat sheet, troubleshooting, and best practices">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <button class="hamburger" aria-label="Menu">&#9776;</button>
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-header"><a href="index.html">beads-superpowers</a> <span class="version">v0.4.1</span></div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Documentation</div>
+        <a class="nav-link" href="index.html">Home</a>
+        <a class="nav-link" href="getting-started.html">Getting Started</a>
+        <a class="nav-link" href="methodology.html">Methodology</a>
+        <a class="nav-link" href="skills.html">Skills Reference</a>
+        <a class="nav-link" href="workflow.html">Example Workflow</a>
+        <a class="nav-link" href="tips.html">Tips &amp; Tricks</a>
+      </div>
+      <hr class="sidebar-divider">
+      <div class="sidebar-external">
+        <a href="https://github.com/DollarDill/beads-superpowers">GitHub &rarr;</a>
+      </div>
+    </nav>
+    <div class="content">
+      <article>
+        <h1>Tips &amp; Tricks</h1>
+        <p class="subtitle">Beads command cheat sheet, skill selection guide, troubleshooting, and contributor tips.</p>
+
+        <h2 id="cheatsheet">Beads Command Cheat Sheet</h2>
+        <p>Quick reference for the <code>bd</code> commands used throughout the skills. The orchestrating agent calls these — subagents do not touch beads.</p>
+
+        <h3>Finding Work</h3>
+        <table>
+          <thead>
+            <tr><th>Command</th><th>What it does</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>bd ready</code></td><td>List unclaimed, unblocked beads ready to work</td></tr>
+            <tr><td><code>bd ready --parent &lt;epic-id&gt;</code></td><td>Check remaining tasks inside a specific epic</td></tr>
+            <tr><td><code>bd list --status=open</code></td><td>List all open beads regardless of block status</td></tr>
+            <tr><td><code>bd show &lt;id&gt;</code></td><td>Show full details for a single bead</td></tr>
+            <tr><td><code>bd blocked</code></td><td>Show all beads currently blocked by a dependency</td></tr>
+            <tr><td><code>bd epic status &lt;id&gt;</code></td><td>Show progress summary for an epic and its children</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Creating Beads</h3>
+        <table>
+          <thead>
+            <tr><th>Command</th><th>What it does</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>bd create "Epic: name" -t epic -p 2</code></td><td>Create a new epic at priority 2</td></tr>
+            <tr><td><code>bd create "Task: title" -t task --parent &lt;epic-id&gt;</code></td><td>Create a task under an epic</td></tr>
+            <tr><td><code>bd q "quick title"</code></td><td>Quick-capture a bead without flags</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Working a Bead</h3>
+        <table>
+          <thead>
+            <tr><th>Command</th><th>What it does</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>bd update &lt;id&gt; --claim</code></td><td>Claim a bead as in-progress</td></tr>
+            <tr><td><code>bd close &lt;id&gt; --reason "..."</code></td><td>Mark a bead complete with an evidence reason</td></tr>
+            <tr><td><code>bd dep add &lt;child&gt; &lt;depends-on&gt;</code></td><td>Add a dependency between two beads</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Memory</h3>
+        <table>
+          <thead>
+            <tr><th>Command</th><th>What it does</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>bd remember "insight"</code></td><td>Store a learning that persists across sessions</td></tr>
+            <tr><td><code>bd memories &lt;keyword&gt;</code></td><td>Search stored learnings by keyword</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Sync</h3>
+        <table>
+          <thead>
+            <tr><th>Command</th><th>What it does</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>bd dolt push</code></td><td>Push beads database to the Dolt remote</td></tr>
+            <tr><td><code>bd dolt pull</code></td><td>Pull latest beads from the Dolt remote</td></tr>
+            <tr><td><code>bd github push</code></td><td>Sync beads to GitHub Issues</td></tr>
+            <tr><td><code>bd github pull</code></td><td>Pull GitHub Issues into beads</td></tr>
+            <tr><td><code>bd github status</code></td><td>Check GitHub sync configuration</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Health &amp; Housekeeping</h3>
+        <table>
+          <thead>
+            <tr><th>Command</th><th>What it does</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>bd stats</code></td><td>Summary counts of open, closed, and blocked beads</td></tr>
+            <tr><td><code>bd doctor</code></td><td>Diagnose common configuration problems</td></tr>
+            <tr><td><code>bd preflight</code></td><td>PR readiness check — are all beads closed?</td></tr>
+            <tr><td><code>bd stale</code></td><td>Find beads that have not been touched recently</td></tr>
+            <tr><td><code>bd orphans</code></td><td>Find beads with no parent epic</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout callout-info">
+          <div class="callout-title">Land the Plane</div>
+          <p>Every session ends with the same three steps: <code>bd close &lt;id&gt; --reason "..."</code> for each completed bead, then <code>bd dolt push</code> to sync, then <code>git push</code> to push code. The <strong>finishing-a-development-branch</strong> skill enforces this sequence.</p>
+        </div>
+
+        <h2 id="skill-selection">Which Skill for Which Situation?</h2>
+        <p>Skills are not suggestions — if a skill applies, it must be used. Use this table to route to the right skill quickly.</p>
+
+        <table>
+          <thead>
+            <tr><th>Situation</th><th>Skill to invoke</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Starting a session or returning after compaction</td><td><code>getting-up-to-speed</code></td></tr>
+            <tr><td>I need to design something before writing code</td><td><code>brainstorming</code></td></tr>
+            <tr><td>I want to stress-test a design or plan</td><td><code>stress-test</code></td></tr>
+            <tr><td>I have an approved design and need a task plan</td><td><code>writing-plans</code></td></tr>
+            <tr><td>I need to implement tasks with full review per task</td><td><code>subagent-driven-development</code></td></tr>
+            <tr><td>I need to execute a plan in a single session</td><td><code>executing-plans</code></td></tr>
+            <tr><td>I am writing any feature or bugfix</td><td><code>test-driven-development</code></td></tr>
+            <tr><td>Tests are failing or behaviour is unexpected</td><td><code>systematic-debugging</code></td></tr>
+            <tr><td>I am about to say the work is done</td><td><code>verification-before-completion</code></td></tr>
+            <tr><td>I need a code review</td><td><code>requesting-code-review</code></td></tr>
+            <tr><td>Someone gave me code review feedback</td><td><code>receiving-code-review</code></td></tr>
+            <tr><td>I need to merge, open a PR, or close a branch</td><td><code>finishing-a-development-branch</code></td></tr>
+            <tr><td>Two or more tasks can be parallelised</td><td><code>dispatching-parallel-agents</code></td></tr>
+            <tr><td>I need to create or modify a skill</td><td><code>writing-skills</code></td></tr>
+            <tr><td>Post-ship — documentation needs updating</td><td><code>document-release</code></td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout callout-tip">
+          <div class="callout-title">Tip</div>
+          <p>The <strong>using-superpowers</strong> bootstrap skill (injected automatically at session start) contains the full routing logic and anti-rationalization table. If you are unsure which skill applies, ask Claude to read it explicitly.</p>
+        </div>
+
+        <h2 id="troubleshooting">Common Issues</h2>
+
+        <div class="callout callout-warning">
+          <div class="callout-title">Skills not loading</div>
+          <p>Verify the plugin is installed and enabled:</p>
+          <pre><code>claude plugin list
+# Expected: beads-superpowers@beads-superpowers-marketplace — Status: enabled
+
+/plugins     # Inside Claude Code session — should list beads-superpowers
+/skills      # Should show beads-superpowers: prefixed skills (20 total)</code></pre>
+          <p>If the plugin is listed but skills are missing, check that the SessionStart hook is executable:</p>
+          <pre><code>ls -la hooks/session-start   # Should show -rwxr-xr-x
+chmod +x hooks/session-start  # If not executable</code></pre>
+        </div>
+
+        <div class="callout callout-warning">
+          <div class="callout-title"><code>bd: command not found</code></div>
+          <p>The <code>bd</code> CLI is not installed. Install it using one of these methods:</p>
+          <pre><code># Homebrew (macOS / Linux)
+brew install beads
+
+# npm (any platform)
+npm install -g @beads/bd
+
+# curl installer
+curl -fsSL https://raw.githubusercontent.com/gastownhall/beads/main/scripts/install.sh | bash
+
+# Verify
+bd version</code></pre>
+        </div>
+
+        <div class="callout callout-warning">
+          <div class="callout-title">Duplicate context injection (double <code>bd prime</code>)</div>
+          <p>Running <code>bd init</code> or <code>bd setup claude</code> installs a SessionStart hook that also runs <code>bd prime</code>. The beads-superpowers plugin already does this, so you get double injection — roughly 2x token overhead per session start.</p>
+          <p>The plugin detects the duplicate and warns you. Fix it with:</p>
+          <pre><code>bd setup claude --remove
+
+# Verify no "bd prime" entries remain
+cat .claude/settings.json</code></pre>
+        </div>
+
+        <div class="callout callout-warning">
+          <div class="callout-title">Plugin cache is stale after editing skills</div>
+          <p>After editing skills in the source repo, the installed plugin cache at <code>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.4.1/</code> does not update automatically. <code>claude plugin update</code> has a <a href="https://github.com/anthropics/claude-code/issues/14061">known cache bug</a>.</p>
+          <p>Use a one-time symlink instead — see the <a href="#development">Development Tips</a> section below.</p>
+          <p>Quick check for drift:</p>
+          <pre><code>diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.4.1/skills/</code></pre>
+        </div>
+
+        <div class="callout callout-warning">
+          <div class="callout-title">Tests skip or fail unexpectedly</div>
+          <p>The test suite requires <code>bd</code>, <code>git</code>, and <code>bash</code> to be available on <code>PATH</code>. Verify each:</p>
+          <pre><code>bd version
+git --version
+bash --version</code></pre>
+          <p>Fast tests (skill content verification) run in about 2 minutes and have no external dependencies beyond <code>bash</code>. Integration tests require a live <code>bd</code> installation and a project with <code>bd init</code> completed.</p>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-title"><code>bd dolt push</code> fails</div>
+          <p>This most commonly means no Dolt remote is configured. Set one up:</p>
+          <pre><code>bd dolt remote add origin https://doltremoteapi.dolthub.com/your-org/your-repo</code></pre>
+          <p>If you don't need cross-session remote sync, the failure is harmless — beads continues to work locally. The Land the Plane protocol will still close beads; the push step will simply report an error that can be ignored.</p>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-title">Skills still reference TodoWrite</div>
+          <p>All active TodoWrite references were replaced with <code>bd</code> commands during the migration. If you see any that are not preceded by "Do NOT use TodoWrite", it is a bug.</p>
+          <p>Verify with:</p>
+          <pre><code>grep -r "TodoWrite" skills/ | grep -v "Do NOT use" | grep -v "replaces"
+# Should return empty</code></pre>
+        </div>
+
+        <h2 id="development">Development Tips</h2>
+        <p>Tips for contributors who are editing skills or working on the plugin itself.</p>
+
+        <h3>One-Time Plugin Cache Symlink</h3>
+        <p>Editing skills in the source repo immediately goes stale in the plugin cache. The symlink approach fixes this permanently — edits in the repo are instantly reflected in the installed plugin, with no sync step required.</p>
+        <pre><code># Remove the cached copy
+rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.4.1
+
+# Symlink the cache entry to this repo
+ln -s ~/workplace/beads-superpowers \
+  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.4.1</code></pre>
+        <p>Verify the symlink is working:</p>
+        <pre><code>diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.4.1/skills/
+# Should produce no output</code></pre>
+
+        <h3>Version Management</h3>
+        <p>The version number is declared in three files that must stay in sync: <code>package.json</code>, <code>.claude-plugin/plugin.json</code>, and <code>.claude-plugin/marketplace.json</code>. Always use the bump script — never edit them by hand.</p>
+        <pre><code># Bump to a new version (updates all three files)
+./scripts/bump-version.sh 0.5.0
+
+# Check for version drift across the three files
+./scripts/bump-version.sh --check</code></pre>
+
+        <h3>Running Tests</h3>
+        <p>There is no build step. Skills are plain Markdown and tests verify their content directly.</p>
+        <pre><code># Fast tests — skill content verification (~2 minutes)
+cd tests/claude-code && ./run-skill-tests.sh
+
+# Integration tests — full workflow execution (10–30 minutes)
+cd tests/claude-code && ./run-skill-tests.sh --integration</code></pre>
+
+        <h3>Validation Commands</h3>
+        <p>Run these before opening a PR to verify the plugin is consistent:</p>
+        <pre><code># Validate plugin manifests
+claude plugin validate .claude-plugin/plugin.json
+
+# Verify skill count (should be 20)
+ls -d skills/*/ | wc -l
+
+# Verify zero active TodoWrite references (must return empty)
+grep -r "TodoWrite" skills/ | grep -v "Do NOT use TodoWrite" | grep -v "replaces TodoWrite"
+
+# Verify beads integration density (should be 30+)
+grep -r "bd create\|bd close\|bd ready" skills/ | wc -l
+
+# Test hook output is valid JSON
+bash hooks/session-start 2>&1 | python3 -m json.tool</code></pre>
+
+        <h3>Adding a New Skill</h3>
+        <p>When adding a skill, follow these conventions to avoid breaking Claude's routing logic:</p>
+        <ol>
+          <li>Create <code>skills/&lt;skill-name&gt;/SKILL.md</code> with a YAML frontmatter block. The <code>description</code> field is a trigger condition, not a workflow summary — write it as "Use when X", not "This skill does Y".</li>
+          <li>Make it beads-aware: use <code>bd create</code> / <code>bd close</code> / <code>bd ready</code> for all task tracking. No TodoWrite, no markdown checklists.</li>
+          <li>Update the skills table in <code>README.md</code> and add a CHANGELOG entry.</li>
+        </ol>
+
+        <div class="callout callout-tip">
+          <div class="callout-title">Anti-patterns to avoid</div>
+          <p>When modifying existing skills, do <strong>not</strong> remove anti-rationalization tables, Iron Laws, or Red Flags sections — these are the enforcement mechanism. Do <strong>not</strong> soften bright-line rules by replacing "MUST" with "consider". Do <strong>not</strong> add platform-specific code to skills — skills are pure Markdown.</p>
+        </div>
+
+        <h2 id="windows">Windows Support</h2>
+        <p>The SessionStart hook at <code>hooks/session-start</code> is a bash script. On Windows it is called via the polyglot wrapper <code>hooks/run-hook.cmd</code>.</p>
+        <p>The <code>.cmd</code> file is simultaneously valid as a Windows batch file and a bash script:</p>
+        <ul>
+          <li>On Windows: <code>cmd.exe</code> interprets the batch portion, which locates Git Bash and re-executes the hook under <code>bash.exe</code>.</li>
+          <li>On Unix: the shell treats the <code>:</code> command as a no-op and executes the rest as bash.</li>
+        </ul>
+        <p>This means the plugin works on Windows without WSL, provided Git for Windows (Git Bash) is installed. No separate Windows configuration is required.</p>
+
+        <div class="callout callout-info">
+          <div class="callout-title">Skill content is platform-agnostic</div>
+          <p>Skills are plain Markdown with no platform-specific code. The only platform-specific layer is the hook wrapper. If you are writing a new skill, keep it pure Markdown — the hook handles platform differences externally.</p>
+        </div>
+
+        <h2 id="upstream">Upstream Tracking</h2>
+        <p>beads-superpowers is a fork that tracks two upstream projects. Changes in either upstream may introduce new skills, modified commands, or updated hook formats that should be merged in.</p>
+
+        <table>
+          <thead>
+            <tr><th>Source</th><th>Baseline version</th><th>What we track</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="https://github.com/obra/superpowers">obra/superpowers</a></td>
+              <td>v5.0.7</td>
+              <td>Skill content, new skills, hook changes</td>
+            </tr>
+            <tr>
+              <td><a href="https://github.com/gastownhall/beads">gastownhall/beads</a></td>
+              <td>v1.0.2</td>
+              <td>CLI commands, new features, <code>bd prime</code> format</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>To check whether the repo has drifted from either upstream, invoke the <strong>auditing-upstream-drift</strong> skill. It compares skills, hook output, and command usage against the current upstream releases and produces a prioritised list of changes to review.</p>
+
+        <div class="callout callout-tip">
+          <div class="callout-title">When to run an upstream audit</div>
+          <p>Run <code>auditing-upstream-drift</code> before a plugin release, after a long gap between development sessions, or when you notice a skill behaving differently from the upstream documentation.</p>
+        </div>
+
+        <div class="page-nav">
+          <a href="workflow.html"><span class="label">Previous</span><span class="title">Example Workflow</span></a>
+          <span></span>
+        </div>
+      </article>
+      <div class="on-this-page"></div>
+    </div>
+  </div>
+  <script src="nav.js"></script>
+</body>
+</html>
