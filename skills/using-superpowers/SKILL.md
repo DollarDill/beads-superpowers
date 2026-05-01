@@ -143,8 +143,11 @@ This skills system uses **bd (beads)** for persistent task tracking across sessi
 | Add dependency | `bd dep add <child-id> <depends-on-id>` |
 | View dependency tree | `bd dep tree <epic-id>` |
 | Store a learning | `bd remember "insight"` |
+| Remove stale memory | `bd forget <id>` |
 | Search memories | `bd memories <keyword>` |
 | Recall specific memory | `bd recall <id>` |
+| Append note to bead | `bd note <id> "context"` |
+| Find duplicate beads | `bd find-duplicates` |
 | PR readiness check | `bd preflight` |
 | Sync to remote | `bd dolt push` |
 

@@ -52,7 +52,10 @@ This plugin uses `bd` (beads) for ALL task tracking.
 | Epic status | `bd epic status <id>` |
 | Add dependency | `bd dep add <child> <depends-on>` |
 | Store learning | `bd remember "insight"` |
+| Remove stale memory | `bd forget <id>` |
 | Search memories | `bd memories <keyword>` |
+| Append note to bead | `bd note <id> "context"` |
+| Find duplicate beads | `bd find-duplicates` |
 | PR readiness | `bd preflight` |
 | Sync beads | `bd dolt push` |
 | Sync to GitHub Issues | `bd github push` |

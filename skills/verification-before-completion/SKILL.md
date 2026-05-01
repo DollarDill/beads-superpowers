@@ -135,8 +135,11 @@ From 24 failure memories:
 
 `bd close` without fresh verification evidence is lying. Before closing any bead:
 1. Run the verification command that proves the work is done
-2. Include the evidence in the `--reason` flag
-3. Only then execute `bd close`
+2. Annotate the bead with evidence: `bd note <id> "test output: 14 passed, 0 failed"`
+3. Include the summary in the `--reason` flag
+4. Only then execute `bd close`
+
+Use `bd note` to attach detailed evidence (test output, diff stats, verification logs) to the bead before closing. The `--reason` flag is the summary; `bd note` is the full evidence trail.
 
 A bead closed without evidence is worse than a bead left open — it corrupts the ledger.
 
