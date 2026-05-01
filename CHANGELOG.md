@@ -7,16 +7,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > **Forked from:** [obra/superpowers](https://github.com/obra/superpowers) v5.0.7 (2026-03-31)
 > **Beads integration based on:** [gastownhall/beads](https://github.com/gastownhall/beads) v1.0.2 (2026-04-15)
 
-## [Unreleased]
+## [0.5.1] - 2026-05-01
+
+### Added
+
+- Click-to-expand lightbox with pan/zoom for all Mermaid diagrams on docs site. Click any diagram to open fullscreen; scroll to zoom, drag to pan. Uses [panzoom](https://github.com/anvaka/panzoom) (CDN, ~14KB).
+- "Last updated" date on each docs page, fetched from GitHub API (git commit history per file). Graceful degradation if API unavailable.
 
 ### Changed
 
 - UserPromptSubmit reminder hook expanded from 9 to 20 skills (all 21 minus auto-loaded `using-superpowers`). Tiered format: 12 high-frequency skills with explicit trigger mappings + 7 "also available" skills. New triggers: `stress-test`, `research-driven-development`, `receiving-code-review`. Updated in `hooks/superpowers-reminder.sh`, `install.sh`, and `skills/setup/SKILL.md`.
-- Docs site: Mermaid diagrams render larger (fontSize 16, increased node/rank spacing, SVGs scale to container width). Last-updated dates fetched from GitHub API per page.
+- Docs site Mermaid diagrams render larger (fontSize 16, increased node/rank spacing, SVGs scale to container width).
 
 ### Fixed
 
 - Mermaid diagrams on docs site too small and hard to read — increased font size, spacing, and CSS scaling.
+- 3 Mermaid diagrams did not match surrounding page content: methodology walkthrough (was FSM states, now matches Steps 1-7), skills category map (was 14 skills, now all 21), skills chaining (added missing `document-release`).
 
 ## [0.5.0] - 2026-05-01
 

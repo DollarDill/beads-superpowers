@@ -11,7 +11,7 @@
   <button class="hamburger" aria-label="Menu">&#9776;</button>
   <div class="layout">
     <nav class="sidebar">
-      <div class="sidebar-header"><a href="index.html">beads-superpowers</a> <span class="version">v0.5.0</span></div>
+      <div class="sidebar-header"><a href="index.html">beads-superpowers</a> <span class="version">v0.5.1</span></div>
       <div class="sidebar-section">
         <div class="sidebar-section-title">Documentation</div>
         <a class="nav-link" href="index.html">Home</a>
@@ -197,10 +197,10 @@ cat .claude/settings.json</code></pre>
 
         <div class="callout callout-warning">
           <div class="callout-title">Plugin cache is stale after editing skills</div>
-          <p>After editing skills in the source repo, the installed plugin cache at <code>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.0/</code> does not update automatically. <code>claude plugin update</code> has a <a href="https://github.com/anthropics/claude-code/issues/14061">known cache bug</a>.</p>
+          <p>After editing skills in the source repo, the installed plugin cache at <code>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.1/</code> does not update automatically. <code>claude plugin update</code> has a <a href="https://github.com/anthropics/claude-code/issues/14061">known cache bug</a>.</p>
           <p>Use a one-time symlink instead — see the <a href="#development">Development Tips</a> section below.</p>
           <p>Quick check for drift:</p>
-          <pre><code>diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.0/skills/</code></pre>
+          <pre><code>diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.1/skills/</code></pre>
         </div>
 
         <div class="callout callout-warning">
@@ -233,19 +233,19 @@ bash --version</code></pre>
         <h3>One-Time Plugin Cache Symlink</h3>
         <p>Editing skills in the source repo immediately goes stale in the plugin cache. The symlink approach fixes this permanently — edits in the repo are instantly reflected in the installed plugin, with no sync step required.</p>
         <pre><code># Remove the cached copy
-rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.0
+rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.1
 
 # Symlink the cache entry to this repo
 ln -s ~/workplace/beads-superpowers \
-  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.0</code></pre>
+  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.1</code></pre>
         <p>Verify the symlink is working:</p>
-        <pre><code>diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.0/skills/
+        <pre><code>diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.1/skills/
 # Should produce no output</code></pre>
 
         <h3>Version Management</h3>
         <p>The version number is declared in three files that must stay in sync: <code>package.json</code>, <code>.claude-plugin/plugin.json</code>, and <code>.claude-plugin/marketplace.json</code>. Always use the bump script — never edit them by hand.</p>
         <pre><code># Bump to a new version (updates all three files)
-./scripts/bump-version.sh 0.5.0
+./scripts/bump-version.sh 0.5.1
 
 # Check for version drift across the three files
 ./scripts/bump-version.sh --check</code></pre>

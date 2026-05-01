@@ -64,20 +64,20 @@ Three files must stay in sync:
 Use the helper script:
 
 ```bash
-./scripts/bump-version.sh 0.5.0   # Bump to a new version
+./scripts/bump-version.sh 0.5.1   # Bump to a new version
 ./scripts/bump-version.sh --check # Detect drift
 ```
 
 ## Cache sync during development
 
 When you edit skills locally, the installed plugin cache at
-`~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.0/`
+`~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.1/`
 goes stale. Symlink the cache to your dev checkout once and you're done:
 
 ```bash
-rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.0
+rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.1
 ln -s ~/workplace/beads-superpowers \
-  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.0
+  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.1
 ```
 
 ## Tests
