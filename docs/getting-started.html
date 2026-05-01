@@ -152,7 +152,7 @@ bd stats</code></pre>
         <p>The combined output (~2–3k tokens) provides the agent with skill routing instructions, beads awareness, and anti-rationalization enforcement.</p>
 
         <h4>UserPromptSubmit hook</h4>
-        <p>The plugin also registers a <strong>UserPromptSubmit</strong> hook that fires on every user message. It injects a brief reminder to check if any beads-superpowers skill applies to the current task, with key trigger mappings (bug → systematic-debugging, new feature → brainstorming, etc.). This prevents the agent from forgetting to invoke skills mid-session.</p>
+        <p>The plugin also registers a <strong>UserPromptSubmit</strong> hook that fires on every user message. It injects a tiered reminder covering all 20 invocable skills — the top 12 get explicit trigger mappings (bug → systematic-debugging, new feature → brainstorming, research question → research-driven-development, etc.) and the remaining 7 are listed as "also available." This prevents the agent from forgetting to invoke skills mid-session.</p>
 
         <div class="mermaid">
 sequenceDiagram

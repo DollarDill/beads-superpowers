@@ -61,7 +61,7 @@
         </p>
         <ul>
           <li><strong>SessionStart hook</strong> — fires once at session start (and after <code>/clear</code> or <code>/compact</code>). Injects the <code>using-superpowers</code> bootstrap skill and runs <code>bd prime</code> for beads context.</li>
-          <li><strong>UserPromptSubmit hook</strong> — fires on <em>every</em> user message. Injects a brief reminder mapping common task types to skills:</li>
+          <li><strong>UserPromptSubmit hook</strong> — fires on <em>every</em> user message. Injects a tiered reminder covering all 20 invocable skills (all 21 minus <code>using-superpowers</code>, which auto-loads at session start). The top 12 high-frequency skills get explicit trigger mappings; the remaining 7 are listed as "also available":</li>
         </ul>
 
         <table>
@@ -72,14 +72,27 @@
             <tr><td>Bug or test failure</td><td><code>systematic-debugging</code></td></tr>
             <tr><td>Writing code</td><td><code>test-driven-development</code></td></tr>
             <tr><td>New feature or design</td><td><code>brainstorming</code></td></tr>
+            <tr><td>Challenge or stress-test a design</td><td><code>stress-test</code></td></tr>
             <tr><td>Writing a plan</td><td><code>writing-plans</code></td></tr>
-            <tr><td>Executing a plan</td><td><code>subagent-driven-development</code></td></tr>
+            <tr><td>Executing a plan</td><td><code>subagent-driven-development</code> or <code>executing-plans</code></td></tr>
+            <tr><td>Research question</td><td><code>research-driven-development</code></td></tr>
             <tr><td>Complex task (6+ files)</td><td><code>using-git-worktrees</code></td></tr>
             <tr><td>About to claim done</td><td><code>verification-before-completion</code></td></tr>
             <tr><td>Code review needed</td><td><code>requesting-code-review</code></td></tr>
+            <tr><td>Received review feedback</td><td><code>receiving-code-review</code></td></tr>
             <tr><td>Branch complete</td><td><code>finishing-a-development-branch</code></td></tr>
           </tbody>
         </table>
+        <p>
+          <strong>Also available:</strong>
+          <code>document-release</code>,
+          <code>getting-up-to-speed</code>,
+          <code>dispatching-parallel-agents</code>,
+          <code>project-init</code>,
+          <code>setup</code>,
+          <code>writing-skills</code>,
+          <code>auditing-upstream-drift</code>
+        </p>
         <p>
           This two-layer approach means the agent gets full skill context at session start, then a lightweight
           nudge on every subsequent message to check whether a skill applies. The nudge prevents mid-session

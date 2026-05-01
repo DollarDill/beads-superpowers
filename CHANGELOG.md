@@ -9,6 +9,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- UserPromptSubmit reminder hook expanded from 9 to 20 skills (all 21 minus auto-loaded `using-superpowers`). Tiered format: 12 high-frequency skills with explicit trigger mappings + 7 "also available" skills. New triggers: `stress-test`, `research-driven-development`, `receiving-code-review`. Updated in `hooks/superpowers-reminder.sh`, `install.sh`, and `skills/setup/SKILL.md`.
+- Docs site: Mermaid diagrams render larger (fontSize 16, increased node/rank spacing, SVGs scale to container width). Last-updated dates fetched from GitHub API per page.
+
+### Fixed
+
+- Mermaid diagrams on docs site too small and hard to read — increased font size, spacing, and CSS scaling.
+
 ## [0.5.0] - 2026-05-01
 
 ### Added
