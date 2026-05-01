@@ -39,7 +39,7 @@ Each state has a mandatory skill invocation, a guard condition that must pass be
 
 ### Path Summary
 
-```
+```text
 Non-trivial:  S1 → S2 → S3 → S4 → S5 → S6 → S7 → S8 → S9 → S10 → S11
 Simple task:  S1 → S7 → S8 → S9 → S10 → S11
 Research:     S1 → S2 → S3 → S11
@@ -121,11 +121,13 @@ Research documents should follow this structure:
 ## Session Protocol
 
 ### Session Start
+
 1. beads-superpowers plugin injects `bd prime` context automatically
 2. `bd ready` — find unblocked work
 3. Claim: `bd update <id> --claim`
 
 ### Session End
+
 Work is NOT complete until `git push` succeeds:
 
 ```bash

@@ -29,7 +29,7 @@ ls /path/to/your-project/.claude/agents/
 
 The CLAUDE.md defines an 11-state finite state machine that orchestrates beads-superpowers skills into a complete professional development lifecycle:
 
-```
+```text
 S1:  SETUP         → Create and claim a bead
 S2:  RESEARCH      → @researcher + @explore in parallel
 S3:  KNOWLEDGE     → Synthesize findings → write to knowledge base

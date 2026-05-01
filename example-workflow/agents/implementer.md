@@ -53,7 +53,7 @@ Before writing any test, use `findReferences` and `incomingCalls` on the functio
 
 For each phase:
 
-```
+```text
 1. Claim the bead: bd update <id> --claim
 2. Read the phase requirements from the plan
 3. Invoke Skill(beads-superpowers:test-driven-development) — write failing test FIRST
@@ -66,7 +66,7 @@ For each phase:
 
 After the FINAL phase only:
 
-```
+```text
 9. Invoke Skill(beads-superpowers:requesting-code-review)
 10. Invoke Skill(beads-superpowers:finishing-a-development-branch)
 ```
