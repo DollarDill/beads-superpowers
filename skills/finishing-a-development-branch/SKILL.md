@@ -246,17 +246,4 @@ git status    # MUST show "up to date with origin"
 - Get typed confirmation for Option 4
 - Clean up worktree for Options 1 & 4 only
 
-## Integration
-
-**Called by:**
-- **subagent-driven-development** (Step 7) - After all tasks complete
-- **executing-plans** (Step 5) - After all batches complete
-
-**Pairs with:**
-- **using-git-worktrees** - Cleans up worktree created by that skill
-
-**Session close:**
-- **Land the Plane** protocol ensures beads state and code are both synced to remote
-- `bd dolt push` syncs issue state for the next session
-- `git push` syncs code changes
 - Work is NOT complete until both syncs succeed

@@ -27,13 +27,12 @@ hooks/
   run-hook.cmd             # Windows polyglot wrapper
 skills/                    # 21 beads-native skills (auto-discovered)
 agents/                    # Code reviewer agent (auto-discovered)
-commands/                  # Deprecated slash commands (auto-discovered)
 docs/                      # METHODOLOGY.md, SETUP-GUIDE.md, testing.md, etc.
 tests/                     # Test infrastructure (5 suites)
 scripts/                   # bump-version.sh
 ```
 
-**Important:** Claude Code auto-discovers `skills/`, `agents/`, `commands/`, and `hooks/` directories by convention. Do NOT declare these paths in `plugin.json` — it causes validation failures.
+**Important:** Claude Code auto-discovers `skills/`, `agents/`, and `hooks/` directories by convention. Do NOT declare these paths in `plugin.json` — it causes validation failures.
 
 ## Beads Integration
 
