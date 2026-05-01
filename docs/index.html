@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>beads-superpowers — Process discipline and persistent memory for AI coding agents</title>
-  <meta name="description" content="Claude Code plugin with 20 mandatory skills: TDD, brainstorming, systematic debugging, two-stage code review, and persistent task tracking via beads. One-command install.">
+  <meta name="description" content="Claude Code plugin with 21 mandatory skills: TDD, brainstorming, systematic debugging, two-stage code review, and persistent task tracking via beads. One-command install.">
   <meta name="keywords" content="claude code, claude code plugin, ai coding agent, tdd, debugging, code review, task tracking, beads, superpowers, developer tools">
   <meta name="author" content="Dillon Frawley">
   <link rel="canonical" href="https://dollardill.github.io/beads-superpowers/">
@@ -12,14 +12,14 @@
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="beads-superpowers — AI coding agent skills + persistent memory">
-  <meta property="og:description" content="Claude Code plugin: 20 mandatory skills enforcing TDD, brainstorming, debugging, and code review. Persistent task tracking via beads.">
+  <meta property="og:description" content="Claude Code plugin: 21 mandatory skills enforcing TDD, brainstorming, debugging, and code review. Persistent task tracking via beads.">
   <meta property="og:url" content="https://dollardill.github.io/beads-superpowers/">
   <meta property="og:site_name" content="beads-superpowers">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="beads-superpowers — AI coding agent skills + persistent memory">
-  <meta name="twitter:description" content="Claude Code plugin: 20 mandatory skills + persistent task tracking. One-command install.">
+  <meta name="twitter:description" content="Claude Code plugin: 21 mandatory skills + persistent task tracking. One-command install.">
 
   <!-- Google Search Console verification (replace content value after verifying) -->
   <!-- <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE_HERE"> -->
@@ -33,7 +33,7 @@
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "beads-superpowers",
-    "description": "Claude Code plugin merging Superpowers skills with Beads issue tracking. 20 mandatory skills for AI coding agents — TDD, brainstorming, systematic debugging, two-stage code review, and persistent task memory.",
+    "description": "Claude Code plugin merging Superpowers skills with Beads issue tracking. 21 mandatory skills for AI coding agents — TDD, brainstorming, systematic debugging, two-stage code review, and persistent task memory.",
     "url": "https://github.com/DollarDill/beads-superpowers",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "macOS, Linux",
@@ -100,13 +100,13 @@
         <h2 id="what">What is this?</h2>
         <p>AI coding agents have two recurring failure modes: <strong>no process discipline</strong> (they skip tests, rush to code, and claim work is done without verification) and <strong>no persistent memory</strong> (todo lists vanish when a session ends, the next session starts blind).</p>
         <p><strong>beads-superpowers</strong> is a <a href="https://github.com/DollarDill/beads-superpowers">Claude Code plugin</a> that solves both at once. It merges <a href="https://github.com/obra/superpowers">Superpowers</a> — a set of composable process skills enforcing TDD, brainstorming, systematic debugging, and two-stage code review — with <a href="https://github.com/gastownhall/beads">Beads</a>, a Dolt-backed issue tracker that gives agents persistent task memory across sessions.</p>
-        <p>The upstream Superpowers library ships 15 skills. This plugin extends it to 20, replaces all <code>TodoWrite</code> task tracking with <code>bd</code> beads commands, and wires everything together via a <code>SessionStart</code> hook that injects skills and task context automatically at the start of every session.</p>
+        <p>The upstream Superpowers library ships 15 skills. This plugin extends it to 21, replaces all <code>TodoWrite</code> task tracking with <code>bd</code> beads commands, and wires everything together via a <code>SessionStart</code> hook that injects skills and task context automatically at the start of every session.</p>
 
         <h2 id="docs">Documentation</h2>
         <div class="card-grid">
           <div class="card"><a href="getting-started.html"><div class="card-title">Getting Started</div><div class="card-desc">Install, configure, and run your first project in 60 seconds.</div></a></div>
           <div class="card"><a href="methodology.html"><div class="card-title">Methodology</div><div class="card-desc">Design philosophy: why we merged Superpowers with Beads and how.</div></a></div>
-          <div class="card"><a href="skills.html"><div class="card-title">Skills Reference</div><div class="card-desc">All 20 skills — triggers, categories, and beads commands.</div></a></div>
+          <div class="card"><a href="skills.html"><div class="card-title">Skills Reference</div><div class="card-desc">All 21 skills — triggers, categories, and beads commands.</div></a></div>
           <div class="card"><a href="workflow.html"><div class="card-title">Example Workflow</div><div class="card-desc">Complete development lifecycle: 11-state FSM with diagrams.</div></a></div>
           <div class="card"><a href="tips.html"><div class="card-title">Tips &amp; Tricks</div><div class="card-desc">Command cheat sheet, troubleshooting, and best practices.</div></a></div>
         </div>
@@ -133,6 +133,7 @@
           <a class="skill-tag" href="https://github.com/DollarDill/beads-superpowers/blob/main/skills/setup/SKILL.md"><span class="name">setup</span><br><span class="desc">Post-install config</span></a>
           <a class="skill-tag" href="https://github.com/DollarDill/beads-superpowers/blob/main/skills/writing-skills/SKILL.md"><span class="name">writing-skills</span><br><span class="desc">Meta: create skills</span></a>
           <a class="skill-tag" href="https://github.com/DollarDill/beads-superpowers/blob/main/skills/auditing-upstream-drift/SKILL.md"><span class="name">auditing-upstream-drift</span><br><span class="desc">Staleness detection</span></a>
+          <a class="skill-tag" href="https://github.com/DollarDill/beads-superpowers/blob/main/skills/research-driven-development/SKILL.md"><span class="name">research-driven-development</span><br><span class="desc">Parallel research agents</span></a>
           <a class="skill-tag" href="https://github.com/DollarDill/beads-superpowers/blob/main/skills/using-superpowers/SKILL.md"><span class="name">using-superpowers</span><br><span class="desc">Bootstrap + routing</span></a>
         </div>
 

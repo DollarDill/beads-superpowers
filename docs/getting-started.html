@@ -66,7 +66,7 @@
         <p>Three methods are available. The curl installer is the simplest — it requires only <code>bash</code> and works without Claude Code's plugin system.</p>
 
         <h3>Option A: curl (recommended)</h3>
-        <p>One command, no dependencies. Installs 20 skills to <code>~/.claude/skills/</code> and configures the SessionStart hook automatically.</p>
+        <p>One command, no dependencies. Installs 21 skills to <code>~/.claude/skills/</code> and configures the SessionStart hook automatically.</p>
         <pre><code>curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash</code></pre>
         <p>The installer supports additional flags: <code>--yes</code> (CI mode, skip prompts), <code>--version X.Y.Z</code> (pin a version), <code>--dry-run</code> (preview without writing), and <code>--uninstall</code>.</p>
 
@@ -126,7 +126,7 @@ bd dolt push</code></pre>
 
         <p><strong>2. Verify skills are available (inside a Claude Code session):</strong></p>
         <pre><code>/skills
-# Should list 20 beads-superpowers: prefixed skills</code></pre>
+# Should list 21 beads-superpowers: prefixed skills</code></pre>
 
         <p><strong>3. Verify <code>bd</code> is working:</strong></p>
         <pre><code>bd ready
@@ -148,6 +148,9 @@ bd stats</code></pre>
           <li>Outputs platform-specific JSON for Claude Code, Cursor, or Copilot CLI</li>
         </ol>
         <p>The combined output (~2–3k tokens) provides the agent with skill routing instructions, beads awareness, and anti-rationalization enforcement.</p>
+
+        <h4>UserPromptSubmit hook</h4>
+        <p>The plugin also registers a <strong>UserPromptSubmit</strong> hook that fires on every user message. It injects a brief reminder to check if any beads-superpowers skill applies to the current task, with key trigger mappings (bug → systematic-debugging, new feature → brainstorming, etc.). This prevents the agent from forgetting to invoke skills mid-session.</p>
 
         <h3>Duplicate hook warning</h3>
         <p>If you have previously run <code>bd setup claude</code> (or <code>bd init</code>, which calls it), the plugin detects the overlap and displays a warning at session start. To resolve it:</p>

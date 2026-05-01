@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Skills Reference — beads-superpowers</title>
-  <meta name="description" content="Complete reference for all 20 beads-superpowers skills">
+  <meta name="description" content="Complete reference for all 21 beads-superpowers skills">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -32,11 +32,11 @@
     <div class="content">
       <article>
         <h1>Skills Reference</h1>
-        <p class="subtitle">Complete reference for all 20 beads-superpowers skills</p>
+        <p class="subtitle">Complete reference for all 21 beads-superpowers skills</p>
 
         <h2 id="overview">Overview</h2>
         <p>
-          beads-superpowers ships 20 composable skills that are loaded on demand via the <code>Skill</code> tool.
+          beads-superpowers ships 21 composable skills that are loaded on demand via the <code>Skill</code> tool.
           The bootstrap skill, <strong>using-superpowers</strong>, is injected at every session start and routes
           automatically to the correct skill for the current task.
         </p>
@@ -120,6 +120,12 @@
               <td>
                 <a href="#skill-setup">setup</a>,
                 <a href="#skill-project-init">project-init</a>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Research</strong></td>
+              <td>
+                <a href="#skill-research-driven-development">research-driven-development</a>
               </td>
             </tr>
           </tbody>
@@ -324,6 +330,18 @@
           diverged and needs a hard reset. Prevents data loss by confirming the correct path before executing.
         </p>
 
+        <!-- ─── Research ─── -->
+
+        <h3 id="skill-research-driven-development">research-driven-development</h3>
+        <p><strong>Category:</strong> Research</p>
+        <p><strong>Trigger:</strong> Use when the user asks a question about a topic, requests research, or when you need to understand something before planning. Dispatches parallel research agents, synthesizes findings into a persistent document.</p>
+        <p>
+          Dispatches <code>@researcher</code> (web + documentation) and <code>@explore</code> (codebase) in
+          parallel, then synthesizes their findings into a structured research document written to
+          <code>docs/research/</code>. Iron Law: NO RESEARCH WITHOUT A DOCUMENT — verbal answers
+          without persistent artifacts are prohibited.
+        </p>
+
         <h2 id="commands">Beads Commands</h2>
         <p>
           Skills use <code>bd</code> commands to create, track, and close beads (tasks). Only the orchestrating
@@ -377,6 +395,21 @@
               <td>Store learning</td>
               <td><code>bd remember "insight"</code></td>
               <td>any session</td>
+            </tr>
+            <tr>
+              <td>Remove stale memory</td>
+              <td><code>bd forget &lt;id&gt;</code></td>
+              <td>any session</td>
+            </tr>
+            <tr>
+              <td>Append note to bead</td>
+              <td><code>bd note &lt;id&gt; "context"</code></td>
+              <td>verification-before-completion</td>
+            </tr>
+            <tr>
+              <td>Find duplicate beads</td>
+              <td><code>bd find-duplicates</code></td>
+              <td>finishing-a-development-branch</td>
             </tr>
             <tr>
               <td>Sync to remote</td>

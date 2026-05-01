@@ -21,6 +21,17 @@
         ],
         "matcher": ""
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "command": "bash ./hooks/superpowers-reminder.sh",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
     ]
   }
 }

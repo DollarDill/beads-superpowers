@@ -57,5 +57,5 @@ The two companion agents (`@researcher` and `@implementer`) are dispatched by th
 ## Learn More
 
 - [Example Workflow documentation](https://dollardill.github.io/beads-superpowers/workflow.html) — Full walkthrough with diagrams
-- [Skills Reference](https://dollardill.github.io/beads-superpowers/skills.html) — All 20 skills explained
+- [Skills Reference](https://dollardill.github.io/beads-superpowers/skills.html) — All 21 skills explained
 - [Methodology](https://dollardill.github.io/beads-superpowers/methodology.html) — Why this workflow exists
