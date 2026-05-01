@@ -23,22 +23,39 @@
     });
   }
 
-  // Render "Last updated" from meta tag
+  // Render "Last updated" from GitHub API (git commit history)
   var article = document.querySelector('article');
-  var lastUpdatedMeta = document.querySelector('meta[name="last-updated"]');
-  if (lastUpdatedMeta && article) {
-    var dateStr = lastUpdatedMeta.getAttribute('content');
-    var parts = dateStr.split('-');
-    var date = new Date(+parts[0], +parts[1] - 1, +parts[2]);
-    var formatted = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  var pagePath = location.pathname.split('/').pop() || 'index.html';
+  var repo = 'DollarDill/beads-superpowers';
+  var filePath = 'docs/' + pagePath;
+
+  if (article) {
+    // Create placeholder so layout doesn't shift
     var el = document.createElement('p');
     el.className = 'last-updated';
-    el.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm.5 4.5v3.793l2.354 2.353a.5.5 0 0 1-.708.708l-2.5-2.5A.5.5 0 0 1 7.5 8.5v-4a.5.5 0 0 1 1 0z"/></svg>' +
-      'Last updated: ' + formatted;
+    el.style.visibility = 'hidden';
+    el.innerHTML = '&nbsp;';
     var subtitle = article.querySelector('.subtitle');
     if (subtitle) {
       subtitle.parentNode.insertBefore(el, subtitle.nextSibling);
     }
+
+    fetch('https://api.github.com/repos/' + repo + '/commits?path=' + filePath + '&per_page=1')
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+      .then(function (commits) {
+        if (commits && commits.length > 0) {
+          var date = new Date(commits[0].commit.committer.date);
+          var formatted = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+          el.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm.5 4.5v3.793l2.354 2.353a.5.5 0 0 1-.708.708l-2.5-2.5A.5.5 0 0 1 7.5 8.5v-4a.5.5 0 0 1 1 0z"/></svg>' +
+            'Last updated: ' + formatted;
+          el.style.visibility = 'visible';
+        } else {
+          el.remove();
+        }
+      })
+      .catch(function () {
+        el.remove(); // silently degrade if API unavailable or rate-limited
+      });
   }
 
   // Auto-generate "On this page" TOC from h2 elements
