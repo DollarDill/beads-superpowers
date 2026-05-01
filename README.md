@@ -38,7 +38,7 @@ After installing, tell Claude: **"Run the setup skill"** — this configures the
 curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
 ```
 
-Installs 20 skills to `~/.claude/skills/` and configures the SessionStart hook automatically. Supports `--yes` (CI mode), `--version X.Y.Z`, `--dry-run`, and `--uninstall`. See [install.sh](install.sh) for details.
+Installs 21 skills to `~/.claude/skills/` and configures the SessionStart hook automatically. Supports `--yes` (CI mode), `--version X.Y.Z`, `--dry-run`, and `--uninstall`. See [install.sh](install.sh) for details.
 
 ### Then, in any project
 
@@ -47,7 +47,7 @@ cd your-project
 bd init
 ```
 
-In Claude Code, run `/skills` to verify — you should see 20 skills available.
+In Claude Code, run `/skills` to verify — you should see 21 skills available.
 
 <details>
 <summary>If you previously ran <code>bd setup claude</code></summary>
@@ -133,6 +133,7 @@ Skills are not suggestions. They use bright-line rules, anti-rationalization tab
 | **setup** | Infrastructure | Post-npx hook installation — configures SessionStart for skills auto-activation |
 | **auditing-upstream-drift** | Meta | Periodic audit for staleness vs upstream superpowers and beads |
 | **getting-up-to-speed** | Meta | Start of session or post-compaction — runs bd commands, deep-dives the codebase, produces a structured current-state summary |
+| **research-driven-development** | Research | Dispatches parallel research agents, synthesizes findings into a persistent document |
 
 ### Beads commands used in skills
 
@@ -204,10 +205,11 @@ beads-superpowers/
 ├── .github/                CI workflow, Dependabot, issue/PR templates
 ├── assets/                 README banner SVG
 ├── hooks/                  SessionStart hook (bash + Windows polyglot wrapper)
-├── skills/                 20 beads-native skills
+├── skills/                 21 beads-native skills
 ├── agents/                 code-reviewer agent
 ├── commands/               Deprecated slash commands (will be removed in a future version)
-├── docs/                   METHODOLOGY, SETUP-GUIDE, testing, upstream-reference
+├── example-workflow/       Ready-to-use CLAUDE.md + agent configs for the full development lifecycle
+├── docs/                   METHODOLOGY, SETUP-GUIDE, testing, GitHub Pages site
 ├── tests/                  Test infrastructure (5 suites)
 ├── scripts/                bump-version.sh
 ├── CHANGELOG.md
