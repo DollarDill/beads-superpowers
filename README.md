@@ -59,7 +59,7 @@ Built on two excellent projects:
 
 Contributions are welcome! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the guide.
 
-Have an idea for a new skill or improvement? **[Drop a suggestion on Issue #26](https://github.com/DollarDill/beads-superpowers/issues/26)** — we read every one.
+Have an idea for a new skill or improvement? **[Drop a suggestion in Discussions](https://github.com/DollarDill/beads-superpowers/discussions/27)** — we read every one.
 
 ## License
 
