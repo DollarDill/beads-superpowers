@@ -46,6 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - `example-workflow/agents/yegge.md` KB document workflow had broken DCI syntax (`` `!`\`bash...\` `` — escaped backticks, `!` in its own code span). DCI does not work in agent `.md` files (only `SKILL.md` and `.claude/commands/*.md`), so the path is now delegated to the research-driven-development skill's DCI. Empirically confirmed via `claude --print --agent dci-test`.
+- `CLAUDE.md` Plugin Structure tree was stale — missing `docs-src/`, `example-workflow/`, `assets/`, `hooks/superpowers-reminder.sh`, `scripts/sync-skill-count.sh`, `scripts/build-docs.sh`, `install.sh`, `mkdocs.yml`. Added full directory layout with accurate descriptions.
 
 ## [0.5.1] - 2026-05-01
 
