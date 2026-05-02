@@ -159,7 +159,7 @@ bd stats
 
 ### How the hook mechanism works
 
-The plugin registers a single `SessionStart` hook via `hooks/hooks.json`. This fires on every session start, clear, and compact event. The hook script:
+The plugin registers two hooks via `hooks/hooks.json`. The `SessionStart` hook fires on every session start, clear, and compact event. The hook script:
 
 1. Reads `using-superpowers/SKILL.md` — the bootstrap skill that routes to all other skills
 2. Runs `bd prime` — captures beads workflow context and persistent memories
