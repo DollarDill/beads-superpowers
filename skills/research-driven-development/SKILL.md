@@ -30,36 +30,17 @@ Dispatch parallel research agents, synthesize their findings, and write a persis
 
 ## Output Path
 
-Research documents are written to a configurable directory. Resolve the path at the start of every research task using this priority chain:
+Research documents are written to: **!`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`**
 
-```bash
-# Resolution order (first match wins):
-RESEARCH_DIR=$(
-  bd config get custom.research-output-dir 2>/dev/null | grep -v "not set" | head -1
-) || true
-RESEARCH_DIR="${RESEARCH_DIR:-${RESEARCH_OUTPUT_DIR:-./docs/research}}"
-echo "Research output: $RESEARCH_DIR"
-```
+This path is resolved dynamically when the skill loads. Priority chain:
 
-| Priority | Source | Example |
-|----------|--------|---------|
-| 1 | `bd config get custom.research-output-dir` | Per-project beads config |
-| 2 | `$RESEARCH_OUTPUT_DIR` env var | Global or shell-level override |
+| Priority | Scope | How to set |
+|----------|-------|------------|
+| 1 | Per-project | `bd config set custom.research-output-dir "/absolute/path"` |
+| 2 | Global | `export RESEARCH_OUTPUT_DIR="/absolute/path"` in shell profile |
 | 3 | Default | `./docs/research` |
 
-**To configure per-project:**
-
-```bash
-bd config set custom.research-output-dir "./docs/beads-superpowers/research"
-```
-
-**To configure globally (shell profile):**
-
-```bash
-export RESEARCH_OUTPUT_DIR="$HOME/workplace/knowledge"
-```
-
-Use `$RESEARCH_DIR` for all path references in subsequent steps.
+**Important:** Always use absolute paths. Tilde (`~`) does not expand in `bd config` values.
 
 ## Pipeline
 
@@ -87,11 +68,8 @@ Before launching new research, search for existing coverage:
 # Check beads memories for prior context
 bd memories <keyword>
 
-# Search project research directory (uses $RESEARCH_DIR from Output Path resolution)
-find "$RESEARCH_DIR" -name "*.md" -exec grep -l "<keyword>" {} \; 2>/dev/null
-
-# Search knowledge base if one exists
-find ~/workplace/knowledge/ -name "*.md" -exec grep -l "<keyword>" {} \; 2>/dev/null
+# Search project research directory
+find "!`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`" -name "*.md" -exec grep -l "<keyword>" {} \; 2>/dev/null
 ```
 
 **If comprehensive coverage already exists:** Reference it, add any new findings as updates, and close the bead. Do not duplicate existing research.
@@ -141,14 +119,13 @@ After both agents return, the **orchestrator** (you) synthesizes:
 
 ## Step 5: Write the Document
 
-Write the research document to the resolved output directory:
+Write the research document to: **!`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`**
 
 ```bash
-# Create directory if needed (uses $RESEARCH_DIR from Output Path resolution)
-mkdir -p "$RESEARCH_DIR"
-
-# Write to: $RESEARCH_DIR/YYYY-MM-DD-<topic-slug>.md
+mkdir -p "!`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`"
 ```
+
+Filename: `YYYY-MM-DD-<topic-slug>.md`
 
 ### Document Format
 
@@ -249,12 +226,11 @@ bd create "Follow-up: <title>" -t task -p <priority>
 User asks: "How does Dolt handle merge conflicts?"
 
 ```
-1. Resolve $RESEARCH_DIR (bd config → env var → default ./docs/research)
-2. bd create "Research: Dolt merge conflict handling" -t task -p 2
-3. bd memories "dolt merge" → check for prior research
-4. Dispatch @researcher: "Research Dolt merge conflict resolution..."
+1. bd create "Research: Dolt merge conflict handling" -t task -p 2
+2. bd memories "dolt merge" → check for prior research
+3. Dispatch @researcher: "Research Dolt merge conflict resolution..."
    Dispatch @explore: "Search codebase for Dolt merge, conflict..."
-5. Synthesize: researcher found cell-level merge docs, explore found bd dolt pull usage
-6. Write to $RESEARCH_DIR/2026-05-01-dolt-merge-conflict-handling.md
-7. bd close <id> --reason "Research complete: Dolt uses cell-level merge on SQL tables"
+4. Synthesize: researcher found cell-level merge docs, explore found bd dolt pull usage
+5. Write to !`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`/2026-05-01-dolt-merge-conflict-handling.md
+6. bd close <id> --reason "Research complete: Dolt uses cell-level merge on SQL tables"
 ```
