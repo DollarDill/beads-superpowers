@@ -26,7 +26,7 @@ Each state has a mandatory skill invocation, a guard condition that must pass be
 | State | Action | Guard (Exit Criterion) | On Failure |
 |-------|--------|----------------------|------------|
 | **S1: SETUP** | `bd create` → `bd update --claim` | Bead exists and claimed | Retry bd commands |
-| **S2: RESEARCH** | Dispatch `@researcher` (web + KB) + `@explore` (codebase) in parallel | Both agents return structured findings | Proceed with one if the other fails |
+| **S2: RESEARCH** | Invoke `Skill(beads-superpowers:research-driven-development)` | Research document written to `docs/research/` | Proceed with partial findings if one agent fails |
 | **S3: KNOWLEDGE CAPTURE** | Synthesize research → write findings to knowledge base → commit | Document written | Present findings inline and continue |
 | **S4: BRAINSTORM** | Invoke `Skill(beads-superpowers:brainstorming)` | Design doc written; user approved | Loop — revise until user approves |
 | **S5: DECISION CAPTURE** | Write Architecture Decision Record | ADR written | Non-blocking — warn and continue |
@@ -70,34 +70,18 @@ When S7 delegates to `@implementer`:
 
 ## Research Workflow (S2-S3)
 
-When handling research queries or the research phase of non-trivial tasks:
+When handling research queries or the research phase of non-trivial tasks, invoke `Skill(beads-superpowers:research-driven-development)`. The skill handles:
 
-1. **Create a bead** — `bd create "Research: <topic>" -t task`
-2. **Check existing knowledge first** — Search `bd memories <keyword>` and your knowledge base
-3. **Dispatch researcher agent** — `@researcher` runs web searches, fetches primary sources, cross-references findings
-4. **Dispatch explore agent** — `@explore` searches the codebase for relevant patterns, implementations, prior art
-5. **Synthesize findings** — Combine both agents' output into a structured document
-6. **Write to knowledge base** — Save to your project's research directory (e.g., `docs/research/`)
-7. **Close the bead** — `bd close <id> --reason "Research complete: <summary>"`
+1. **Bead creation** — Creates and claims a research bead
+2. **Knowledge check** — Searches `bd memories` and existing docs before new research
+3. **Parallel dispatch** — Launches `@researcher` (web) + `@explore` (codebase) concurrently
+4. **Synthesis** — Merges findings, resolves contradictions, identifies gaps
+5. **Document output** — Writes structured document to `docs/research/YYYY-MM-DD-<topic>.md`
+6. **Bead closure** — Closes the research bead with a summary
 
-Research documents should follow this structure:
+**Iron Law:** NO RESEARCH WITHOUT A DOCUMENT. Every research task produces a written artifact.
 
-```markdown
-# Research: [Topic]
-
-## Summary
-[2-3 sentence overview]
-
-## Key Findings
-### [Finding 1]
-[Details with specific facts, commands, numbers]
-
-## Open Questions
-[Anything unresolved]
-
-## Sources
-- [Source](URL) — [What was extracted]
-```
+See the full skill at `skills/research-driven-development/SKILL.md` for document format and quality checklist.
 
 ## Planning Principles
 
