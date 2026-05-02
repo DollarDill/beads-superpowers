@@ -67,6 +67,51 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
 
+---
+
+<!-- PROJECT-SPECIFIC SECTIONS BELOW — fill these in for your project.
+     Modelled on Karpathy's llm-council CLAUDE.md: dense architectural context
+     that helps the agent understand your codebase without reading every file.
+     Delete the HTML comments once you've filled in each section. -->
+
+## Project Overview
+
+<!-- What does this project do? 1-3 sentences. Include language/runtime,
+     primary purpose, and any key dependencies or integrations.
+     Example: "A Next.js dashboard that displays real-time analytics from
+     a PostgreSQL database. Uses tRPC for type-safe API calls and Tailwind
+     for styling." -->
+
+## Architecture
+
+<!-- File-by-file or component-by-component overview. What does each key
+     file/directory do? How do they connect?
+     Example:
+     - `src/server/` — tRPC router definitions, one file per domain
+     - `src/components/` — React components, co-located with tests
+     - `prisma/schema.prisma` — database schema, source of truth for types -->
+
+## Key Design Decisions
+
+<!-- Decisions and their rationale — why X and not Y. Include date if known.
+     Example:
+     - **tRPC over REST** — type safety end-to-end, no code generation step
+     - **Tailwind over CSS modules** — team velocity, consistent design tokens -->
+
+## Common Gotchas
+
+<!-- Known pitfalls, failure modes, and workarounds. Things that waste time
+     if you don't know about them. This is the highest-value section.
+     Example:
+     - `prisma generate` must run after schema changes — tests fail with stale types
+     - Port 3000 conflicts with the analytics service — use 3001 for dev
+     - The `user.email` field is nullable in prod but the UI assumes non-null -->
+
+## Non-Interactive Shell Commands
+
+<!-- ALWAYS use non-interactive flags with file operations to avoid hanging:
+     cp -f, mv -f, rm -f, rm -rf, cp -rf (NOT cp, mv, rm without -f) -->
+
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
 ## Beads Issue Tracker
 
