@@ -31,10 +31,21 @@ Agent tool (subagent_type: "researcher"):
     ## Your Workflow
 
     1. **Search the knowledge base first** — Use `bd memories <keyword>` for workflow
-       context, then search the project's research directory for existing documents.
-       Check both before researching from scratch.
-    2. **LSP-first code navigation** — Use LSP as your DEFAULT code navigation tool
-       (`goToDefinition`, `findReferences`, `hover`, `documentSymbol`, etc.)
+       context. Then search for existing research documents:
+       ```bash
+       # Search project research directory
+       find docs/research/ -name "*.md" -exec grep -li "<keyword>" {} \; 2>/dev/null
+       # Search global knowledge base if configured
+       find "${RESEARCH_OUTPUT_DIR:-./docs/research}" -name "*.md" -exec grep -li "<keyword>" {} \; 2>/dev/null
+       ```
+       Check both before researching from scratch. If comprehensive coverage already
+       exists, reference it — do not duplicate.
+    2. **LSP-first code navigation** — Use LSP as your DEFAULT code navigation tool.
+       Prefer LSP over grep/find for code understanding:
+       - `goToDefinition` / `findReferences` — trace how code connects
+       - `hover` — check type contracts before making claims
+       - `documentSymbol` — understand file structure
+       - `incomingCalls` / `outgoingCalls` — map dependency chains
     3. **Search broadly** — Run 3-5 varied `WebSearch` queries, rewording the topic
        each time
     4. **Fetch primary sources** — Use `WebFetch` on official documentation and
@@ -44,6 +55,10 @@ Agent tool (subagent_type: "researcher"):
        explain which is more authoritative
     7. **Identify sub-tasks** — If research reveals work that should be tracked, note
        recommended beads to create in your output
+    8. **Design tasks** — When research is for a new feature or system design (not just
+       information gathering), note in your output that the orchestrator should invoke
+       `Skill(beads-superpowers:brainstorming)` for Socratic design refinement after
+       reviewing your findings
 
     ## Research Principles
 
