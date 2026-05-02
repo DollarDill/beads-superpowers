@@ -164,6 +164,13 @@ Then immediately use the `AskUserQuestion` tool:
 
 If the user selects "Needs changes", make the requested changes and re-run the self-review. Only proceed to execution handoff once approved.
 
+If you discovered something reusable, capture it before closing:
+
+```bash
+# Only if worth preserving for future sessions:
+bd remember "pattern: <planning insight for future tasks>"
+```
+
 ## Execution Handoff
 
 After the plan is approved, **use the `AskUserQuestion` tool** to offer the execution choice:

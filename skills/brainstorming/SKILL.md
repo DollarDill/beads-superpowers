@@ -126,6 +126,14 @@ digraph brainstorming {
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
+**Capture what you learned** before closing:
+
+```bash
+bd remember "design: <key design decision and rationale>"
+```
+
+If a previous memory is now wrong, `bd forget <id>` first.
+
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:
 

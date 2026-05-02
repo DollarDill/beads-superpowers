@@ -653,3 +653,10 @@ Same cycle: RED (baseline) → GREEN (write skill) → REFACTOR (close loopholes
 Same benefits: Better quality, fewer surprises, bulletproof results.
 
 If you follow TDD for code, follow it for skills. It's the same discipline applied to documentation.
+
+If you discovered something reusable, capture it before closing:
+
+```bash
+# Only if worth preserving for future sessions:
+bd remember "skill-craft: <meta-pattern for skill design>"
+```

@@ -88,6 +88,13 @@ You: [Fix progress indicators]
 - Review before merge
 - Review when stuck
 
+If you discovered something reusable, capture it before closing:
+
+```bash
+# Only if worth preserving for future sessions:
+bd remember "pattern: <code quality pattern discovered>"
+```
+
 ## Red Flags
 
 **Never:**

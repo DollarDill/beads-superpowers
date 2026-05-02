@@ -487,3 +487,10 @@ echo "=== Quick Audit Complete ==="
 ```bash
 rm -rf /tmp/superpowers-upstream
 ```
+
+If you discovered something reusable, capture it before closing:
+
+```bash
+# Only if worth preserving for future sessions:
+bd remember "upstream: <drift finding or new capability>"
+```

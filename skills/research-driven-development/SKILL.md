@@ -205,6 +205,13 @@ Before writing, verify your document passes these checks:
 
 ## Step 6: Close the Bead
 
+If you discovered something reusable, capture it before closing:
+
+```bash
+# Only if worth preserving for future sessions:
+bd remember "research: <key finding from research>"
+```
+
 ```bash
 bd close <id> --reason "Research complete: <1-line summary of finding>"
 ```

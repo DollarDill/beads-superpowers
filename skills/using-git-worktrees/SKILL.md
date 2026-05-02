@@ -260,6 +260,13 @@ Tests passing (47 tests, 0 failures)
 Ready to implement auth feature
 ```
 
+If you discovered something reusable, capture it before closing:
+
+```bash
+# Only if worth preserving for future sessions:
+bd remember "worktree: <gotcha or workaround>"
+```
+
 ## Red Flags
 
 **Never:**

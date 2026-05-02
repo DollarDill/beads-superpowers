@@ -241,6 +241,13 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
 
+If you discovered something reusable, capture it before closing:
+
+```bash
+# Only if worth preserving for future sessions:
+bd remember "sdd: <pattern about subagent delegation>"
+```
+
 ## Prompt Templates
 
 Dispatch via the `Agent` tool:

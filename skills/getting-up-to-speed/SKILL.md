@@ -140,6 +140,13 @@ I'm ready for your next instruction. The highest-priority unblocked work right n
 
 The trailing "I'm ready" line is the **terminal contract**: the skill stops here. Do NOT auto-claim the next bead. Do NOT start working on anything. The user drives the next move.
 
+If any memories from Phase 1 are stale or incorrect, clean them up:
+
+```bash
+bd forget <id>              # Remove outdated memory
+bd remember "corrected: <updated insight>"  # Replace if needed
+```
+
 ## Edge Cases
 
 | Condition | Behavior |

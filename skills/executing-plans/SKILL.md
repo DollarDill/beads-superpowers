@@ -65,6 +65,13 @@ After all tasks complete and verified:
 - Stop when blocked, don't guess
 - Never start implementation on main/master branch without explicit user consent
 
+If you discovered something reusable, capture it before closing:
+
+```bash
+# Only if worth preserving for future sessions:
+bd remember "lesson: <what worked or didn't in plan execution>"
+```
+
 ## Integration
 
 **Required workflow skills:**

@@ -215,6 +215,13 @@ After agents return:
 3. **Run full suite** - Verify all fixes work together
 4. **Spot check** - Agents can make systematic errors
 
+If you discovered something reusable, capture it before closing:
+
+```bash
+# Only if worth preserving for future sessions:
+bd remember "parallel: <coordination pattern>"
+```
+
 ## Real-World Impact
 
 From debugging session (2025-10-03):

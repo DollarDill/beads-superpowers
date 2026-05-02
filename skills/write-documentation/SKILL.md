@@ -367,6 +367,13 @@ Do not strip all hyphens. Keep them when they prevent ambiguity, when the compou
 | "I'll strip all structure to avoid looking AI-generated" | Removing needed headings and lists from technical writing is not a style improvement. |
 | "This piece is too short for checks" | Short pieces still run checks 1-3, 5, 7, and 10. The bar is lower, not absent. |
 
+If you discovered something reusable, capture it before closing:
+
+```bash
+# Only if worth preserving for future sessions:
+bd remember "docs: <documentation quality insight>"
+```
+
 ## Integration
 
 **Pairs with:**

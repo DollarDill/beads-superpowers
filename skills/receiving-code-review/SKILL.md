@@ -163,6 +163,14 @@ If you pushed back and were wrong:
 
 State the correction factually and move on.
 
+**Capture what you learned** before closing:
+
+```bash
+bd remember "review: <insight from code review>"
+```
+
+If a previous memory is now wrong, `bd forget <id>` first.
+
 ## Common Mistakes
 
 | Mistake | Fix |

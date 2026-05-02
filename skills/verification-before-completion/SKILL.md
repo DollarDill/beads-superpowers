@@ -143,6 +143,13 @@ Use `bd note` to attach detailed evidence (test output, diff stats, verification
 
 A bead closed without evidence is worse than a bead left open — it corrupts the ledger.
 
+If you discovered something reusable, capture it before closing:
+
+```bash
+# Only if worth preserving for future sessions:
+bd remember "lesson: <what was learned during this task>"
+```
+
 ## The Bottom Line
 
 **No shortcuts for verification.**

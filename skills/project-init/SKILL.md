@@ -264,6 +264,13 @@ These lessons come from real recovery scenarios, not theory.
 
 **Resolution:** This warning is harmless. The export still succeeds (file is written), only the `git add` step fails. No action needed.
 
+If you discovered something reusable, capture it before closing:
+
+```bash
+# Only if worth preserving for future sessions:
+bd remember "project-init: <setup pattern or recovery step>"
+```
+
 ## Integration
 
 **Called by:**

@@ -176,6 +176,13 @@ bd worktree remove <worktree-name>
 
 **For Option 3:** Keep worktree.
 
+If you discovered something reusable, capture it before closing:
+
+```bash
+# Only if worth preserving for future sessions:
+bd remember "lesson: <pattern or insight from this branch>"
+```
+
 ### Step 6: Land the Plane
 
 **After executing the chosen option (Steps 1-5), complete the session close ritual. This is MANDATORY.**

@@ -120,6 +120,13 @@ Use the `AskUserQuestion` tool for risky changes. Provide context, recommendatio
 - **Be specific about changes:** Every edit gets a one-line summary
 - **Discoverability:** Every doc file must be reachable from README or CLAUDE.md
 
+If you discovered something reusable, capture it before closing:
+
+```bash
+# Only if worth preserving for future sessions:
+bd remember "docs: <documentation pattern or gap found>"
+```
+
 ## Integration
 
 **Called by:**

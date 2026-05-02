@@ -124,6 +124,13 @@ bd close <id> --reason "Stress-test complete: N branches resolved, M changes mad
 - Produce a written findings summary
 - Create and close a bead with evidence
 
+If you discovered something reusable, capture it before closing:
+
+```bash
+# Only if worth preserving for future sessions:
+bd remember "design: <gap or insight revealed by stress testing>"
+```
+
 ## Integration
 
 **Called by:**

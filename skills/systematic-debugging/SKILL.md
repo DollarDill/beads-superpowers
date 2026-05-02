@@ -212,6 +212,14 @@ You MUST complete each phase before proceeding to the next.
 
    This is NOT a failed hypothesis - this is a wrong architecture.
 
+**Capture what you learned** before closing:
+
+```bash
+bd remember "root cause: <problem> — <cause> because <reason>"
+```
+
+If a previous memory is now wrong, `bd forget <id>` first.
+
 ## Red Flags - STOP and Follow Process
 
 If you catch yourself thinking:
