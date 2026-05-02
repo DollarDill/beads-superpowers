@@ -146,6 +146,17 @@ Recommend one of:
 6. **NEVER make unrelated changes** — Stay focused on the task at hand
 7. **NEVER skip verification (S8)** — Evidence before claims, always
 
+## Verification Hard Gate
+
+**Before writing `bd close` or `git commit` for ANY task that changed files, STOP and check:**
+
+> Did I invoke `Skill(beads-superpowers:verification-before-completion)` for this task?
+
+- **YES** → Proceed with `bd close` / `git commit`
+- **NO** → STOP. Invoke the skill NOW. Do not rationalize ("it's a trivial change", "I already tested it", "it's just a docs fix"). Every task that changed files gets verification. No exceptions.
+
+This gate applies to ALL FSM paths — non-trivial (S8), simple tasks (S8), and even single-file fixes. The verification skill is what produces the evidence that justifies closing.
+
 ## Session Protocol
 
 ### Session Start
@@ -201,7 +212,7 @@ Interrupts (any state): DEBUG → Skill(beads-superpowers:systematic-debugging)
 
 All subagents are dispatched via **prompt templates** within their respective skills — no separate agent files needed. The skill owns the prompt, ensuring it stays in sync with the skill's requirements.
 
-- **`researcher`** — Deep research specialist. Dispatched at S2 via `Skill(beads-superpowers:research-driven-development)` using the prompt template at `skills/research-driven-development/researcher-prompt.md`. Read-only — cannot write files. Named after Jesse Vincent, creator of [Superpowers](https://github.com/obra/superpowers).
+- **`researcher`** — Deep research specialist. Dispatched at S2 via `Skill(beads-superpowers:research-driven-development)`: Read `researcher-prompt.md`, use its content as the `prompt`, dispatch with `subagent_type: "general-purpose"` (NOT `"researcher"` — that is a built-in agent type with its own system prompt). Read-only — cannot write files. Named after Jesse Vincent, creator of [Superpowers](https://github.com/obra/superpowers).
 - **`implementer`** — Dispatched via the SDD skill's prompt template (`skills/subagent-driven-development/implementer-prompt.md`). Includes beads-superpowers skill invocations, bead lifecycle, and LSP instructions.
 - **`code-reviewer`** — Plugin-provided senior code reviewer. Invoked via `Skill(beads-superpowers:requesting-code-review)` at the S7 review gate.
 

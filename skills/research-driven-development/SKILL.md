@@ -80,9 +80,13 @@ Launch BOTH agents in a **single message with multiple Agent tool calls** so the
 
 ### Agent A: Researcher (web + documentation)
 
-Dispatch via the `Agent` tool using the prompt template at `./researcher-prompt.md`. Use `subagent_type: "researcher"`:
+Dispatch via the `Agent` tool:
 
-The prompt template includes the full researcher workflow (knowledge base search → LSP navigation → web search → cross-reference → structured output). You provide:
+1. `Read` the prompt template at `./researcher-prompt.md`
+2. Use its content as the `prompt` parameter
+3. Use `subagent_type: "general-purpose"` (do NOT use `"researcher"` — that is Claude Code's built-in researcher agent with its own system prompt, which overrides the prompt template)
+
+The prompt template includes the full researcher workflow (knowledge base search → LSP navigation → web search → cross-reference → structured output). Append to the prompt:
 - The research question (one clear sentence)
 - Context (bead ID, what decision this informs, prior knowledge from `bd memories`)
 
