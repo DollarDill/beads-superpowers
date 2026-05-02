@@ -24,11 +24,10 @@ The key modification from upstream superpowers: every `TodoWrite` reference has 
 agents/                    # Code reviewer agent (auto-discovered)
 assets/                    # Banner SVG
 docs/
-  beads-superpowers/       # Knowledge base (research docs, numbered 01-09)
+  beads-superpowers/       # Knowledge base (specs/ and plans/ from brainstorming + planning)
   decisions/               # Architecture Decision Records (ADR-0001..0003 + INDEX.md)
   upstream-reference/      # Upstream design docs
   windows/                 # Windows polyglot hook docs
-  audits/                  # Upstream drift audit reports
   SETUP-GUIDE.md           # Installation and setup guide
   testing.md               # Test infrastructure docs
 docs-src/                  # MkDocs source pages (index, getting-started, methodology, skills, workflow, tips)
