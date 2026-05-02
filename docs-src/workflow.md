@@ -3,11 +3,13 @@
 How beads-superpowers skills orchestrate a complete professional development lifecycle.
 
 !!! tip "Ready to use this workflow?"
-    We provide a complete, copy-paste-ready configuration bundle with the CLAUDE.md, researcher agent, and implementer agent pre-configured for this workflow.
+    We provide a complete, copy-paste-ready configuration bundle with the CLAUDE.md and orchestrator agent pre-configured for this workflow.
 
-    [Get the CLAUDE.md + Agent Configs](https://github.com/DollarDill/beads-superpowers/tree/main/example-workflow){ .md-button }
+    [Get the CLAUDE.md + Agent Config](https://github.com/DollarDill/beads-superpowers/tree/main/example-workflow){ .md-button }
 
-    Contains: [CLAUDE.md](https://github.com/DollarDill/beads-superpowers/blob/main/example-workflow/CLAUDE.md) · [researcher.md](https://github.com/DollarDill/beads-superpowers/blob/main/example-workflow/agents/researcher.md) · [implementer.md](https://github.com/DollarDill/beads-superpowers/blob/main/example-workflow/agents/implementer.md)
+    Contains: [CLAUDE.md](https://github.com/DollarDill/beads-superpowers/blob/main/example-workflow/CLAUDE.md) · [yegge.md](https://github.com/DollarDill/beads-superpowers/blob/main/example-workflow/agents/yegge.md) (orchestrator agent)
+
+    Subagents (researcher, implementer, code-reviewer) are dispatched via prompt templates within their skills — no standalone agent files needed.
 
 ## Overview
 
@@ -80,8 +82,8 @@ Every task begins with a bead. Before a single line of research or code happens,
 
 For non-trivial tasks, research runs before any design decisions are made. Two parallel workstreams run simultaneously: a researcher subagent investigates the problem domain, existing patterns, and prior art in the codebase; an explorer subagent maps the affected code, identifies dependencies, and traces blast radius. Running these in parallel cuts research time roughly in half without sacrificing coverage.
 
-- **Action:** Dispatch researcher and explorer agents in parallel via the `dispatching-parallel-agents` skill
-- **Skill:** `dispatching-parallel-agents`, `getting-up-to-speed`
+- **Action:** Invoke `research-driven-development`, which dispatches a researcher subagent (via `researcher-prompt.md`) and an `@explore` agent in parallel
+- **Skill:** `research-driven-development`
 
 !!! tip "Guard Condition"
     Both agents return findings. If one fails, the other's findings are sufficient to proceed — but the gap must be noted.
@@ -92,8 +94,8 @@ For non-trivial tasks, research runs before any design decisions are made. Two p
 
 Research findings are synthesized into a durable knowledge artifact. This step prevents rediscovery — the next time a related problem comes up, the recorded knowledge is available. The synthesis also forces a coherence check: if the researcher and explorer findings contradict each other, the conflict surfaces now rather than in implementation.
 
-- **Action:** Synthesize research from S2, write a structured knowledge base document. Store key learnings with `bd remember "insight"`
-- **Skill:** `getting-up-to-speed`
+- **Action:** Synthesize research from S2, write a structured knowledge base document to the research output directory. Store key learnings with `bd remember "insight"`
+- **Skill:** None — the orchestrator synthesizes and writes directly. The output path is resolved by the `research-driven-development` skill's DCI resolver
 
 !!! tip "Guard Condition"
     Knowledge base document written and confirmed. Persistent learnings stored in beads memory.
@@ -138,9 +140,13 @@ The design is decomposed into a concrete, phase-by-phase implementation plan. Th
 
 ### S7 — Implement
 
-Implementation follows the plan exactly. Code runs in an isolated git worktree to prevent contamination of the main branch during development. The `test-driven-development` skill enforces the RED-GREEN-REFACTOR cycle: a failing test must exist before any implementation code is written. For complex multi-step plans, the `subagent-driven-development` skill delegates individual tasks to fresh subagent instances, each of which operates in the same isolated worktree.
+Implementation follows the plan exactly. Code runs in an isolated git worktree to prevent contamination of the main branch during development. The `test-driven-development` skill enforces the RED-GREEN-REFACTOR cycle: a failing test must exist before any implementation code is written. For complex multi-step plans, the `subagent-driven-development` skill delegates individual tasks to fresh subagent instances.
 
-Every subagent result passes through the [Sub-Agent Review Gate](#sub-agent-review-gate) before being accepted. This prevents scope creep, catching regressions, and ensures spec compliance.
+When multiple tasks are unblocked (`bd ready --parent` returns more than one), SDD switches to **parallel batch mode**: up to 5 subagents execute concurrently, each in its own per-task worktree created by the orchestrator. Sequential mode runs tasks one at a time in a shared epic worktree when tasks have dependencies or only one is unblocked.
+
+Subagents are dispatched by reading the prompt template (`implementer-prompt.md`) and passing its content as the `prompt` parameter with `subagent_type: "general-purpose"`. The built-in `"implementer"` agent type is not used because its system prompt overrides the prompt template. The `implementer-prompt.md` is an explicit exception to the orchestrator-only beads rule — it includes bead lifecycle commands, mandatory skill invocations (TDD, systematic-debugging, verification-before-completion), and LSP-first code navigation.
+
+Every subagent result passes through the [Sub-Agent Review Gate](#sub-agent-review-gate) before being accepted. This prevents scope creep, catches regressions, and ensures spec compliance.
 
 - **Action:** Create worktree (`using-git-worktrees`), implement per plan using TDD, run review gate on each subagent result
 - **Skill:** `using-git-worktrees`, `test-driven-development`, `subagent-driven-development`
