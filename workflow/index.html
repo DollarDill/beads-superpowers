@@ -768,9 +768,10 @@
 <p>How beads-superpowers skills orchestrate a complete professional development lifecycle.</p>
 <div class="admonition tip">
 <p class="admonition-title">Ready to use this workflow?</p>
-<p>We provide a complete, copy-paste-ready configuration bundle with the CLAUDE.md, researcher agent, and implementer agent pre-configured for this workflow.</p>
-<p><a class="md-button" href="https://github.com/DollarDill/beads-superpowers/tree/main/example-workflow">Get the CLAUDE.md + Agent Configs</a></p>
-<p>Contains: <a href="https://github.com/DollarDill/beads-superpowers/blob/main/example-workflow/CLAUDE.md">CLAUDE.md</a> · <a href="https://github.com/DollarDill/beads-superpowers/blob/main/example-workflow/agents/researcher.md">researcher.md</a> · <a href="https://github.com/DollarDill/beads-superpowers/blob/main/example-workflow/agents/implementer.md">implementer.md</a></p>
+<p>We provide a complete, copy-paste-ready configuration bundle with the CLAUDE.md and orchestrator agent pre-configured for this workflow.</p>
+<p><a class="md-button" href="https://github.com/DollarDill/beads-superpowers/tree/main/example-workflow">Get the CLAUDE.md + Agent Config</a></p>
+<p>Contains: <a href="https://github.com/DollarDill/beads-superpowers/blob/main/example-workflow/CLAUDE.md">CLAUDE.md</a> · <a href="https://github.com/DollarDill/beads-superpowers/blob/main/example-workflow/agents/yegge.md">yegge.md</a> (orchestrator agent)</p>
+<p>Subagents (researcher, implementer, code-reviewer) are dispatched via prompt templates within their skills — no standalone agent files needed.</p>
 </div>
 <h2 id="overview">Overview</h2>
 <p>beads-superpowers skills orchestrate a complete professional development lifecycle through an 11-state finite state machine. Every code change follows a disciplined path from research through verification. The FSM is not a suggestion — each state transition has an explicit guard condition that must be satisfied before moving forward.</p>
@@ -851,8 +852,8 @@
 <h3 id="s2-deep-research">S2 — Deep Research</h3>
 <p>For non-trivial tasks, research runs before any design decisions are made. Two parallel workstreams run simultaneously: a researcher subagent investigates the problem domain, existing patterns, and prior art in the codebase; an explorer subagent maps the affected code, identifies dependencies, and traces blast radius. Running these in parallel cuts research time roughly in half without sacrificing coverage.</p>
 <ul>
-<li><strong>Action:</strong> Dispatch researcher and explorer agents in parallel via the <code>dispatching-parallel-agents</code> skill</li>
-<li><strong>Skill:</strong> <code>dispatching-parallel-agents</code>, <code>getting-up-to-speed</code></li>
+<li><strong>Action:</strong> Invoke <code>research-driven-development</code>, which dispatches a researcher subagent (via <code>researcher-prompt.md</code>) and an <code>@explore</code> agent in parallel</li>
+<li><strong>Skill:</strong> <code>research-driven-development</code></li>
 </ul>
 <div class="admonition tip">
 <p class="admonition-title">Guard Condition</p>
@@ -862,8 +863,8 @@
 <h3 id="s3-knowledge-capture">S3 — Knowledge Capture</h3>
 <p>Research findings are synthesized into a durable knowledge artifact. This step prevents rediscovery — the next time a related problem comes up, the recorded knowledge is available. The synthesis also forces a coherence check: if the researcher and explorer findings contradict each other, the conflict surfaces now rather than in implementation.</p>
 <ul>
-<li><strong>Action:</strong> Synthesize research from S2, write a structured knowledge base document. Store key learnings with <code>bd remember "insight"</code></li>
-<li><strong>Skill:</strong> <code>getting-up-to-speed</code></li>
+<li><strong>Action:</strong> Synthesize research from S2, write a structured knowledge base document to the research output directory. Store key learnings with <code>bd remember "insight"</code></li>
+<li><strong>Skill:</strong> None — the orchestrator synthesizes and writes directly. The output path is resolved by the <code>research-driven-development</code> skill's DCI resolver</li>
 </ul>
 <div class="admonition tip">
 <p class="admonition-title">Guard Condition</p>
@@ -904,8 +905,10 @@
 </div>
 <p><strong>On failure:</strong> Loop — revise the plan based on user feedback and present again. Phrases like "TBD", "TODO", or "as needed" in a plan are grounds for rejection — every step must be concrete.</p>
 <h3 id="s7-implement">S7 — Implement</h3>
-<p>Implementation follows the plan exactly. Code runs in an isolated git worktree to prevent contamination of the main branch during development. The <code>test-driven-development</code> skill enforces the RED-GREEN-REFACTOR cycle: a failing test must exist before any implementation code is written. For complex multi-step plans, the <code>subagent-driven-development</code> skill delegates individual tasks to fresh subagent instances, each of which operates in the same isolated worktree.</p>
-<p>Every subagent result passes through the <a href="#sub-agent-review-gate">Sub-Agent Review Gate</a> before being accepted. This prevents scope creep, catching regressions, and ensures spec compliance.</p>
+<p>Implementation follows the plan exactly. Code runs in an isolated git worktree to prevent contamination of the main branch during development. The <code>test-driven-development</code> skill enforces the RED-GREEN-REFACTOR cycle: a failing test must exist before any implementation code is written. For complex multi-step plans, the <code>subagent-driven-development</code> skill delegates individual tasks to fresh subagent instances.</p>
+<p>When multiple tasks are unblocked (<code>bd ready --parent</code> returns more than one), SDD switches to <strong>parallel batch mode</strong>: up to 5 subagents execute concurrently, each in its own per-task worktree created by the orchestrator. Sequential mode runs tasks one at a time in a shared epic worktree when tasks have dependencies or only one is unblocked.</p>
+<p>Subagents are dispatched by reading the prompt template (<code>implementer-prompt.md</code>) and passing its content as the <code>prompt</code> parameter with <code>subagent_type: "general-purpose"</code>. The built-in <code>"implementer"</code> agent type is not used because its system prompt overrides the prompt template. The <code>implementer-prompt.md</code> is an explicit exception to the orchestrator-only beads rule — it includes bead lifecycle commands, mandatory skill invocations (TDD, systematic-debugging, verification-before-completion), and LSP-first code navigation.</p>
+<p>Every subagent result passes through the <a href="#sub-agent-review-gate">Sub-Agent Review Gate</a> before being accepted. This prevents scope creep, catches regressions, and ensures spec compliance.</p>
 <ul>
 <li><strong>Action:</strong> Create worktree (<code>using-git-worktrees</code>), implement per plan using TDD, run review gate on each subagent result</li>
 <li><strong>Skill:</strong> <code>using-git-worktrees</code>, <code>test-driven-development</code>, <code>subagent-driven-development</code></li>

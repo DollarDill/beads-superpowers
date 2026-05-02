@@ -819,7 +819,7 @@ language. See the <a href="../methodology/">Methodology</a> page for the researc
 <p>Two hooks work together to ensure skills are never forgotten:</p>
 <ul>
 <li><strong>SessionStart hook</strong> — fires once at session start (and after <code>/clear</code> or <code>/compact</code>). Injects the <code>using-superpowers</code> bootstrap skill and runs <code>bd prime</code> for beads context.</li>
-<li><strong>UserPromptSubmit hook</strong> — fires on <em>every</em> user message. Injects a tiered reminder covering all 21 invocable skills (all 22 total minus <code>using-superpowers</code>, which auto-loads at session start). The top 13 high-frequency skills get explicit trigger mappings; the remaining 8 are listed as "also available":</li>
+<li><strong>UserPromptSubmit hook</strong> — fires on <em>every</em> user message. Injects a tiered reminder covering all 21 invocable skills (all 22 total minus <code>using-superpowers</code>, which auto-loads at session start). The top 14 high-frequency skills get explicit trigger mappings (across 13 rows, with SDD and executing-plans sharing one); the remaining 7 are listed as "also available":</li>
 </ul>
 <table>
 <thead>
@@ -1041,7 +1041,8 @@ before writing-plans in the design pipeline.</p>
 <p><strong>Trigger:</strong> Use when executing implementation plans with independent tasks in the current session.</p>
 <p>Dispatches a fresh subagent per task from a written plan, with two-stage code review between tasks.
 The orchestrating agent tracks beads; subagents are not permitted to touch beads directly. Each task
-lands with a review checkpoint before the next task is started.</p>
+lands with a review checkpoint before the next task is started. When multiple tasks are unblocked,
+<strong>parallel batch mode</strong> executes up to 5 subagents concurrently, each in its own per-task worktree.</p>
 <h3 id="executing-plans">executing-plans</h3>
 <p><strong>Category:</strong> Execution</p>
 <p><strong>Trigger:</strong> Use when you have a written implementation plan to execute in a separate session with review checkpoints.</p>
@@ -1051,9 +1052,10 @@ Designed to complement written-plans output directly.</p>
 <h3 id="dispatching-parallel-agents">dispatching-parallel-agents</h3>
 <p><strong>Category:</strong> Execution</p>
 <p><strong>Trigger:</strong> Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies.</p>
-<p>Coordinates multiple concurrent subagents for independent tasks. Enforces strict isolation — agents
-must not share mutable state or touch the same files. Results are collected and merged by the
-orchestrator after all agents complete.</p>
+<p>Coordinates multiple concurrent subagents for independent parallel work — plan tasks, subsystem
+changes, or any set of changes without shared state. Enforces strict isolation — agents must not
+share mutable state or touch the same files. Results are collected and merged by the orchestrator
+after all agents complete. Also used by SDD's parallel batch mode for the dispatch pattern.</p>
 <h3 id="test-driven-development">test-driven-development</h3>
 <p><strong>Category:</strong> Quality</p>
 <p><strong>Trigger:</strong> Use when implementing any feature or bugfix, before writing implementation code.</p>
@@ -1087,9 +1089,10 @@ explicitly rather than silently ignoring or silently complying.</p>
 <h3 id="using-git-worktrees">using-git-worktrees</h3>
 <p><strong>Category:</strong> Infrastructure</p>
 <p><strong>Trigger:</strong> Use when starting feature work that needs isolation from current workspace or before executing implementation plans — creates isolated git worktrees with smart directory selection and safety verification.</p>
-<p>Creates and manages isolated git worktrees for feature work. Includes safety checks to verify the
-worktree is clean before switching, smart directory selection to avoid naming collisions, and teardown
-instructions to keep the repo tidy after merging.</p>
+<p>Creates and manages isolated git worktrees for feature work using <code>bd worktree</code> commands. Includes
+safety checks, smart directory selection, and teardown instructions. Supports <strong>multiple concurrent
+worktrees</strong> for parallel subagent work — the orchestrator creates one <code>bd worktree</code> per task (max 5)
+and manages the full lifecycle.</p>
 <h3 id="finishing-a-development-branch">finishing-a-development-branch</h3>
 <p><strong>Category:</strong> Infrastructure</p>
 <p><strong>Trigger:</strong> Use when implementation is complete, all tests pass, and you need to decide how to integrate the work — guides completion of development work by presenting structured options for merge, PR, or cleanup.</p>
@@ -1129,10 +1132,11 @@ diverged and needs a hard reset. Prevents data loss by confirming the correct pa
 <h3 id="research-driven-development">research-driven-development</h3>
 <p><strong>Category:</strong> Research</p>
 <p><strong>Trigger:</strong> Use when the user asks a question about a topic, requests research, or when you need to understand something before planning. Dispatches parallel research agents, synthesizes findings into a persistent document.</p>
-<p>Dispatches <code>@researcher</code> (web + documentation) and <code>@explore</code> (codebase) in
-parallel, then synthesizes their findings into a structured research document written to
-<code>docs/research/</code>. Iron Law: NO RESEARCH WITHOUT A DOCUMENT — verbal answers
-without persistent artifacts are prohibited.</p>
+<p>Dispatches a researcher subagent (via <code>researcher-prompt.md</code> with <code>subagent_type: "general-purpose"</code>)
+and <code>@explore</code> (codebase) in parallel, then synthesizes their findings into a structured research
+document. The output directory is resolved at skill load time via DCI, with a configurable three-tier
+priority: per-project config, environment variable, or <code>./docs/research</code> default.
+Iron Law: NO RESEARCH WITHOUT A DOCUMENT — verbal answers without persistent artifacts are prohibited.</p>
 <h3 id="write-documentation">write-documentation</h3>
 <p><strong>Category:</strong> Writing</p>
 <p><strong>Trigger:</strong> Use when writing or substantially rewriting human-facing prose: documentation, README, guides, blog posts, emails, Slack messages, PR descriptions, release notes, or any text a human will read.</p>

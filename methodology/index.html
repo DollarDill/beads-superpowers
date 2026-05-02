@@ -619,10 +619,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#step-1-session-start" class="md-nav__link">
+  <a href="#step-1-setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 1 — Session Start
+        Step 1 — Setup
       
     </span>
   </a>
@@ -630,10 +630,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-2-brainstorming" class="md-nav__link">
+  <a href="#step-2-deep-research" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 2 — Brainstorming
+        Step 2 — Deep Research
       
     </span>
   </a>
@@ -641,10 +641,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-3-writing-plans" class="md-nav__link">
+  <a href="#step-3-knowledge-capture" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 3 — Writing Plans
+        Step 3 — Knowledge Capture
       
     </span>
   </a>
@@ -652,10 +652,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-4-subagent-driven-development" class="md-nav__link">
+  <a href="#step-4-brainstorming" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 4 — Subagent-Driven Development
+        Step 4 — Brainstorming
       
     </span>
   </a>
@@ -663,10 +663,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-5-finishing-the-branch" class="md-nav__link">
+  <a href="#step-5-decision-capture" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 5 — Finishing the Branch
+        Step 5 — Decision Capture
       
     </span>
   </a>
@@ -674,10 +674,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-6-land-the-plane" class="md-nav__link">
+  <a href="#step-6-writing-plans" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 6 — Land the Plane
+        Step 6 — Writing Plans
       
     </span>
   </a>
@@ -685,10 +685,54 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-7-next-session" class="md-nav__link">
+  <a href="#step-7-implementation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 7 — Next Session
+        Step 7 — Implementation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-8-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 8 — Verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-9-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 9 — Documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-10-close-branch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 10 — Close Branch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-11-land-the-plane" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 11 — Land the Plane
       
     </span>
   </a>
@@ -902,7 +946,7 @@
   style Merge fill:#6366f1,color:#fff
   style Result fill:#22c55e,color:#000</code></pre>
 <h2 id="the-integration">The Integration</h2>
-<p>The core change was mechanical: every <code>TodoWrite</code> call across the original 14 Superpowers skills was replaced with the equivalent <code>bd</code> command. The result is that following process discipline and populating persistent memory are the same action.</p>
+<p>The first change was mechanical: every <code>TodoWrite</code> call across the original 14 Superpowers skills was replaced with the equivalent <code>bd</code> command. The result is that following process discipline and populating persistent memory are the same action. Subsequent changes went deeper — restructuring how subagents are dispatched, adding parallel execution, and introducing dynamic configuration.</p>
 <table>
 <thead>
 <tr>
@@ -935,9 +979,16 @@
 </table>
 <p>The replacement operates at two levels. At the task level, execution skills track plan tasks as beads. At the checklist level, skills like brainstorming (9 steps) and writing-skills (20 steps) create a bead for each internal step. Both levels are persistent and auditable, because if checklist-level tracking is ephemeral while task-level tracking is persistent, agents learn that some tracking is optional.</p>
 <h3 id="orchestrator-only-design">Orchestrator-Only Design</h3>
-<p>Subagent prompts (implementer, spec-reviewer, code-quality-reviewer) are deliberately not beads-aware. Only the orchestrating agent creates, claims, and closes beads. Subagents focus on their specific job. This prevents concurrent write conflicts and keeps subagent prompts simple: orchestrator creates bead, dispatches subagent, subagent does the work, orchestrator closes bead.</p>
+<p>Only the orchestrating agent creates, claims, and closes beads. Subagents focus on their specific job. This prevents concurrent write conflicts and keeps subagent prompts simple: orchestrator creates bead, dispatches subagent, subagent does the work, orchestrator closes bead.</p>
+<p>The one exception is <code>implementer-prompt.md</code>, which is beads-aware by design. It includes bead lifecycle commands (<code>bd update --claim</code>, <code>bd close --reason</code>), mandatory skill invocations (TDD, systematic-debugging, verification-before-completion), and LSP-first code navigation. Review subagent prompts (spec-reviewer, code-quality-reviewer) remain deliberately unaware of beads.</p>
 <h3 id="what-was-added">What Was Added</h3>
-<p>Beyond the <code>TodoWrite</code> replacement, the integration added several structural pieces. The <code>using-superpowers</code> skill gained a Beads Issue Tracking section so every session starts with beads awareness. The <code>finishing-a-development-branch</code> skill gained the Land the Plane protocol (<code>bd dolt push</code> + <code>git push</code>) so every session ends with both task state and code synced to remote. The <code>verification-before-completion</code> skill requires evidence in <code>bd close</code> because closing a bead without evidence is treated the same as not verifying. Execution skills use an epic/child bead pattern with <code>bd dep add</code> for dependency tracking, and brainstorming beads link forward to plan epics via <code>discovered-from</code> so the design trail is connected to the implementation trail.</p>
+<p>Beyond the <code>TodoWrite</code> replacement, the integration added several structural pieces:</p>
+<p><strong>Session lifecycle.</strong> The <code>using-superpowers</code> skill gained a Beads Issue Tracking section so every session starts with beads awareness. The <code>finishing-a-development-branch</code> skill gained the Land the Plane protocol (<code>bd dolt push</code> + <code>git push</code>) so every session ends with both task state and code synced to remote. The <code>verification-before-completion</code> skill requires evidence in <code>bd close</code> because closing a bead without evidence is treated the same as not verifying.</p>
+<p><strong>Dependency tracking.</strong> Execution skills use an epic/child bead pattern with <code>bd dep add</code> for dependency tracking, and brainstorming beads link forward to plan epics via <code>discovered-from</code> so the design trail is connected to the implementation trail.</p>
+<p><strong>Prompt template pattern.</strong> Subagent definitions moved from standalone agent files into prompt templates owned by the skills that dispatch them (<code>implementer-prompt.md</code>, <code>researcher-prompt.md</code>, <code>spec-reviewer-prompt.md</code>, <code>code-quality-reviewer-prompt.md</code>). This eliminates drift between the skill's expectations and the subagent's instructions — a single source of truth per subagent role.</p>
+<p><strong>Parallel batch mode.</strong> The <code>subagent-driven-development</code> skill gained a parallel execution mode: when <code>bd ready --parent</code> returns multiple unblocked tasks, they execute concurrently (max 5 per batch), each in its own <code>bd worktree</code>. The <code>dispatching-parallel-agents</code> skill was generalized from bug-fixing to any independent parallel work.</p>
+<p><strong>Dynamic Context Injection (DCI).</strong> The <code>research-driven-development</code> skill uses Claude Code's <code>!</code> backtick syntax to resolve the research output directory at skill load time, with a three-tier priority: per-project config, environment variable, or <code>./docs/research</code> default.</p>
+<p><strong>Mid-session enforcement.</strong> A <code>UserPromptSubmit</code> hook fires on every user message, injecting a tiered skill trigger reminder that prevents the agent from forgetting to invoke skills as the session progresses.</p>
 <h2 id="what-was-preserved">What Was Preserved</h2>
 <p>The integration was additive. All 14 original Superpowers skills kept their complete content: every anti-rationalization table, Iron Law, Red Flags section, the progressive skill chain (brainstorming, plans, execution, finishing), the two-stage review pattern (spec compliance then code quality), all three subagent prompt templates, and the platform reference files for Gemini, Copilot CLI, and Codex.</p>
 <p>Since the fork, the project has grown from 14 to 22 skills. The eight additions are <code>auditing-upstream-drift</code>, <code>document-release</code>, <code>getting-up-to-speed</code>, <code>project-init</code>, <code>setup</code>, <code>stress-test</code>, <code>write-documentation</code>, and <code>research-driven-development</code>.</p>
@@ -1038,42 +1089,54 @@
 <h3 id="claude-search-optimization-cso">Claude Search Optimization (CSO)</h3>
 <p>An empirical finding from the <code>writing-skills</code> meta-skill: when a skill's YAML <code>description</code> field summarized the workflow ("code review between tasks"), Claude followed the description instead of reading the full skill content and did one review instead of the two the skill specified. As a result, every skill's <code>description</code> field is now a trigger condition ("when to use this") rather than a workflow summary ("what this does"), which forces the full skill content to be read.</p>
 <h2 id="end-to-end-workflow">End-to-End Workflow</h2>
-<p>Here is a feature request moving through the full pipeline, from session start to the next session picking up where the first left off.</p>
+<p>Here is a non-trivial feature request moving through the full 11-state FSM, from session start to the next session picking up where the first left off. Simple tasks skip the research and planning phases (S2–S6) but still pass through the quality pipeline (S7–S11).</p>
 <pre class="mermaid"><code>graph TD
-  Step1["1. Session Start&lt;br/&gt;Hook loads skills + bd prime"] --&gt; Step2["2. Brainstorming&lt;br/&gt;Design before code"]
-  Step2 --&gt; Step3["3. Writing Plans&lt;br/&gt;Bite-sized tasks with beads"]
-  Step3 --&gt; Step4["4. Subagent-Driven Dev&lt;br/&gt;TDD + two-stage review per task"]
-  Step4 --&gt; Step5["5. Finishing Branch&lt;br/&gt;Merge / PR / cleanup"]
-  Step5 --&gt; Step6["6. Land the Plane&lt;br/&gt;bd close + git push"]
-  Step6 --&gt; Step7["7. Next Session&lt;br/&gt;bd prime restores state"]
+  Step1["1. Setup&lt;br/&gt;Bead + claim + sync"] --&gt; Step2["2. Research&lt;br/&gt;Parallel agents investigate"]
+  Step2 --&gt; Step3["3. Knowledge&lt;br/&gt;Write to KB"]
+  Step3 --&gt; Step4["4. Brainstorm&lt;br/&gt;Design before code"]
+  Step4 --&gt; Step5["5. Decide&lt;br/&gt;Write ADR"]
+  Step5 --&gt; Step6["6. Plan&lt;br/&gt;Bite-sized tasks"]
+  Step6 --&gt; Step7["7. Implement&lt;br/&gt;TDD in worktree"]
+  Step7 --&gt; Step8["8. Verify&lt;br/&gt;Fresh evidence"]
+  Step8 --&gt; Step9["9. Document&lt;br/&gt;Docs audit"]
+  Step9 --&gt; Step10["10. Close Branch&lt;br/&gt;Merge / PR"]
+  Step10 --&gt; Step11["11. Land the Plane&lt;br/&gt;bd close + git push"]
 
   style Step1 fill:#6366f1,color:#fff
-  style Step4 fill:#22c55e,color:#000
-  style Step6 fill:#f59e0b,color:#000</code></pre>
-<h3 id="step-1-session-start">Step 1 — Session Start</h3>
-<p>The SessionStart hook loads <code>using-superpowers</code> (beads-aware skill routing) and runs <code>bd prime</code>, which injects the current task state and any persistent memories from previous sessions. If the last session ended mid-feature, the agent sees exactly what was finished and what remains.</p>
-<h3 id="step-2-brainstorming">Step 2 — Brainstorming</h3>
-<p>For any creative work, the <code>brainstorming</code> skill fires first. It creates a session bead (<code>bd create "Brainstorming: auth system" -t task</code>) and child beads for each checklist step, then walks through project context, clarifying questions, 2-3 approaches with trade-offs, and a design spec that gets committed to git. The terminal state is invoking <code>writing-plans</code>, not jumping to code.</p>
-<h3 id="step-3-writing-plans">Step 3 — Writing Plans</h3>
-<p><code>writing-plans</code> breaks the approved design into bite-sized tasks (2-5 minutes each) with exact file paths, code snippets, and verification steps. The plan is saved to <code>docs/</code> and handed to <code>subagent-driven-development</code>.</p>
-<h3 id="step-4-subagent-driven-development">Step 4 — Subagent-Driven Development</h3>
-<p>The orchestrator creates an epic bead with task children and dependency chains:</p>
+  style Step7 fill:#22c55e,color:#000
+  style Step11 fill:#f59e0b,color:#000</code></pre>
+<h3 id="step-1-setup">Step 1 — Setup</h3>
+<p>Every task begins with a bead. Before a single line of research or code happens, the work is captured as a tracked item (<code>bd create</code>), claimed by the agent (<code>bd update &lt;id&gt; --claim</code>), and the remote state is synced. If the session ends unexpectedly, the bead record shows an in-progress item that can be recovered.</p>
+<h3 id="step-2-deep-research">Step 2 — Deep Research</h3>
+<p>For non-trivial tasks, the <code>research-driven-development</code> skill dispatches two agents in parallel: a researcher subagent (via <code>researcher-prompt.md</code>) investigates the problem domain, and an <code>@explore</code> agent maps the affected code and traces dependencies. Running both concurrently cuts research time roughly in half.</p>
+<h3 id="step-3-knowledge-capture">Step 3 — Knowledge Capture</h3>
+<p>Research findings are synthesized into a durable knowledge base document. The output directory is resolved by the research skill's DCI resolver with a three-tier priority: per-project config, environment variable, or <code>./docs/research</code> default. Key learnings are persisted with <code>bd remember "insight"</code> so they surface in future sessions.</p>
+<h3 id="step-4-brainstorming">Step 4 — Brainstorming</h3>
+<p>The <code>brainstorming</code> skill uses a Socratic approach to explore the solution space. It creates a session bead and child beads for each checklist step, then walks through project context, clarifying questions, 2–3 approaches with trade-offs, and a design spec committed to git. The terminal state is invoking <code>writing-plans</code>, not jumping to code. The <code>stress-test</code> skill may fire during this phase to adversarially interrogate the design.</p>
+<h3 id="step-5-decision-capture">Step 5 — Decision Capture</h3>
+<p>Architecture decisions are recorded as ADRs (Architecture Decision Records) in <code>docs/decisions/</code>. This transforms the implicit decisions made during brainstorming into explicit, timestamped records with context, rationale, and consequences.</p>
+<h3 id="step-6-writing-plans">Step 6 — Writing Plans</h3>
+<p><code>writing-plans</code> breaks the approved design into bite-sized tasks (2–5 minutes each) with exact file paths, code snippets, and verification steps. Every task becomes a bead. The plan is saved to <code>docs/</code> and handed to <code>subagent-driven-development</code>.</p>
+<h3 id="step-7-implementation">Step 7 — Implementation</h3>
+<p>Code runs in an isolated git worktree. The orchestrator creates an epic bead with task children and dependency chains:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bd<span class="w"> </span>create<span class="w"> </span><span class="s2">&quot;Epic: Auth System&quot;</span><span class="w"> </span>-t<span class="w"> </span>epic
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>bd<span class="w"> </span>create<span class="w"> </span><span class="s2">&quot;Task 1-5&quot;</span><span class="w"> </span>-t<span class="w"> </span>task<span class="w"> </span>--parent<span class="w"> </span>&lt;epic-id&gt;
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>bd<span class="w"> </span>dep<span class="w"> </span>add<span class="w"> </span>&lt;child&gt;<span class="w"> </span>&lt;depends-on&gt;
 </code></pre></div>
-<p>For each task, the orchestrator claims it, dispatches an implementer subagent that works under TDD (red-green-refactor), then dispatches a spec reviewer and a code quality reviewer in sequence. Only after both reviewers pass does the orchestrator close the bead. After all tasks complete, a final code review runs and <code>finishing-a-development-branch</code> takes over.</p>
-<h3 id="step-5-finishing-the-branch">Step 5 — Finishing the Branch</h3>
-<p><code>finishing-a-development-branch</code> verifies that all tests pass (hard gate, no exceptions), determines the base branch, presents four options (merge locally, create PR, keep the branch, or discard), executes the chosen option, and cleans up the worktree.</p>
-<h3 id="step-6-land-the-plane">Step 6 — Land the Plane</h3>
+<p>For each task, the orchestrator dispatches an implementer subagent (via <code>implementer-prompt.md</code> with <code>subagent_type: "general-purpose"</code>) that works under TDD (red-green-refactor). When multiple tasks are unblocked, parallel batch mode executes up to 5 subagents concurrently, each in its own per-task worktree. After each task, a spec reviewer and code quality reviewer run in sequence. Only after both pass does the orchestrator close the bead.</p>
+<h3 id="step-8-verification">Step 8 — Verification</h3>
+<p>The <code>verification-before-completion</code> skill runs the full test suite independently — not relying on the last test run during development. Claims of correctness must be backed by fresh evidence. "Tests pass" means a test command was just run and its output is attached.</p>
+<h3 id="step-9-documentation">Step 9 — Documentation</h3>
+<p>The <code>document-release</code> skill scans the diff against existing documentation to identify stale references, missing entries, and outdated examples. Documentation gaps caught here are cheaper to fix than gaps discovered by users.</p>
+<h3 id="step-10-close-branch">Step 10 — Close Branch</h3>
+<p><code>finishing-a-development-branch</code> verifies tests pass (hard gate), determines the base branch, presents four options (merge locally, create PR, keep the branch, or discard), executes the chosen option, and cleans up the worktree.</p>
+<h3 id="step-11-land-the-plane">Step 11 — Land the Plane</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bd<span class="w"> </span>close<span class="w"> </span>&lt;epic-id&gt;<span class="w"> </span>--reason<span class="w"> </span><span class="s2">&quot;All tasks complete&quot;</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>bd<span class="w"> </span>dolt<span class="w"> </span>push
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>git<span class="w"> </span>pull<span class="w"> </span>--rebase<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>push
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>git<span class="w"> </span>status
 </code></pre></div>
-<p>Work is not done until both <code>bd dolt push</code> (task state) and <code>git push</code> (code) succeed. <code>git status</code> must show "up to date with origin" before the agent stops.</p>
-<h3 id="step-7-next-session">Step 7 — Next Session</h3>
-<p><code>bd prime</code> restores the full picture: completed beads, remaining work, learned memories. The next agent picks up where this one left off, with no manual handoff needed.</p>
+<p>Work is not done until both <code>bd dolt push</code> (task state) and <code>git push</code> (code) succeed. <code>git status</code> must show "up to date with origin" before the agent stops. The next session runs <code>bd prime</code> to restore the full picture.</p>
 <h2 id="what-this-enables">What This Enables</h2>
 <p><strong>For individual developers:</strong> Cross-session continuity via <code>bd prime</code>, process discipline without needing to remind the agent, and a full audit trail of every task, review, and close reason in the beads ledger.</p>
 <p><strong>For teams:</strong> Shared project state via <code>bd dolt push/pull</code>, concurrent multi-agent work via hash-based IDs and cell-level merge, and convention persistence via <code>bd remember</code> (injected into every future session for every agent).</p>
@@ -1091,11 +1154,12 @@
 <li>Anthropic best practices for skill authoring. Referenced in <code>skills/writing-skills/anthropic-best-practices.md</code>.</li>
 </ul>
 <h3 id="analysis-documentation">Analysis Documentation</h3>
-<p>The complete research that informed this integration is available in <code>docs/</code>:</p>
+<p>Design documents and implementation plans from the overhaul are available in <code>docs/beads-superpowers/</code>:</p>
 <ul>
-<li><code>01-system-architecture.md</code> through <code>05-comparison-and-insights.md</code> — Superpowers deep dive</li>
-<li><code>06-beads-system-architecture.md</code> through <code>09-beads-design-patterns.md</code> — Beads deep dive</li>
+<li><code>specs/</code> — Design specs from brainstorming (SDD parallel mode, example workflow, write-documentation, single source of truth)</li>
+<li><code>plans/</code> — Implementation plans from writing-plans</li>
 </ul>
+<p>Architecture decisions are recorded in <code>docs/decisions/</code> as ADRs.</p>
 
 
 

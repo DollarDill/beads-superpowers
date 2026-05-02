@@ -893,7 +893,7 @@
 </blockquote>
 <h2 id="configuration">Configuration</h2>
 <h3 id="how-the-hook-mechanism-works">How the hook mechanism works</h3>
-<p>The plugin registers a single <code>SessionStart</code> hook via <code>hooks/hooks.json</code>. This fires on every session start, clear, and compact event. The hook script:</p>
+<p>The plugin registers two hooks via <code>hooks/hooks.json</code>. The <code>SessionStart</code> hook fires on every session start, clear, and compact event. The hook script:</p>
 <ol>
 <li>Reads <code>using-superpowers/SKILL.md</code> — the bootstrap skill that routes to all other skills</li>
 <li>Runs <code>bd prime</code> — captures beads workflow context and persistent memories</li>

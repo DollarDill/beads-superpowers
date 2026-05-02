@@ -931,6 +931,14 @@
 <td>Post-ship — documentation needs updating</td>
 <td><code>document-release</code></td>
 </tr>
+<tr>
+<td>I need to research a topic before deciding</td>
+<td><code>research-driven-development</code></td>
+</tr>
+<tr>
+<td>I am writing human-facing documentation or prose</td>
+<td><code>write-documentation</code></td>
+</tr>
 </tbody>
 </table>
 <blockquote>
@@ -945,7 +953,7 @@
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a># Expected: beads-superpowers@beads-superpowers-marketplace — Status: enabled
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>/plugins     # Inside Claude Code session — should list beads-superpowers
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>/skills      # Should show beads-superpowers: prefixed skills (20 total)
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>/skills      # Should show beads-superpowers: prefixed skills (22 total)
 </code></pre></div>
 <p>If the plugin is listed but skills are missing, check that the SessionStart hook is executable:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>ls -la hooks/session-start   # Should show -rwxr-xr-x
@@ -1034,7 +1042,7 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a># Validate plugin manifests
 <a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>claude plugin validate .claude-plugin/plugin.json
 <a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
-<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a># Verify skill count (should be 20)
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a># Verify skill count (should be 22)
 <a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>ls -d skills/*/ | wc -l
 <a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
 <a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a># Verify zero active TodoWrite references (must return empty)
@@ -1051,7 +1059,7 @@
 <ol>
 <li>Create <code>skills/&lt;skill-name&gt;/SKILL.md</code> with a YAML frontmatter block. The <code>description</code> field is a trigger condition, not a workflow summary — write it as "Use when X", not "This skill does Y".</li>
 <li>Make it beads-aware: use <code>bd create</code> / <code>bd close</code> / <code>bd ready</code> for all task tracking. No TodoWrite, no markdown checklists.</li>
-<li>Update the skills table in <code>README.md</code> and add a CHANGELOG entry.</li>
+<li>Update the skills table in <code>CLAUDE.md</code> and add a CHANGELOG entry.</li>
 </ol>
 <blockquote>
 <p><strong>Anti-patterns to avoid</strong></p>
