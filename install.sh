@@ -33,7 +33,7 @@ KNOWN_SKILLS=(
   write-documentation writing-plans writing-skills
 )
 
-KNOWN_AGENTS=(yegge jesse)
+KNOWN_AGENTS=(yegge)
 
 # --- Flags ---
 FLAG_YES=false
@@ -402,7 +402,7 @@ print_next_steps() {
   local count
   count=$(find "$SKILLS_DIR" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
   echo
-  success "beads-superpowers v$VERSION installed ($count skills, 2 agents, hook configured)"
+  success "beads-superpowers v$VERSION installed ($count skills, $agent_count agent(s), hook configured)"
   echo
   echo "Next steps:"
   echo "  1. Restart Claude Code (or start a new session) to activate skills"
@@ -477,7 +477,7 @@ print_dry_run() {
   echo "Would perform these actions:"
   echo "  1. Download release tarball from GitHub"
   echo "  2. Copy 22 skills to $SKILLS_DIR/"
-  echo "  3. Copy 2 agents (yegge, jesse) to $AGENTS_DIR/"
+  echo "  3. Copy yegge agent to $AGENTS_DIR/"
   echo "  4. Create hook script at $HOOK_SCRIPT"
   echo "  5. Backup $SETTINGS_FILE"
   echo "  6. Register SessionStart hook in settings.json"
@@ -545,7 +545,7 @@ assert d['hooks']['UserPromptSubmit']
     fi
   done
   if [ "$agents_ok" = true ]; then
-    success "Agents installed: yegge, jesse"; pass=$((pass + 1))
+    success "Agents installed: yegge"; pass=$((pass + 1))
   else
     error "Agents missing"; fail=$((fail + 1))
   fi
@@ -555,8 +555,7 @@ assert d['hooks']['UserPromptSubmit']
 
   if [ ! -f "$test_home/.claude/hooks/beads-superpowers-session-start.sh" ] && \
      [ ! -f "$test_home/.claude/hooks/beads-superpowers-reminder.sh" ] && \
-     [ ! -f "$test_home/.claude/agents/yegge.md" ] && \
-     [ ! -f "$test_home/.claude/agents/jesse.md" ]; then
+     [ ! -f "$test_home/.claude/agents/yegge.md" ]; then
     success "Uninstall: hooks and agents removed"; pass=$((pass + 1))
   else
     error "Uninstall: hooks still exist"; fail=$((fail + 1))

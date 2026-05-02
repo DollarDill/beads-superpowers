@@ -49,7 +49,7 @@ echo "tracked=$TRACKED beads=$HAS_BEADS git=$HAS_GIT"
 |---|---|---|
 | `< 50` or no `.git` | **Light** | bd commands + read README + git log; skip Phase 2 medium drilldown. |
 | `50 – 500` | **Medium** *(default)* | Parallel bd + parallel codebase reads + key-file drilldown + open-bead details. |
-| `> 500` | **Heavy** | Dispatch `@jesse` + `@explore` in parallel via the `Agent` tool (use `dispatching-parallel-agents`). |
+| `> 500` | **Heavy** | Dispatch `@researcher` + `@explore` in parallel via the `Agent` tool (use `dispatching-parallel-agents`). |
 
 ## Phase 1 — Beads context (single parallel batch)
 
@@ -89,7 +89,7 @@ Light path, plus:
 
 Use `dispatching-parallel-agents` to dispatch in one message:
 
-- `@jesse` — read CLAUDE.md/README/CHANGELOG, return architecture summary in <300 words
+- `@researcher` — read CLAUDE.md/README/CHANGELOG, return architecture summary in <300 words
 - `@explore` — enumerate top-level structure, count source files by language, return layout report in <200 words
 
 After both return, optionally `Read` 1–3 files the agents flagged as critical.

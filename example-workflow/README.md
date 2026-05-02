@@ -2,23 +2,23 @@
 
 This directory contains a ready-to-use development workflow for projects using [beads-superpowers](https://github.com/DollarDill/beads-superpowers).
 
-## Three-Layer Architecture
+## Architecture
 
 | Layer | File | Purpose |
 |-------|------|---------|
 | Behavioral rules | `CLAUDE.md` | Karpathy's 4 principles + beads integration — loaded for all agents |
 | Orchestration | `agents/yegge.md` | Complete 11-state FSM development lifecycle — primary session agent |
-| Research | `agents/jesse.md` | Deep research specialist — dispatched by yegge at FSM state S2 |
 
-### Agent Naming
+Subagents (researcher, implementer, code-reviewer) are dispatched via **prompt templates** within their respective skills — no separate agent files needed. The skills own the prompts, keeping them in sync.
 
-Agents are named after the creators of the projects this plugin merges:
-- **yegge** — Steve Yegge, creator of [Beads](https://github.com/gastownhall/beads)
-- **jesse** — Jesse Vincent, creator of [Superpowers](https://github.com/obra/superpowers)
+### Naming
+
+- **yegge** (orchestrator) — Named after Steve Yegge, creator of [Beads](https://github.com/gastownhall/beads)
+- **researcher** prompt — Named after Jesse Vincent, creator of [Superpowers](https://github.com/obra/superpowers)
 
 ## Quick Setup
 
-Agents are installed globally by `install.sh`. To add the CLAUDE.md template to your project:
+The yegge agent is installed globally by `install.sh`. To add the CLAUDE.md template to your project:
 
 ```bash
 # Copy the Karpathy + beads CLAUDE.md template
@@ -33,7 +33,7 @@ The `yegge` agent orchestrates an 11-state finite state machine:
 
 ```text
 S1:  SETUP         → Create and claim a bead
-S2:  RESEARCH      → @jesse + @explore in parallel
+S2:  RESEARCH      → @researcher + @explore in parallel
 S3:  KNOWLEDGE     → Synthesize findings → write to knowledge base
 S4:  BRAINSTORM    → Skill(brainstorming) → design doc + user approval
 S5:  DECIDE        → Write Architecture Decision Record
@@ -53,7 +53,7 @@ The `CLAUDE.md` provides behavioral guardrails (Think Before Coding, Simplicity 
 ## Customization
 
 - **Add project context** — Edit CLAUDE.md to add your architecture overview, conventions, and gotchas after the behavioral guidelines
-- **Adjust models** — yegge uses `model: inherit` (your session model); jesse uses Opus. Change in YAML frontmatter.
+- **Adjust models** — yegge uses `model: inherit` (your session model). The researcher prompt template defaults to the `researcher` subagent type.
 - **Add project rules** — The Karpathy section explicitly says "Merge with project-specific instructions as needed"
 
 ## Learn More

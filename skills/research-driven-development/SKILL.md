@@ -78,17 +78,13 @@ find "!`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`" -name "*.md" -exec grep
 
 Launch BOTH agents in a **single message with multiple Agent tool calls** so they run concurrently:
 
-### Agent A: @jesse (web + documentation)
+### Agent A: Researcher (web + documentation)
 
-Dispatch via the `Agent` tool with `subagent_type: "researcher"` (or `"jesse"` if the jesse agent is installed):
+Dispatch via the `Agent` tool using the prompt template at `./researcher-prompt.md`. Use `subagent_type: "researcher"`:
 
-> Research [topic]. I need:
-> 1. Official documentation and primary sources
-> 2. Current best practices (note versions and dates)
-> 3. Common pitfalls and known issues
-> 4. Comparisons with alternatives if relevant
->
-> Search at least 3-5 varied queries. Cross-reference across 3+ independent sources. Flag any contradictions. Report in structured format with Sources section.
+The prompt template includes the full researcher workflow (knowledge base search → LSP navigation → web search → cross-reference → structured output). You provide:
+- The research question (one clear sentence)
+- Context (bead ID, what decision this informs, prior knowledge from `bd memories`)
 
 ### Agent B: @explore (codebase)
 
@@ -104,7 +100,7 @@ Dispatch via the `Agent` tool with `subagent_type: "Explore"`:
 
 ### If Only One Agent Applies
 
-- **Pure topic research** (no codebase relevance): Dispatch only @jesse
+- **Pure topic research** (no codebase relevance): Dispatch only the researcher
 - **Pure codebase question**: Dispatch only @explore
 - **Both relevant** (default): Dispatch both in parallel
 
@@ -228,9 +224,9 @@ User asks: "How does Dolt handle merge conflicts?"
 ```
 1. bd create "Research: Dolt merge conflict handling" -t task -p 2
 2. bd memories "dolt merge" → check for prior research
-3. Dispatch @jesse: "Research Dolt merge conflict resolution..."
+3. Dispatch researcher (via ./researcher-prompt.md): "Research Dolt merge conflict resolution..."
    Dispatch @explore: "Search codebase for Dolt merge, conflict..."
-4. Synthesize: jesse found cell-level merge docs, explore found bd dolt pull usage
+4. Synthesize: researcher found cell-level merge docs, explore found bd dolt pull usage
 5. Write to !`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`/2026-05-01-dolt-merge-conflict-handling.md
 6. bd close <id> --reason "Research complete: Dolt uses cell-level merge on SQL tables"
 ```
