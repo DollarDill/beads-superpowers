@@ -169,7 +169,7 @@ results=$(grep -rn "docs/superpowers" skills/ tests/ | grep -v "auditing-upstrea
 [ -z "$results" ] && echo "PASS" || echo "FAIL: stale paths found: $results"
 ```
 
-All paths should use `docs/beads-superpowers/`.
+All paths should use `.internal/`.
 
 **Check 3.3 — Zero stale skill namespace references:**
 ```bash
@@ -369,14 +369,14 @@ done
 
 **Check 7.5 — SETUP-GUIDE install commands use correct names:**
 ```bash
-grep -q "DollarDill/beads-superpowers" docs/SETUP-GUIDE.md && echo "PASS: correct marketplace repo" || echo "FAIL"
-grep -q "beads-superpowers@beads-superpowers-marketplace" docs/SETUP-GUIDE.md && echo "PASS: correct install command" || echo "FAIL"
+grep -q "DollarDill/beads-superpowers" .internal/SETUP-GUIDE.md && echo "PASS: correct marketplace repo" || echo "FAIL"
+grep -q "beads-superpowers@beads-superpowers-marketplace" .internal/SETUP-GUIDE.md && echo "PASS: correct install command" || echo "FAIL"
 ```
 
 **Check 7.6 — Copied upstream docs don't have stale references:**
 ```bash
 # These docs were adapted from superpowers — verify no stale refs
-for f in docs/testing.md docs/windows/polyglot-hooks.md tests/claude-code/README.md; do
+for f in .internal/testing.md .internal/windows/polyglot-hooks.md tests/claude-code/README.md; do
     stale=$(grep -c "superpowers" "$f" | head -1)
     allowed=$(grep -c "beads-superpowers\|obra/superpowers\|upstream" "$f" | head -1)
     raw=$((stale - allowed))
@@ -396,7 +396,7 @@ bd create "Drift: [description]" -t chore -p 3 --parent <audit-id>
 bd create "CRITICAL: [description]" -t bug -p 0 --parent <audit-id>
 ```
 
-Write the report to `docs/audits/YYYY-MM-DD-upstream-drift.md`:
+Write the report to `.internal/audits/YYYY-MM-DD-upstream-drift.md`:
 
 ```markdown
 # Plugin Audit — YYYY-MM-DD

@@ -1,10 +1,9 @@
 site_name: beads-superpowers
 site_url: https://dollardill.github.io/beads-superpowers
-docs_dir: docs-src
 site_dir: site
 repo_url: https://github.com/DollarDill/beads-superpowers
 repo_name: DollarDill/beads-superpowers
-edit_uri: edit/main/docs-src/
+edit_uri: edit/main/docs/
 
 theme:
   name: material

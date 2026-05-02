@@ -2,21 +2,13 @@
 # MkDocs build output
 site/
 
+# Internal working docs (plans, specs, research, audits, reference)
+.internal/
+
 # Beads / Dolt files (added by bd init)
 .dolt/
 *.db
 .beads-credential-key
-
-# Research/analysis docs (internal working notes, not part of the plugin)
-docs/01-*.md
-docs/02-*.md
-docs/03-*.md
-docs/04-*.md
-docs/05-*.md
-docs/06-*.md
-docs/07-*.md
-docs/08-*.md
-docs/09-*.md
 
 # Session work logs (internal, not part of the plugin)
 SESSION-SUMMARY.md
@@ -67,5 +59,3 @@ skills-lock.json
 # Beads workspace — infrastructure for plugin USERS, not tracked here
 .beads/
 issues.jsonl
-docs/audits/
-docs/known-issues/

@@ -51,7 +51,7 @@ prefixes (`feat:`, `fix:`, `docs:`, `ci:`, `chore:`, `build:`).
 ### Modifying hooks or scripts
 
 The session-start hook is bash on Unix, batch on Windows (polyglot via
-`run-hook.cmd`). Test on both if you can. See `docs/windows/polyglot-hooks.md`.
+`run-hook.cmd`). Test on both if you can. See `.internal/windows/polyglot-hooks.md`.
 
 ### Modifying plugin manifests
 

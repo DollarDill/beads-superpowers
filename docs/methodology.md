@@ -184,7 +184,7 @@ The `brainstorming` skill uses a Socratic approach to explore the solution space
 
 ### Step 5 — Decision Capture
 
-Architecture decisions are recorded as ADRs (Architecture Decision Records) in `docs/decisions/`. This transforms the implicit decisions made during brainstorming into explicit, timestamped records with context, rationale, and consequences.
+Architecture decisions are recorded as ADRs (Architecture Decision Records) in `decisions/`. This transforms the implicit decisions made during brainstorming into explicit, timestamped records with context, rationale, and consequences.
 
 ### Step 6 — Writing Plans
 
@@ -248,9 +248,9 @@ Work is not done until both `bd dolt push` (task state) and `git push` (code) su
 
 ### Analysis Documentation
 
-Design documents and implementation plans from the overhaul are available in `docs/beads-superpowers/`:
+Design documents and implementation plans from the overhaul are available in `.internal/`:
 
 - `specs/` — Design specs from brainstorming (SDD parallel mode, example workflow, write-documentation, single source of truth)
 - `plans/` — Implementation plans from writing-plans
 
-Architecture decisions are recorded in `docs/decisions/` as ADRs.
+Architecture decisions are recorded in `decisions/` as ADRs.

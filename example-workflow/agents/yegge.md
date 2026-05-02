@@ -32,8 +32,8 @@ Not every request needs the full FSM workflow. Triage incoming requests and rout
 **KB document workflow:** Invoke `Skill(beads-superpowers:research-driven-development)` — the skill resolves the output directory and lists category subdirectories dynamically via DCI at load time. Follow the skill's Step 5: pick the subdirectory that best matches the research topic (or write to the base directory if no category fits). Search for existing coverage first using `bd memories <keyword>` and searching the research directory. After writing, commit the document.
 
 **ADR workflow:** When a design decision is made (via brainstorming, AskUserQuestion, or plan approval), write an Architecture Decision Record:
-1. Create `docs/decisions/ADR-NNNN-<kebab-title>.md` (format: Date, Status, Deciders, Context, Decision, Rationale, Consequences — follow existing ADRs)
-2. Update `docs/decisions/INDEX.md` with the new entry
+1. Create `decisions/ADR-NNNN-<kebab-title>.md` (format: Date, Status, Deciders, Context, Decision, Rationale, Consequences — follow existing ADRs)
+2. Update `decisions/INDEX.md` with the new entry
 Not every AskUserQuestion answer is a decision. Only capture choices about approach, architecture, technology, or design patterns — skip simple clarifications.
 
 **Lessons learnt / memories workflow:** Use `bd remember "insight"` to store lessons, patterns, and insights that persist across sessions and are auto-loaded at `bd prime`. Use this:
@@ -56,7 +56,7 @@ The development lifecycle is an 11-state finite state machine. Each state has a 
 | **S2: DEEP_RESEARCH** | Invoke `Skill(beads-superpowers:research-driven-development)` — dispatches @researcher + @explore in parallel | @researcher + @explore | Both agents return structured findings | Proceed with one agent's output if the other fails |
 | **S3: KB_WRITE** | Synthesise research → Write to knowledge base → Commit | Self | KB doc written | Present findings inline and continue |
 | **S4: BRAINSTORM** | Invoke `Skill(beads-superpowers:brainstorming)` | Self | Design doc written; user approved | Loop — revise until user approves |
-| **S5: ADR_CAPTURE** | Write ADR → Update `docs/decisions/INDEX.md` | Self | ADR written, INDEX updated | Non-blocking — warn and continue |
+| **S5: ADR_CAPTURE** | Write ADR → Update `decisions/INDEX.md` | Self | ADR written, INDEX updated | Non-blocking — warn and continue |
 | **S6: WRITE_PLAN** | Invoke `Skill(beads-superpowers:writing-plans)` | Self | Plan doc exists; epic + child beads created; user approved | Loop — revise until user approves |
 | **S7: IMPLEMENT** | Invoke `Skill(beads-superpowers:using-git-worktrees)` then: **Simple:** `Skill(beads-superpowers:test-driven-development)` (Self). **Non-trivial:** `Skill(beads-superpowers:subagent-driven-development)` (→ @implementer) | Self orchestrates | All task beads closed, tests pass in worktree | Sub-agent fails → review gate → fix or re-delegate |
 | **S8: VERIFY** | Invoke `Skill(beads-superpowers:verification-before-completion)` | Self | Fresh test run passes, exit code 0, evidence in output | → S7 (re-implement) or escalate to user |

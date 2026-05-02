@@ -83,8 +83,9 @@ A Claude Code marketplace plugin that merges [Superpowers](https://github.com/ob
 - `agents/` — `code-reviewer.md` agent. Auto-discovered. Subagents (implementer, researcher) use prompt templates inside their skills, not standalone agent files.
 - `hooks/` — `session-start` (injects `using-superpowers` + `bd prime`) and `superpowers-reminder.sh` (UserPromptSubmit skill trigger reminders). Registered in `hooks/hooks.json`. Auto-discovered.
 - `example-workflow/` — Ready-to-use project template: `CLAUDE.md` (Karpathy behavioral principles + beads integration) and `agents/yegge.md` (11-state FSM orchestrator). `install.sh` copies `yegge.md` globally.
-- `docs/` — Knowledge base (`beads-superpowers/specs/`, `beads-superpowers/plans/`), Architecture Decision Records (`decisions/`), upstream reference docs, setup guide.
-- `docs-src/` — MkDocs Material source pages (6 pages + assets). Template variables (`{{ skill_count }}`) computed at build time via `main.py` macros plugin.
+- `docs/` — MkDocs Material source pages (6 pages + assets). Template variables (`{{ skill_count }}`) computed at build time via `main.py` macros plugin. Contains ONLY website content.
+- `decisions/` — Architecture Decision Records (ADRs). Tracked in git.
+- `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs.
 - `tests/` — 5 test suites: brainstorm-server (Node.js), claude-code skill tests, explicit-skill-requests, skill-triggering, subagent-driven-dev.
 - `scripts/` — `bump-version.sh` (sync version across 3 files), `sync-skill-count.sh` (sync skill counts across all files), `build-docs.sh`.
 - `install.sh` — curl installer. Installs plugin + yegge agent globally.
@@ -131,14 +132,19 @@ cp -rf source dest          # NOT: cp -r source dest
   marketplace.json         # Marketplace config for plugin discovery
 agents/                    # Code reviewer agent (auto-discovered)
 assets/                    # Banner SVG
-docs/
-  beads-superpowers/       # Knowledge base (specs/ and plans/ from brainstorming + planning)
-  decisions/               # Architecture Decision Records (ADR-0001..0003 + INDEX.md)
-  upstream-reference/      # Upstream design docs
+docs/                      # MkDocs source pages — website content ONLY
+  index.md, getting-started.md, methodology.md, skills.md, workflow.md, tips.md
+  assets/                  # Banner SVG
+decisions/                 # Architecture Decision Records (ADR-0001..0003 + INDEX.md)
+.internal/                 # Working docs (gitignored)
+  specs/                   # Design specs from brainstorming
+  plans/                   # Implementation plans from writing-plans
+  research/                # Research output from research-driven-development
+  audits/                  # Upstream drift audit reports
+  reference/               # Upstream design docs
   windows/                 # Windows polyglot hook docs
   SETUP-GUIDE.md           # Installation and setup guide
   testing.md               # Test infrastructure docs
-docs-src/                  # MkDocs source pages (index, getting-started, methodology, skills, workflow, tips)
 example-workflow/
   CLAUDE.md                # Karpathy behavioral principles + beads integration (generic project template)
   agents/yegge.md          # Orchestrator agent — 11-state FSM lifecycle

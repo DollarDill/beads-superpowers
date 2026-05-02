@@ -12,7 +12,7 @@ OUTPUT_DIR="/tmp/beads-superpowers-tests/${TIMESTAMP}/explicit-skill-requests/ex
 mkdir -p "$OUTPUT_DIR"
 
 PROJECT_DIR="$OUTPUT_DIR/project"
-mkdir -p "$PROJECT_DIR/docs/beads-superpowers/plans"
+mkdir -p "$PROJECT_DIR/.internal/plans"
 
 echo "=== Extended Multi-Turn Test ==="
 echo "Output dir: $OUTPUT_DIR"

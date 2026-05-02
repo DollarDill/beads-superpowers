@@ -26,10 +26,10 @@ trap "cleanup_test_project $TEST_PROJECT" EXIT
 cd "$TEST_PROJECT"
 
 # Create directory structure
-mkdir -p docs/beads-superpowers/specs
+mkdir -p .internal/specs
 
 # Create a spec document WITH INTENTIONAL ERRORS for the reviewer to catch
-cat > docs/beads-superpowers/specs/test-feature-design.md <<'EOF'
+cat > .internal/specs/test-feature-design.md <<'EOF'
 # Test Feature Design
 
 ## Overview
@@ -80,7 +80,7 @@ PROMPT="You are testing the spec document reviewer.
 
 Read the spec-document-reviewer-prompt.md template in skills/brainstorming/ to understand the review format.
 
-Then review the spec at $TEST_PROJECT/docs/beads-superpowers/specs/test-feature-design.md using the criteria from that template.
+Then review the spec at $TEST_PROJECT/.internal/specs/test-feature-design.md using the criteria from that template.
 
 Look for:
 - TODOs, placeholders, 'TBD', incomplete sections
