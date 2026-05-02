@@ -35,53 +35,22 @@
     <div class="content">
       <article>
         <h1>Methodology</h1>
-        <p class="subtitle">Design philosophy, research basis, and rationale behind merging Superpowers skills with Beads issue tracking into a single Claude Code plugin.</p>
+        <p class="subtitle">Why beads-superpowers exists, how it works, and what research shaped the design.</p>
 
         <h2 id="problem">The Problem</h2>
-        <p>AI coding agents in 2025–2026 face two fundamental problems that, until now, have been solved by two separate systems.</p>
+        <p>Ask an AI coding agent to build a feature and watch what happens. It skips straight to code, writes implementation before tests, claims the work is "done" without running verification, and if you point out a problem it agrees instantly rather than pushing back. When you start a new session the next day, every task it was tracking has vanished. Two separate projects attacked each half of this problem.</p>
 
-        <h3>Problem 1: No Process Discipline</h3>
-        <p>Without explicit workflow enforcement, AI agents consistently:</p>
-        <ul>
-          <li>Skip to coding before understanding the problem</li>
-          <li>Write implementation before tests</li>
-          <li>Claim work is "done" without running verification</li>
-          <li>Accept review feedback without questioning it (sycophancy)</li>
-          <li>Attempt fix after fix without investigating root causes</li>
-          <li>Rationalise skipping every process step with plausible-sounding excuses</li>
-        </ul>
-        <p><strong>Superpowers</strong> (by Jesse Vincent) solved this with 14 composable skills that use bright-line rules, anti-rationalization tables, and pressure-tested enforcement language. Compliance doubled from 33% to 72% when using absolute rules over hedged guidance (Meincke et al. 2025).</p>
+        <h3>Process Discipline</h3>
+        <p><a href="https://github.com/obra/superpowers">Superpowers</a> (Jesse Vincent) shipped 14 composable skills that force agents to brainstorm before coding, write tests before implementation, investigate root causes before proposing fixes, and verify before claiming completion. The skills use bright-line rules ("NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST") rather than hedged guidance ("consider writing tests"), because compliance doubles from 33% to 72% when instructions are absolute rather than suggested (Meincke et al. 2025). Each skill includes an anti-rationalization table that preempts the excuses agents use to skip process steps.</p>
 
-        <h3>Problem 2: No Persistent Memory</h3>
-        <p>When an AI coding session ends:</p>
-        <ul>
-          <li>Todo lists created with <code>TodoWrite</code> vanish entirely</li>
-          <li>Task dependencies are forgotten</li>
-          <li>Work-in-progress has no audit trail</li>
-          <li>The next session starts completely blind</li>
-          <li>Learned conventions and preferences are lost</li>
-        </ul>
-        <p><strong>Beads</strong> (by Steve Yegge) solved this with a Dolt-backed issue tracker that provides:</p>
-        <ul>
-          <li>Hash-based IDs that work without central coordination</li>
-          <li>Cell-level merge for conflict-free multi-agent operation</li>
-          <li><code>bd prime</code> context injection at every session start</li>
-          <li><code>bd remember</code> for persistent cross-session learnings</li>
-          <li>Full audit trail via the events table</li>
-        </ul>
+        <h3>Persistent Memory</h3>
+        <p>Superpowers tracked tasks with <code>TodoWrite</code>, which vanishes when a session ends. <a href="https://github.com/gastownhall/beads">Beads</a> (Steve Yegge) replaced that with a Dolt-backed issue tracker where every task is a bead with a hash-based ID that survives session boundaries. Beads handles dependency tracking, cell-level merges for conflict-free multi-agent work, a full audit trail via the events table, and <code>bd remember</code> for persistent learnings. At every session start, <code>bd prime</code> injects the current task state so the agent picks up where it left off.</p>
 
         <h3>The Gap</h3>
-        <p>Superpowers had process discipline but ephemeral tracking (<code>TodoWrite</code>). Beads had persistent tracking but no process discipline (just raw issue CRUD). Neither was complete alone.</p>
-        <p><strong>beads-superpowers bridges the gap:</strong> every process step in every skill now creates, updates, or closes a persistent bead. The agent doesn't just follow the right process — it leaves a permanent record of having done so.</p>
+        <p>Superpowers enforced good process but forgot everything between sessions. Beads remembered everything but imposed no process on how work should be done. beads-superpowers connects the two: every process step in every skill now creates, updates, or closes a persistent bead, so following the right process and maintaining persistent memory are the same action.</p>
 
-        <h2 id="solution">The Solution</h2>
-        <p>beads-superpowers is a Claude Code plugin that merges two upstream systems, each addressing one of the two failure modes.</p>
-
-        <h3>Superpowers — Process Discipline</h3>
-        <p>Superpowers provides 22 composable skills enforcing TDD, brainstorming before code, systematic debugging, two-stage code review, and verification before completion. Skills are not suggestions. They use bright-line rules, Iron Laws, and anti-rationalization tables. The bootstrap skill (<code>using-superpowers</code>) routes to the correct skill automatically based on the task type.</p>
-
-        <h3>Beads — Persistent Memory</h3>
-        <p>Beads is a Dolt-backed issue tracker built for AI agents. Every task is a bead — a persistent record with a hash-based ID that survives session boundaries. <code>bd prime</code> injects current task state, remaining work, and learned memories at every session start. The agent never starts blind.</p>
+        <h2 id="solution">How It Works</h2>
+        <p>The plugin installs 22 composable skills and a Dolt-backed task database. A <code>using-superpowers</code> bootstrap skill loads at session start and routes the agent to whichever skill fits the current task. The Dolt database stores every bead (task) with hash-based IDs, dependency chains, and an events table that records what happened and when.</p>
 
         <div class="mermaid">
 graph TB
@@ -105,11 +74,8 @@ graph TB
   style Result fill:#22c55e,color:#000
         </div>
 
-        <h3>The Integration</h3>
-        <p>By replacing every <code>TodoWrite</code> call in every Superpowers skill with the equivalent <code>bd</code> command, the two systems become one. Following process discipline now automatically populates persistent memory. The agent cannot do one without the other.</p>
-
         <h2 id="integration">The Integration</h2>
-        <p>Every reference to <code>TodoWrite</code> across all 14 original Superpowers skills was replaced with beads (<code>bd</code>) commands.</p>
+        <p>The core change was mechanical: every <code>TodoWrite</code> call across the original 14 Superpowers skills was replaced with the equivalent <code>bd</code> command. The result is that following process discipline and populating persistent memory are the same action.</p>
 
         <table>
           <thead>
@@ -142,48 +108,20 @@ graph TB
           </tbody>
         </table>
 
-        <p>The replacement was done at both granularity levels that TodoWrite operated at in Superpowers:</p>
-        <ul>
-          <li><strong>Task level</strong> — tracking plan tasks in execution skills</li>
-          <li><strong>Checklist level</strong> — tracking internal steps within a skill's own checklist</li>
-        </ul>
-        <p>Both were replaced. Even the brainstorming 9-step checklist and the writing-skills 20-step checklist now create beads. This means every process step, at every level, is persistent and auditable.</p>
-        <blockquote>If only task-level tracking is persistent but checklist-level tracking is ephemeral, agents learn that "some tracking is optional." The bright-line rule is: all tracking uses beads, no exceptions.</blockquote>
+        <p>The replacement operates at two levels. At the task level, execution skills track plan tasks as beads. At the checklist level, skills like brainstorming (9 steps) and writing-skills (20 steps) create a bead for each internal step. Both levels are persistent and auditable, because if checklist-level tracking is ephemeral while task-level tracking is persistent, agents learn that some tracking is optional.</p>
 
         <h3>Orchestrator-Only Design</h3>
-        <p>The three subagent prompt files (implementer, spec-reviewer, code-quality-reviewer) are deliberately not beads-aware. This is the <strong>orchestrator-only</strong> design decision:</p>
-        <ul>
-          <li>The orchestrating agent creates, claims, and closes beads</li>
-          <li>Subagents focus purely on implementation and review</li>
-          <li>This prevents concurrent bead write conflicts</li>
-          <li>It keeps subagent prompts focused and simple</li>
-        </ul>
-        <p>The pattern: orchestrator creates bead &rarr; dispatches subagent &rarr; subagent implements &rarr; orchestrator closes bead.</p>
+        <p>Subagent prompts (implementer, spec-reviewer, code-quality-reviewer) are deliberately not beads-aware. Only the orchestrating agent creates, claims, and closes beads. Subagents focus on their specific job. This prevents concurrent write conflicts and keeps subagent prompts simple: orchestrator creates bead, dispatches subagent, subagent does the work, orchestrator closes bead.</p>
 
-        <h3>What Was Added Beyond the Replacement</h3>
-        <ul>
-          <li><strong>Beads Issue Tracking section</strong> in <code>using-superpowers</code> — every session starts with beads awareness</li>
-          <li><strong>Land the Plane protocol</strong> in <code>finishing-a-development-branch</code> — every session ends with <code>bd dolt push</code> + <code>git push</code></li>
-          <li><strong>Beads Completion section</strong> in <code>verification-before-completion</code> — <code>bd close</code> without evidence is lying</li>
-          <li><strong>Epic/child bead pattern</strong> in execution skills — plans become epic beads with task children</li>
-          <li><strong>Dependency tracking</strong> in execution skills — <code>bd dep add</code> for task dependencies</li>
-          <li><strong>Context forwarding</strong> in <code>brainstorming</code> — brainstorming beads link to plan epics via <code>discovered-from</code></li>
-        </ul>
+        <h3>What Was Added</h3>
+        <p>Beyond the <code>TodoWrite</code> replacement, the integration added several structural pieces. The <code>using-superpowers</code> skill gained a Beads Issue Tracking section so every session starts with beads awareness. The <code>finishing-a-development-branch</code> skill gained the Land the Plane protocol (<code>bd dolt push</code> + <code>git push</code>) so every session ends with both task state and code synced to remote. The <code>verification-before-completion</code> skill requires evidence in <code>bd close</code> because closing a bead without evidence is treated the same as not verifying. Execution skills use an epic/child bead pattern with <code>bd dep add</code> for dependency tracking, and brainstorming beads link forward to plan epics via <code>discovered-from</code> so the design trail is connected to the implementation trail.</p>
 
         <h2 id="preserved">What Was Preserved</h2>
-        <p>The integration was designed to be additive. The following content from the original 14 Superpowers skills was kept completely intact:</p>
-        <ul>
-          <li>All 14 original Superpowers skills and their complete content</li>
-          <li>Every anti-rationalization table, Iron Law, and Red Flags section</li>
-          <li>The progressive skill chain (brainstorming &rarr; plans &rarr; execution &rarr; finishing)</li>
-          <li>The two-stage review pattern (spec compliance then code quality)</li>
-          <li>All subagent prompt templates (implementer, spec-reviewer, code-quality-reviewer) — unchanged</li>
-          <li>Platform reference files for Gemini, Copilot CLI, and Codex</li>
-        </ul>
-        <blockquote>Note: beads-superpowers has since grown to 22 skills. Seven additional skills were created specifically for this project: <code>auditing-upstream-drift</code>, <code>document-release</code>, <code>getting-up-to-speed</code>, <code>project-init</code>, <code>setup</code>, <code>stress-test</code>, and <code>write-documentation</code>.</blockquote>
+        <p>The integration was additive. All 14 original Superpowers skills kept their complete content: every anti-rationalization table, Iron Law, Red Flags section, the progressive skill chain (brainstorming, plans, execution, finishing), the two-stage review pattern (spec compliance then code quality), all three subagent prompt templates, and the platform reference files for Gemini, Copilot CLI, and Codex.</p>
+        <p>Since the fork, the project has grown from 14 to 22 skills. The eight additions are <code>auditing-upstream-drift</code>, <code>document-release</code>, <code>getting-up-to-speed</code>, <code>project-init</code>, <code>setup</code>, <code>stress-test</code>, <code>write-documentation</code>, and <code>research-driven-development</code>.</p>
 
         <h2 id="memory">Agent Memory Types</h2>
-        <p>Beads provides all seven types of memory that AI agents need. By integrating beads into every skill, all seven memory types are populated as a natural byproduct of following the workflow.</p>
+        <p>Because beads tracks every process step, the seven memory types agents need are populated as a side effect of following the workflow rather than requiring separate bookkeeping.</p>
 
         <table>
           <thead>
@@ -233,32 +171,19 @@ graph TB
         </table>
 
         <h2 id="research">Research Basis</h2>
-        <p>The skill enforcement language is grounded in two research streams.</p>
+        <p>The enforcement language in skills draws on two lines of research, plus one empirical finding from the project itself.</p>
 
-        <h3>Cialdini (2021) — Influence Principles Applied to AI</h3>
-        <p>From <em>Influence: The Psychology of Persuasion</em> (New and Expanded Edition), three principles inform how skills are written:</p>
-        <ul>
-          <li><strong>Authority</strong> — Iron Laws and bright-line rules ("NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST")</li>
-          <li><strong>Consistency</strong> — Once an agent starts following a skill, consistency pressure maintains compliance</li>
-          <li><strong>Scarcity</strong> — "You cannot rationalize your way out of this" removes alternatives</li>
-        </ul>
+        <h3>Cialdini (2021) — Influence Principles</h3>
+        <p>Three principles from <em>Influence: The Psychology of Persuasion</em> (New and Expanded Edition) shape how skills are written. Authority: Iron Laws use absolute phrasing ("NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST") because agents treat authoritative instructions as harder to override. Consistency: once an agent begins following a skill's process, consistency pressure keeps it on track through the remaining steps. Scarcity: phrasing like "you cannot rationalize your way out of this" removes the sense that alternatives exist.</p>
 
-        <h3>Meincke et al. (2025) — AI Agent Compliance</h3>
-        <p>Research on AI agent compliance with explicit vs hedged instructions found:</p>
-        <ul>
-          <li>Compliance <strong>doubled from 33% to 72%</strong> when using absolute rules over hedged guidance</li>
-          <li>Pre-emptive rationalization counters outperform reactive correction</li>
-          <li>Specific examples of non-compliance are more effective than generic warnings</li>
-        </ul>
-        <p>This is why every discipline-enforcing skill includes an Iron Law (absolute, memorable, no exceptions), a Red Flags table (anticipated rationalizations with pre-loaded counter-arguments), and bright-line rules (MUST/NEVER/NO EXCEPTIONS instead of "consider"/"prefer"/"try to").</p>
+        <h3>Meincke et al. (2025) — Compliance with Absolute vs. Hedged Instructions</h3>
+        <p>This study found that compliance doubled from 33% to 72% when AI agents received absolute rules instead of hedged guidance, that pre-emptive rationalization counters outperformed reactive correction, and that specific examples of non-compliance were more effective than generic warnings. These findings explain the structure of every discipline-enforcing skill: an Iron Law (absolute, memorable, no exceptions), a Red Flags table (anticipated rationalizations with pre-loaded counter-arguments), and bright-line rules (MUST/NEVER rather than "consider" or "prefer").</p>
 
         <h3>Claude Search Optimization (CSO)</h3>
-        <p>A critical finding from the <code>writing-skills</code> meta-skill:</p>
-        <blockquote>When a skill's <code>description</code> field summarizes the workflow, Claude may follow the description instead of reading the full skill content. A description saying "code review between tasks" caused Claude to do ONE review, even though the skill clearly showed TWO reviews.</blockquote>
-        <p>As a result, every skill's YAML frontmatter <code>description</code> field is a trigger condition ("when to use this"), not a workflow summary ("what this does"). This ensures the full skill content is always read.</p>
+        <p>An empirical finding from the <code>writing-skills</code> meta-skill: when a skill's YAML <code>description</code> field summarized the workflow ("code review between tasks"), Claude followed the description instead of reading the full skill content and did one review instead of the two the skill specified. As a result, every skill's <code>description</code> field is now a trigger condition ("when to use this") rather than a workflow summary ("what this does"), which forces the full skill content to be read.</p>
 
         <h2 id="walkthrough">End-to-End Workflow</h2>
-        <p>The following is what happens when an agent receives a feature request with beads-superpowers active.</p>
+        <p>Here is a feature request moving through the full pipeline, from session start to the next session picking up where the first left off.</p>
 
         <div class="mermaid">
 graph TD
@@ -275,59 +200,33 @@ graph TD
         </div>
 
         <h3>Step 1 — Session Start</h3>
-        <p>The SessionStart hook fires automatically. It loads the <code>using-superpowers</code> skill (providing beads-aware routing) and runs <code>bd prime</code> (injecting beads context and persistent memories from previous sessions).</p>
+        <p>The SessionStart hook loads <code>using-superpowers</code> (beads-aware skill routing) and runs <code>bd prime</code>, which injects the current task state and any persistent memories from previous sessions. If the last session ended mid-feature, the agent sees exactly what was finished and what remains.</p>
 
         <h3>Step 2 — Brainstorming</h3>
-        <p>The agent checks whether brainstorming applies (yes for any creative work). The <code>brainstorming</code> skill activates:</p>
-        <ul>
-          <li><code>bd create "Brainstorming: auth system" -t task</code></li>
-          <li>Creates child beads for each checklist step</li>
-          <li>Explores project context, asks clarifying questions</li>
-          <li>Proposes 2–3 approaches with trade-offs</li>
-          <li>Presents design, gets user approval</li>
-          <li>Writes design spec, commits to git</li>
-          <li>Terminal state: invokes <code>writing-plans</code></li>
-        </ul>
+        <p>For any creative work, the <code>brainstorming</code> skill fires first. It creates a session bead (<code>bd create "Brainstorming: auth system" -t task</code>) and child beads for each checklist step, then walks through project context, clarifying questions, 2-3 approaches with trade-offs, and a design spec that gets committed to git. The terminal state is invoking <code>writing-plans</code>, not jumping to code.</p>
 
         <h3>Step 3 — Writing Plans</h3>
-        <p>The <code>writing-plans</code> skill creates an implementation plan with bite-sized tasks (2–5 minutes each). Each task has exact file paths, code snippets, and verification steps. The plan is saved to <code>docs/</code> and handed off to <code>subagent-driven-development</code>.</p>
+        <p><code>writing-plans</code> breaks the approved design into bite-sized tasks (2-5 minutes each) with exact file paths, code snippets, and verification steps. The plan is saved to <code>docs/</code> and handed to <code>subagent-driven-development</code>.</p>
 
         <h3>Step 4 — Subagent-Driven Development</h3>
-        <p>The orchestrating agent creates an epic bead and task beads with dependencies:</p>
+        <p>The orchestrator creates an epic bead with task children and dependency chains:</p>
         <pre><code>bd create "Epic: Auth System" -t epic
 bd create "Task 1-5" -t task --parent &lt;epic-id&gt;
 bd dep add &lt;child&gt; &lt;depends-on&gt;</code></pre>
-        <p>For each task:</p>
-        <ul>
-          <li><code>bd update &lt;task-id&gt; --claim</code></li>
-          <li>Dispatch implementer subagent (with full task text)</li>
-          <li>Implementer implements using TDD (RED-GREEN-REFACTOR)</li>
-          <li>Dispatch spec reviewer subagent &rarr; pass/fail loop</li>
-          <li>Dispatch code quality reviewer subagent &rarr; pass/fail loop</li>
-          <li><code>bd close &lt;task-id&gt; --reason "Completed: spec + quality passed"</code></li>
-        </ul>
-        <p>After all tasks, a final code reviewer is dispatched and <code>finishing-a-development-branch</code> is invoked.</p>
+        <p>For each task, the orchestrator claims it, dispatches an implementer subagent that works under TDD (red-green-refactor), then dispatches a spec reviewer and a code quality reviewer in sequence. Only after both reviewers pass does the orchestrator close the bead. After all tasks complete, a final code review runs and <code>finishing-a-development-branch</code> takes over.</p>
 
         <h3>Step 5 — Finishing the Branch</h3>
-        <p>The <code>finishing-a-development-branch</code> skill runs six steps:</p>
-        <ol>
-          <li>Verify all tests pass (hard gate)</li>
-          <li>Determine base branch</li>
-          <li>Present 4 options (merge / PR / keep / discard)</li>
-          <li>Execute chosen option</li>
-          <li>Cleanup worktree</li>
-          <li>Land the Plane</li>
-        </ol>
+        <p><code>finishing-a-development-branch</code> verifies that all tests pass (hard gate, no exceptions), determines the base branch, presents four options (merge locally, create PR, keep the branch, or discard), executes the chosen option, and cleans up the worktree.</p>
 
         <h3>Step 6 — Land the Plane</h3>
         <pre><code>bd close &lt;epic-id&gt; --reason "All tasks complete"
 bd dolt push
 git pull --rebase &amp;&amp; git push
 git status</code></pre>
+        <p>Work is not done until both <code>bd dolt push</code> (task state) and <code>git push</code> (code) succeed. <code>git status</code> must show "up to date with origin" before the agent stops.</p>
 
         <h3>Step 7 — Next Session</h3>
-        <p><code>bd prime</code> injects completed beads, remaining work, and memories. The next session starts exactly where the last one left off.</p>
-        <blockquote>Every step is tracked. Every decision is auditable. Every session starts where the last one left off.</blockquote>
+        <p><code>bd prime</code> restores the full picture: completed beads, remaining work, learned memories. The next agent picks up where this one left off, with no manual handoff needed.</p>
 
         <div class="page-nav">
           <a href="getting-started.html"><span class="label">Previous</span><span class="title">Getting Started</span></a>
