@@ -14,7 +14,7 @@ Dispatch parallel research agents, synthesize their findings, and write a persis
 - User asks a question about a technology, concept, or approach
 - User says "research this", "deep dive", "investigate", "look into"
 - User asks "what is X", "how does Y work", "compare A vs B"
-- Before planning a non-trivial task (FSM state S2)
+- Before planning a non-trivial task that requires understanding first
 - When you need to understand something before making a decision
 
 ## When NOT to Use
@@ -27,6 +27,39 @@ Dispatch parallel research agents, synthesize their findings, and write a persis
 
 > **NO RESEARCH WITHOUT A DOCUMENT.**
 > Every research task produces a written artifact. Verbal answers without persistent documents are prohibited. If you researched it, write it down.
+
+## Output Path
+
+Research documents are written to a configurable directory. Resolve the path at the start of every research task using this priority chain:
+
+```bash
+# Resolution order (first match wins):
+RESEARCH_DIR=$(
+  bd config get custom.research-output-dir 2>/dev/null | grep -v "not set" | head -1
+) || true
+RESEARCH_DIR="${RESEARCH_DIR:-${RESEARCH_OUTPUT_DIR:-./docs/research}}"
+echo "Research output: $RESEARCH_DIR"
+```
+
+| Priority | Source | Example |
+|----------|--------|---------|
+| 1 | `bd config get custom.research-output-dir` | Per-project beads config |
+| 2 | `$RESEARCH_OUTPUT_DIR` env var | Global or shell-level override |
+| 3 | Default | `./docs/research` |
+
+**To configure per-project:**
+
+```bash
+bd config set custom.research-output-dir "./docs/beads-superpowers/research"
+```
+
+**To configure globally (shell profile):**
+
+```bash
+export RESEARCH_OUTPUT_DIR="$HOME/workplace/knowledge"
+```
+
+Use `$RESEARCH_DIR` for all path references in subsequent steps.
 
 ## Pipeline
 
@@ -54,8 +87,8 @@ Before launching new research, search for existing coverage:
 # Check beads memories for prior context
 bd memories <keyword>
 
-# Search project research directory
-find docs/research/ -name "*.md" -exec grep -l "<keyword>" {} \;
+# Search project research directory (uses $RESEARCH_DIR from Output Path resolution)
+find "$RESEARCH_DIR" -name "*.md" -exec grep -l "<keyword>" {} \; 2>/dev/null
 
 # Search knowledge base if one exists
 find ~/workplace/knowledge/ -name "*.md" -exec grep -l "<keyword>" {} \; 2>/dev/null
@@ -108,13 +141,13 @@ After both agents return, the **orchestrator** (you) synthesizes:
 
 ## Step 5: Write the Document
 
-Write the research document to the project's research directory:
+Write the research document to the resolved output directory:
 
 ```bash
-# Create directory if needed
-mkdir -p docs/research/
+# Create directory if needed (uses $RESEARCH_DIR from Output Path resolution)
+mkdir -p "$RESEARCH_DIR"
 
-# Write to: docs/research/YYYY-MM-DD-<topic-slug>.md
+# Write to: $RESEARCH_DIR/YYYY-MM-DD-<topic-slug>.md
 ```
 
 ### Document Format
@@ -216,11 +249,12 @@ bd create "Follow-up: <title>" -t task -p <priority>
 User asks: "How does Dolt handle merge conflicts?"
 
 ```
-1. bd create "Research: Dolt merge conflict handling" -t task -p 2
-2. bd memories "dolt merge" → check for prior research
-3. Dispatch @researcher: "Research Dolt merge conflict resolution..."
+1. Resolve $RESEARCH_DIR (bd config → env var → default ./docs/research)
+2. bd create "Research: Dolt merge conflict handling" -t task -p 2
+3. bd memories "dolt merge" → check for prior research
+4. Dispatch @researcher: "Research Dolt merge conflict resolution..."
    Dispatch @explore: "Search codebase for Dolt merge, conflict..."
-4. Synthesize: researcher found cell-level merge docs, explore found bd dolt pull usage
-5. Write to docs/research/2026-05-01-dolt-merge-conflict-handling.md
-6. bd close <id> --reason "Research complete: Dolt uses cell-level merge on SQL tables"
+5. Synthesize: researcher found cell-level merge docs, explore found bd dolt pull usage
+6. Write to $RESEARCH_DIR/2026-05-01-dolt-merge-conflict-handling.md
+7. bd close <id> --reason "Research complete: Dolt uses cell-level merge on SQL tables"
 ```
