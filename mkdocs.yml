@@ -1,0 +1,64 @@
+site_name: beads-superpowers
+site_url: https://dollardill.github.io/beads-superpowers
+docs_dir: docs-src
+site_dir: site
+repo_url: https://github.com/DollarDill/beads-superpowers
+repo_name: DollarDill/beads-superpowers
+edit_uri: edit/main/docs-src/
+
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to light mode
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to dark mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - toc.integrate
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - macros
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - tables
+  - attr_list
+  - md_in_html
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Methodology: methodology.md
+  - Skills Reference: skills.md
+  - Example Workflow: workflow.md
+  - Tips & Tricks: tips.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/DollarDill/beads-superpowers

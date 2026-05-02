@@ -1,4 +1,7 @@
 
+# MkDocs build output
+site/
+
 # Beads / Dolt files (added by bd init)
 .dolt/
 *.db
