@@ -1,19 +1,127 @@
+<!-- Based on https://github.com/forrestchang/andrej-karpathy-skills (MIT License) -->
+
 # beads-superpowers — Claude Code Plugin
 
-This project IS a Claude Code marketplace plugin that merges [Superpowers](https://github.com/obra/superpowers) skills (v5.0.7) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.0.2).
+Behavioral guidelines to reduce common LLM coding mistakes, plus project-specific instructions.
+
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+
+## 1. Think Before Coding
+
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+## 2. Simplicity First
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+## 3. Surgical Changes
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+## 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+---
+
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+---
+
+## Project Overview
+
+A Claude Code marketplace plugin that merges [Superpowers](https://github.com/obra/superpowers) skills (v5.0.7) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.0.2). It gives AI coding agents 22 composable process-discipline skills (TDD, brainstorming, systematic debugging, two-stage code review, verification) plus persistent task memory via a Dolt-backed database.
 
 **Repository:** <https://github.com/DollarDill/beads-superpowers>
 **Version:** 0.5.1
 **License:** MIT (fork of obra/superpowers, also MIT)
 
-## Project Context
+## Architecture
 
-This plugin gives AI coding agents two things simultaneously:
+- `.claude-plugin/` — Plugin manifest (`plugin.json`) and marketplace config (`marketplace.json`). Claude Code auto-discovers these.
+- `skills/` — 22 skills, each in `skills/<name>/SKILL.md`. Some include prompt templates (`implementer-prompt.md`, `researcher-prompt.md`) or helper scripts. Auto-discovered by Claude Code — do NOT declare in `plugin.json`.
+- `agents/` — `code-reviewer.md` agent. Auto-discovered. Subagents (implementer, researcher) use prompt templates inside their skills, not standalone agent files.
+- `hooks/` — `session-start` (injects `using-superpowers` + `bd prime`) and `superpowers-reminder.sh` (UserPromptSubmit skill trigger reminders). Registered in `hooks/hooks.json`. Auto-discovered.
+- `example-workflow/` — Ready-to-use project template: `CLAUDE.md` (Karpathy behavioral principles + beads integration) and `agents/yegge.md` (11-state FSM orchestrator). `install.sh` copies `yegge.md` globally.
+- `docs/` — Knowledge base (`beads-superpowers/specs/`, `beads-superpowers/plans/`), Architecture Decision Records (`decisions/`), upstream reference docs, setup guide.
+- `docs-src/` — MkDocs Material source pages (6 pages + assets). Template variables (`{{ skill_count }}`) computed at build time via `main.py` macros plugin.
+- `tests/` — 5 test suites: brainstorm-server (Node.js), claude-code skill tests, explicit-skill-requests, skill-triggering, subagent-driven-dev.
+- `scripts/` — `bump-version.sh` (sync version across 3 files), `sync-skill-count.sh` (sync skill counts across all files), `build-docs.sh`.
+- `install.sh` — curl installer. Installs plugin + yegge agent globally.
+- `mkdocs.yml` + `main.py` — MkDocs Material site config and macros plugin.
 
-1. **Process discipline** — 22 composable skills enforcing TDD, brainstorming, systematic debugging, two-stage code review, and verification
-2. **Persistent memory** — Every task is a bead tracked in a Dolt-backed database that survives across sessions
+## Key Design Decisions
 
-The key modification from upstream superpowers: every `TodoWrite` reference has been replaced with `bd` (beads) commands. The plugin's SessionStart hook runs `bd prime` to inject beads workflow context alongside skills.
+- **Skills are pure Markdown** — No executable code in skills. Claude Code auto-discovers `skills/*/SKILL.md`. Platform-agnostic by design. (See: upstream superpowers architecture)
+- **Prompt templates over standalone agent files** — Subagent prompts (`implementer-prompt.md`, `researcher-prompt.md`) live inside their skills. Only the orchestrator (`yegge.md`) is a standalone agent file. Prevents drift between skill and dispatch instructions. (See: ADR-0003)
+- **`bd` replaces TodoWrite everywhere** — Every `TodoWrite` reference in upstream superpowers replaced with `bd` commands. Beads provides persistent cross-session memory that TodoWrite lacks.
+- **Three-layer architecture for example workflow** — `CLAUDE.md` (behavioral principles + project context) + `agents/yegge.md` (FSM orchestration) + prompt templates (subagent dispatch). Each layer has a distinct responsibility. (See: ADR-0003)
+- **MkDocs Material for docs site** — HashiCorp/Terraform-style sidebar, dark theme, Mermaid diagrams. Template variables via macros plugin avoid hardcoded counts. (See: ADR-0001)
+- **Per-task worktree isolation for parallel SDD** — Independent plan tasks execute in parallel (max 5), each in its own `bd worktree`. Prevents merge conflicts between concurrent subagents. (See: ADR-0002)
+
+## Common Gotchas
+
+- **Embedded Dolt mode** — This project uses embedded Dolt (`.beads/metadata.json` `dolt_mode: embedded`). `bd dolt push/pull/status/show` all fail. No remote configured.
+- **`export.git-add` pollutes branches** — `bd config set export.git-add false` BEFORE starting branch work. Default is `true`, which auto-stages `issues.jsonl` on every commit.
+- **DCI only works in SKILL.md** — The `!` backtick syntax (Dynamic Context Injection) only works in `SKILL.md` and `.claude/commands/*.md`. NOT in agent `.md` files, `CLAUDE.md`, or rules files.
+- **Never run `npx skills add` from inside this repo** — It replaces real skill files in `skills/` with symlinks to `.agents/skills/`, destroying the source. Use `-g` flag from `/tmp` or another directory.
+- **Never chain `open` after `bd` commands** — `open <file>` hangs when chained in the same Bash invocation with `bd` commands. Always run `open` as a standalone call.
+- **Worktree path default** — `bd worktree create <name>` creates at `./<name>` (sibling to repo files), NOT `.worktrees/<name>`. Pass the full path: `bd worktree create .worktrees/<name>`.
+- **Worktree detection** — Use `git rev-parse --is-inside-work-tree`, NOT `[ -d .git ]`. In a worktree, `.git` is a file, not a directory.
+- **Plugin cache goes stale** — After modifying skills, the installed plugin cache is outdated. Symlink the cache to this repo (see "Syncing Source" section below). `claude plugin update` has a [cache bug](https://github.com/anthropics/claude-code/issues/14061).
+- **Skill `description` field trap** — Putting workflow descriptions in skill `description` frontmatter causes Claude to follow the description instead of reading the full skill body (CSO problem). Descriptions should state trigger conditions only.
+
+## Non-Interactive Shell Commands
+
+**ALWAYS use non-interactive flags** with file operations to avoid hanging:
+
+```bash
+cp -f source dest           # NOT: cp source dest
+mv -f source dest           # NOT: mv source dest
+rm -f file                  # NOT: rm file
+rm -rf directory            # NOT: rm -r directory
+cp -rf source dest          # NOT: cp -r source dest
+```
 
 ## Plugin Structure
 
@@ -262,14 +370,3 @@ ln -s ~/workplace/beads-superpowers \
 | [gastownhall/beads](https://github.com/gastownhall/beads) | v1.0.2 (baseline) | CLI commands, new features, bd prime format |
 
 Use the `auditing-upstream-drift` skill to check for staleness.
-
-## Non-Interactive Shell Commands
-
-**ALWAYS use non-interactive flags** with file operations to avoid hanging:
-
-```bash
-cp -f source dest           # NOT: cp source dest
-mv -f source dest           # NOT: mv source dest
-rm -f file                  # NOT: rm file
-rm -rf directory            # NOT: rm -r directory
-```
