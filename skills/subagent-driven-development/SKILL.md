@@ -156,11 +156,11 @@ digraph parallel_batch {
      bd worktree create <task-name> --branch feature/<epic>/<task>
 
 4. Dispatch all subagents in parallel:
-   One Agent tool call per task, ALL in the same message:
+   Read ./implementer-prompt.md, then one Agent tool call per task, ALL in the same message:
      Agent({
        description: "Implement Task N: <name>",
-       prompt: "<implementer-prompt with 'Work from: <task-worktree-path>'>",
-       subagent_type: "implementer"
+       prompt: "<implementer-prompt content with 'Work from: <task-worktree-path>'>",
+       subagent_type: "general-purpose"
      })
 
 5. Two-stage review per task (can also run in parallel):
@@ -242,6 +242,12 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
 
 ## Prompt Templates
+
+Dispatch via the `Agent` tool:
+
+1. `Read` the prompt template file
+2. Use its content as the `prompt` parameter
+3. Use `subagent_type: "general-purpose"` (do NOT use `"implementer"` — that is Claude Code's built-in implementer agent with its own system prompt, which overrides the prompt template)
 
 - `./implementer-prompt.md` - Dispatch implementer subagent
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent

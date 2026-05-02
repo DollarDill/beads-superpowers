@@ -3,7 +3,9 @@
 Use this template when dispatching an implementer subagent.
 
 ```
-Agent tool (subagent_type: "implementer"):
+Agent tool (subagent_type: "general-purpose"):
+  # Do NOT use "implementer" — that is Claude Code's built-in agent type
+  # with its own system prompt, which overrides this prompt template.
   description: "Implement Task N: [task name]"
   prompt: |
     You are implementing Task N: [task name]
