@@ -88,6 +88,8 @@ Skills are not suggestions — if a skill applies, it must be used. Use this tab
 | Two or more tasks can be parallelised | `dispatching-parallel-agents` |
 | I need to create or modify a skill | `writing-skills` |
 | Post-ship — documentation needs updating | `document-release` |
+| I need to research a topic before deciding | `research-driven-development` |
+| I am writing human-facing documentation or prose | `write-documentation` |
 
 > **Tip**
 >
@@ -104,7 +106,7 @@ Skills are not suggestions — if a skill applies, it must be used. Use this tab
 > # Expected: beads-superpowers@beads-superpowers-marketplace — Status: enabled
 >
 > /plugins     # Inside Claude Code session — should list beads-superpowers
-> /skills      # Should show beads-superpowers: prefixed skills (20 total)
+> /skills      # Should show beads-superpowers: prefixed skills ({{ skill_count }} total)
 > ```
 >
 > If the plugin is listed but skills are missing, check that the SessionStart hook is executable:
@@ -246,7 +248,7 @@ Run these before opening a PR to verify the plugin is consistent:
 # Validate plugin manifests
 claude plugin validate .claude-plugin/plugin.json
 
-# Verify skill count (should be 20)
+# Verify skill count (should be {{ skill_count }})
 ls -d skills/*/ | wc -l
 
 # Verify zero active TodoWrite references (must return empty)
@@ -265,7 +267,7 @@ When adding a skill, follow these conventions to avoid breaking Claude's routing
 
 1. Create `skills/<skill-name>/SKILL.md` with a YAML frontmatter block. The `description` field is a trigger condition, not a workflow summary — write it as "Use when X", not "This skill does Y".
 2. Make it beads-aware: use `bd create` / `bd close` / `bd ready` for all task tracking. No TodoWrite, no markdown checklists.
-3. Update the skills table in `README.md` and add a CHANGELOG entry.
+3. Update the skills table in `CLAUDE.md` and add a CHANGELOG entry.
 
 > **Anti-patterns to avoid**
 >
