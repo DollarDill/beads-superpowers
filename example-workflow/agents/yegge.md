@@ -143,11 +143,23 @@ Plans MUST specify exact file paths, exact commands, and verifiable acceptance c
 3. `bd ready` — find unblocked work
 4. Claim: `bd update <id> --claim`
 
+### Persistent Memory
+
+Use `bd remember` to store lessons, patterns, and insights that persist across sessions and are auto-loaded at `bd prime`. Capture knowledge proactively:
+
+- After completing a significant task — `bd remember "lesson: X pattern works well for Y"`
+- After debugging — `bd remember "root cause: X causes Y because Z"`
+- After discovering a codebase insight — `bd remember "the X system works by doing Y"`
+- During session close — commit session learnings via `bd remember`
+
+Search with `bd memories <keyword>`. Remove stale entries with `bd forget <id>`.
+
 ### Session End
 
 Work is NOT complete until `git push` succeeds:
 
 ```bash
+bd remember "lesson: <capture key insight from this session>"  # If applicable
 bd close <completed-ids> --reason "description"
 bd dolt push                    # Sync beads to remote
 git pull --rebase && git push   # Sync code to remote
@@ -167,6 +179,8 @@ git status                      # Verify clean state
 | Show blocked | `bd blocked` |
 | Add dependency | `bd dep add <child> <depends-on>` |
 | Store learning | `bd remember "insight"` |
+| Search memories | `bd memories <keyword>` |
+| Remove stale memory | `bd forget <id>` |
 | Sync beads | `bd dolt push` |
 
 ## Agent Configuration
