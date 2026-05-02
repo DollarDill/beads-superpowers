@@ -139,13 +139,13 @@ git status                      # Verify clean state
 
 ## Agent Configuration
 
-This workflow uses companion agents. The **beads-superpowers plugin auto-provides**:
-
-- **`implementer`** — Disciplined implementation specialist (Sonnet model). Executes plans phase-by-phase with TDD, verifies each phase, escalates deviations. Available via `subagent_type: "implementer"`.
-- **`code-reviewer`** — Senior code reviewer. Plan alignment + code quality assessment. Available via `Skill(beads-superpowers:requesting-code-review)`.
-
-The following agent is recommended for your project's `.claude/agents/` directory:
+This workflow uses two companion agents. Place these in your project's `.claude/agents/` directory:
 
 - **`researcher.md`** — Deep research specialist (Opus model, read-only). Searches web + knowledge base, cross-references sources, produces structured findings.
+- **`implementer.md`** — Disciplined implementation specialist (Sonnet model). Executes plans phase-by-phase with TDD, verifies each phase, escalates deviations.
 
-See `example-workflow/agents/` for a ready-to-use researcher configuration.
+The **beads-superpowers plugin auto-provides**:
+
+- **`code-reviewer`** — Senior code reviewer. Plan alignment + code quality assessment. Available via `Skill(beads-superpowers:requesting-code-review)`.
+
+See the `example-workflow/agents/` directory for ready-to-use agent configurations.

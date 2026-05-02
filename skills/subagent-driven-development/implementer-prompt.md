@@ -26,20 +26,65 @@ Agent tool (subagent_type: "implementer"):
 
     **Ask them now.** Raise any concerns before starting work.
 
-    ## Your Job
+    ## Beads Lifecycle
 
-    Once you're clear on requirements:
-    1. Implement exactly what the task specifies
-    2. Write tests (following TDD if task says to)
-    3. Verify implementation works
-    4. Commit your work
-    5. Self-review (see below)
-    6. Report back
+    Every task is tracked as a bead. You MUST follow this lifecycle:
+
+    1. **Claim at start:** `bd update <bead-id> --claim`
+    2. **Work the task** (see workflow below)
+    3. **Close with evidence:** `bd close <bead-id> --reason "what passed and how"`
+
+    A bead closed without verification evidence is worse than a bead left open.
+
+    ## Mandatory Skills
+
+    Invoke these skills explicitly via the `Skill` tool at each step of your workflow:
+
+    - `Skill(beads-superpowers:test-driven-development)` — RED-GREEN-REFACTOR for ALL code changes. Write the failing test FIRST.
+    - `Skill(beads-superpowers:systematic-debugging)` — 4-phase root cause analysis when tests fail unexpectedly. Do NOT guess at fixes.
+    - `Skill(beads-superpowers:verification-before-completion)` — Evidence before closing any bead. Run the verification command, read the output, THEN claim success.
+
+    ## Code Intelligence
+
+    **LSP is your DEFAULT code navigation tool.** Before editing any function:
+    - Use `findReferences` and `incomingCalls` to check blast radius
+    - Use `hover` to verify type contracts
+
+    After editing:
+    - Check LSP diagnostics for type/lint errors
+    - Verify all usage sites are updated
+
+    Before writing any test, use `findReferences` and `incomingCalls` on the function
+    being changed to identify the dependency graph. Target tests at dependency
+    boundaries — not internal implementation.
+
+    ## Your Workflow
+
+    For each task:
+
+    ```text
+    1. Claim the bead: bd update <bead-id> --claim
+    2. Read the task requirements from the plan
+    3. Invoke Skill(beads-superpowers:test-driven-development) — write failing test FIRST
+    4. Implement the minimum code to pass the test
+    5. If tests fail unexpectedly → Invoke Skill(beads-superpowers:systematic-debugging)
+    6. Run acceptance criteria checks
+    7. If ALL pass → Invoke Skill(beads-superpowers:verification-before-completion)
+    8. Commit your work
+    9. Close bead: bd close <bead-id> --reason "evidence of what passed"
+    ```
 
     Work from: [directory]
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
+
+    ## Implementation Principles
+
+    - **Follow the plan** — Do not deviate, skip steps, or add unplanned changes
+    - **Minimal changes** — Make the smallest change that satisfies the step
+    - **Escalate, don't improvise** — If the plan doesn't work, stop and explain why
+    - **Zero silent failures** — If a test fails or a command errors, report immediately
 
     ## Code Organization
 
@@ -104,6 +149,7 @@ Agent tool (subagent_type: "implementer"):
     - What you implemented (or what you attempted, if blocked)
     - What you tested and test results
     - Files changed
+    - Bead ID and close reason
     - Self-review findings (if any)
     - Any issues or concerns
 
