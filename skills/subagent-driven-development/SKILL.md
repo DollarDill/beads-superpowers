@@ -366,7 +366,9 @@ Done!
 - Start implementation on main/master branch without explicit user consent
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
-- Dispatch multiple implementation subagents in parallel (conflicts)
+- Dispatch parallel subagents WITHOUT per-task worktree isolation (each subagent MUST have its own `bd worktree`)
+- Dispatch more than 5 parallel subagents in a single batch (resource exhaustion)
+- Use Claude's `isolation: "worktree"` parameter instead of `bd worktree` (bypasses beads DB sharing)
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
@@ -398,9 +400,15 @@ Done!
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:requesting-code-review** - Code review template for reviewer subagents
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **superpowers:dispatching-parallel-agents** - Parallel dispatch pattern (SDD uses the pattern, not the skill directly)
+- **superpowers:receiving-code-review** - Review feedback loops in parallel review cycles
 
 **Subagents should use:**
 - **superpowers:test-driven-development** - Subagents follow TDD for each task
+
+**Parallel mode uses:**
+- **superpowers:using-git-worktrees** - Multiple worktrees for parallel task isolation
+- **superpowers:systematic-debugging** - Integration test failures after batch merge
 
 **Alternative workflow:**
 - **superpowers:executing-plans** - Use for parallel session instead of same-session execution
