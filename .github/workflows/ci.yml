@@ -40,6 +40,9 @@ jobs:
             exit 1
           fi
 
+      - name: Validate skill count consistency
+        run: ./scripts/sync-skill-count.sh --check
+
       - name: Verify zero active TodoWrite references
         run: |
           results=$(grep -r "TodoWrite" skills/ | grep -v "Do NOT use" | grep -v "replaces" | grep -v "auditing-upstream-drift" || true)
