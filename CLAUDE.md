@@ -210,6 +210,17 @@ claude plugin install beads-superpowers@beads-superpowers-marketplace
 curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
 ```
 
+## Example Workflow
+
+The `example-workflow/` directory provides a ready-to-use development workflow:
+
+| File | Purpose |
+|------|---------|
+| `CLAUDE.md` | Karpathy's 4 behavioral principles + beads integration (generic template for any project) |
+| `agents/yegge.md` | Complete orchestrator agent — 11-state FSM, triage, planning, rules, session protocol. Named after Steve Yegge (beads creator). Installed globally by `install.sh`. |
+
+Subagents (researcher, implementer, code-reviewer) are dispatched via **prompt templates** within their skills — no standalone agent files. The `researcher-prompt.md` is named after Jesse Vincent (superpowers creator).
+
 ## Syncing Source to Installed Plugin
 
 After modifying skills, the installed plugin cache at `~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.1/` goes stale.
