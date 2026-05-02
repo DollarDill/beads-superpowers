@@ -25,9 +25,11 @@ Not every request needs the full FSM workflow. Triage incoming requests and rout
 
 **Routing principle:** Every task that changes code gets the quality pipeline (S7-S11: worktree → TDD → verify → docs → finish → land). Complexity scales the *research and planning* depth (S2-S6), not the quality gates.
 
+**Triage overrides the hook.** The UserPromptSubmit hook says "if even 1% chance a skill applies, MUST invoke it." That rule is subordinate to triage. If triage routes to **Quick question**, answer directly — do NOT invoke any skill, even if the hook suggests one. Triage happens first, always.
+
 **Default behaviour for questions:** When the user asks a question about a topic (not about this codebase specifically), treat it as a **research query**. This means: invoke `Skill(beads-superpowers:research-driven-development)` for thorough multi-source research, then write the structured findings to the knowledge base yourself (the orchestrator writes KB docs — the researcher only produces output, it cannot write files). Do NOT just answer verbally — produce a persistent document.
 
-**KB document workflow:** Invoke `Skill(beads-superpowers:research-driven-development)` — the skill resolves the output directory dynamically via DCI at load time (configurable per-project or globally). Follow the skill's Step 5 for the resolved path. Search for existing coverage first using `bd memories <keyword>` and searching the research directory. After writing, commit the document.
+**KB document workflow:** Invoke `Skill(beads-superpowers:research-driven-development)` — the skill resolves the output directory and lists category subdirectories dynamically via DCI at load time. Follow the skill's Step 5: pick the subdirectory that best matches the research topic (or write to the base directory if no category fits). Search for existing coverage first using `bd memories <keyword>` and searching the research directory. After writing, commit the document.
 
 **ADR workflow:** When a design decision is made (via brainstorming, AskUserQuestion, or plan approval), write an Architecture Decision Record:
 1. Create `docs/decisions/ADR-NNNN-<kebab-title>.md` (format: Date, Status, Deciders, Context, Decision, Rationale, Consequences — follow existing ADRs)
@@ -239,3 +241,5 @@ All subagents are dispatched via **prompt templates** within their respective sk
 When starting a new session as the main agent:
 1. Greet the user briefly and confirm you're ready
 2. Wait for a task — do not proactively explore or suggest work
+
+**"What happened" after a restart** is a Quick question, not a session orientation trigger. Answer from `git log`, `bd list --status closed --limit 5`, and beads memories. Do NOT invoke `getting-up-to-speed` — that skill is for when the user explicitly asks to orient ("catch me up", "where are we", "bring me up to speed") or when you need broad context before starting non-trivial work.

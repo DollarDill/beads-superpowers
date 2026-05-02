@@ -119,10 +119,15 @@ After both agents return, the **orchestrator** (you) synthesizes:
 
 ## Step 5: Write the Document
 
-Write the research document to: **!`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`**
+Research output directory and categories:
+
+**!`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`**
+
+If categories are listed above (after `---categories---`), pick the subdirectory that best matches the research topic. If no category fits, write to the base directory. If no categories exist, write to the base directory.
 
 ```bash
-mkdir -p "!`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`"
+# Example: research about CI/CD → engineering-and-technology subdirectory
+mkdir -p "<base-dir>/<category>"
 ```
 
 Filename: `YYYY-MM-DD-<topic-slug>.md`
