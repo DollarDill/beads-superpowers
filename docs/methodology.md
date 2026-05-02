@@ -1,26 +1,26 @@
 # Methodology
 
-Why beads-superpowers exists, how it works, and what research shaped the design.
+## The problem
 
-## The Problem
+Ask an AI coding agent to build a feature and watch what happens. It skips straight to code, writes implementation before tests, claims the work is "done" without running verification, and if you point out a problem it agrees instantly rather than pushing back. Start a new session the next day and every task it was tracking has vanished.
 
-Ask an AI coding agent to build a feature and watch what happens. It skips straight to code, writes implementation before tests, claims the work is "done" without running verification, and if you point out a problem it agrees instantly rather than pushing back. When you start a new session the next day, every task it was tracking has vanished. Two separate projects attacked each half of this problem.
+Two projects attacked each half of this.
 
-### Process Discipline
+### Process discipline
 
-[Superpowers](https://github.com/obra/superpowers) (Jesse Vincent) shipped 14 composable skills that force agents to brainstorm before coding, write tests before implementation, investigate root causes before proposing fixes, and verify before claiming completion. The skills use bright-line rules ("NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST") rather than hedged guidance ("consider writing tests"), because compliance doubles from 33% to 72% when instructions are absolute rather than suggested (Meincke et al. 2025). Each skill includes an anti-rationalization table that preempts the excuses agents use to skip process steps.
+[Superpowers](https://github.com/obra/superpowers) (Jesse Vincent) shipped 14 composable skills that force agents to brainstorm before coding, write tests before implementation, investigate root causes before proposing fixes, and verify before claiming completion. The skills use bright-line rules — "NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST" — rather than hedged guidance like "consider writing tests", because compliance doubles from 33% to 72% when instructions are absolute rather than suggested (Meincke et al. 2025). Each skill includes an anti-rationalization table that preempts the excuses agents use to skip steps.
 
-### Persistent Memory
+### Persistent memory
 
 Superpowers tracked tasks with `TodoWrite`, which vanishes when a session ends. [Beads](https://github.com/gastownhall/beads) (Steve Yegge) replaced that with a Dolt-backed issue tracker where every task is a bead with a hash-based ID that survives session boundaries. Beads handles dependency tracking, cell-level merges for conflict-free multi-agent work, a full audit trail via the events table, and `bd remember` for persistent learnings. At every session start, `bd prime` injects the current task state so the agent picks up where it left off.
 
-### The Gap
+### The gap
 
-Superpowers enforced good process but forgot everything between sessions. Beads remembered everything but imposed no process on how work should be done. beads-superpowers connects the two: every process step in every skill now creates, updates, or closes a persistent bead, so following the right process and maintaining persistent memory are the same action.
+Superpowers enforced good process but forgot everything between sessions. Beads remembered everything but imposed no process on how work should be done. beads-superpowers connects the two: every process step in every skill creates, updates, or closes a persistent bead, so following the right process and maintaining persistent memory are the same action.
 
-## How It Works
+## How it works
 
-The plugin installs {{ skill_count }} composable skills and a Dolt-backed task database. A `using-superpowers` bootstrap skill loads at session start and routes the agent to whichever skill fits the current task. The Dolt database stores every bead (task) with hash-based IDs, dependency chains, and an events table that records what happened and when.
+The plugin installs {{ skill_count }} composable skills and a Dolt-backed task database. A `using-superpowers` bootstrap skill loads at session start and routes the agent to whichever skill fits the current task.
 
 ```mermaid
 graph TB
@@ -44,9 +44,7 @@ graph TB
   style Result fill:#22c55e,color:#000
 ```
 
-## The Integration
-
-The first change was mechanical: every `TodoWrite` call across the original 14 Superpowers skills was replaced with the equivalent `bd` command. The result is that following process discipline and populating persistent memory are the same action. Subsequent changes went deeper — restructuring how subagents are dispatched, adding parallel execution, and introducing dynamic configuration.
+The first change was mechanical: every `TodoWrite` call across the original 14 Superpowers skills was replaced with the equivalent `bd` command.
 
 | Before (TodoWrite) | After (Beads) |
 |--------------------|---------------|
@@ -54,104 +52,29 @@ The first change was mechanical: every `TodoWrite` call across the original 14 S
 | Mark task as in_progress | `bd update <task-id> --claim` |
 | Mark task as completed | `bd close <task-id> --reason "Implemented login"` |
 | "More tasks remain?" | `bd ready --parent <epic-id>` |
-| Create todo per checklist item | `bd create "Step: title" -t chore --parent <session-id>` |
 
-The replacement operates at two levels. At the task level, execution skills track plan tasks as beads. At the checklist level, skills like brainstorming (9 steps) and writing-skills (20 steps) create a bead for each internal step. Both levels are persistent and auditable, because if checklist-level tracking is ephemeral while task-level tracking is persistent, agents learn that some tracking is optional.
+The replacement works at two levels. Execution skills track plan tasks as beads. Checklist-heavy skills like brainstorming (9 steps) and writing-skills (20 steps) create a bead for each internal step. Both levels persist, because if checklist tracking is ephemeral while task tracking is persistent, agents learn that some tracking is optional.
 
-### Orchestrator-Only Design
+Subsequent changes went further:
 
-Only the orchestrating agent creates, claims, and closes beads. Subagents focus on their specific job. This prevents concurrent write conflicts and keeps subagent prompts simple: orchestrator creates bead, dispatches subagent, subagent does the work, orchestrator closes bead.
+**Prompt template pattern.** Subagent definitions moved from standalone agent files into prompt templates owned by the skills that dispatch them (`implementer-prompt.md`, `researcher-prompt.md`). One source of truth per subagent role — no drift between the skill's expectations and the subagent's instructions.
 
-The one exception is `implementer-prompt.md`, which is beads-aware by design. It includes bead lifecycle commands (`bd update --claim`, `bd close --reason`), mandatory skill invocations (TDD, systematic-debugging, verification-before-completion), and LSP-first code navigation. Review subagent prompts (spec-reviewer, code-quality-reviewer) remain deliberately unaware of beads.
+**Parallel batch mode.** When `bd ready --parent` returns multiple unblocked tasks, `subagent-driven-development` executes them concurrently (max 5 per batch), each in its own `bd worktree`.
 
-### What Was Added
+**Dynamic Context Injection.** The `research-driven-development` skill uses Claude Code's `!` backtick syntax to resolve its output directory at skill load time, with per-project config, environment variable, or default fallback.
 
-Beyond the `TodoWrite` replacement, the integration added several structural pieces:
+**Mid-session enforcement.** A `UserPromptSubmit` hook fires on every user message, injecting skill trigger reminders that prevent the agent from forgetting to invoke skills as the session progresses.
 
-**Session lifecycle.** The `using-superpowers` skill gained a Beads Issue Tracking section so every session starts with beads awareness. The `finishing-a-development-branch` skill gained the Land the Plane protocol (`bd dolt push` + `git push`) so every session ends with both task state and code synced to remote. The `verification-before-completion` skill requires evidence in `bd close` because closing a bead without evidence is treated the same as not verifying.
+**Orchestrator-only design.** Only the orchestrating agent creates, claims, and closes beads. Subagents focus on their job. The one exception is `implementer-prompt.md`, which is beads-aware by design — it includes bead lifecycle commands, mandatory skill invocations, and LSP-first code navigation.
 
-**Dependency tracking.** Execution skills use an epic/child bead pattern with `bd dep add` for dependency tracking, and brainstorming beads link forward to plan epics via `discovered-from` so the design trail is connected to the implementation trail.
+## The lifecycle
 
-**Prompt template pattern.** Subagent definitions moved from standalone agent files into prompt templates owned by the skills that dispatch them (`implementer-prompt.md`, `researcher-prompt.md`, `spec-reviewer-prompt.md`, `code-quality-reviewer-prompt.md`). This eliminates drift between the skill's expectations and the subagent's instructions — a single source of truth per subagent role.
-
-**Parallel batch mode.** The `subagent-driven-development` skill gained a parallel execution mode: when `bd ready --parent` returns multiple unblocked tasks, they execute concurrently (max 5 per batch), each in its own `bd worktree`. The `dispatching-parallel-agents` skill was generalized from bug-fixing to any independent parallel work.
-
-**Dynamic Context Injection (DCI).** The `research-driven-development` skill uses Claude Code's `!` backtick syntax to resolve the research output directory at skill load time, with a three-tier priority: per-project config, environment variable, or `./docs/research` default.
-
-**Mid-session enforcement.** A `UserPromptSubmit` hook fires on every user message, injecting a tiered skill trigger reminder that prevents the agent from forgetting to invoke skills as the session progresses.
-
-## What Was Preserved
-
-The integration was additive. All 14 original Superpowers skills kept their complete content: every anti-rationalization table, Iron Law, Red Flags section, the progressive skill chain (brainstorming, plans, execution, finishing), the two-stage review pattern (spec compliance then code quality), all three subagent prompt templates, and the platform reference files for Gemini, Copilot CLI, and Codex.
-
-Since the fork, the project has grown from 14 to {{ skill_count }} skills. The eight additions are `auditing-upstream-drift`, `document-release`, `getting-up-to-speed`, `project-init`, `setup`, `stress-test`, `write-documentation`, and `research-driven-development`.
-
-## Design Decisions
-
-### Plugin Subsumes Beads Hooks
-
-Beads' `bd setup claude` command installs SessionStart hooks that run `bd prime`. The plugin's SessionStart hook also needs to inject the `using-superpowers` skill content. Having both fire would inject 3-4k tokens of partially redundant context, so the plugin's `hooks/session-start` script does both: it injects `using-superpowers` and runs `bd prime` itself. It also detects if the `bd setup claude` hooks are still installed and warns the user to remove them.
-
-### Land the Plane in the Terminal Skill
-
-The session close protocol lives in `finishing-a-development-branch` (Step 6) rather than a separate `session-close` skill or the user's CLAUDE.md. Both `subagent-driven-development` and `executing-plans` already end by invoking this skill, so every pipeline path passes through the mandatory push ritual without needing a separate dependency.
-
-### Skills Are Markdown, Not Code
-
-Following Superpowers' zero-dependency philosophy, all skills are plain Markdown files with YAML frontmatter. No build step, no runtime dependencies. The plugin works on any platform with a file system, skills can be read and modified by humans, and the only runtime dependency is `bd` (beads CLI), which is optional — skills still work without it, they just lose persistence.
-
-## Agent Memory Types
-
-Because beads tracks every process step, the seven memory types agents need are populated as a side effect of following the workflow rather than requiring separate bookkeeping.
-
-| Memory Type | Beads Feature | Purpose |
-|-------------|---------------|---------|
-| **Working** | `bd show --current` | What am I doing right now? |
-| **Short-term** | `bd list --status=in_progress` | What's active? |
-| **Long-term** | `bd remember` + `bd prime` | Persistent learnings across sessions |
-| **Procedural** | `bd formula` | Reusable workflow templates |
-| **Episodic** | `events` table | Complete audit trail of what happened |
-| **Semantic** | `bd search`, `bd query` | Find related work by meaning |
-| **Prospective** | `bd ready` | What should I do next? |
-
-## Research Basis
-
-The enforcement language in skills draws on two lines of research, plus one empirical finding from the project itself.
-
-### Cialdini (2021) — Influence Principles
-
-Three principles from *Influence: The Psychology of Persuasion* (New and Expanded Edition) shape how skills are written. Authority: Iron Laws use absolute phrasing ("NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST") because agents treat authoritative instructions as harder to override. Consistency: once an agent begins following a skill's process, consistency pressure keeps it on track through the remaining steps. Scarcity: phrasing like "you cannot rationalize your way out of this" removes the sense that alternatives exist.
-
-### Meincke et al. (2025) — Compliance with Absolute vs. Hedged Instructions
-
-This study found that compliance doubled from 33% to 72% when AI agents received absolute rules instead of hedged guidance, that pre-emptive rationalization counters outperformed reactive correction, and that specific examples of non-compliance were more effective than generic warnings. These findings explain the structure of every discipline-enforcing skill: an Iron Law (absolute, memorable, no exceptions), a Red Flags table (anticipated rationalizations with pre-loaded counter-arguments), and bright-line rules (MUST/NEVER rather than "consider" or "prefer").
-
-### TDD Applied Recursively
-
-The `writing-skills` meta-skill revealed that TDD principles apply to process documentation itself:
-
-| TDD Concept | Skill Creation Equivalent |
-|-------------|--------------------------|
-| Test case | Pressure scenario with subagent |
-| Production code | Skill document (SKILL.md) |
-| Test fails (RED) | Agent violates rule without skill (baseline) |
-| Test passes (GREEN) | Agent complies with skill present |
-| Refactor | Close loopholes while maintaining compliance |
-
-Every rule in every skill has been verified through adversarial pressure testing, not designed from theory alone.
-
-### Claude Search Optimization (CSO)
-
-An empirical finding from the `writing-skills` meta-skill: when a skill's YAML `description` field summarized the workflow ("code review between tasks"), Claude followed the description instead of reading the full skill content and did one review instead of the two the skill specified. As a result, every skill's `description` field is now a trigger condition ("when to use this") rather than a workflow summary ("what this does"), which forces the full skill content to be read.
-
-## End-to-End Workflow
-
-Here is a non-trivial feature request moving through the full 11-state FSM, from session start to the next session picking up where the first left off. Simple tasks skip the research and planning phases (S2–S6) but still pass through the quality pipeline (S7–S11).
+A non-trivial feature request moves through 11 states. Simple tasks skip research and planning (S2–S6) but still pass through the quality pipeline (S7–S11).
 
 ```mermaid
 graph TD
   Step1["1. Setup<br/>Bead + claim + sync"] --> Step2["2. Research<br/>Parallel agents investigate"]
-  Step2 --> Step3["3. Knowledge<br/>Write to KB"]
+  Step2 --> Step3["3. Knowledge<br/>Write findings"]
   Step3 --> Step4["4. Brainstorm<br/>Design before code"]
   Step4 --> Step5["5. Decide<br/>Write ADR"]
   Step5 --> Step6["6. Plan<br/>Bite-sized tasks"]
@@ -166,91 +89,90 @@ graph TD
   style Step11 fill:#f59e0b,color:#000
 ```
 
-### Step 1 — Setup
+**Step 1 — Setup.** Every task begins with a bead. Before any research or code, the work is captured (`bd create`), claimed (`bd update --claim`), and synced. If the session dies, the bead record shows an in-progress item that can be recovered.
 
-Every task begins with a bead. Before a single line of research or code happens, the work is captured as a tracked item (`bd create`), claimed by the agent (`bd update <id> --claim`), and the remote state is synced. If the session ends unexpectedly, the bead record shows an in-progress item that can be recovered.
+**Step 2 — Research.** The `research-driven-development` skill dispatches two agents in parallel: a researcher investigates the problem domain while an `@explore` agent maps the affected code. Running both concurrently cuts research time roughly in half.
 
-### Step 2 — Deep Research
+**Step 3 — Knowledge capture.** Findings are written to a persistent document. Key learnings go into `bd remember` so they surface in future sessions.
 
-For non-trivial tasks, the `research-driven-development` skill dispatches two agents in parallel: a researcher subagent (via `researcher-prompt.md`) investigates the problem domain, and an `@explore` agent maps the affected code and traces dependencies. Running both concurrently cuts research time roughly in half.
+**Step 4 — Brainstorming.** The `brainstorming` skill walks through context, clarifying questions, 2–3 approaches with trade-offs, and a design spec committed to git. It ends by invoking `writing-plans` — not by jumping to code. The `stress-test` skill may fire here to interrogate the design adversarially.
 
-### Step 3 — Knowledge Capture
+**Step 5 — Decision capture.** Architecture decisions become ADRs in `decisions/` — explicit, timestamped records with context, rationale, and consequences.
 
-Research findings are synthesized into a durable knowledge base document. The output directory is resolved by the research skill's DCI resolver with a three-tier priority: per-project config, environment variable, or `./docs/research` default. Key learnings are persisted with `bd remember "insight"` so they surface in future sessions.
+**Step 6 — Planning.** `writing-plans` breaks the design into bite-sized tasks (2–5 minutes each) with exact file paths, code, and verification steps. Every task becomes a bead.
 
-### Step 4 — Brainstorming
+**Step 7 — Implementation.** Code runs in an isolated git worktree under TDD. The orchestrator creates an epic with task children and dependency chains, then dispatches implementer subagents. When multiple tasks are unblocked, parallel batch mode runs up to 5 concurrently, each in its own worktree. After each task, a spec reviewer and code quality reviewer run in sequence — the bead closes only after both pass.
 
-The `brainstorming` skill uses a Socratic approach to explore the solution space. It creates a session bead and child beads for each checklist step, then walks through project context, clarifying questions, 2–3 approaches with trade-offs, and a design spec committed to git. The terminal state is invoking `writing-plans`, not jumping to code. The `stress-test` skill may fire during this phase to adversarially interrogate the design.
+**Step 8 — Verification.** The full test suite runs fresh — not relying on the last run during development. "Tests pass" means a test command was just executed and its output is attached.
 
-### Step 5 — Decision Capture
+**Step 9 — Documentation.** `document-release` scans the diff against existing docs for stale references, missing entries, and outdated examples.
 
-Architecture decisions are recorded as ADRs (Architecture Decision Records) in `decisions/`. This transforms the implicit decisions made during brainstorming into explicit, timestamped records with context, rationale, and consequences.
+**Step 10 — Close branch.** `finishing-a-development-branch` verifies tests pass, determines the base branch, presents options (merge, PR, keep, discard), and cleans up.
 
-### Step 6 — Writing Plans
-
-`writing-plans` breaks the approved design into bite-sized tasks (2–5 minutes each) with exact file paths, code snippets, and verification steps. Every task becomes a bead. The plan is saved to `docs/` and handed to `subagent-driven-development`.
-
-### Step 7 — Implementation
-
-Code runs in an isolated git worktree. The orchestrator creates an epic bead with task children and dependency chains:
-
-```bash
-bd create "Epic: Auth System" -t epic
-bd create "Task 1-5" -t task --parent <epic-id>
-bd dep add <child> <depends-on>
-```
-
-For each task, the orchestrator dispatches an implementer subagent (via `implementer-prompt.md` with `subagent_type: "general-purpose"`) that works under TDD (red-green-refactor). When multiple tasks are unblocked, parallel batch mode executes up to 5 subagents concurrently, each in its own per-task worktree. After each task, a spec reviewer and code quality reviewer run in sequence. Only after both pass does the orchestrator close the bead.
-
-### Step 8 — Verification
-
-The `verification-before-completion` skill runs the full test suite independently — not relying on the last test run during development. Claims of correctness must be backed by fresh evidence. "Tests pass" means a test command was just run and its output is attached.
-
-### Step 9 — Documentation
-
-The `document-release` skill scans the diff against existing documentation to identify stale references, missing entries, and outdated examples. Documentation gaps caught here are cheaper to fix than gaps discovered by users.
-
-### Step 10 — Close Branch
-
-`finishing-a-development-branch` verifies tests pass (hard gate), determines the base branch, presents four options (merge locally, create PR, keep the branch, or discard), executes the chosen option, and cleans up the worktree.
-
-### Step 11 — Land the Plane
+**Step 11 — Land the Plane.**
 
 ```bash
 bd close <epic-id> --reason "All tasks complete"
 bd dolt push
 git pull --rebase && git push
-git status
+git status    # must show "up to date with origin"
 ```
 
-Work is not done until both `bd dolt push` (task state) and `git push` (code) succeed. `git status` must show "up to date with origin" before the agent stops. The next session runs `bd prime` to restore the full picture.
+Work is not done until both task state (`bd dolt push`) and code (`git push`) reach the remote. The next session runs `bd prime` to restore the full picture.
 
-## What This Enables
+## Agent memory
 
-**For individual developers:** Cross-session continuity via `bd prime`, process discipline without needing to remind the agent, and a full audit trail of every task, review, and close reason in the beads ledger.
+Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow.
 
-**For teams:** Shared project state via `bd dolt push/pull`, concurrent multi-agent work via hash-based IDs and cell-level merge, and convention persistence via `bd remember` (injected into every future session for every agent).
+| Memory Type | Beads Feature | What it answers |
+|-------------|---------------|-----------------|
+| Working | `bd show --current` | What am I doing right now? |
+| Short-term | `bd list --status=in_progress` | What's active? |
+| Long-term | `bd remember` + `bd prime` | What did I learn last week? |
+| Procedural | `bd formula` | How do I do this kind of task? |
+| Episodic | `events` table | What happened and when? |
+| Semantic | `bd search`, `bd query` | Where's the related work? |
+| Prospective | `bd ready` | What should I do next? |
 
-**For the ecosystem:** A reference implementation that fully merges workflow skills with persistent issue tracking. MIT licensed, extensible, and the pattern is documented.
+## Research basis
+
+### Cialdini (2021) — Influence principles
+
+Three principles from *Influence: The Psychology of Persuasion* shape how skills are written. Authority: Iron Laws use absolute phrasing because agents treat authoritative instructions as harder to override. Consistency: once an agent begins a skill's process, consistency pressure keeps it on track through the remaining steps. Scarcity: phrasing like "you cannot rationalize your way out of this" removes the sense that alternatives exist.
+
+### Meincke et al. (2025) — Absolute vs hedged instructions
+
+Compliance doubled from 33% to 72% when AI agents received absolute rules instead of hedged guidance. Pre-emptive rationalization counters outperformed reactive correction. Specific examples of non-compliance were more effective than generic warnings. These findings explain the structure of every discipline-enforcing skill: an Iron Law (absolute, no exceptions), a Red Flags table (anticipated rationalizations with counter-arguments), and bright-line rules (MUST/NEVER rather than "consider" or "prefer").
+
+### TDD applied recursively
+
+The `writing-skills` meta-skill revealed that TDD principles apply to process documentation itself:
+
+| TDD Concept | Skill Creation Equivalent |
+|-------------|--------------------------|
+| Test case | Pressure scenario with subagent |
+| Production code | Skill document (SKILL.md) |
+| RED | Agent violates rule without skill (baseline) |
+| GREEN | Agent complies with skill present |
+| Refactor | Close loopholes while maintaining compliance |
+
+Every rule in every skill has been verified through adversarial pressure testing, not designed from theory alone.
+
+### Claude Search Optimization (CSO)
+
+An empirical finding: when a skill's YAML `description` field summarized the workflow ("code review between tasks"), Claude followed the description instead of reading the full skill content and did one review instead of the two the skill specified. As a result, every skill's `description` is a trigger condition ("when to use this"), not a workflow summary ("what this does"), which forces the full content to be read.
+
+## Design decisions
+
+**Plugin subsumes beads hooks.** Beads' `bd setup claude` installs hooks that run `bd prime`. The plugin also needs to inject skill context. Rather than fire both and waste 3–4k tokens on redundant context, the plugin's hook does both jobs and warns if the standalone hooks are still installed.
+
+**Land the Plane in the terminal skill.** The session close protocol lives in `finishing-a-development-branch` rather than a separate skill. Both `subagent-driven-development` and `executing-plans` end by invoking it, so every pipeline path hits the mandatory push ritual without a separate dependency.
+
+**Skills are Markdown, not code.** Following Superpowers' zero-dependency philosophy, all skills are plain Markdown with YAML frontmatter. No build step. The only runtime dependency is `bd`, which is optional — skills still work without it, they just lose persistence.
 
 ## Sources
 
-### Systems
-
 - [obra/superpowers](https://github.com/obra/superpowers) v5.0.7 — 14 composable skills for AI agents (MIT)
 - [gastownhall/beads](https://github.com/gastownhall/beads) v1.0.2 — Persistent issue tracker for AI agents (MIT)
-
-### Research
-
 - Cialdini, R. B. (2021). *Influence: The Psychology of Persuasion* (New and Expanded Edition). Harper Business.
-- Meincke, L., et al. (2025). Research on AI agent compliance with explicit vs hedged instructions. Referenced in `skills/writing-skills/persuasion-principles.md`.
-- Anthropic best practices for skill authoring. Referenced in `skills/writing-skills/anthropic-best-practices.md`.
-
-### Analysis Documentation
-
-Design documents and implementation plans from the overhaul are available in `.internal/`:
-
-- `specs/` — Design specs from brainstorming (SDD parallel mode, example workflow, write-documentation, single source of truth)
-- `plans/` — Implementation plans from writing-plans
-
-Architecture decisions are recorded in `decisions/` as ADRs.
+- Meincke, L., et al. (2025). AI agent compliance with explicit vs hedged instructions. Referenced in `skills/writing-skills/persuasion-principles.md`.
