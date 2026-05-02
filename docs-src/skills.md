@@ -21,7 +21,7 @@ language. See the [Methodology](methodology.md) page for the research basis behi
 Two hooks work together to ensure skills are never forgotten:
 
 - **SessionStart hook** — fires once at session start (and after `/clear` or `/compact`). Injects the `using-superpowers` bootstrap skill and runs `bd prime` for beads context.
-- **UserPromptSubmit hook** — fires on *every* user message. Injects a tiered reminder covering all {{ invocable_count }} invocable skills (all {{ skill_count }} total minus `using-superpowers`, which auto-loads at session start). The top 13 high-frequency skills get explicit trigger mappings; the remaining 8 are listed as "also available":
+- **UserPromptSubmit hook** — fires on *every* user message. Injects a tiered reminder covering all {{ invocable_count }} invocable skills (all {{ skill_count }} total minus `using-superpowers`, which auto-loads at session start). The top 14 high-frequency skills get explicit trigger mappings (across 13 rows, with SDD and executing-plans sharing one); the remaining 7 are listed as "also available":
 
 | If the task involves... | The reminder points to... |
 |---|---|
@@ -190,7 +190,8 @@ before writing-plans in the design pipeline.
 
 Dispatches a fresh subagent per task from a written plan, with two-stage code review between tasks.
 The orchestrating agent tracks beads; subagents are not permitted to touch beads directly. Each task
-lands with a review checkpoint before the next task is started.
+lands with a review checkpoint before the next task is started. When multiple tasks are unblocked,
+**parallel batch mode** executes up to 5 subagents concurrently, each in its own per-task worktree.
 
 ### executing-plans
 
@@ -208,9 +209,10 @@ Designed to complement written-plans output directly.
 
 **Trigger:** Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies.
 
-Coordinates multiple concurrent subagents for independent tasks. Enforces strict isolation — agents
-must not share mutable state or touch the same files. Results are collected and merged by the
-orchestrator after all agents complete.
+Coordinates multiple concurrent subagents for independent parallel work — plan tasks, subsystem
+changes, or any set of changes without shared state. Enforces strict isolation — agents must not
+share mutable state or touch the same files. Results are collected and merged by the orchestrator
+after all agents complete. Also used by SDD's parallel batch mode for the dispatch pattern.
 
 ### test-driven-development
 
@@ -268,9 +270,10 @@ explicitly rather than silently ignoring or silently complying.
 
 **Trigger:** Use when starting feature work that needs isolation from current workspace or before executing implementation plans — creates isolated git worktrees with smart directory selection and safety verification.
 
-Creates and manages isolated git worktrees for feature work. Includes safety checks to verify the
-worktree is clean before switching, smart directory selection to avoid naming collisions, and teardown
-instructions to keep the repo tidy after merging.
+Creates and manages isolated git worktrees for feature work using `bd worktree` commands. Includes
+safety checks, smart directory selection, and teardown instructions. Supports **multiple concurrent
+worktrees** for parallel subagent work — the orchestrator creates one `bd worktree` per task (max 5)
+and manages the full lifecycle.
 
 ### finishing-a-development-branch
 
@@ -338,10 +341,11 @@ diverged and needs a hard reset. Prevents data loss by confirming the correct pa
 
 **Trigger:** Use when the user asks a question about a topic, requests research, or when you need to understand something before planning. Dispatches parallel research agents, synthesizes findings into a persistent document.
 
-Dispatches `@researcher` (web + documentation) and `@explore` (codebase) in
-parallel, then synthesizes their findings into a structured research document written to
-`docs/research/`. Iron Law: NO RESEARCH WITHOUT A DOCUMENT — verbal answers
-without persistent artifacts are prohibited.
+Dispatches a researcher subagent (via `researcher-prompt.md` with `subagent_type: "general-purpose"`)
+and `@explore` (codebase) in parallel, then synthesizes their findings into a structured research
+document. The output directory is resolved at skill load time via DCI, with a configurable three-tier
+priority: per-project config, environment variable, or `./docs/research` default.
+Iron Law: NO RESEARCH WITHOUT A DOCUMENT — verbal answers without persistent artifacts are prohibited.
 
 ### write-documentation
 
