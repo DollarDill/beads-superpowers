@@ -9,7 +9,7 @@ description: Use when facing 2+ independent tasks that can be worked on without 
 
 You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
-When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
+When you have multiple independent tasks — whether bug investigations, plan tasks, or subsystem changes — executing them sequentially wastes time. Each task is independent and can happen in parallel, provided each agent gets its own isolated workspace.
 
 **Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
 
@@ -38,6 +38,8 @@ digraph when_to_use {
 - Multiple subsystems broken independently
 - Each problem can be understood without context from others
 - No shared state between investigations
+- 2+ independent plan tasks with no dependency edges between them
+- Multiple independent subsystem changes (different files, different concerns)
 
 **Don't use when:**
 - Failures are related (fix one might fix others)
@@ -129,6 +131,47 @@ Return: Summary of what you found and what you fixed.
 **Need full context:** Understanding requires seeing entire system
 **Exploratory debugging:** You don't know what's broken yet
 **Shared state:** Agents would interfere (editing same files, using same resources)
+**Single task:** Only one task remaining — no parallelism benefit
+**Same files:** Tasks that modify the same files — merge conflicts likely even with worktree isolation
+
+## SDD Integration
+
+Subagent-Driven Development uses this skill's **pattern** — not the skill itself — when executing plans with independent tasks.
+
+**How SDD uses the pattern:**
+
+1. SDD detects independent task batches via `bd ready --parent <epic-id>` (tasks with no unresolved dependencies)
+2. Orchestrator creates one `bd worktree` per task — subagent receives path, never creates worktrees itself
+3. Dispatches all implementer subagents in one message via multiple `Agent` tool calls (max 5 per batch)
+4. SDD handles merge-back into the epic worktree after review
+
+**Key difference from standalone use:** In SDD, the orchestrator manages the full lifecycle (worktree creation → dispatch → review → merge → cleanup). This skill describes the dispatch pattern; SDD adds the orchestration layer.
+
+**Example — plan task execution with per-task worktrees:**
+
+```
+Orchestrator identifies 3 unblocked tasks (no deps between them):
+  Task A: Add validation to user input (touches src/validation.py)
+  Task B: Add logging middleware (touches src/middleware.py)
+  Task C: Update API docs (touches docs/api.md)
+
+Orchestrator creates per-task worktrees:
+  bd worktree create task-a --branch feature/epic/task-a
+  bd worktree create task-b --branch feature/epic/task-b
+  bd worktree create task-c --branch feature/epic/task-c
+
+Dispatches 3 subagents in parallel (one Agent call each, same message):
+  Agent 1 → "Work from: .worktrees/task-a" → implements validation
+  Agent 2 → "Work from: .worktrees/task-b" → implements middleware
+  Agent 3 → "Work from: .worktrees/task-c" → updates docs
+
+After all 3 pass review:
+  git merge feature/epic/task-a (in epic worktree)
+  git merge feature/epic/task-b
+  git merge feature/epic/task-c
+  bd worktree remove task-a task-b task-c
+  Run full test suite → integration check
+```
 
 ## Real Example from Session
 
