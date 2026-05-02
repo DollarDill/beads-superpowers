@@ -11,44 +11,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Parallel Batch Mode in `subagent-driven-development` — independent plan tasks now execute in parallel (max 5 per batch), each in its own `bd worktree`, with automatic mode selection via `bd ready --parent`. Includes batch execution flow diagram, failed task handling, and mode selection logic.
-- SDD Integration section in `dispatching-parallel-agents` — documents how SDD uses the parallel dispatch pattern with per-task worktrees.
-- Multiple Worktrees for Parallel Subagents section in `using-git-worktrees` — documents the orchestrator-managed multi-worktree pattern.
-- Dynamic Context Injection (DCI) for `research-driven-development` output path — uses Claude Code's `!` backtick syntax to resolve the research directory at skill load time. Resolver script also lists category subdirectories so the agent can route research documents by topic. Configurable via `bd config set custom.research-output-dir` (per-project) or `RESEARCH_OUTPUT_DIR` env var (global). Resolver script: `skills/research-driven-development/resolve-output-dir.sh`.
-- `example-workflow/agents/yegge.md` — Complete orchestrator agent at full rpi-developer parity: 11-state FSM with Agent column, request triage with Skills Invoked column, default research behaviour, KB document workflow (delegated to skill DCI), ADR workflow, planning principles with 2–5 min granularity, plan output with Risks/Mitigations/Testing Strategy/Execution Path/Estimated complexity/Dependencies, FSM workflow summary, session startup. Named after Steve Yegge (beads creator).
-- `skills/research-driven-development/researcher-prompt.md` — Researcher subagent prompt template (like `implementer-prompt.md`). Contains full researcher workflow with concrete KB search paths, full LSP tool hierarchy, brainstorming trigger for design research, research principles, output format, and DONE/BLOCKED/NEEDS_CONTEXT status reporting. Named after Jesse Vincent (superpowers creator). Replaces standalone agent file — the skill owns the prompt.
-- Agent installation in `install.sh` — copies `yegge.md` to `~/.claude/agents/` for global availability. Includes install, uninstall, verify, dry-run, and test support.
+- Parallel Batch Mode in `subagent-driven-development` — up to 5 independent tasks execute concurrently, each in its own `bd worktree`, with automatic mode selection via `bd ready --parent`.
+- DCI for `research-driven-development` output path — resolves research directory at skill load time via `!` backtick syntax. Configurable per-project (`bd config`), per-env (`RESEARCH_OUTPUT_DIR`), or default (`.internal/research`).
+- `example-workflow/agents/yegge.md` — 11-state FSM orchestrator agent with request triage, verification hard gate, ADR workflow, and session protocol. Named after Steve Yegge.
+- `researcher-prompt.md` — researcher subagent prompt template. Replaces standalone agent file — the skill owns the prompt. Named after Jesse Vincent.
+- Agent installation in `install.sh` — copies `yegge.md` to `~/.claude/agents/` for global availability.
+- Karpathy behavioral principles (Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution) added to project `CLAUDE.md` and `AGENTS.md`. Based on [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) (MIT).
+- `skills/setup/get-reminder-hook.sh` — DCI resolver so the setup skill includes reminder content dynamically instead of hardcoding it.
 
 ### Changed
 
-- `subagent-driven-development` "The Process" renamed to "The Process (Sequential Mode)" with cross-reference to new Parallel Batch Mode section.
-- `subagent-driven-development` Red Flags: replaced blanket parallel prohibition with 3 specific guardrails (require per-task worktree, max 5 cap, no Claude `isolation: "worktree"` parameter).
-- `subagent-driven-development` Integration section: added `dispatching-parallel-agents`, `receiving-code-review`, `using-git-worktrees` (parallel mode), and `systematic-debugging` references.
-- `dispatching-parallel-agents` generalized from bug-fixing to any independent parallel work (plan tasks, subsystem changes).
-- `implementer-prompt.md` rewritten as single source of truth for implementer behaviour — now includes beads lifecycle (`bd update --claim`, `bd close --reason`), mandatory skill invocations (TDD, systematic-debugging, verification-before-completion), LSP-first code navigation, and phase execution workflow.
-- `research-driven-development` decoupled from FSM — removed "FSM state S2" reference so skill works standalone.
-- `research-driven-development` researcher dispatch: now explicitly instructs `Read` of `researcher-prompt.md` and dispatch with `subagent_type: "general-purpose"` — NOT `"researcher"` (built-in agent type overrides prompt template).
-- `research-driven-development` Step 5: resolver script output now includes category subdirectories; agent picks the best-matching subdirectory by research topic.
-- `example-workflow/agents/yegge.md` — Verification Hard Gate: new section blocks `bd close`/`git commit` without prior `Skill(verification-before-completion)` invocation. Applies to all FSM paths.
-- `example-workflow/agents/yegge.md` — "Triage overrides the hook": Quick questions skip skills even if the UserPromptSubmit hook's 1% rule fires. Triage happens first, always.
-- `example-workflow/agents/yegge.md` — Session Startup: "what happened" after restart is a Quick question, not a getting-up-to-speed trigger.
-- `example-workflow/CLAUDE.md` — True hybrid Karpathy template: verbatim [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) behavioral guidelines (MIT) + architectural scaffolding sections (Project Overview, Architecture, Key Design Decisions, Common Gotchas — modelled on Karpathy's own llm-council CLAUDE.md) + beads integration section generated by `bd init`. All orchestration logic moved to `yegge.md` agent.
-- `example-workflow/README.md` — Rewritten to document architecture (CLAUDE.md + yegge agent + prompt-template subagents).
-- `install.sh` — Updated to install agents alongside skills and hooks; updated uninstall, verify, dry-run, and test modes.
+- `subagent-driven-development` parallel guardrails: require per-task worktree, max 5 cap, no Claude `isolation: "worktree"` parameter.
+- `dispatching-parallel-agents` generalized from bug-fixing to any independent parallel work.
+- `implementer-prompt.md` rewritten — now includes beads lifecycle, mandatory skill invocations (TDD, debugging, verification), and LSP-first code navigation.
+- `research-driven-development` researcher dispatch uses `subagent_type: "general-purpose"` (not `"researcher"` — built-in type overrides the prompt).
+- `example-workflow/CLAUDE.md` — Karpathy behavioral guidelines + project scaffolding sections + beads integration.
+- `install.sh` — installs agents alongside skills; `write_reminder_script()` copies from tarball instead of hardcoding.
+- Docs structure consolidated: `docs-src/` → `docs/` (website only), `docs/decisions/` → `decisions/` (tracked), internal KB → `.internal/` (gitignored). Updated `mkdocs.yml`, deploy workflow, and all skill/test path references.
+- UserPromptSubmit reminder DRY'd — `hooks/superpowers-reminder.sh` is the single source of truth. `install.sh` and `setup/SKILL.md` reference it instead of hardcoding copies.
+- All 8 documentation files rewritten for human readers: README.md (45% shorter), CONTRIBUTING.md (55%), docs/index.md (expanded from stub), getting-started.md (57%), methodology.md (31%), skills.md (35%), workflow.md (58%), tips.md (64%). Removed ceremony, admonitions, and redundant sections while preserving all substance.
 
 ### Removed
 
-- `agents/implementer.md` — removed to avoid upstream drift; all implementer instructions now in `implementer-prompt.md`.
-- `example-workflow/agents/implementer.md` — redundant with prompt template; single source of truth eliminates drift.
-- `example-workflow/agents/researcher.md` — Replaced by `researcher-prompt.md` in the research-driven-development skill (prompt template pattern).
-- `example-workflow/agents/jesse.md` — Removed; researcher is now a prompt template, not a standalone agent.
+- `agents/implementer.md` — all implementer instructions now in `implementer-prompt.md`.
+- `example-workflow/agents/implementer.md`, `researcher.md`, `jesse.md` — replaced by prompt templates in their respective skills.
+- `docs-src/` directory — website source moved to `docs/`.
 
 ### Fixed
 
-- `example-workflow/agents/yegge.md` KB document workflow had broken DCI syntax (`` `!`\`bash...\` `` — escaped backticks, `!` in its own code span). DCI does not work in agent `.md` files (only `SKILL.md` and `.claude/commands/*.md`), so the path is now delegated to the research-driven-development skill's DCI. Empirically confirmed via `claude --print --agent dci-test`.
-- `CLAUDE.md` Plugin Structure tree was stale — missing `docs-src/`, `example-workflow/`, `assets/`, `hooks/superpowers-reminder.sh`, `scripts/sync-skill-count.sh`, `scripts/build-docs.sh`, `install.sh`, `mkdocs.yml`. Added full directory layout with accurate descriptions.
-- `subagent-driven-development` implementer dispatch used `subagent_type: "implementer"` — Claude Code's built-in agent type overrides the prompt template. Changed to `"general-purpose"` to match the researcher dispatch pattern. Updated SKILL.md (parallel batch walkthrough + Prompt Templates section) and `implementer-prompt.md`.
-- Docs site: 18 staleness issues fixed across 5 pages. workflow.md had broken links to deleted agent files and wrong skill references per FSM state. methodology.md claimed integration was "mechanical only" and that subagent prompts are "not beads-aware" (implementer now is). Replaced 7-step walkthrough with full 11-state FSM. skills.md updated for parallel batch mode, DCI, dispatch generalization. tips.md routing table and hardcoded counts fixed. getting-started.md hook count corrected.
+- `yegge.md` DCI syntax was broken in agent `.md` files — delegated to research skill's DCI instead.
+- `CLAUDE.md` plugin structure tree was stale — updated with full directory layout.
+- SDD implementer dispatch used `subagent_type: "implementer"` which overrides the prompt template. Changed to `"general-purpose"`.
+- 18 staleness issues across 5 docs pages: broken links, wrong skill references, outdated claims.
 
 ## [0.5.1] - 2026-05-01
 
