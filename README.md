@@ -3,10 +3,6 @@
 </p>
 
 <p align="center">
-  <em>Process discipline and persistent memory for AI coding agents.</em>
-</p>
-
-<p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
   <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.5.1-4f46e5.svg"></a>
   <a href="https://github.com/DollarDill/beads-superpowers/actions/workflows/release.yml"><img alt="Release" src="https://github.com/DollarDill/beads-superpowers/actions/workflows/release.yml/badge.svg"></a>
@@ -15,51 +11,28 @@
 
 ---
 
-## Quick Start
+A Claude Code plugin that makes your AI coding agent write tests before code, debug systematically instead of guessing, and remember what it worked on yesterday. 22 skills enforce the practices; a Dolt-backed issue tracker keeps context across sessions.
+
+## Install
 
 ```bash
-# Install the plugin (pick one)
 curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
-
-# Or via Claude Code Marketplace
-claude plugin marketplace add DollarDill/beads-superpowers
-claude plugin install beads-superpowers@beads-superpowers-marketplace
 ```
 
-Then in any project:
+Then in any project: `bd init`. Run `/skills` in Claude Code to confirm.
 
-```bash
-bd init
-```
+## Docs
 
-That's it. 22 skills are now active. Run `/skills` in Claude Code to verify.
+**[dollardill.github.io/beads-superpowers](https://dollardill.github.io/beads-superpowers/)** — getting started, methodology, skills reference, example workflow, and tips.
 
-## Documentation
+## Built on
 
-Everything you need is on the docs site:
-
-| | |
-|---|---|
-| **[Getting Started](https://dollardill.github.io/beads-superpowers/getting-started.html)** | Installation, configuration, troubleshooting |
-| **[Methodology](https://dollardill.github.io/beads-superpowers/methodology.html)** | Why this exists and how it works |
-| **[Skills Reference](https://dollardill.github.io/beads-superpowers/skills.html)** | All 22 skills — triggers, categories, commands |
-| **[Example Workflow](https://dollardill.github.io/beads-superpowers/workflow.html)** | Complete development lifecycle with diagrams |
-| **[Tips & Tricks](https://dollardill.github.io/beads-superpowers/tips.html)** | Cheat sheet, common issues, best practices |
-
-Want the full workflow out of the box? Grab the [example CLAUDE.md + agent configs](example-workflow/).
-
-## Attribution
-
-Built on two excellent projects:
-
-- **[Superpowers](https://github.com/obra/superpowers)** by Jesse Vincent — composable skills for AI agents
-- **[Beads](https://github.com/gastownhall/beads)** by Steve Yegge — persistent issue tracking for AI agents
+- **[Superpowers](https://github.com/obra/superpowers)** by Jesse Vincent — the skill system and development practices
+- **[Beads](https://github.com/gastownhall/beads)** by Steve Yegge — persistent issue tracking with cross-session memory
 
 ## Contributing
 
-Contributions are welcome! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the guide.
-
-Have an idea for a new skill or improvement? **[Drop a suggestion in Discussions](https://github.com/DollarDill/beads-superpowers/discussions/27)** — we read every one.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). Ideas welcome in **[Discussions](https://github.com/DollarDill/beads-superpowers/discussions/27)**.
 
 ## License
 
