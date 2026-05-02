@@ -20,6 +20,7 @@ SETTINGS_FILE="$HOME/.claude/settings.json"
 PLUGINS_FILE="$HOME/.claude/plugins/installed_plugins.json"
 HOOK_SCRIPT="$HOOKS_DIR/beads-superpowers-session-start.sh"
 REMINDER_SCRIPT="$HOOKS_DIR/beads-superpowers-reminder.sh"
+AGENTS_DIR="$HOME/.claude/agents"
 VERSION_FILE="$SKILLS_DIR/.beads-superpowers-version"
 
 KNOWN_SKILLS=(
@@ -31,6 +32,8 @@ KNOWN_SKILLS=(
   using-git-worktrees using-superpowers verification-before-completion
   write-documentation writing-plans writing-skills
 )
+
+KNOWN_AGENTS=(yegge jesse)
 
 # --- Flags ---
 FLAG_YES=false
@@ -219,6 +222,18 @@ do_install() {
     fi
   done
 
+  info "Installing agents to $AGENTS_DIR/..."
+  mkdir -p "$AGENTS_DIR"
+  local agent_count=0
+  for agent in "${KNOWN_AGENTS[@]}"; do
+    if [ -f "$tmpdir/extracted/example-workflow/agents/$agent.md" ]; then
+      cp -f "$tmpdir/extracted/example-workflow/agents/$agent.md" "$AGENTS_DIR/$agent.md"
+      agent_count=$((agent_count + 1))
+    else
+      warn "Agent not found in release tarball: $agent.md"
+    fi
+  done
+
   info "Creating SessionStart hook..."
   write_hook_script
 
@@ -236,7 +251,7 @@ do_install() {
 
   echo "$VERSION" > "$VERSION_FILE"
 
-  success "Installed $installed_count skills"
+  success "Installed $installed_count skills and $agent_count agents"
 }
 
 write_hook_script() {
@@ -370,6 +385,16 @@ assert any('beads-superpowers' in json.dumps(e) for e in d.get('hooks',{}).get('
   else
     warn "Hook not found in settings.json"
   fi
+
+  local agents_found=0
+  for agent in "${KNOWN_AGENTS[@]}"; do
+    [ -f "$AGENTS_DIR/$agent.md" ] && agents_found=$((agents_found + 1))
+  done
+  if [ "$agents_found" -eq "${#KNOWN_AGENTS[@]}" ]; then
+    success "Agents installed: $agents_found"
+  else
+    warn "Expected ${#KNOWN_AGENTS[@]} agents, found $agents_found"
+  fi
 }
 
 # --- Phase 5: Next Steps ---
@@ -377,7 +402,7 @@ print_next_steps() {
   local count
   count=$(find "$SKILLS_DIR" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
   echo
-  success "beads-superpowers v$VERSION installed ($count skills, hook configured)"
+  success "beads-superpowers v$VERSION installed ($count skills, 2 agents, hook configured)"
   echo
   echo "Next steps:"
   echo "  1. Restart Claude Code (or start a new session) to activate skills"
@@ -404,6 +429,13 @@ do_uninstall() {
     fi
   done
   info "Removed $removed skill directories"
+
+  for agent in "${KNOWN_AGENTS[@]}"; do
+    if [ -f "$AGENTS_DIR/$agent.md" ]; then
+      rm -f "$AGENTS_DIR/$agent.md"
+    fi
+  done
+  info "Removed agent definitions"
 
   if [ -f "$HOOK_SCRIPT" ]; then
     rm -f "$HOOK_SCRIPT"
@@ -445,10 +477,11 @@ print_dry_run() {
   echo "Would perform these actions:"
   echo "  1. Download release tarball from GitHub"
   echo "  2. Copy 22 skills to $SKILLS_DIR/"
-  echo "  3. Create hook script at $HOOK_SCRIPT"
-  echo "  4. Backup $SETTINGS_FILE"
-  echo "  5. Register SessionStart hook in settings.json"
-  echo "  6. Write version marker to $VERSION_FILE"
+  echo "  3. Copy 2 agents (yegge, jesse) to $AGENTS_DIR/"
+  echo "  4. Create hook script at $HOOK_SCRIPT"
+  echo "  5. Backup $SETTINGS_FILE"
+  echo "  6. Register SessionStart hook in settings.json"
+  echo "  7. Write version marker to $VERSION_FILE"
   echo
   echo "No files were modified."
 }
@@ -503,12 +536,28 @@ assert d['hooks']['UserPromptSubmit']
     error "settings.json: hooks missing"; fail=$((fail + 1))
   fi
 
+  # Check agents
+  local agents_ok=true
+  for agent in "${KNOWN_AGENTS[@]}"; do
+    if [ ! -f "$test_home/.claude/agents/$agent.md" ]; then
+      agents_ok=false
+      break
+    fi
+  done
+  if [ "$agents_ok" = true ]; then
+    success "Agents installed: yegge, jesse"; pass=$((pass + 1))
+  else
+    error "Agents missing"; fail=$((fail + 1))
+  fi
+
   # Test uninstall
   BEADS_SUPERPOWERS_SKILLS_DIR="$test_home/skills" HOME="$test_home" bash "$0" --uninstall 2>&1
 
   if [ ! -f "$test_home/.claude/hooks/beads-superpowers-session-start.sh" ] && \
-     [ ! -f "$test_home/.claude/hooks/beads-superpowers-reminder.sh" ]; then
-    success "Uninstall: hooks removed"; pass=$((pass + 1))
+     [ ! -f "$test_home/.claude/hooks/beads-superpowers-reminder.sh" ] && \
+     [ ! -f "$test_home/.claude/agents/yegge.md" ] && \
+     [ ! -f "$test_home/.claude/agents/jesse.md" ]; then
+    success "Uninstall: hooks and agents removed"; pass=$((pass + 1))
   else
     error "Uninstall: hooks still exist"; fail=$((fail + 1))
   fi
