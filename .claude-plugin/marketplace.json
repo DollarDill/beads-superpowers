@@ -7,7 +7,7 @@
     {
       "name": "beads-superpowers",
       "description": "Superpowers skills + Beads issue tracking: TDD, debugging, collaboration, and persistent project management for AI agents",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "source": "./",
       "author": {
         "name": "Dillon Frawley"

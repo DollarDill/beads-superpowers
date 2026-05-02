@@ -38,7 +38,7 @@ This path is resolved dynamically when the skill loads. Priority chain:
 |----------|-------|------------|
 | 1 | Per-project | `bd config set custom.research-output-dir "/absolute/path"` |
 | 2 | Global | `export RESEARCH_OUTPUT_DIR="/absolute/path"` in shell profile |
-| 3 | Default | `./docs/research` |
+| 3 | Default | `./.internal/research` |
 
 **Important:** Always use absolute paths. Tilde (`~`) does not expand in `bd config` values.
 

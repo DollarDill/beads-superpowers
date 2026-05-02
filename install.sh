@@ -13,7 +13,7 @@ set -euo pipefail
 
 # --- Configuration ---
 REPO="DollarDill/beads-superpowers"
-FALLBACK_VERSION="0.4.1"
+FALLBACK_VERSION="0.5.2"
 SKILLS_DIR="${BEADS_SUPERPOWERS_SKILLS_DIR:-$HOME/.claude/skills}"
 HOOKS_DIR="$HOME/.claude/hooks"
 SETTINGS_FILE="$HOME/.claude/settings.json"
