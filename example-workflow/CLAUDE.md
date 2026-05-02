@@ -31,9 +31,9 @@ Each state has a mandatory skill invocation, a guard condition that must pass be
 | **S4: BRAINSTORM** | Invoke `Skill(beads-superpowers:brainstorming)` | Design doc written; user approved | Loop — revise until user approves |
 | **S5: DECISION CAPTURE** | Write Architecture Decision Record | ADR written | Non-blocking — warn and continue |
 | **S6: PLAN** | Invoke `Skill(beads-superpowers:writing-plans)` | Plan exists; beads created; user approved | Loop — revise until user approves |
-| **S7: IMPLEMENT** | Invoke `Skill(beads-superpowers:using-git-worktrees)` then `Skill(beads-superpowers:test-driven-development)` or `Skill(beads-superpowers:subagent-driven-development)` | All task beads closed, tests pass | Sub-agent fails → review gate → fix or re-delegate |
+| **S7: IMPLEMENT** | Invoke `Skill(beads-superpowers:using-git-worktrees)` then `Skill(beads-superpowers:test-driven-development)` or `Skill(beads-superpowers:subagent-driven-development)` (sequential or parallel batch mode) | All task beads closed, tests pass | Sub-agent fails → review gate → fix or re-delegate |
 | **S8: VERIFY** | Invoke `Skill(beads-superpowers:verification-before-completion)` | Fresh test run passes, evidence in output | → S7 (re-implement) or escalate |
-| **S9: DOCUMENT** | Invoke `Skill(document-release)` | Docs audited and updated | Non-blocking — warn if update fails |
+| **S9: DOCUMENT** | Invoke `Skill(beads-superpowers:write-documentation)` for prose, then `Skill(document-release)` for audit | Docs written/updated, audit passed | Non-blocking — warn if update fails |
 | **S10: CLOSE BRANCH** | Invoke `Skill(beads-superpowers:finishing-a-development-branch)` | Branch merged/PR created | Retry merge; keep worktree if conflicts |
 | **S11: LAND THE PLANE** | `bd close` → `bd dolt push` → `git push` → `git status` | Git status shows "up to date with origin" | Retry push; NEVER stop before pushed |
 
@@ -107,8 +107,9 @@ See the full skill at `skills/research-driven-development/SKILL.md` for document
 ### Session Start
 
 1. beads-superpowers plugin injects `bd prime` context automatically
-2. `bd ready` — find unblocked work
-3. Claim: `bd update <id> --claim`
+2. *(Optional)* Invoke `Skill(beads-superpowers:getting-up-to-speed)` for full project orientation
+3. `bd ready` — find unblocked work
+4. Claim: `bd update <id> --claim`
 
 ### Session End
 
@@ -138,9 +139,13 @@ git status                      # Verify clean state
 
 ## Agent Configuration
 
-This workflow uses two companion agents. Place these in your project's `.claude/agents/` directory:
+This workflow uses companion agents. The **beads-superpowers plugin auto-provides**:
+
+- **`implementer`** — Disciplined implementation specialist (Sonnet model). Executes plans phase-by-phase with TDD, verifies each phase, escalates deviations. Available via `subagent_type: "implementer"`.
+- **`code-reviewer`** — Senior code reviewer. Plan alignment + code quality assessment. Available via `Skill(beads-superpowers:requesting-code-review)`.
+
+The following agent is recommended for your project's `.claude/agents/` directory:
 
 - **`researcher.md`** — Deep research specialist (Opus model, read-only). Searches web + knowledge base, cross-references sources, produces structured findings.
-- **`implementer.md`** — Disciplined implementation specialist (Sonnet model). Executes plans phase-by-phase with TDD, verifies each phase, escalates deviations.
 
-See the `example-workflow/agents/` directory for ready-to-use agent configurations.
+See `example-workflow/agents/` for a ready-to-use researcher configuration.
