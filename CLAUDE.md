@@ -145,7 +145,7 @@ If `bd setup claude` hooks are installed in `.claude/settings.json`, this plugin
 
 ## Build & Test
 
-No build step — skills are plain Markdown.
+Skills are plain Markdown. The docs site uses MkDocs Material.
 
 ### Validation
 
@@ -153,8 +153,11 @@ No build step — skills are plain Markdown.
 # Validate plugin manifests
 claude plugin validate .claude-plugin/plugin.json
 
-# Verify skill count (should be 20)
-ls -d skills/*/ | wc -l
+# Sync skill counts across all files (idempotent)
+./scripts/sync-skill-count.sh
+
+# Verify skill counts are consistent
+./scripts/sync-skill-count.sh --check
 
 # Verify zero active TodoWrite references
 grep -r "TodoWrite" skills/ | grep -v "Do NOT use TodoWrite" | grep -v "replaces TodoWrite"
@@ -164,6 +167,11 @@ grep -r "bd create\|bd close\|bd ready" skills/ | wc -l
 
 # Test hook output
 bash hooks/session-start 2>&1 | python3 -m json.tool
+
+# Build docs site locally
+pip install mkdocs-material mkdocs-macros-plugin  # one-time
+mkdocs build --strict                              # build
+mkdocs serve                                       # preview at http://localhost:8000
 ```
 
 ### Running Skill Tests
