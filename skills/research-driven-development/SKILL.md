@@ -78,9 +78,9 @@ find "!`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`" -name "*.md" -exec grep
 
 Launch BOTH agents in a **single message with multiple Agent tool calls** so they run concurrently:
 
-### Agent A: @researcher (web + documentation)
+### Agent A: @jesse (web + documentation)
 
-Dispatch via the `Agent` tool with `subagent_type: "researcher"`:
+Dispatch via the `Agent` tool with `subagent_type: "researcher"` (or `"jesse"` if the jesse agent is installed):
 
 > Research [topic]. I need:
 > 1. Official documentation and primary sources
@@ -104,7 +104,7 @@ Dispatch via the `Agent` tool with `subagent_type: "Explore"`:
 
 ### If Only One Agent Applies
 
-- **Pure topic research** (no codebase relevance): Dispatch only @researcher
+- **Pure topic research** (no codebase relevance): Dispatch only @jesse
 - **Pure codebase question**: Dispatch only @explore
 - **Both relevant** (default): Dispatch both in parallel
 
@@ -228,9 +228,9 @@ User asks: "How does Dolt handle merge conflicts?"
 ```
 1. bd create "Research: Dolt merge conflict handling" -t task -p 2
 2. bd memories "dolt merge" → check for prior research
-3. Dispatch @researcher: "Research Dolt merge conflict resolution..."
+3. Dispatch @jesse: "Research Dolt merge conflict resolution..."
    Dispatch @explore: "Search codebase for Dolt merge, conflict..."
-4. Synthesize: researcher found cell-level merge docs, explore found bd dolt pull usage
+4. Synthesize: jesse found cell-level merge docs, explore found bd dolt pull usage
 5. Write to !`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`/2026-05-01-dolt-merge-conflict-handling.md
 6. bd close <id> --reason "Research complete: Dolt uses cell-level merge on SQL tables"
 ```
