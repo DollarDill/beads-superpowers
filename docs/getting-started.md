@@ -1,176 +1,90 @@
 # Getting Started
 
-Install and configure beads-superpowers in 60 seconds.
-
 ## Prerequisites
 
-You need two things before installing the plugin:
+You need **Claude Code** ([claude.ai/claude-code](https://claude.ai/claude-code)) and the **`bd` CLI** ([gastownhall/beads](https://github.com/gastownhall/beads)).
 
-1. **Claude Code** — Install from [claude.ai/claude-code](https://claude.ai/claude-code)
-2. **Beads (`bd` CLI)** — The task tracking backend the plugin depends on
+Install `bd`:
 
-### Install the `bd` CLI
-
-Choose the method that fits your platform. The `bd` CLI is maintained at [gastownhall/beads](https://github.com/gastownhall/beads).
-
-**Homebrew (macOS / Linux):**
-
-```
-brew install beads
+```bash
+brew install beads          # macOS / Linux
+# or
+npm install -g @beads/bd    # any platform
 ```
 
-**npm (any platform):**
+Verify with `bd version`.
 
-```
-npm install -g @beads/bd
-```
+**Optional:** A [DoltHub](https://dolthub.com) account if you want cross-session sync via `bd dolt push/pull`. Without it, beads still works — just locally.
 
-**curl installer:**
+## Install the plugin
 
-```
-curl -fsSL https://raw.githubusercontent.com/gastownhall/beads/main/scripts/install.sh | bash
-```
+### curl (recommended)
 
-Verify the install:
-
-```
-bd version
-```
-
-### Optional dependencies
-
-- **Git** — Required for the Land the Plane protocol (`git push`)
-- **Dolt remote** — Required for `bd dolt push/pull` (cross-session sync). Sign up at [dolthub.com](https://dolthub.com)
-
-## Installation
-
-Three methods are available. The curl installer is the simplest — it requires only `bash` and works without Claude Code's plugin system.
-
-### Option A: curl (recommended)
-
-One command, no dependencies. Installs {{ skill_count }} skills to `~/.claude/skills/` and configures the SessionStart hook automatically.
-
-```
+```bash
 curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
 ```
 
-The installer supports additional flags: `--yes` (CI mode, skip prompts), `--version X.Y.Z` (pin a version), `--dry-run` (preview without writing), and `--uninstall`.
+Installs {{ skill_count }} skills to `~/.claude/skills/` and configures the SessionStart hook. Supports `--yes` (skip prompts), `--version X.Y.Z` (pin version), `--dry-run` (preview), and `--uninstall`.
 
-### Option B: Claude Code Marketplace
+### Claude Code Marketplace
 
-Two commands using the Claude Code plugin system:
-
-```
+```bash
 claude plugin marketplace add DollarDill/beads-superpowers
 claude plugin install beads-superpowers@beads-superpowers-marketplace
 ```
 
-You can also run these as slash commands inside an active Claude Code session:
+Or as slash commands inside a Claude Code session: `/plugin marketplace add ...` and `/plugin install ...`.
 
-```
-/plugin marketplace add DollarDill/beads-superpowers
-/plugin install beads-superpowers@beads-superpowers-marketplace
-```
+### npx (Vercel Skills CLI)
 
-### Option C: npx (via Vercel Skills CLI)
-
-Install skills via the Vercel Skills CLI:
-
-```
+```bash
 npx skills add DollarDill/beads-superpowers --all -y -g
 ```
 
-After installing, tell Claude: **"Run the setup skill"** — this configures the SessionStart hook that makes skills activate automatically on every session start.
+After installing, tell Claude: **"Run the setup skill"** — this configures the SessionStart hook.
 
-## First Project Setup
+## First project setup
 
-After installing the plugin, initialise beads in your project directory:
+Initialise beads in your project:
 
-```
+```bash
 cd your-project
 bd init
 ```
 
-This creates:
+This creates `.beads/` (config, metadata, git hooks), `CLAUDE.md`, and `AGENTS.md`. The plugin's own hooks supersede the ones `bd init` installs, so remove the duplicates right away:
 
-- `.beads/` directory containing config, metadata, and git hooks
-- `CLAUDE.md` with beads instructions (superseded by the plugin's context injection)
-- `AGENTS.md` with agent instructions (also superseded by the plugin)
-
-> **Warning**
->
-> `bd init` installs Claude Code hooks that run `bd prime` on SessionStart. The beads-superpowers plugin's SessionStart hook **also** runs `bd prime`. Having both causes redundant context injection (~2x token overhead).
->
-> Remove the duplicate hooks immediately after running `bd init`:
->
-> ```
-> bd setup claude --remove
-> ```
-
-### Set up Dolt remote (optional but recommended)
-
-For cross-session persistence of your task history:
-
+```bash
+bd setup claude --remove
 ```
-# Create a DoltHub account at dolthub.com, then:
+
+If you skip this step, `bd prime` runs twice per session — same context injected at double the token cost.
+
+### Dolt remote (optional)
+
+For cross-session sync of your task history:
+
+```bash
 bd dolt remote add origin https://doltremoteapi.dolthub.com/your-org/your-repo
-
-# Test the connection
-bd dolt push
+bd dolt push    # test the connection
 ```
 
-## Verify Installation
+## Verify it works
 
-Start a new Claude Code session. The SessionStart hook injects the `using-superpowers` skill context and runs `bd prime` automatically.
+Start a fresh Claude Code session in your project, then:
 
-Run these commands to confirm everything is working:
+1. **Check skills loaded:** Type `/skills` — you should see {{ skill_count }} skills prefixed with `beads-superpowers:`
+2. **Check beads works:** Run `bd ready` and `bd stats` in the terminal
 
-**1. Check the plugin is installed and enabled:**
+If `/skills` shows nothing, the plugin isn't installed. If `bd ready` fails, beads isn't initialised in this project (`bd init`).
 
-```
-claude plugin list
+## How the hooks work
 
-# Expected output:
-#   > beads-superpowers@beads-superpowers-marketplace
-#     Version: {{ version }}
-#     Scope: user
-#     Status: enabled
-```
+The plugin registers two hooks via `hooks/hooks.json`:
 
-**2. Verify skills are available (inside a Claude Code session):**
+**SessionStart** fires on every session start, clear, and compact. It reads the `using-superpowers` skill (which routes to all other skills), runs `bd prime` (captures beads state and persistent memories), checks for duplicate hooks, and outputs the combined context (~2–3k tokens).
 
-```
-/skills
-# Should list {{ skill_count }} beads-superpowers: prefixed skills
-```
-
-**3. Verify `bd` is working:**
-
-```
-bd ready
-bd stats
-```
-
-> **Tip**
->
-> The `/skills` command is a slash command run inside Claude Code — not a shell command. Open a Claude Code session in your project directory and type it directly.
-
-## Configuration
-
-### How the hook mechanism works
-
-The plugin registers two hooks via `hooks/hooks.json`. The `SessionStart` hook fires on every session start, clear, and compact event. The hook script:
-
-1. Reads `using-superpowers/SKILL.md` — the bootstrap skill that routes to all other skills
-2. Runs `bd prime` — captures beads workflow context and persistent memories
-3. Checks for duplicate hooks — warns if `bd setup claude` hooks are still installed
-4. Outputs platform-specific JSON for Claude Code, Cursor, or Copilot CLI
-
-The combined output (~2–3k tokens) provides the agent with skill routing instructions, beads awareness, and anti-rationalization enforcement.
-
-#### UserPromptSubmit hook
-
-The plugin also registers a **UserPromptSubmit** hook that fires on every user message. It injects a tiered reminder covering all 20 invocable skills — the top 12 get explicit trigger mappings (bug → systematic-debugging, new feature → brainstorming, research question → research-driven-development, etc.) and the remaining 7 are listed as "also available." This prevents the agent from forgetting to invoke skills mid-session.
+**UserPromptSubmit** fires on every user message. It injects a reminder listing all 20 invocable skills with their trigger conditions — "bug → systematic-debugging", "new feature → brainstorming", etc. This keeps the agent from forgetting about skills mid-session.
 
 ```mermaid
 sequenceDiagram
@@ -190,136 +104,38 @@ sequenceDiagram
   Note over Agent: Agent checks skill triggers
 ```
 
-### Duplicate hook warning
+## Configuration
 
-If you have previously run `bd setup claude` (or `bd init`, which calls it), the plugin detects the overlap and displays a warning at session start. To resolve it:
+**Instruction priority** when things conflict:
 
-```
-bd setup claude --remove
+1. Your project's `CLAUDE.md` (highest)
+2. Plugin skills
+3. Default system prompt (lowest)
 
-# Verify removal — should NOT contain "bd prime" entries
-cat .claude/settings.json
-```
+To override a skill's behaviour, add instructions to your project's `CLAUDE.md` — no need to fork the plugin.
 
-### Plugin cache symlink for development
-
-If you are contributing to the plugin or testing local skill edits, the installed cache at `~/.claude/plugins/cache/` goes stale after every edit. Symlink it to your working copy once:
-
-```
-rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.1
-ln -s ~/workplace/beads-superpowers \
-  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.1
-```
-
-After symlinking, edits to skills take effect immediately in every new session — no reinstall needed.
-
-### Beads project configuration
-
-Beads is configured per-project in `.beads/config.yaml`. The defaults work for most projects; the main knobs are:
-
-```
-# Issue ID prefix (default: directory name)
-# issue:
-#   prefix: my-project
-
-# Dolt auto-commit policy
-# dolt:
-#   auto-commit: on|off|batch
-```
-
-### Instruction priority
-
-When instructions conflict, the resolution order is:
-
-1. **Your project's `CLAUDE.md`** — highest priority
-2. **Plugin skills** — override default Claude behaviour
-3. **Default system prompt** — lowest priority
-
-To override a skill's behaviour for your project, add instructions to your project's `CLAUDE.md` — you do not need to fork the plugin.
+**Beads project config** lives in `.beads/config.yaml`. The defaults work for most projects.
 
 ## Troubleshooting
 
-### Skills not loading
+**Skills not loading** — Run `/plugins` to check the plugin is installed, then `/skills` to check skills are visible. If missing, reinstall: `claude plugin marketplace update beads-superpowers-marketplace`.
 
-Verify the plugin is installed and recognised:
+**`bd: command not found`** — Beads isn't installed or isn't on your PATH. Run `brew install beads` or `npm install -g @beads/bd`, then verify with `bd version`.
 
-```
-/plugins          # In Claude Code — should list beads-superpowers
-/skills           # Should show beads-superpowers: prefixed skills
-```
+**No `.beads` directory** — Run `bd init` in your project directory. Remember to run `bd setup claude --remove` afterwards.
 
-If the plugin does not appear, try reinstalling:
+**Double context injection** — Both the plugin hook and `bd setup claude` hooks are active. Fix with `bd setup claude --remove`.
 
-```
-claude plugin marketplace update beads-superpowers-marketplace
-claude plugin update beads-superpowers@beads-superpowers-marketplace
-```
+**Stale plugin cache** — The cache doesn't update when you edit skill files locally. Either symlink the cache to your checkout:
 
-### `bd`: command not found
-
-> **Warning**
->
-> Beads is not installed, or it is not on your `PATH`. Install it and verify:
->
-> ```
-> brew install beads
-> # or
-> npm install -g @beads/bd
->
-> bd version
-> ```
-
-### No `.beads` directory found
-
-You need to initialise beads in your project first:
-
-```
-cd your-project
-bd init
+```bash
+rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/{{ version }}
+ln -s ~/workplace/beads-superpowers \
+  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/{{ version }}
 ```
 
-Remember to remove duplicate hooks afterwards (see the [First Project Setup](#first-project-setup) section above).
+Or reinstall. Note: `claude plugin update` has a known [cache bug](https://github.com/anthropics/claude-code/issues/14061) — the symlink is more reliable.
 
-### Duplicate context injection (double `bd prime`)
+**Hook not firing** — Check the hook is executable: `chmod +x hooks/session-start`.
 
-> **Warning**
->
-> If you see beads context injected twice at session start, the plugin's hook and `bd setup claude` hooks are both active. Remove the standalone hooks:
->
-> ```
-> bd setup claude --remove
-> ```
-
-### Plugin cache is stale after editing skills
-
-The installed cache does not update when you edit skill files. Use the symlink approach described in the [Configuration](#configuration) section, or reinstall the plugin:
-
-```
-claude plugin update beads-superpowers@beads-superpowers-marketplace
-```
-
-> **Warning**
->
-> `claude plugin update` has a known [cache bug](https://github.com/anthropics/claude-code/issues/14061). If the update does not pick up your changes, use the symlink approach instead.
-
-### Hook not firing
-
-Check that the hook script is executable:
-
-```
-ls -la hooks/session-start
-# Should show -rwxr-xr-x
-
-# If not:
-chmod +x hooks/session-start
-```
-
-### `bd dolt push` fails
-
-You need a Dolt remote configured first:
-
-```
-bd dolt remote add origin <url>
-```
-
-If you do not need remote sync, the push failure is harmless — beads continues to work locally with full functionality.
+**`bd dolt push` fails** — You need a Dolt remote configured first (`bd dolt remote add origin <url>`). If you don't need remote sync, the failure is harmless — beads works fine locally.
