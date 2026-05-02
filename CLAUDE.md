@@ -21,15 +21,33 @@ The key modification from upstream superpowers: every `TodoWrite` reference has 
 .claude-plugin/
   plugin.json              # Plugin manifest (auto-discovered by Claude Code)
   marketplace.json         # Marketplace config for plugin discovery
+agents/                    # Code reviewer agent (auto-discovered)
+assets/                    # Banner SVG
+docs/
+  beads-superpowers/       # Knowledge base (research docs, numbered 01-09)
+  decisions/               # Architecture Decision Records (ADR-0001..0003 + INDEX.md)
+  upstream-reference/      # Upstream design docs
+  windows/                 # Windows polyglot hook docs
+  audits/                  # Upstream drift audit reports
+  SETUP-GUIDE.md           # Installation and setup guide
+  testing.md               # Test infrastructure docs
+docs-src/                  # MkDocs source pages (index, getting-started, methodology, skills, workflow, tips)
+example-workflow/
+  CLAUDE.md                # Karpathy behavioral principles + beads integration (generic project template)
+  agents/yegge.md          # Orchestrator agent — 11-state FSM lifecycle
 hooks/
   hooks.json               # SessionStart + UserPromptSubmit hook registration
   session-start            # Bash: injects using-superpowers + runs bd prime
+  superpowers-reminder.sh  # UserPromptSubmit: injects skill trigger reminders
   run-hook.cmd             # Windows polyglot wrapper
-skills/                    # 22 beads-native skills (auto-discovered)
-agents/                    # Code reviewer agent (auto-discovered)
-docs/                      # METHODOLOGY.md, SETUP-GUIDE.md, testing.md, etc.
+scripts/
+  bump-version.sh          # Sync version across package.json + plugin manifests
+  sync-skill-count.sh      # Sync skill counts across all files (idempotent)
+  build-docs.sh            # Build MkDocs site
+skills/                    # 22 beads-native skills (auto-discovered, each has SKILL.md)
 tests/                     # Test infrastructure (5 suites)
-scripts/                   # bump-version.sh
+install.sh                 # curl installer (installs plugin + yegge agent globally)
+mkdocs.yml                 # MkDocs Material site config
 ```
 
 **Important:** Claude Code auto-discovers `skills/`, `agents/`, and `hooks/` directories by convention. Do NOT declare these paths in `plugin.json` — it causes validation failures.
