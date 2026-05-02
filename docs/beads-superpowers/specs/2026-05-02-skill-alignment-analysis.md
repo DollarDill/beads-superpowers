@@ -258,3 +258,66 @@ Bug:
 **What:** Adding a skill requires: create SKILL.md, update CLAUDE.md (table + count), update README, update install.sh (KNOWN_SKILLS), update 3 reminder hook copies, update docs-src/skills.md (5 places), update CI threshold, run sync-skill-count.sh.
 **Impact:** We just went through this with `write-documentation` and had to fix things after the fact.
 **Fix:** The `writing-skills` meta-skill should include a "post-creation checklist" that covers all these files, or `sync-skill-count.sh` should be extended to handle more than just the count.
+
+---
+
+## Part 5: Per-Skill Integration Section Audit
+
+Deep audit of every skill's Integration/Pairs-with/Called-by sections against actual usage.
+
+### Missing Integration Sections (should have one)
+
+| Skill | Has Integration? | Should Reference |
+|-------|-----------------|-----------------|
+| `receiving-code-review` | ❌ None | Called by: `subagent-driven-development` (reviewer loop). Pairs with: `requesting-code-review`. |
+| `research-driven-development` | ❌ None | Called by: FSM S2 (research phase). Pairs with: `getting-up-to-speed` (orientation research). |
+| `dispatching-parallel-agents` | ❌ None | Called by: `subagent-driven-development` (parallel batch mode — once implemented). Pairs with: `using-git-worktrees` (one worktree per parallel agent). |
+| `systematic-debugging` | ❌ None | Pairs with: `test-driven-development` (write regression test after fix). Interrupt: returns to any interrupted state. |
+| `test-driven-development` | ❌ None | Used by: `subagent-driven-development`, `executing-plans` (subagents follow TDD). Pairs with: `systematic-debugging` (regression tests). |
+| `using-superpowers` | ❌ None | Called by: SessionStart hook (automatic). Routes to: all other skills. |
+
+### Broken or Incomplete Connections
+
+| Source Skill | Claims | Reality |
+|-------------|--------|---------|
+| `brainstorming` | Terminal state: invokes `writing-plans` | ✅ Correct |
+| `brainstorming` | No mention of `stress-test` | ❌ Should note that stress-test may fire before proceeding to writing-plans |
+| `stress-test` | Called by: brainstorming, writing-plans | ✅ Correct — but neither brainstorming nor writing-plans mention stress-test in their own flow |
+| `document-release` | Called by: `finishing-a-development-branch` | ✅ Correct |
+| `document-release` | Pairs with: `verification-before-completion`, `writing-plans` | ⚠️ Missing: should also pair with `write-documentation` |
+| `subagent-driven-development` | Required: `using-git-worktrees` | ✅ Correct |
+| `subagent-driven-development` | Required: `requesting-code-review` | ✅ Correct |
+| `subagent-driven-development` | No mention of `dispatching-parallel-agents` | ❌ Should reference for parallel independent tasks |
+| `subagent-driven-development` | No mention of `receiving-code-review` | ❌ Review feedback loops use this skill |
+| `executing-plans` | Required: `using-git-worktrees` | ✅ Correct |
+| `executing-plans` | No mention of `test-driven-development` | ❌ Subagents should follow TDD |
+| `finishing-a-development-branch` | Called by: `subagent-driven-development`, `executing-plans` | ✅ Correct |
+| `finishing-a-development-branch` | Pairs with: `using-git-worktrees` | ✅ Correct |
+| `finishing-a-development-branch` | No mention of `document-release` | ❌ Should note that document-release is RECOMMENDED before merge |
+
+### Correct and Complete Integration Sections
+
+| Skill | Status | Notes |
+|-------|--------|-------|
+| `document-release` | ✅ Good | Clear Called by + Pairs with |
+| `project-init` | ✅ Good | Clear Called by + Pairs with |
+| `setup` | ✅ Good | Clear Pairs with |
+| `write-documentation` | ✅ Good | Clear Pairs with + Called by |
+| `writing-plans` | ✅ Good | Clear terminal options |
+| `writing-skills` | ✅ Good | References TDD requirement |
+
+### Summary: Beads for Integration Fixes
+
+| Bead ID | Fix |
+|---------|-----|
+| New | Add Integration section to `receiving-code-review` |
+| New | Add Integration section to `research-driven-development` |
+| New | Add Integration section to `dispatching-parallel-agents` |
+| New | Add Integration section to `systematic-debugging` |
+| New | Add Integration section to `test-driven-development` |
+| New | Add Integration section to `using-superpowers` |
+| New | `brainstorming`: add stress-test mention |
+| New | `document-release`: add write-documentation pairing |
+| New | `subagent-driven-development`: add dispatching-parallel-agents + receiving-code-review refs |
+| New | `executing-plans`: add test-driven-development ref |
+| New | `finishing-a-development-branch`: add document-release recommendation |
