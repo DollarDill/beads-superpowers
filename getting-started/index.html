@@ -694,9 +694,9 @@
 <p><strong>No <code>.beads</code> directory</strong> — Run <code>bd init</code> in your project directory. Remember to run <code>bd setup claude --remove</code> afterwards.</p>
 <p><strong>Double context injection</strong> — Both the plugin hook and <code>bd setup claude</code> hooks are active. Fix with <code>bd setup claude --remove</code>.</p>
 <p><strong>Stale plugin cache</strong> — The cache doesn't update when you edit skill files locally. Either symlink the cache to your checkout:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.2
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.3
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>ln<span class="w"> </span>-s<span class="w"> </span>~/workplace/beads-superpowers<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.2
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.3
 </code></pre></div>
 <p>Or reinstall. Note: <code>claude plugin update</code> has a known <a href="https://github.com/anthropics/claude-code/issues/14061">cache bug</a> — the symlink is more reliable.</p>
 <p><strong>Hook not firing</strong> — Check the hook is executable: <code>chmod +x hooks/session-start</code>.</p>
