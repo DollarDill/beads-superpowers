@@ -35,8 +35,8 @@ jobs:
         run: |
           count=$(ls -d skills/*/ | wc -l)
           echo "Skill count: $count"
-          if [ "$count" -lt 21 ]; then
-            echo "::error::Expected at least 21 skills, found $count"
+          if [ "$count" -lt 22 ]; then
+            echo "::error::Expected at least 22 skills, found $count"
             exit 1
           fi
 

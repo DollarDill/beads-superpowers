@@ -32,7 +32,7 @@ Then in any project:
 bd init
 ```
 
-That's it. 21 skills are now active. Run `/skills` in Claude Code to verify.
+That's it. 22 skills are now active. Run `/skills` in Claude Code to verify.
 
 ## Documentation
 
@@ -42,7 +42,7 @@ Everything you need is on the docs site:
 |---|---|
 | **[Getting Started](https://dollardill.github.io/beads-superpowers/getting-started.html)** | Installation, configuration, troubleshooting |
 | **[Methodology](https://dollardill.github.io/beads-superpowers/methodology.html)** | Why this exists and how it works |
-| **[Skills Reference](https://dollardill.github.io/beads-superpowers/skills.html)** | All 21 skills — triggers, categories, commands |
+| **[Skills Reference](https://dollardill.github.io/beads-superpowers/skills.html)** | All 22 skills — triggers, categories, commands |
 | **[Example Workflow](https://dollardill.github.io/beads-superpowers/workflow.html)** | Complete development lifecycle with diagrams |
 | **[Tips & Tricks](https://dollardill.github.io/beads-superpowers/tips.html)** | Cheat sheet, common issues, best practices |
 

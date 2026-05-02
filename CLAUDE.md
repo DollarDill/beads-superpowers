@@ -10,7 +10,7 @@ This project IS a Claude Code marketplace plugin that merges [Superpowers](https
 
 This plugin gives AI coding agents two things simultaneously:
 
-1. **Process discipline** — 21 composable skills enforcing TDD, brainstorming, systematic debugging, two-stage code review, and verification
+1. **Process discipline** — 22 composable skills enforcing TDD, brainstorming, systematic debugging, two-stage code review, and verification
 2. **Persistent memory** — Every task is a bead tracked in a Dolt-backed database that survives across sessions
 
 The key modification from upstream superpowers: every `TodoWrite` reference has been replaced with `bd` (beads) commands. The plugin's SessionStart hook runs `bd prime` to inject beads workflow context alongside skills.
@@ -25,7 +25,7 @@ hooks/
   hooks.json               # SessionStart + UserPromptSubmit hook registration
   session-start            # Bash: injects using-superpowers + runs bd prime
   run-hook.cmd             # Windows polyglot wrapper
-skills/                    # 21 beads-native skills (auto-discovered)
+skills/                    # 22 beads-native skills (auto-discovered)
 agents/                    # Code reviewer agent (auto-discovered)
 docs/                      # METHODOLOGY.md, SETUP-GUIDE.md, testing.md, etc.
 tests/                     # Test infrastructure (5 suites)
@@ -86,7 +86,7 @@ GitHub sync is configured via:
 
 If `bd setup claude` hooks are installed in `.claude/settings.json`, this plugin detects them and warns. Run `bd setup claude --remove` — the plugin's hook already handles `bd prime`.
 
-## Skills (21 Total)
+## Skills (22 Total)
 
 | Skill | Purpose |
 |-------|---------|
@@ -111,6 +111,7 @@ If `bd setup claude` hooks are installed in `.claude/settings.json`, this plugin
 | auditing-upstream-drift | Detect staleness vs upstream superpowers/beads |
 | getting-up-to-speed | Session orientation — bd context + adaptive codebase deep-dive + structured current-state summary |
 | research-driven-development | Parallel research agents → synthesized knowledge base document. Triggers on "research this", "what is X", "how does Y work" |
+| write-documentation | Human-quality prose for all human-facing text — 14-rule writing system with context-first drafting and required checks |
 
 ## Modifying Skills
 
@@ -127,7 +128,7 @@ If `bd setup claude` hooks are installed in `.claude/settings.json`, this plugin
 
 2. Make it beads-aware: use `bd create`/`bd close`/`bd ready` for task tracking
 3. If it has a checklist, create beads per checklist item
-4. Update README.md skills table and CHANGELOG.md
+4. Update CLAUDE.md skills table (count and row) and CHANGELOG.md
 
 ### Modifying an Existing Skill
 

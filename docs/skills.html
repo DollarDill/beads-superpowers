@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Skills Reference — beads-superpowers</title>
-  <meta name="description" content="Complete reference for all 21 beads-superpowers skills">
+  <meta name="description" content="Complete reference for all 22 beads-superpowers skills">
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <script src="https://unpkg.com/panzoom@9.4.0/dist/panzoom.min.js"></script>
@@ -35,11 +35,11 @@
     <div class="content">
       <article>
         <h1>Skills Reference</h1>
-        <p class="subtitle">Complete reference for all 21 beads-superpowers skills</p>
+        <p class="subtitle">Complete reference for all 22 beads-superpowers skills</p>
 
         <h2 id="overview">Overview</h2>
         <p>
-          beads-superpowers ships 21 composable skills that are loaded on demand via the <code>Skill</code> tool.
+          beads-superpowers ships 22 composable skills that are loaded on demand via the <code>Skill</code> tool.
           The bootstrap skill, <strong>using-superpowers</strong>, is injected at every session start and routes
           automatically to the correct skill for the current task.
         </p>
@@ -62,7 +62,7 @@
         </p>
         <ul>
           <li><strong>SessionStart hook</strong> — fires once at session start (and after <code>/clear</code> or <code>/compact</code>). Injects the <code>using-superpowers</code> bootstrap skill and runs <code>bd prime</code> for beads context.</li>
-          <li><strong>UserPromptSubmit hook</strong> — fires on <em>every</em> user message. Injects a tiered reminder covering all 20 invocable skills (all 21 minus <code>using-superpowers</code>, which auto-loads at session start). The top 12 high-frequency skills get explicit trigger mappings; the remaining 7 are listed as "also available":</li>
+          <li><strong>UserPromptSubmit hook</strong> — fires on <em>every</em> user message. Injects a tiered reminder covering all 22 invocable skills (all 22 total minus <code>using-superpowers</code>, which auto-loads at session start). The top 13 high-frequency skills get explicit trigger mappings; the remaining 8 are listed as "also available":</li>
         </ul>
 
         <table>
@@ -81,6 +81,7 @@
             <tr><td>About to claim done</td><td><code>verification-before-completion</code></td></tr>
             <tr><td>Code review needed</td><td><code>requesting-code-review</code></td></tr>
             <tr><td>Received review feedback</td><td><code>receiving-code-review</code></td></tr>
+            <tr><td>Writing human-facing prose</td><td><code>write-documentation</code></td></tr>
             <tr><td>Branch complete</td><td><code>finishing-a-development-branch</code></td></tr>
           </tbody>
         </table>
@@ -175,6 +176,12 @@
                 <a href="#skill-research-driven-development">research-driven-development</a>
               </td>
             </tr>
+            <tr>
+              <td><strong>Writing</strong></td>
+              <td>
+                <a href="#skill-write-documentation">write-documentation</a>
+              </td>
+            </tr>
           </tbody>
         </table>
 
@@ -219,6 +226,9 @@ graph TD
   subgraph Research
     RDD["research-driven-dev"]
   end
+  subgraph Writing
+    WD["write-documentation"]
+  end
 
   Meta --> Design
   Design --> Execution
@@ -235,6 +245,7 @@ graph TD
   style Lifecycle fill:#64748b,color:#fff
   style SetupRecovery fill:#64748b,color:#fff
   style Research fill:#8b5cf6,color:#fff
+  style Writing fill:#ec4899,color:#fff
         </div>
 
         <h2 id="skills">All Skills</h2>
@@ -448,6 +459,20 @@ graph TD
           without persistent artifacts are prohibited.
         </p>
 
+        <!-- ─── Writing ─── -->
+
+        <h3 id="skill-write-documentation">write-documentation</h3>
+        <p><strong>Category:</strong> Writing</p>
+        <p><strong>Trigger:</strong> Use when writing or substantially rewriting human-facing prose: documentation, README, guides, blog posts, emails, Slack messages, PR descriptions, release notes, or any text a human will read.</p>
+        <p>
+          Adapts the <a href="https://github.com/Anbeeld/WRITING.md">WRITING.md</a> 14-rule writing system
+          for AI-generated prose. Uses a context-first drafting workflow: identify medium and audience, draft
+          with rules internalized, run required checks as a revision pass, cut genericity, and present.
+          Targets the specific patterns that make LLM prose recognizable (regularity, catalog prose,
+          service-desk tone, false crispness) without faking humanity. Pairs with
+          <code>document-release</code> (which handles <em>when</em> to update docs, not <em>how</em> to write them).
+        </p>
+
         <h2 id="commands">Beads Commands</h2>
         <p>
           Skills use <code>bd</code> commands to create, track, and close beads (tasks). Only the orchestrating
@@ -542,6 +567,7 @@ graph TD
   US --> TDD["test-driven-development"]
   US --> SD["systematic-debugging"]
   US --> RDD["research-driven-development"]
+  US --> WD["write-documentation"]
   B --> ST["stress-test"]
   ST --> WP["writing-plans"]
   WP --> SDD["subagent-driven-development"]

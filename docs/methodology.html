@@ -78,7 +78,7 @@
         <p>beads-superpowers is a Claude Code plugin that merges two upstream systems, each addressing one of the two failure modes.</p>
 
         <h3>Superpowers — Process Discipline</h3>
-        <p>Superpowers provides 21 composable skills enforcing TDD, brainstorming before code, systematic debugging, two-stage code review, and verification before completion. Skills are not suggestions. They use bright-line rules, Iron Laws, and anti-rationalization tables. The bootstrap skill (<code>using-superpowers</code>) routes to the correct skill automatically based on the task type.</p>
+        <p>Superpowers provides 22 composable skills enforcing TDD, brainstorming before code, systematic debugging, two-stage code review, and verification before completion. Skills are not suggestions. They use bright-line rules, Iron Laws, and anti-rationalization tables. The bootstrap skill (<code>using-superpowers</code>) routes to the correct skill automatically based on the task type.</p>
 
         <h3>Beads — Persistent Memory</h3>
         <p>Beads is a Dolt-backed issue tracker built for AI agents. Every task is a bead — a persistent record with a hash-based ID that survives session boundaries. <code>bd prime</code> injects current task state, remaining work, and learned memories at every session start. The agent never starts blind.</p>
@@ -86,7 +86,7 @@
         <div class="mermaid">
 graph TB
   subgraph Superpowers ["Superpowers (Process Discipline)"]
-    S1["21 Composable Skills"]
+    S1["22 Composable Skills"]
     S2["Bright-line Rules"]
     S3["Anti-rationalization"]
     S4["Pressure-tested Enforcement"]
@@ -180,7 +180,7 @@ graph TB
           <li>All subagent prompt templates (implementer, spec-reviewer, code-quality-reviewer) — unchanged</li>
           <li>Platform reference files for Gemini, Copilot CLI, and Codex</li>
         </ul>
-        <blockquote>Note: beads-superpowers has since grown to 21 skills. Six additional skills were created specifically for this project: <code>auditing-upstream-drift</code>, <code>document-release</code>, <code>getting-up-to-speed</code>, <code>project-init</code>, <code>setup</code>, and <code>stress-test</code>.</blockquote>
+        <blockquote>Note: beads-superpowers has since grown to 22 skills. Seven additional skills were created specifically for this project: <code>auditing-upstream-drift</code>, <code>document-release</code>, <code>getting-up-to-speed</code>, <code>project-init</code>, <code>setup</code>, <code>stress-test</code>, and <code>write-documentation</code>.</blockquote>
 
         <h2 id="memory">Agent Memory Types</h2>
         <p>Beads provides all seven types of memory that AI agents need. By integrating beads into every skill, all seven memory types are populated as a natural byproduct of following the workflow.</p>

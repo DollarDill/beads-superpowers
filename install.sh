@@ -29,7 +29,7 @@ KNOWN_SKILLS=(
   requesting-code-review research-driven-development setup stress-test
   subagent-driven-development systematic-debugging test-driven-development
   using-git-worktrees using-superpowers verification-before-completion
-  writing-plans writing-skills
+  write-documentation writing-plans writing-skills
 )
 
 # --- Flags ---
@@ -169,9 +169,9 @@ print_consent() {
   echo
   echo "This script will:"
   if [ "$UPGRADING" = true ]; then
-    echo "  • Upgrade 21 skills in $SKILLS_DIR/"
+    echo "  • Upgrade 22 skills in $SKILLS_DIR/"
   else
-    echo "  • Download 21 skills to $SKILLS_DIR/"
+    echo "  • Download 22 skills to $SKILLS_DIR/"
   fi
   echo "  • Create SessionStart hook at $HOOK_SCRIPT"
   echo "  • Create UserPromptSubmit hook at $REMINDER_SCRIPT"
@@ -353,7 +353,7 @@ do_verify() {
   if [ "$count" -ge 21 ]; then
     success "Skill count: $count"
   else
-    warn "Expected >= 21 skills, found $count"
+    warn "Expected >= 22 skills, found $count"
   fi
 
   if bash "$HOOK_SCRIPT" 2>/dev/null | python3 -m json.tool > /dev/null 2>&1; then
@@ -381,7 +381,7 @@ print_next_steps() {
   echo
   echo "Next steps:"
   echo "  1. Restart Claude Code (or start a new session) to activate skills"
-  echo "  2. Run /skills to verify — you should see 21+ skills available"
+  echo "  2. Run /skills to verify — you should see 22+ skills available"
   if [ "$HAS_BEADS" = false ]; then
     echo
     echo "  3. Install beads for persistent task tracking:"
@@ -444,7 +444,7 @@ print_dry_run() {
   echo
   echo "Would perform these actions:"
   echo "  1. Download release tarball from GitHub"
-  echo "  2. Copy 21 skills to $SKILLS_DIR/"
+  echo "  2. Copy 22 skills to $SKILLS_DIR/"
   echo "  3. Create hook script at $HOOK_SCRIPT"
   echo "  4. Backup $SETTINGS_FILE"
   echo "  5. Register SessionStart hook in settings.json"
