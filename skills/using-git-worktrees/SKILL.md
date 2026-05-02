@@ -171,6 +171,36 @@ Tests passing (<N> tests, 0 failures)
 Ready to implement <feature-name>
 ```
 
+## Multiple Worktrees for Parallel Subagents
+
+When Subagent-Driven Development runs independent tasks in parallel, the **orchestrator** creates and manages multiple worktrees. Subagents never create or destroy worktrees — they receive a path and work within it.
+
+**Pattern:**
+
+```bash
+# 1. Orchestrator creates epic worktree (once)
+bd worktree create <epic-name>
+
+# 2. For each parallel task (max 5 concurrent):
+bd worktree create <task-name> --branch feature/<epic>/<task>
+
+# 3. Subagent receives path in its prompt:
+#    "Work from: <task-worktree-path>"
+
+# 4. After task passes review — orchestrator merges and cleans up:
+cd <epic-worktree-path>
+git merge feature/<epic>/<task>
+bd worktree remove <task-name>
+```
+
+**Constraints:**
+- Maximum 5 concurrent task worktrees (resource limit)
+- Orchestrator manages the full lifecycle — subagents never run `bd worktree` commands
+- All task worktrees branch from the same HEAD commit (created before any subagent commits)
+- After merge, run the full test suite on the epic worktree to catch integration issues
+
+**See also:** `superpowers:subagent-driven-development` → Parallel Batch Mode section for the full orchestration flow.
+
 ## Quick Reference
 
 | Situation | Action |
@@ -182,6 +212,7 @@ Ready to implement <feature-name>
 | Directory not ignored | Add to .gitignore + commit |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
+| Parallel subagent work | Create one `bd worktree` per task, orchestrator manages lifecycle (max 5) |
 
 ## Common Mistakes
 
