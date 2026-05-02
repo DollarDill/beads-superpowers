@@ -401,38 +401,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#trigger-map" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
+        Trigger map
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Overview">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#how-skills-get-triggered" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How skills get triggered
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#skills-by-category" class="md-nav__link">
+  <a href="#by-category" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skills by Category
+        By category
       
     </span>
   </a>
@@ -443,12 +426,12 @@
   <a href="#all-skills" class="md-nav__link">
     <span class="md-ellipsis">
       
-        All Skills
+        All skills
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="All Skills">
+    <nav class="md-nav" aria-label="All skills">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -702,7 +685,7 @@
   <a href="#beads-commands" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Beads Commands
+        Beads commands
       
     </span>
   </a>
@@ -710,10 +693,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-skills-chain-together" class="md-nav__link">
+  <a href="#how-skills-chain" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How Skills Chain Together
+        How skills chain
       
     </span>
   </a>
@@ -803,29 +786,14 @@
 
 
 <h1 id="skills-reference">Skills Reference</h1>
-<p>Complete reference for all 22 beads-superpowers skills</p>
-<h2 id="overview">Overview</h2>
-<p>beads-superpowers ships 22 composable skills that are loaded on demand via the <code>Skill</code> tool.
-The bootstrap skill, <strong>using-superpowers</strong>, is injected at every session start and routes
-automatically to the correct skill for the current task.</p>
-<p>Skills are <strong>mandatory enforcement mechanisms</strong>, not suggestions. When a skill applies to
-your task, the plugin's using-superpowers bootstrap states explicitly:</p>
-<blockquote>
-<p>IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.</p>
-</blockquote>
-<p>Each skill uses bright-line rules, anti-rationalization tables, and empirically-tested enforcement
-language. See the <a href="../methodology/">Methodology</a> page for the research basis behind this design.</p>
-<h3 id="how-skills-get-triggered">How skills get triggered</h3>
-<p>Two hooks work together to ensure skills are never forgotten:</p>
-<ul>
-<li><strong>SessionStart hook</strong> — fires once at session start (and after <code>/clear</code> or <code>/compact</code>). Injects the <code>using-superpowers</code> bootstrap skill and runs <code>bd prime</code> for beads context.</li>
-<li><strong>UserPromptSubmit hook</strong> — fires on <em>every</em> user message. Injects a tiered reminder covering all 21 invocable skills (all 22 total minus <code>using-superpowers</code>, which auto-loads at session start). The top 14 high-frequency skills get explicit trigger mappings (across 13 rows, with SDD and executing-plans sharing one); the remaining 7 are listed as "also available":</li>
-</ul>
+<p>beads-superpowers ships 22 composable skills loaded on demand via the <code>Skill</code> tool. The bootstrap skill <code>using-superpowers</code> loads at every session start and routes to the right skill for the current task. Skills are mandatory — when one applies, the agent must invoke it.</p>
+<h2 id="trigger-map">Trigger map</h2>
+<p>The UserPromptSubmit hook reminds the agent on every message which skill applies to which task:</p>
 <table>
 <thead>
 <tr>
-<th>If the task involves...</th>
-<th>The reminder points to...</th>
+<th>Task</th>
+<th>Skill</th>
 </tr>
 </thead>
 <tbody>
@@ -842,7 +810,7 @@ language. See the <a href="../methodology/">Methodology</a> page for the researc
 <td><code>brainstorming</code></td>
 </tr>
 <tr>
-<td>Challenge or stress-test a design</td>
+<td>Stress-test a design</td>
 <td><code>stress-test</code></td>
 </tr>
 <tr>
@@ -851,7 +819,7 @@ language. See the <a href="../methodology/">Methodology</a> page for the researc
 </tr>
 <tr>
 <td>Executing a plan</td>
-<td><code>subagent-driven-development</code> or <code>executing-plans</code></td>
+<td><code>subagent-driven-development</code> / <code>executing-plans</code></td>
 </tr>
 <tr>
 <td>Research question</td>
@@ -883,18 +851,8 @@ language. See the <a href="../methodology/">Methodology</a> page for the researc
 </tr>
 </tbody>
 </table>
-<p><strong>Also available:</strong>
-<code>document-release</code>,
-<code>getting-up-to-speed</code>,
-<code>dispatching-parallel-agents</code>,
-<code>project-init</code>,
-<code>setup</code>,
-<code>writing-skills</code>,
-<code>auditing-upstream-drift</code></p>
-<p>This two-layer approach means the agent gets full skill context at session start, then a lightweight
-nudge on every subsequent message to check whether a skill applies. The nudge prevents mid-session
-drift — even after many turns, the agent is reminded to invoke skills rather than skipping them.</p>
-<h2 id="skills-by-category">Skills by Category</h2>
+<p>Also available: <code>document-release</code>, <code>getting-up-to-speed</code>, <code>dispatching-parallel-agents</code>, <code>project-init</code>, <code>setup</code>, <code>writing-skills</code>, <code>auditing-upstream-drift</code></p>
+<h2 id="by-category">By category</h2>
 <table>
 <thead>
 <tr>
@@ -904,11 +862,11 @@ drift — even after many turns, the agent is reminded to invoke skills rather t
 </thead>
 <tbody>
 <tr>
-<td><strong>Meta / Entry</strong></td>
+<td><strong>Meta</strong></td>
 <td><a href="#using-superpowers">using-superpowers</a>, <a href="#writing-skills">writing-skills</a></td>
 </tr>
 <tr>
-<td><strong>Design &amp; Planning</strong></td>
+<td><strong>Design</strong></td>
 <td><a href="#brainstorming">brainstorming</a>, <a href="#writing-plans">writing-plans</a>, <a href="#stress-test">stress-test</a></td>
 </tr>
 <tr>
@@ -932,7 +890,7 @@ drift — even after many turns, the agent is reminded to invoke skills rather t
 <td><a href="#document-release">document-release</a>, <a href="#getting-up-to-speed">getting-up-to-speed</a>, <a href="#auditing-upstream-drift">auditing-upstream-drift</a></td>
 </tr>
 <tr>
-<td><strong>Setup / Recovery</strong></td>
+<td><strong>Setup</strong></td>
 <td><a href="#setup">setup</a>, <a href="#project-init">project-init</a></td>
 </tr>
 <tr>
@@ -946,11 +904,11 @@ drift — even after many turns, the agent is reminded to invoke skills rather t
 </tbody>
 </table>
 <pre class="mermaid"><code>graph TD
-  subgraph Meta ["Meta / Entry"]
+  subgraph Meta
     US["using-superpowers"]
     WS["writing-skills"]
   end
-  subgraph Design ["Design &amp; Planning"]
+  subgraph Design
     BR["brainstorming"]
     STR["stress-test"]
     WP["writing-plans"]
@@ -976,9 +934,9 @@ drift — even after many turns, the agent is reminded to invoke skills rather t
   subgraph Lifecycle
     DR["document-release"]
     GUS["getting-up-to-speed"]
-    AUD["auditing-upstream-drift"]
+    AUD["auditing-drift"]
   end
-  subgraph SetupRecovery ["Setup / Recovery"]
+  subgraph Setup
     SET["setup"]
     PI["project-init"]
   end
@@ -1002,171 +960,94 @@ drift — even after many turns, the agent is reminded to invoke skills rather t
   style Review fill:#06b6d4,color:#000
   style Infra fill:#14b8a6,color:#000
   style Lifecycle fill:#64748b,color:#fff
-  style SetupRecovery fill:#64748b,color:#fff
+  style Setup fill:#64748b,color:#fff
   style Research fill:#8b5cf6,color:#fff
   style Writing fill:#ec4899,color:#fff</code></pre>
-<h2 id="all-skills">All Skills</h2>
+<h2 id="all-skills">All skills</h2>
 <h3 id="using-superpowers">using-superpowers</h3>
-<p><strong>Category:</strong> Meta / Entry</p>
-<p><strong>Trigger:</strong> Use when starting any conversation — establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions.</p>
-<p>The bootstrap skill injected at every session start. It establishes the skill invocation protocol and
-routes the agent to the correct skill for the current task. All other skills depend on this one
-having been loaded first.</p>
+<p>Bootstrap skill injected at every session start. Routes the agent to the correct skill for the current task. All other skills depend on this one having loaded first.</p>
 <h3 id="writing-skills">writing-skills</h3>
-<p><strong>Category:</strong> Meta / Entry</p>
-<p><strong>Trigger:</strong> Use when creating new skills, editing existing skills, or verifying skills work before deployment.</p>
-<p>The meta-skill for managing the skill library itself. Enforces TDD-for-process-docs: new skills must
-have a failing test before the SKILL.md is written, and the frontmatter description must be a trigger
-condition, not a workflow summary.</p>
+<p>Meta-skill for creating and modifying skills. Enforces TDD-for-process-docs: new skills need a failing test before the SKILL.md is written. Frontmatter descriptions must be trigger conditions, not workflow summaries (see CSO in <a href="../methodology/">Methodology</a>).</p>
 <h3 id="brainstorming">brainstorming</h3>
-<p><strong>Category:</strong> Design &amp; Planning</p>
-<p><strong>Trigger:</strong> You MUST use this before any creative work — creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation.</p>
-<p>Socratic design exploration before any code is written. The agent asks structured questions to surface
-requirements, constraints, and design alternatives. Each brainstorming session produces beads capturing
-the agreed design direction.</p>
+<p><strong>Trigger:</strong> Before any creative work — features, components, or behavior changes.</p>
+<p>Socratic design exploration. Asks structured questions to surface requirements, constraints, and design alternatives. Produces a committed design spec. Ends by invoking <code>writing-plans</code>, not by jumping to code.</p>
 <h3 id="writing-plans">writing-plans</h3>
-<p><strong>Category:</strong> Design &amp; Planning</p>
-<p><strong>Trigger:</strong> Use when you have a spec or requirements for a multi-step task, before touching code.</p>
-<p>Translates a design or spec into a bite-sized, phase-by-phase implementation plan where every task
-becomes a bead. Plans include acceptance criteria, dependency ordering, and an explicit verification
-step per phase so the implementer can verify before proceeding.</p>
+<p><strong>Trigger:</strong> When you have a spec or requirements for a multi-step task.</p>
+<p>Breaks a design into bite-sized tasks (2–5 minutes each) with exact file paths, code, and verification steps. Every task becomes a bead with dependency ordering.</p>
 <h3 id="stress-test">stress-test</h3>
-<p><strong>Category:</strong> Design &amp; Planning</p>
-<p><strong>Trigger:</strong> Use when a design, plan, or decision needs adversarial scrutiny before proceeding. Interrogates every branch of the decision tree, providing recommended answers and forcing explicit agreement or pushback. Triggers on "grill me", "stress test this", "poke holes", "challenge this design", or when brainstorming/writing-plans suggests review.</p>
-<p>Adversarial interrogation of a design or plan with recommended answers for each challenge. Forces the
-author to either accept or explicitly reject each critique. Typically runs after brainstorming and
-before writing-plans in the design pipeline.</p>
+<p><strong>Trigger:</strong> When a design or plan needs adversarial scrutiny. Also triggers on "grill me", "poke holes", "challenge this design".</p>
+<p>Interrogates every branch of the decision tree with recommended answers, forcing explicit agreement or rejection of each critique. Typically runs between brainstorming and writing-plans.</p>
 <h3 id="subagent-driven-development">subagent-driven-development</h3>
-<p><strong>Category:</strong> Execution</p>
-<p><strong>Trigger:</strong> Use when executing implementation plans with independent tasks in the current session.</p>
-<p>Dispatches a fresh subagent per task from a written plan, with two-stage code review between tasks.
-The orchestrating agent tracks beads; subagents are not permitted to touch beads directly. Each task
-lands with a review checkpoint before the next task is started. When multiple tasks are unblocked,
-<strong>parallel batch mode</strong> executes up to 5 subagents concurrently, each in its own per-task worktree.</p>
+<p><strong>Trigger:</strong> When executing a plan with independent tasks.</p>
+<p>Dispatches a fresh subagent per task with two-stage code review between tasks. The orchestrator tracks beads; subagents don't touch them. When multiple tasks are unblocked, <strong>parallel batch mode</strong> runs up to 5 concurrently, each in its own worktree.</p>
 <h3 id="executing-plans">executing-plans</h3>
-<p><strong>Category:</strong> Execution</p>
-<p><strong>Trigger:</strong> Use when you have a written implementation plan to execute in a separate session with review checkpoints.</p>
-<p>Executes a multi-phase plan in a single session with explicit checkpoints between phases. Each phase
-is claimed, implemented, verified against acceptance criteria, and closed before the next phase begins.
-Designed to complement written-plans output directly.</p>
+<p><strong>Trigger:</strong> When executing a plan in a single session with review checkpoints.</p>
+<p>Runs a multi-phase plan sequentially: claim, implement, verify against acceptance criteria, close, next phase. Designed to complement <code>writing-plans</code> output directly.</p>
 <h3 id="dispatching-parallel-agents">dispatching-parallel-agents</h3>
-<p><strong>Category:</strong> Execution</p>
-<p><strong>Trigger:</strong> Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies.</p>
-<p>Coordinates multiple concurrent subagents for independent parallel work — plan tasks, subsystem
-changes, or any set of changes without shared state. Enforces strict isolation — agents must not
-share mutable state or touch the same files. Results are collected and merged by the orchestrator
-after all agents complete. Also used by SDD's parallel batch mode for the dispatch pattern.</p>
+<p><strong>Trigger:</strong> When facing 2+ independent tasks without shared state.</p>
+<p>Coordinates concurrent subagents for independent work — plan tasks, subsystem changes, anything without shared mutable state. Used by SDD's parallel batch mode for the dispatch pattern.</p>
 <h3 id="test-driven-development">test-driven-development</h3>
-<p><strong>Category:</strong> Quality</p>
-<p><strong>Trigger:</strong> Use when implementing any feature or bugfix, before writing implementation code.</p>
-<p>Enforces the RED-GREEN-REFACTOR cycle as an Iron Law: no implementation code may be written until a
-failing test exists. The skill prevents bypassing the red phase by requiring explicit evidence of the
-failing test output before any production code is touched.</p>
+<p><strong>Trigger:</strong> Before writing any implementation code.</p>
+<p>Iron Law: no production code without a failing test first. Requires explicit evidence of the failing test output before any implementation is touched. RED-GREEN-REFACTOR, no shortcuts.</p>
 <h3 id="systematic-debugging">systematic-debugging</h3>
-<p><strong>Category:</strong> Quality</p>
-<p><strong>Trigger:</strong> Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes.</p>
-<p>Four-phase root cause analysis: observe, hypothesize, isolate, fix. Prevents premature fixes by
-requiring a confirmed root cause before any code change is proposed. Anti-rationalization table
-blocks common shortcuts like "just try this and see".</p>
+<p><strong>Trigger:</strong> Any bug, test failure, or unexpected behavior — before proposing fixes.</p>
+<p>Four-phase root cause analysis: observe, hypothesize, isolate, fix. Requires a confirmed root cause before any code change. Blocks "just try this and see."</p>
 <h3 id="verification-before-completion">verification-before-completion</h3>
-<p><strong>Category:</strong> Quality</p>
-<p><strong>Trigger:</strong> Use when about to claim work is complete, fixed, or passing, before committing or creating PRs — requires running verification commands and confirming output before making any success claims; evidence before assertions always.</p>
-<p>Mandatory evidence collection before any "done" claim. The agent must run verification commands and
-show the actual output — not assert from memory — before closing a bead or creating a PR. Prevents
-hallucinated test results.</p>
+<p><strong>Trigger:</strong> Before claiming work is done, fixed, or passing.</p>
+<p>The agent must run verification commands and show actual output — not assert from memory — before closing a bead or creating a PR. Evidence before assertions, always.</p>
 <h3 id="requesting-code-review">requesting-code-review</h3>
-<p><strong>Category:</strong> Review</p>
-<p><strong>Trigger:</strong> Use when completing tasks, implementing major features, or before merging to verify work meets requirements.</p>
-<p>Dispatches a dedicated code reviewer subagent after implementation is complete. The reviewer runs two
-stages: spec compliance first, then code quality. The reviewing agent is given the original
-requirements alongside the diff so it can check both correctness and cleanliness.</p>
+<p><strong>Trigger:</strong> After completing tasks, major features, or before merging.</p>
+<p>Dispatches a code reviewer subagent that runs two stages: spec compliance first, then code quality. The reviewer gets the original requirements alongside the diff.</p>
 <h3 id="receiving-code-review">receiving-code-review</h3>
-<p><strong>Category:</strong> Review</p>
-<p><strong>Trigger:</strong> Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable — requires technical rigor and verification, not performative agreement or blind implementation.</p>
-<p>Anti-sycophancy protocol for receiving review feedback. Requires the implementer to evaluate each
-suggestion technically rather than accepting blindly to avoid conflict. Escalates disagreements
-explicitly rather than silently ignoring or silently complying.</p>
+<p><strong>Trigger:</strong> When review feedback arrives, especially if unclear or questionable.</p>
+<p>Anti-sycophancy protocol. Requires technical evaluation of each suggestion rather than blind acceptance. Escalates disagreements explicitly.</p>
 <h3 id="using-git-worktrees">using-git-worktrees</h3>
-<p><strong>Category:</strong> Infrastructure</p>
-<p><strong>Trigger:</strong> Use when starting feature work that needs isolation from current workspace or before executing implementation plans — creates isolated git worktrees with smart directory selection and safety verification.</p>
-<p>Creates and manages isolated git worktrees for feature work using <code>bd worktree</code> commands. Includes
-safety checks, smart directory selection, and teardown instructions. Supports <strong>multiple concurrent
-worktrees</strong> for parallel subagent work — the orchestrator creates one <code>bd worktree</code> per task (max 5)
-and manages the full lifecycle.</p>
+<p><strong>Trigger:</strong> Feature work needing isolation, or before executing plans.</p>
+<p>Creates and manages isolated git worktrees via <code>bd worktree</code>. Supports multiple concurrent worktrees for parallel subagent work — one per task, max 5.</p>
 <h3 id="finishing-a-development-branch">finishing-a-development-branch</h3>
-<p><strong>Category:</strong> Infrastructure</p>
-<p><strong>Trigger:</strong> Use when implementation is complete, all tests pass, and you need to decide how to integrate the work — guides completion of development work by presenting structured options for merge, PR, or cleanup.</p>
-<p>Structured decision tree for integrating a completed branch: direct merge vs. PR, squash vs. rebase,
-and the mandatory "Land the Plane" sequence: <code>bd close</code> completed beads, <code>bd dolt push</code>
-to sync, then <code>git push</code> to remote. Ensures nothing is left half-open.</p>
+<p><strong>Trigger:</strong> Implementation complete, tests pass, ready to integrate.</p>
+<p>Decision tree: merge locally, create PR, keep branch, or discard. Ends with the mandatory Land the Plane sequence: <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code>.</p>
 <h3 id="document-release">document-release</h3>
-<p><strong>Category:</strong> Lifecycle</p>
-<p><strong>Trigger:</strong> Use after code changes are committed but before PR merge to ensure all project documentation accurately reflects shipped code. Covers README, ARCHITECTURE, CONTRIBUTING, CHANGELOG, CLAUDE.md, TODOS, and VERSION files.</p>
-<p>Post-ship documentation audit that walks through every documentation file to find and fix drift
-between docs and the shipped code. Checks README, CHANGELOG, CLAUDE.md, ARCHITECTURE, CONTRIBUTING,
-and VERSION files against the actual state of the codebase.</p>
+<p><strong>Trigger:</strong> After code changes are committed, before PR merge.</p>
+<p>Walks through README, CHANGELOG, CLAUDE.md, CONTRIBUTING, and other docs to find and fix drift against shipped code.</p>
 <h3 id="getting-up-to-speed">getting-up-to-speed</h3>
-<p><strong>Category:</strong> Lifecycle</p>
-<p><strong>Trigger:</strong> Use at the start of a session, after compaction, or whenever you need to orient on an unfamiliar or stale codebase. Loads beads context, deep-dives the codebase, and produces a structured current-state summary. Triggers on phrases like "catch me up", "where are we", "orient me", "what's the state of this project".</p>
-<p>Session orientation workflow: runs <code>bd prime</code> to load beads context, performs an adaptive
-deep-dive of the codebase based on what has changed recently, and produces a structured current-state
-summary so work can continue without re-reading everything from scratch.</p>
+<p><strong>Trigger:</strong> Session start, after compaction, or "catch me up" / "where are we".</p>
+<p>Runs <code>bd prime</code>, deep-dives the codebase (adaptive to repo size), and produces a structured current-state summary.</p>
 <h3 id="auditing-upstream-drift">auditing-upstream-drift</h3>
-<p><strong>Category:</strong> Lifecycle</p>
-<p><strong>Trigger:</strong> Use when checking if beads-superpowers is outdated, before a plugin release, or when auditing for missing capabilities — covers upstream drift, test execution, documentation, plugin health, and content integrity.</p>
-<p>Periodic audit against the upstream sources (<a href="https://github.com/obra/superpowers">obra/superpowers</a>
-and <a href="https://github.com/gastownhall/beads">gastownhall/beads</a>) to detect new skills, changed
-commands, and documentation improvements that should be ported into this fork.</p>
+<p><strong>Trigger:</strong> Before a plugin release, or when checking for staleness.</p>
+<p>Audits against <a href="https://github.com/obra/superpowers">obra/superpowers</a> and <a href="https://github.com/gastownhall/beads">gastownhall/beads</a> for new skills, changed commands, and documentation improvements to port.</p>
 <h3 id="setup">setup</h3>
-<p><strong>Category:</strong> Setup / Recovery</p>
-<p><strong>Trigger:</strong> Use after installing beads-superpowers skills via npx to configure the SessionStart hook that makes skills auto-activate. Also use when skills are installed but not triggering automatically, or when the user says "set up beads-superpowers", "configure hooks", or "skills aren't activating".</p>
-<p>Post-installation configuration: registers the SessionStart hook in <code>.claude/settings.json</code>
-so that <code>using-superpowers</code> and <code>bd prime</code> fire automatically at the start of
-every session. Also detects and removes duplicate hooks if <code>bd setup claude</code> was run separately.</p>
+<p><strong>Trigger:</strong> After npx install, or when skills aren't activating.</p>
+<p>Registers the SessionStart hook in <code>.claude/settings.json</code> so skills activate automatically. Detects and removes duplicate hooks from <code>bd setup claude</code>.</p>
 <h3 id="project-init">project-init</h3>
-<p><strong>Category:</strong> Setup / Recovery</p>
-<p><strong>Trigger:</strong> Use when beads/Dolt database initialization fails, when bd commands return errors about missing databases, when setting up beads in a new project, or when recovering from diverged Dolt history. Handles fresh init, bootstrap from remote, and recovery workflows.</p>
-<p>Three-path workflow for beads/Dolt database management: fresh initialization in a new project,
-bootstrap from an existing remote when the local DB is missing, and recovery when Dolt history has
-diverged and needs a hard reset. Prevents data loss by confirming the correct path before executing.</p>
+<p><strong>Trigger:</strong> When <code>bd</code> commands fail, setting up beads in a new project, or recovering from diverged Dolt history.</p>
+<p>Three paths: fresh init, bootstrap from remote, or recovery when Dolt history has diverged.</p>
 <h3 id="research-driven-development">research-driven-development</h3>
-<p><strong>Category:</strong> Research</p>
-<p><strong>Trigger:</strong> Use when the user asks a question about a topic, requests research, or when you need to understand something before planning. Dispatches parallel research agents, synthesizes findings into a persistent document.</p>
-<p>Dispatches a researcher subagent (via <code>researcher-prompt.md</code> with <code>subagent_type: "general-purpose"</code>)
-and <code>@explore</code> (codebase) in parallel, then synthesizes their findings into a structured research
-document. The output directory is resolved at skill load time via DCI, with a configurable three-tier
-priority: per-project config, environment variable, or <code>./docs/research</code> default.
-Iron Law: NO RESEARCH WITHOUT A DOCUMENT — verbal answers without persistent artifacts are prohibited.</p>
+<p><strong>Trigger:</strong> Research questions, "what is X", "how does Y work", "compare A vs B".</p>
+<p>Dispatches a researcher subagent and <code>@explore</code> in parallel, synthesizes findings into a persistent document. Iron Law: no research without a document — verbal answers without persistent artifacts are prohibited.</p>
 <h3 id="write-documentation">write-documentation</h3>
-<p><strong>Category:</strong> Writing</p>
-<p><strong>Trigger:</strong> Use when writing or substantially rewriting human-facing prose: documentation, README, guides, blog posts, emails, Slack messages, PR descriptions, release notes, or any text a human will read.</p>
-<p>Adapts the <a href="https://github.com/Anbeeld/WRITING.md">WRITING.md</a> 14-rule writing system
-for AI-generated prose. Uses a context-first drafting workflow: identify medium and audience, draft
-with rules internalized, run required checks as a revision pass, cut genericity, and present.
-Targets the specific patterns that make LLM prose recognizable (regularity, catalog prose,
-service-desk tone, false crispness) without faking humanity. Pairs with
-<code>document-release</code> (which handles <em>when</em> to update docs, not <em>how</em> to write them).</p>
-<h2 id="beads-commands">Beads Commands</h2>
-<p>Skills use <code>bd</code> commands to create, track, and close beads (tasks). Only the orchestrating
-agent manages beads — subagents do not touch them directly.</p>
+<p><strong>Trigger:</strong> Writing or rewriting human-facing prose — docs, guides, emails, PR descriptions, release notes.</p>
+<p>14-rule writing system adapted from <a href="https://github.com/Anbeeld/WRITING.md">WRITING.md</a>. Context-first drafting, required checks as revision pass, targets the patterns that make LLM prose recognizable (regularity, catalog prose, false crispness). Pairs with <code>document-release</code> (which handles <em>when</em> to update, not <em>how</em> to write).</p>
+<h2 id="beads-commands">Beads commands</h2>
+<p>Skills use <code>bd</code> commands to track work. Only the orchestrating agent manages beads — subagents don't touch them.</p>
 <table>
 <thead>
 <tr>
 <th>Action</th>
 <th>Command</th>
-<th>Used In</th>
+<th>Used in</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Create epic</td>
 <td><code>bd create "Epic: name" -t epic</code></td>
-<td>subagent-driven-development, executing-plans</td>
+<td>SDD, executing-plans</td>
 </tr>
 <tr>
 <td>Create task</td>
 <td><code>bd create "Task: name" -t task --parent &lt;epic&gt;</code></td>
-<td>subagent-driven-development, executing-plans</td>
+<td>SDD, executing-plans</td>
 </tr>
 <tr>
 <td>Quick capture</td>
@@ -1180,18 +1061,18 @@ agent manages beads — subagents do not touch them directly.</p>
 </tr>
 <tr>
 <td>Complete work</td>
-<td><code>bd close &lt;id&gt; --reason "description"</code></td>
+<td><code>bd close &lt;id&gt; --reason "why"</code></td>
 <td>all execution skills</td>
 </tr>
 <tr>
 <td>Check remaining</td>
 <td><code>bd ready --parent &lt;epic&gt;</code></td>
-<td>subagent-driven-development, executing-plans</td>
+<td>SDD, executing-plans</td>
 </tr>
 <tr>
 <td>Add dependency</td>
 <td><code>bd dep add &lt;child&gt; &lt;parent&gt;</code></td>
-<td>subagent-driven-development, writing-plans</td>
+<td>SDD, writing-plans</td>
 </tr>
 <tr>
 <td>Store learning</td>
@@ -1199,36 +1080,18 @@ agent manages beads — subagents do not touch them directly.</p>
 <td>any session</td>
 </tr>
 <tr>
-<td>Remove stale memory</td>
-<td><code>bd forget &lt;id&gt;</code></td>
-<td>any session</td>
-</tr>
-<tr>
-<td>Append note to bead</td>
+<td>Attach evidence</td>
 <td><code>bd note &lt;id&gt; "context"</code></td>
-<td>verification-before-completion</td>
-</tr>
-<tr>
-<td>Find duplicate beads</td>
-<td><code>bd find-duplicates</code></td>
-<td>finishing-a-development-branch</td>
+<td>verification</td>
 </tr>
 <tr>
 <td>Sync to remote</td>
 <td><code>bd dolt push</code></td>
 <td>finishing-a-development-branch</td>
 </tr>
-<tr>
-<td>Session context</td>
-<td><code>bd prime</code></td>
-<td>SessionStart hook (automatic)</td>
-</tr>
 </tbody>
 </table>
-<h2 id="how-skills-chain-together">How Skills Chain Together</h2>
-<p>The <strong>using-superpowers</strong> skill is the entry point loaded by the SessionStart hook at
-every session. It establishes the invocation protocol and determines which skill (if any) applies
-to the current task. From there, skills chain naturally through a typical development workflow:</p>
+<h2 id="how-skills-chain">How skills chain</h2>
 <pre class="mermaid"><code>graph TD
   US["using-superpowers&lt;br/&gt;(bootstrap)"] --&gt; B["brainstorming"]
   US --&gt; TDD["test-driven-development"]
@@ -1249,26 +1112,8 @@ to the current task. From there, skills chain naturally through a typical develo
   style FAB fill:#f59e0b,color:#000
   style TDD fill:#22c55e,color:#000
   style SD fill:#ef4444,color:#fff</code></pre>
-<ol>
-<li><strong>brainstorming</strong> — explore design and requirements before any code</li>
-<li><strong>stress-test</strong> — adversarially interrogate the design</li>
-<li><strong>writing-plans</strong> — produce a beads-backed implementation plan</li>
-<li><strong>subagent-driven-development</strong> or <strong>executing-plans</strong> — execute the plan</li>
-<li><strong>test-driven-development</strong> — RED-GREEN-REFACTOR inside each task</li>
-<li><strong>requesting-code-review</strong> — two-stage review after implementation</li>
-<li><strong>verification-before-completion</strong> — evidence before any "done" claim</li>
-<li><strong>document-release</strong> — sync docs to match shipped code</li>
-<li><strong>finishing-a-development-branch</strong> — merge decision tree + Land the Plane</li>
-</ol>
-<p>Skills like <strong>systematic-debugging</strong> and <strong>verification-before-completion</strong>
-fire whenever their trigger condition is met regardless of where in the workflow the session is.
-Skills are not optional stages — they are mandatory enforcement gates.</p>
-<div class="admonition info">
-<p class="admonition-title">Mandatory enforcement</p>
-<p>The using-superpowers skill states: <em>"IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE.
-YOU MUST USE IT."</em> This is not a suggestion. The enforcement language in each skill is intentionally
-prescriptive to prevent rationalization.</p>
-</div>
+<p>The typical flow: brainstorming → stress-test → writing-plans → SDD/executing-plans → code review → verification → document-release → finishing-a-development-branch.</p>
+<p>Skills like <code>systematic-debugging</code> and <code>verification-before-completion</code> fire whenever their trigger is met, regardless of where in the workflow you are.</p>
 
 
 

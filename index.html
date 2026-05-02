@@ -318,10 +318,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#quick-start" class="md-nav__link">
+  <a href="#where-to-start" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick Start
+        Where to start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install
       
     </span>
   </a>
@@ -492,16 +503,19 @@
 
 
 <h1 id="beads-superpowers">beads-superpowers</h1>
-<p>Process discipline and persistent memory for AI coding agents.</p>
-<p>This plugin includes <strong>22</strong> composable skills and a Dolt-backed
-task database. Version: <strong>v0.5.1</strong>.</p>
-<h2 id="quick-start">Quick Start</h2>
+<p>A Claude Code plugin with <strong>22</strong> skills that enforce development practices — TDD, systematic debugging, design-before-code, two-stage code review — and a persistent issue tracker that remembers context across sessions.</p>
+<p>The skills come from <a href="https://github.com/obra/superpowers">Superpowers</a> by Jesse Vincent. The tracker comes from <a href="https://github.com/gastownhall/beads">Beads</a> by Steve Yegge. This plugin wires them together so skills create and close issues as they run, and the tracker feeds context back into each new session.</p>
+<p><strong>Current version:</strong> v0.5.1 · 22 skills</p>
+<h2 id="where-to-start">Where to start</h2>
+<p><strong><a href="getting-started/">Getting Started</a></strong> if you want to install and configure the plugin.</p>
+<p><strong><a href="methodology/">Methodology</a></strong> if you want to understand the development lifecycle before installing.</p>
+<p><strong><a href="skills/">Skills Reference</a></strong> if you already have it installed and want to know what each skill does.</p>
+<p><strong><a href="workflow/">Example Workflow</a></strong> if you want a ready-to-use orchestrator agent that ties everything together.</p>
+<p><strong><a href="tips/">Tips &amp; Tricks</a></strong> for the cheat sheet and common issues.</p>
+<h2 id="install">Install</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
 </code></pre></div>
-<p>Then in any project:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bd<span class="w"> </span>init
-</code></pre></div>
-<p>That's it. 22 skills are now active. Run <code>/skills</code> in Claude Code to verify.</p>
+<p>Then in any project: <code>bd init</code>. Run <code>/skills</code> in Claude Code to confirm.</p>
 
 
 
