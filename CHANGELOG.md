@@ -47,6 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - `example-workflow/agents/yegge.md` KB document workflow had broken DCI syntax (`` `!`\`bash...\` `` — escaped backticks, `!` in its own code span). DCI does not work in agent `.md` files (only `SKILL.md` and `.claude/commands/*.md`), so the path is now delegated to the research-driven-development skill's DCI. Empirically confirmed via `claude --print --agent dci-test`.
 - `CLAUDE.md` Plugin Structure tree was stale — missing `docs-src/`, `example-workflow/`, `assets/`, `hooks/superpowers-reminder.sh`, `scripts/sync-skill-count.sh`, `scripts/build-docs.sh`, `install.sh`, `mkdocs.yml`. Added full directory layout with accurate descriptions.
+- `subagent-driven-development` implementer dispatch used `subagent_type: "implementer"` — Claude Code's built-in agent type overrides the prompt template. Changed to `"general-purpose"` to match the researcher dispatch pattern. Updated SKILL.md (parallel batch walkthrough + Prompt Templates section) and `implementer-prompt.md`.
 
 ## [0.5.1] - 2026-05-01
 
