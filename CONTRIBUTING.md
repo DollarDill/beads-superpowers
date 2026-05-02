@@ -17,7 +17,7 @@ git switch -c feat/my-improvement
 
 ## Making changes
 
-**Skills:** Read the closest existing skill first — match its tone and structure. Use `bd` commands for task tracking. Update `CHANGELOG.md` when you're done.
+**Skills:** Read the closest existing skill first — match its tone and structure. Use `bd` commands for task tracking. Include a `bd remember` prompt at the skill's natural completion point (see existing skills for the pattern). Update `CHANGELOG.md` when you're done.
 
 **Hooks and scripts:** The session-start hook is bash on Unix, batch on Windows (polyglot via `run-hook.cmd`). See `.internal/windows/polyglot-hooks.md` for cross-platform details.
 

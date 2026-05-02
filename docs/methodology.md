@@ -122,7 +122,7 @@ Work is not done until both task state (`bd dolt push`) and code (`git push`) re
 
 ## Agent memory
 
-Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow.
+Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow. 17 of {{ skill_count }} skills now prompt for `bd remember` at their natural completion points — root causes after debugging, design decisions after brainstorming, review insights after code review — so memory capture happens within the skill workflow, not as a separate step.
 
 | Memory Type | Beads Feature | What it answers |
 |-------------|---------------|-----------------|

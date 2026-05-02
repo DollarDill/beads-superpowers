@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > **Forked from:** [obra/superpowers](https://github.com/obra/superpowers) v5.0.7 (2026-03-31)
 > **Beads integration based on:** [gastownhall/beads](https://github.com/gastownhall/beads) v1.0.2 (2026-04-15)
 
+## [Unreleased]
+
+### Added
+
+- `bd remember` prompts in 17 of 22 skills — agents are now prompted to capture persistent learnings at each skill's natural completion point. Hybrid approach: mandatory capture in 3 high-signal skills (`systematic-debugging`, `receiving-code-review`, `brainstorming`), conditional in 13 others, stale memory cleanup in `getting-up-to-speed`. Prefix conventions match the orchestrator's pattern (`root cause:`, `lesson:`, `design:`, `review:`, etc).
+
 ## [0.5.2] - 2026-05-03
 
 ### Added

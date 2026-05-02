@@ -245,7 +245,7 @@ Skills use `bd` commands to track work. Only the orchestrating agent manages bea
 | Complete work | `bd close <id> --reason "why"` | all execution skills |
 | Check remaining | `bd ready --parent <epic>` | SDD, executing-plans |
 | Add dependency | `bd dep add <child> <parent>` | SDD, writing-plans |
-| Store learning | `bd remember "insight"` | any session |
+| Store learning | `bd remember "insight"` | 17 of {{ skill_count }} skills prompt for this |
 | Attach evidence | `bd note <id> "context"` | verification |
 | Sync to remote | `bd dolt push` | finishing-a-development-branch |
 
