@@ -95,7 +95,7 @@ If `bd setup claude` hooks are installed in `.claude/settings.json`, this plugin
 | brainstorming | Socratic design before code — creates session beads |
 | stress-test | Adversarial design interrogation with recommended answers |
 | writing-plans | Bite-sized task plans — each task becomes a bead |
-| subagent-driven-development | Fresh agent per task + two-stage review |
+| subagent-driven-development | Fresh agent per task + two-stage review; parallel batch mode for independent tasks |
 | executing-plans | Batch execution in single session |
 | test-driven-development | RED-GREEN-REFACTOR — Iron Law: no code without failing test |
 | systematic-debugging | 4-phase root cause analysis before proposing fixes |

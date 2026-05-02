@@ -7,6 +7,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > **Forked from:** [obra/superpowers](https://github.com/obra/superpowers) v5.0.7 (2026-03-31)
 > **Beads integration based on:** [gastownhall/beads](https://github.com/gastownhall/beads) v1.0.2 (2026-04-15)
 
+## [Unreleased]
+
+### Added
+
+- Parallel Batch Mode in `subagent-driven-development` — independent plan tasks now execute in parallel (max 5 per batch), each in its own `bd worktree`, with automatic mode selection via `bd ready --parent`. Includes batch execution flow diagram, failed task handling, and mode selection logic.
+- SDD Integration section in `dispatching-parallel-agents` — documents how SDD uses the parallel dispatch pattern with per-task worktrees.
+- Multiple Worktrees for Parallel Subagents section in `using-git-worktrees` — documents the orchestrator-managed multi-worktree pattern.
+
+### Changed
+
+- `subagent-driven-development` "The Process" renamed to "The Process (Sequential Mode)" with cross-reference to new Parallel Batch Mode section.
+- `subagent-driven-development` Red Flags: replaced blanket parallel prohibition with 3 specific guardrails (require per-task worktree, max 5 cap, no Claude `isolation: "worktree"` parameter).
+- `subagent-driven-development` Integration section: added `dispatching-parallel-agents`, `receiving-code-review`, `using-git-worktrees` (parallel mode), and `systematic-debugging` references.
+- `dispatching-parallel-agents` generalized from bug-fixing to any independent parallel work (plan tasks, subsystem changes).
+
 ## [0.5.1] - 2026-05-01
 
 ### Added
