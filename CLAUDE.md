@@ -134,7 +134,7 @@ If `bd setup claude` hooks are installed in `.claude/settings.json`, this plugin
 
 1. **Do NOT remove** anti-rationalization tables, Iron Laws, or Red Flags sections
 2. **Do NOT add** TodoWrite references — use `bd` commands
-3. **Do NOT modify** subagent prompts (implementer, spec-reviewer, code-quality-reviewer) with beads commands — orchestrator only
+3. **Do NOT modify** subagent review prompts (spec-reviewer, code-quality-reviewer) with beads commands — orchestrator only. Exception: `implementer-prompt.md` IS beads-aware by design (includes skill invocations, bead lifecycle, LSP instructions).
 4. Verify after changes: `grep -r "TodoWrite" skills/ | grep -v "Do NOT use" | grep -v "replaces"` — must return empty
 
 ### Key Anti-Patterns

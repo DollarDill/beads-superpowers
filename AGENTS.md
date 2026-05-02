@@ -1,6 +1,6 @@
 # Agent Instructions
 
-This project is a **Claude Code plugin** (beads-superpowers). It provides 21 skills for AI coding agents with integrated beads issue tracking.
+This project is a **Claude Code plugin** (beads-superpowers). It provides 22 skills for AI coding agents with integrated beads issue tracking.
 
 ## Beads Issue Tracking
 
@@ -27,7 +27,7 @@ When modifying skills in this repo:
 - All task tracking uses `bd` commands — never TodoWrite
 - Test changes by verifying `grep -r "TodoWrite" skills/` returns only prohibition references
 - The SessionStart hook at `hooks/session-start` injects `using-superpowers` + `bd prime`
-- Subagent prompt files are NOT beads-aware (orchestrator-only design)
+- Subagent review prompts (spec-reviewer, code-quality-reviewer) are NOT beads-aware — orchestrator only. Exception: `implementer-prompt.md` IS beads-aware (includes skill invocations, bead lifecycle, LSP instructions).
 - Run the Quick Audit before releasing: see `skills/auditing-upstream-drift/SKILL.md`
 
 ## Tests

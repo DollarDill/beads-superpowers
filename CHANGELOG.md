@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Parallel Batch Mode in `subagent-driven-development` — independent plan tasks now execute in parallel (max 5 per batch), each in its own `bd worktree`, with automatic mode selection via `bd ready --parent`. Includes batch execution flow diagram, failed task handling, and mode selection logic.
 - SDD Integration section in `dispatching-parallel-agents` — documents how SDD uses the parallel dispatch pattern with per-task worktrees.
 - Multiple Worktrees for Parallel Subagents section in `using-git-worktrees` — documents the orchestrator-managed multi-worktree pattern.
+- Dynamic Context Injection (DCI) for `research-driven-development` output path — uses Claude Code's `!` backtick syntax to resolve the research directory at skill load time. Configurable via `bd config set custom.research-output-dir` (per-project) or `RESEARCH_OUTPUT_DIR` env var (global). Resolver script: `skills/research-driven-development/resolve-output-dir.sh`.
 
 ### Changed
 
@@ -21,6 +22,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `subagent-driven-development` Red Flags: replaced blanket parallel prohibition with 3 specific guardrails (require per-task worktree, max 5 cap, no Claude `isolation: "worktree"` parameter).
 - `subagent-driven-development` Integration section: added `dispatching-parallel-agents`, `receiving-code-review`, `using-git-worktrees` (parallel mode), and `systematic-debugging` references.
 - `dispatching-parallel-agents` generalized from bug-fixing to any independent parallel work (plan tasks, subsystem changes).
+- `implementer-prompt.md` rewritten as single source of truth for implementer behaviour — now includes beads lifecycle (`bd update --claim`, `bd close --reason`), mandatory skill invocations (TDD, systematic-debugging, verification-before-completion), LSP-first code navigation, and phase execution workflow.
+- `research-driven-development` decoupled from FSM — removed "FSM state S2" reference so skill works standalone.
+- `example-workflow/CLAUDE.md` FSM table: S2 references `Skill(research-driven-development)` instead of manual agent dispatch; S7 notes parallel batch mode; S9 adds `write-documentation` skill; Session Start includes optional `getting-up-to-speed`.
+- `example-workflow/CLAUDE.md` Agent Configuration: implementer dispatched via SDD prompt template (no separate agent file); only researcher recommended as user-provided agent.
+
+### Removed
+
+- `agents/implementer.md` — removed to avoid upstream drift; all implementer instructions now in `implementer-prompt.md`.
+- `example-workflow/agents/implementer.md` — redundant with prompt template; single source of truth eliminates drift.
 
 ## [0.5.1] - 2026-05-01
 
