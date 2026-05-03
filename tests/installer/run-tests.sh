@@ -52,6 +52,7 @@ tar czf "$tarball" \
     --transform "s,^,beads-superpowers-${version}/," \
     skills/ hooks/ example-workflow/ .claude-plugin/ agents/
 
+chmod 644 "$tarball"  # readable by container's non-root user
 info "Tarball: $(du -h "$tarball" | cut -f1)"
 
 # --- Build Docker image ---
