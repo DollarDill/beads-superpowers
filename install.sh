@@ -162,7 +162,7 @@ detect_existing_install() {
 }
 
 detect_beads() {
-  command -v bd >/dev/null 2>&1 && HAS_BEADS=true || true
+  if command -v bd >/dev/null 2>&1; then HAS_BEADS=true; fi
 }
 
 # --- Phase 2: Consent ---
@@ -194,7 +194,7 @@ wait_for_consent() {
 do_install() {
   local tmpdir
   tmpdir=$(mktemp -d)
-  trap "rm -rf '$tmpdir'" EXIT
+  trap 'rm -rf "'"$tmpdir"'"' EXIT
 
   info "Downloading beads-superpowers v$VERSION..."
   local tarball_url="https://github.com/$REPO/archive/refs/tags/v${VERSION}.tar.gz"
@@ -241,9 +241,10 @@ do_install() {
   write_reminder_script
 
   if [ -f "$SETTINGS_FILE" ]; then
-    local backup="${SETTINGS_FILE}.backup-$(date +%Y%m%d-%H%M%S)"
+    local backup
+    backup="${SETTINGS_FILE}.backup-$(date +%Y%m%d-%H%M%S)"
     cp -f "$SETTINGS_FILE" "$backup"
-    info "Settings backup: $(echo "$backup" | sed "s|$HOME|~|")"
+    info "Settings backup: ${backup/$HOME/\~}"
   fi
 
   info "Registering hook in settings.json..."

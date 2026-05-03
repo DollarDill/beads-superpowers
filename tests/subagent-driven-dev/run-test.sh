@@ -37,7 +37,7 @@ TEST_DIR="$SCRIPT_DIR/$TEST_NAME"
 if [[ ! -d "$TEST_DIR" ]]; then
   echo "Error: Test '$TEST_NAME' not found at $TEST_DIR"
   echo "Available tests:"
-  ls -1 "$SCRIPT_DIR" | grep -v '\.sh$' | grep -v '\.md$'
+  find "$SCRIPT_DIR" -maxdepth 1 -mindepth 1 -not -name '*.sh' -not -name '*.md' -printf '%f\n'
   exit 1
 fi
 

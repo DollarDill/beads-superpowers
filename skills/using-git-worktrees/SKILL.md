@@ -283,4 +283,3 @@ bd remember "worktree: <gotcha or workaround>"
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline
-

@@ -4,6 +4,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=test-helpers.sh
 source "$SCRIPT_DIR/test-helpers.sh"
 
 echo "=== Test: subagent-driven-development skill ==="

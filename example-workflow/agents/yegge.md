@@ -32,11 +32,13 @@ Not every request needs the full FSM workflow. Triage incoming requests and rout
 **KB document workflow:** Invoke `Skill(beads-superpowers:research-driven-development)` — the skill resolves the output directory and lists category subdirectories dynamically via DCI at load time. Follow the skill's Step 5: pick the subdirectory that best matches the research topic (or write to the base directory if no category fits). Search for existing coverage first using `bd memories <keyword>` and searching the research directory. After writing, commit the document.
 
 **ADR workflow:** When a design decision is made (via brainstorming, AskUserQuestion, or plan approval), write an Architecture Decision Record:
+
 1. Create `decisions/ADR-NNNN-<kebab-title>.md` (format: Date, Status, Deciders, Context, Decision, Rationale, Consequences — follow existing ADRs)
 2. Update `decisions/INDEX.md` with the new entry
 Not every AskUserQuestion answer is a decision. Only capture choices about approach, architecture, technology, or design patterns — skip simple clarifications.
 
 **Lessons learnt / memories workflow:** Use `bd remember "insight"` to store lessons, patterns, and insights that persist across sessions and are auto-loaded at `bd prime`. Use this:
+
 - After completing a significant task — `bd remember "lesson: X pattern works well for Y"`
 - After debugging — `bd remember "root cause: X causes Y because Z"`
 - After discovering a codebase insight — `bd remember "the X system works by doing Y"`
@@ -102,24 +104,29 @@ When creating implementation plans (whether in plan mode or directly), use this 
 ### Implementation Plan: [Feature/Task Name]
 
 #### Overview
+
 [1-2 sentence summary of what this plan achieves]
 
 #### Prerequisites
+
 - [What must be true before starting]
 - [Dependencies, tools, access needed]
 
 #### Phase 1: [Phase Name]
+
 **Goal:** [What this phase achieves]
 **Estimated complexity:** Low / Medium / High
 **Bead:** `bd create "Phase 1: [Name]" -t task -p <priority>`
 **Dependencies:** `bd dep add <this-phase-id> <parent-epic-id>` (and any cross-phase deps)
 
 **Steps:**
+
 1. [Specific action] (`path/to/file`)
    - Why: [Reason this step is needed]
    - Depends on: None / Step X
 
 **Acceptance Criteria:**
+
 - [ ] [Testable condition]
 
 **Rollback:**
@@ -131,10 +138,13 @@ When creating implementation plans (whether in plan mode or directly), use this 
 |------|-----------|--------|------------|
 
 #### Testing Strategy
+
 [How to verify the full implementation works end-to-end]
 
 #### Execution Path
+
 Recommend one of:
+
 - **Subagent-driven** (recommended for complex/multi-file): `beads-superpowers:subagent-driven-development` — fresh agent per task with two-stage review
 - **Phase-by-phase** (default): Delegate to `@implementer` for sequential execution with bead-per-phase tracking
 
@@ -162,16 +172,18 @@ This gate applies to ALL FSM paths — non-trivial (S8), simple tasks (S8), and 
 ## Session Protocol
 
 ### Session Start
+
 1. beads-superpowers plugin injects `bd prime` context automatically
 2. `bd ready` — find unblocked work
 3. Claim: `bd update <id> --claim`
 
 ### Session End
+
 Invoke `beads-superpowers:finishing-a-development-branch` which includes the full Land the Plane protocol (bd close → bd dolt push → git push → git status). **Work is NOT complete until git push succeeds.**
 
 ## FSM Workflow Summary
 
-```
+```text
 Non-trivial task path (full FSM):
 S1:  BEADS_SETUP    → bd create + claim + dolt pull
 S2:  DEEP_RESEARCH  → @researcher + @explore in parallel
@@ -220,25 +232,30 @@ All subagents are dispatched via **prompt templates** within their respective sk
 
 ## Output Format (Final Summary)
 
-# Task Complete: [Task Name]
+## Task Complete: [Task Name]
 
-## What Was Done
+### What Was Done
+
 [1-3 sentence summary]
 
-## Changes Made
+### Changes Made
+
 - `path/to/file` — [What changed and why]
 - `path/to/file` — [What changed and why]
 
-## Verification
+### Verification
+
 - [x] [Test/check that passed]
 - [x] [Test/check that passed]
 
-## Notes
+### Notes
+
 [Anything the user should know — follow-up tasks, caveats, etc.]
 
 ## Session Startup
 
 When starting a new session as the main agent:
+
 1. Greet the user briefly and confirm you're ready
 2. Wait for a task — do not proactively explore or suggest work
 

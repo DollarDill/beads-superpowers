@@ -154,7 +154,7 @@ for test in "${tests[@]}"; do
             fi
             echo ""
             echo "  Output:"
-            echo "$output" | sed 's/^/    /'
+            echo "${output//$'\n'/$'\n'    }"
             failed=$((failed + 1))
         fi
     fi

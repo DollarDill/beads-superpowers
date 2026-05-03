@@ -1,0 +1,53 @@
+repos:
+  # General file hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+        exclude: mkdocs\.yml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=500]
+
+  # Markdown linting
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.18.1
+    hooks:
+      - id: markdownlint-cli2
+
+  # Shell script linting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: [-x, -P, tests/claude-code]
+
+  # YAML frontmatter validation for skills
+  - repo: local
+    hooks:
+      - id: skill-frontmatter
+        name: Skill YAML frontmatter check
+        entry: python3 scripts/check-skill-frontmatter.py
+        language: system
+        pass_filenames: false
+        files: skills/.*SKILL\.md$
+
+  # Version/skill count consistency
+  - repo: local
+    hooks:
+      - id: version-sync
+        name: Version sync check
+        entry: bash scripts/bump-version.sh --check
+        language: system
+        pass_filenames: false
+        files: (package\.json|plugin\.json|marketplace\.json)
+      - id: skill-count-sync
+        name: Skill count sync check
+        entry: bash scripts/sync-skill-count.sh --check
+        language: system
+        pass_filenames: false
+        files: (skills/|CLAUDE\.md|README\.md|install\.sh|ci\.yml)

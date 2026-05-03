@@ -23,6 +23,10 @@
     "docs/beads-superpowers/**",
     // Known issues (gitignored, but markdownlint still scans on-disk files)
     "docs/known-issues/**",
+    // Gitignored working docs
+    ".internal/**",
+    ".tmp/**",
+    "decisions/**",
     // Dependencies (if added in future)
     "node_modules/**"
   ]

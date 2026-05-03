@@ -13,8 +13,11 @@ docs/known-issues/
 # Test fixtures and test infrastructure
 tests/
 
-# Local working files
+# Local working files (gitignored)
 .sessions/
+.internal/
+.tmp/
+decisions/
 
 # Dependencies (if added in future)
 node_modules/

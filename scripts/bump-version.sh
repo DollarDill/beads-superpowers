@@ -134,7 +134,7 @@ cmd_audit() {
     local match_file
     match_file=$(echo "$match" | cut -d: -f1)
     # Make path relative to repo root
-    local rel_path="${match_file#$REPO_ROOT/}"
+    local rel_path="${match_file#"$REPO_ROOT"/}"
 
     # Check if this file is in the declared list
     local is_declared=0

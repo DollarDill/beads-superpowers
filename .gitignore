@@ -5,6 +5,12 @@ site/
 # Internal working docs (plans, specs, research, audits, reference)
 .internal/
 
+# Temporary files
+.tmp/
+
+# Architecture Decision Records (local working docs)
+decisions/
+
 # Beads / Dolt files (added by bd init)
 .dolt/
 *.db

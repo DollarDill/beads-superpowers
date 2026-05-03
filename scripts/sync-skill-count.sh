@@ -16,18 +16,17 @@ if [ "${1:-}" = "--check" ]; then
     ERRORS=0
 
     check_pattern() {
-        local file="$1" pattern="$2" expected="$3"
+        local file="$1" pattern="$2"
         if ! grep -qE -- "$pattern" "$file" 2>/dev/null; then
             echo "STALE: $file does not match pattern: $pattern"
             ERRORS=$((ERRORS + 1))
         fi
     }
 
-    check_pattern "CLAUDE.md" "$COUNT composable skills" "$COUNT"
+    check_pattern "CLAUDE.md" "$COUNT composable process-discipline skills" "$COUNT"
     check_pattern "CLAUDE.md" "$COUNT beads-native skills" "$COUNT"
     check_pattern "CLAUDE.md" "Skills \($COUNT Total\)" "$COUNT"
-    check_pattern "README.md" "$COUNT skills are now active" "$COUNT"
-    check_pattern "README.md" "All $COUNT skills" "$COUNT"
+    check_pattern "README.md" "$COUNT skills enforce" "$COUNT"
     check_pattern ".claude-plugin/plugin.json" "$COUNT skills" "$COUNT"
     check_pattern "install.sh" "$COUNT skills" "$COUNT"
     check_pattern ".github/workflows/ci.yml" "at least $COUNT skills" "$COUNT"
@@ -44,13 +43,12 @@ fi
 echo "Skill count: $COUNT (invocable: $INVOCABLE)"
 
 # CLAUDE.md
-sed -i -E "s/[0-9]+ composable skills/$COUNT composable skills/g" CLAUDE.md
+sed -i -E "s/[0-9]+ composable process-discipline skills/$COUNT composable process-discipline skills/g" CLAUDE.md
 sed -i -E "s/[0-9]+ beads-native skills/$COUNT beads-native skills/g" CLAUDE.md
 sed -i -E "s/Skills \([0-9]+ Total\)/Skills ($COUNT Total)/g" CLAUDE.md
 
 # README.md
-sed -i -E "s/[0-9]+ skills are now active/$COUNT skills are now active/g" README.md
-sed -i -E "s/All [0-9]+ skills/All $COUNT skills/g" README.md
+sed -i -E "s/[0-9]+ skills enforce/$COUNT skills enforce/g" README.md
 
 # plugin.json — "N skills +"
 sed -i -E "s/[0-9]+ skills \+/$COUNT skills +/g" .claude-plugin/plugin.json

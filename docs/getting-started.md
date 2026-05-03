@@ -84,7 +84,7 @@ The plugin registers two hooks via `hooks/hooks.json`:
 
 **SessionStart** fires on every session start, clear, and compact. It reads the `using-superpowers` skill (which routes to all other skills), runs `bd prime` (captures beads state and persistent memories), checks for duplicate hooks, and outputs the combined context (~2–3k tokens).
 
-**UserPromptSubmit** fires on every user message. It injects a reminder listing all 20 invocable skills with their trigger conditions — "bug → systematic-debugging", "new feature → brainstorming", etc. This keeps the agent from forgetting about skills mid-session.
+**UserPromptSubmit** fires on every user message. It injects a reminder listing all 21 invocable skills with their trigger conditions — "bug → systematic-debugging", "new feature → brainstorming", etc. This keeps the agent from forgetting about skills mid-session.
 
 ```mermaid
 sequenceDiagram

@@ -4,6 +4,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=test-helpers.sh
 source "$SCRIPT_DIR/test-helpers.sh"
 
 echo "========================================"
@@ -21,7 +22,7 @@ TEST_PROJECT=$(create_test_project)
 echo "Test project: $TEST_PROJECT"
 
 # Trap to cleanup
-trap "cleanup_test_project $TEST_PROJECT" EXIT
+trap 'cleanup_test_project "'"$TEST_PROJECT"'"' EXIT
 
 cd "$TEST_PROJECT"
 
@@ -90,12 +91,13 @@ Look for:
 Output your review in the format specified in the template."
 
 echo "================================================================================"
-cd "$SCRIPT_DIR/../.." && timeout 120 claude -p "$PROMPT" --permission-mode bypassPermissions 2>&1 | tee "$OUTPUT_FILE" || {
+if ! cd "$SCRIPT_DIR/../.." || ! timeout 120 claude -p "$PROMPT" --permission-mode bypassPermissions 2>&1 | tee "$OUTPUT_FILE"; then
+    exit_code=$?
     echo ""
     echo "================================================================================"
-    echo "EXECUTION FAILED (exit code: $?)"
+    echo "EXECUTION FAILED (exit code: $exit_code)"
     exit 1
-}
+fi
 echo "================================================================================"
 
 echo ""
