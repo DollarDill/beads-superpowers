@@ -157,3 +157,13 @@ bd remember "lesson: <what was learned during this task>"
 Run the command. Read the output. THEN claim the result.
 
 This is non-negotiable.
+
+## Integration
+
+**Invoked by:** Any task claiming completion — mandatory before `bd close`, commits, or PRs.
+
+**Pairs with:**
+- **systematic-debugging** — verify the fix worked before claiming success.
+- **document-release** — docs audit is part of completion evidence.
+- **write-documentation** — prose quality checks are completion evidence.
+- **stress-test** — stress-test validates designs; this skill validates implementations.
