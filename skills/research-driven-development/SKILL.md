@@ -246,3 +246,9 @@ User asks: "How does Dolt handle merge conflicts?"
 5. Write to !`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`/2026-05-01-dolt-merge-conflict-handling.md
 6. bd close <id> --reason "Research complete: Dolt uses cell-level merge on SQL tables"
 ```
+
+## Integration
+
+**Invoked by:** Orchestrator (yegge FSM S2 — research phase) or user on-demand. No other skill invokes this directly.
+
+**Invokes:** None. Dispatches @researcher and @explore agents in parallel internally, but does not invoke other skills.
