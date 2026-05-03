@@ -413,8 +413,8 @@ Done!
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:requesting-code-review** - Code review template for reviewer subagents
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
-- **superpowers:dispatching-parallel-agents** - Parallel dispatch pattern (SDD uses the pattern, not the skill directly)
-- **superpowers:receiving-code-review** - Review feedback loops in parallel review cycles
+- **superpowers:dispatching-parallel-agents** - SDD's parallel batch mode uses this skill's dispatch pattern: when `bd ready --parent` returns multiple unblocked tasks, up to 5 are dispatched concurrently, each in its own worktree
+- **superpowers:receiving-code-review** - When two-stage review produces feedback, this skill's anti-sycophancy protocol ensures technical evaluation rather than blind acceptance
 
 **Subagents should use:**
 - **superpowers:test-driven-development** - Subagents follow TDD for each task

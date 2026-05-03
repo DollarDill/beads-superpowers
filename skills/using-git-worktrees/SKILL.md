@@ -33,75 +33,25 @@ Raw `git worktree add` misses `.gitignore` setup and safety checks — while bea
 | Remove worktree | `bd worktree remove <name>` | ~~`git worktree remove`~~ |
 | Worktree info | `bd worktree info` | ~~(no equivalent)~~ |
 
-## Directory Selection Process
+## Directory Selection
 
-Follow this priority order:
+`bd worktree create <name>` handles directory selection automatically:
 
-### 1. Check Existing Directories
+- Creates the worktree at `./<name>` (e.g., `bd worktree create auth` → `./auth`)
+- Adds the path to `.gitignore` automatically
+- To use a specific location: `bd worktree create .worktrees/<name>`
 
-```bash
-# Check in priority order
-ls -d .worktrees 2>/dev/null     # Preferred (hidden)
-ls -d worktrees 2>/dev/null      # Alternative
-```
-
-**If found:** Use that directory. If both exist, `.worktrees` wins.
-
-### 2. Check CLAUDE.md
-
-```bash
-grep -i "worktree.*director" CLAUDE.md 2>/dev/null
-```
-
-**If preference specified:** Use it without asking.
-
-### 3. Ask User
-
-If no directory exists and no CLAUDE.md preference, **use the `AskUserQuestion` tool**:
-
-```json
-{
-  "questions": [{
-    "question": "No worktree directory found. Where should I create worktrees?",
-    "header": "Worktree dir",
-    "options": [
-      {
-        "label": ".worktrees/ (Recommended)",
-        "description": "Project-local hidden directory — keeps worktrees near the code"
-      },
-      {
-        "label": "~/.config/superpowers/worktrees/",
-        "description": "Global location outside the project — no .gitignore needed"
-      }
-    ],
-    "multiSelect": false
-  }]
-}
-```
+If your project has a preferred worktree directory in CLAUDE.md, pass the full path.
 
 ## Safety Verification
 
-**Note:** `bd worktree create` automatically adds the worktree path to `.gitignore` when inside the repo root. Manual verification is a safety net, not the primary mechanism.
-
-### For Project-Local Directories (.worktrees or worktrees)
-
-**Verify directory is ignored after creation:**
+`bd worktree create` automatically adds the worktree path to `.gitignore` when inside the repo root. Verify as a safety net:
 
 ```bash
-# Check if directory is ignored (respects local, global, and system gitignore)
-git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
+git check-ignore -q <worktree-path> 2>/dev/null
 ```
 
-**If NOT ignored** (edge case — `bd worktree create` should have handled this):
-
-1. Add appropriate line to .gitignore
-2. Commit the change
-
-**Why critical:** Prevents accidentally committing worktree contents to repository.
-
-### For Global Directory (~/.config/superpowers/worktrees)
-
-No .gitignore verification needed - outside project entirely.
+**If NOT ignored** (edge case — `bd worktree create` should have handled this): add the path to `.gitignore` and commit.
 
 ## Creation Steps
 
@@ -114,8 +64,8 @@ bd worktree create <feature-name>
 # With explicit branch name
 bd worktree create <feature-name> --branch <branch-name>
 
-# At a specific path (e.g., global location)
-bd worktree create ~/.config/superpowers/worktrees/<project>/<feature-name>
+# At a specific path (e.g., project worktrees directory)
+bd worktree create .worktrees/<feature-name>
 
 # Then cd into it
 cd <worktree-path>
@@ -205,11 +155,9 @@ bd worktree remove <task-name>
 
 | Situation | Action |
 |-----------|--------|
-| `.worktrees/` exists | Use it (verify ignored) |
-| `worktrees/` exists | Use it (verify ignored) |
-| Both exist | Use `.worktrees/` |
-| Neither exists | Check CLAUDE.md → Ask user |
-| Directory not ignored | Add to .gitignore + commit |
+| Creating a worktree | `bd worktree create <name>` — handles path + .gitignore |
+| Custom location needed | `bd worktree create .worktrees/<name>` or path from CLAUDE.md |
+| Directory not ignored | Add to .gitignore + commit (edge case) |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
 | Parallel subagent work | Create one `bd worktree` per task, orchestrator manages lifecycle (max 5) |
@@ -226,10 +174,10 @@ bd worktree remove <task-name>
 - **Problem:** Worktree contents get tracked, pollute git status
 - **Fix:** Verify with `git check-ignore` after creation (`bd worktree create` handles this automatically, but verify as a safety net)
 
-### Assuming directory location
+### Overriding `bd worktree create` path logic
 
-- **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > CLAUDE.md > ask
+- **Problem:** Manually picking directories when `bd worktree create` handles it
+- **Fix:** Just run `bd worktree create <name>` — it creates at `./<name>` and handles `.gitignore`
 
 ### Proceeding with failing tests
 
@@ -246,16 +194,15 @@ bd worktree remove <task-name>
 ```
 You: I'm using the using-git-worktrees skill to set up an isolated workspace.
 
-[Check .worktrees/ - exists]
 [Create worktree: bd worktree create auth --branch feature/auth]
-  ✓ Created worktree at .worktrees/auth
+  ✓ Created worktree at ./auth
   ✓ Beads database shared via git common directory
   ✓ Added to .gitignore
-[cd .worktrees/auth]
+[cd auth]
 [Run npm install]
 [Run npm test - 47 passing]
 
-Worktree ready at /Users/jesse/myproject/.worktrees/auth
+Worktree ready at /Users/jesse/myproject/auth
 Tests passing (47 tests, 0 failures)
 Ready to implement auth feature
 ```
@@ -279,7 +226,6 @@ bd remember "worktree: <gotcha or workaround>"
 
 **Always:**
 - Use `bd worktree create` / `bd worktree list` / `bd worktree remove`
-- Follow directory priority: existing > CLAUDE.md > ask
-- Verify directory is ignored for project-local
+- Let `bd worktree create` handle path and `.gitignore`
 - Auto-detect and run project setup
 - Verify clean test baseline

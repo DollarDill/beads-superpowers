@@ -78,3 +78,6 @@ bd remember "lesson: <what worked or didn't in plan execution>"
 - **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
+
+**Each execution step should use:**
+- **superpowers:test-driven-development** - RED-GREEN-REFACTOR for each task's implementation

@@ -136,3 +136,4 @@ bd remember "docs: <documentation pattern or gap found>"
 **Pairs with:**
 - **verification-before-completion** — docs audit is part of completion verification
 - **writing-plans** — plans reference doc locations that this skill validates
+- **write-documentation** — complementary; document-release syncs existing docs to shipped code, write-documentation handles writing or rewriting prose

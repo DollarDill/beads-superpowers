@@ -73,20 +73,16 @@ You: [Fix progress indicators]
 [Continue to Task 3]
 ```
 
-## Integration with Workflows
+## Integration
 
-**Subagent-Driven Development:**
-- Review after EACH task
-- Catch issues before they compound
-- Fix before moving to next task
+**Used by:**
+- **subagent-driven-development** — review after EACH task; catch issues before they compound; fix before moving to next task
+- **executing-plans** — review after each task or at natural checkpoints
+- **orchestrator (S7 review gate)** — ad-hoc review before merge or when stuck
 
-**Executing Plans:**
-- Review after each task or at natural checkpoints
-- Get feedback, apply, continue
-
-**Ad-Hoc Development:**
-- Review before merge
-- Review when stuck
+**Pairs with:**
+- **receiving-code-review** — request/response pair; this skill dispatches the reviewer, receiving-code-review handles the feedback
+- **verification-before-completion** — code review is pre-completion evidence
 
 If you discovered something reusable, capture it before closing:
 
