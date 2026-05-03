@@ -229,3 +229,13 @@ bd remember "worktree: <gotcha or workaround>"
 - Let `bd worktree create` handle path and `.gitignore`
 - Auto-detect and run project setup
 - Verify clean test baseline
+
+## Integration
+
+**Invoked by:** Any task needing workspace isolation, or user on-demand.
+
+**Required by:**
+- **subagent-driven-development** — must create worktree before delegating to implementer subagents.
+- **executing-plans** — workspace isolation before starting plan execution.
+
+**Pairs with:** **subagent-driven-development** — parallel batch mode creates multiple worktrees (one per task) for concurrent subagent execution.
