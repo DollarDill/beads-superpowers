@@ -14,16 +14,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - E2E container test for `install.sh` — Docker-based test runs install/re-install/uninstall in a clean debian:12-slim container with 24 assertions. Entry point: `./tests/installer/run-tests.sh`.
 - `BEADS_SUPERPOWERS_TARBALL_URL` env var in `install.sh` — overrides the GitHub tarball download URL for local testing.
 - ADR-0004: E2E Container Testing for install.sh.
+- Dynamic per-page "last updated" dates via `mkdocs-git-revision-date-localized-plugin` — dates sourced from git commit history, no hardcoding.
+- Material theme footer restored — copyright, social links, and prev/next page navigation. The 0-byte `footer.html` override that suppressed the footer was removed.
+- `mkdocs-panzoom-plugin` for Mermaid diagrams — Alt+scroll to zoom, Alt+drag to pan, fullscreen toggle. Replaces the custom panzoom implementation lost in the v0.5.2 MkDocs migration.
+- Critical Rule #8 in `yegge.md`: always use `AskUserQuestion` for design choices with 2+ options — never present options as plain text.
 
 ### Changed
 
 - `brainstorming`: optional stress-test step between spec approval and writing-plans — offers adversarial review when design is complex or high-risk
 - `brainstorming`: added `## Integration` section documenting skill relationships
 - `brainstorming` + `writing-plans`: standalone `open` call warning in User Review Gate — prevents hang when chained after `bd` commands
+- S9 renamed `DOCUMENT_RELEASE` → `DOCUMENT` — now conditionally invokes `write-documentation` when `document-release` flags major prose rewrites.
+- S11 renamed `LAND_PLANE` → `SESSION_CLOSE` — fires only on non-branch paths (research queries). Branch paths terminate at S10, which includes Land the Plane as Step 6 of `finishing-a-development-branch`.
+- All 8 Mermaid diagrams across docs site audited for content accuracy and updated with increased `nodeSpacing`/`rankSpacing` (70) for readability.
+- Docs site content audit: 3 pages updated (methodology, workflow, getting-started), 3 verified accurate (index, skills, tips).
 
 ### Fixed
 
 - `agent_count` unbound variable in `install.sh` `--test` mode — variable was local to `do_install()` but referenced in `print_next_steps()`.
+- Hardcoded "21 invocable skills" in getting-started.md → `{{ invocable_count }}` template variable.
+- Review gate diagram in workflow.md: "Merge to main" → "Merge to epic branch" (tasks merge into epic worktree, not main).
+- `decisions/` was tracked in git despite being gitignored — untracked all files, fixed stale CLAUDE.md references.
 
 ## [0.5.3] - 2026-05-03
 
