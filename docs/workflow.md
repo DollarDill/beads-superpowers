@@ -17,14 +17,15 @@ graph LR
   S7 --> S8[Verify]
   S8 --> S9[Document]
   S9 --> S10[Close Branch]
-  S10 --> S11[Land the Plane]
+  S3 -.-> S11[Session Close]
 
   style S1 fill:#6366f1,color:#fff
   style S7 fill:#22c55e,color:#000
-  style S11 fill:#f59e0b,color:#000
+  style S10 fill:#f59e0b,color:#000
+  style S11 fill:#64748b,color:#fff
 ```
 
-S1–S6 scale with complexity — a typo fix goes straight from S1 to S7. S7–S11 run for every code change, no exceptions.
+S1–S6 scale with complexity — a typo fix goes straight from S1 to S7. S7–S10 run for every code change. S11 (Session Close) fires only on non-branch paths like research queries.
 
 ## Triage
 
@@ -33,18 +34,18 @@ Every request is classified before entering the FSM:
 | Type | Examples | Path |
 |---|---|---|
 | Quick question | "What does this file do?" | Answer directly, no FSM |
-| Simple task | "Fix this typo" | S1 → S7–S11 |
-| Non-trivial task | "Add a new feature" | S1–S11 (full) |
+| Simple task | "Fix this typo" | S1 → S7–S10 |
+| Non-trivial task | "Add a new feature" | S1–S10 (full) |
 | Research query | "How does X work?" | S1 → S2–S3 → S11 |
 
-Complexity scales the research and planning depth (S2–S6), not the quality gates (S7–S11).
+Complexity scales the research and planning depth (S2–S6), not the quality gates (S7–S10).
 
 ```mermaid
 graph TD
   A[User Request] --> B{Type?}
   B -->|Question| C[Answer directly]
-  B -->|Simple fix| D[S1 → S7-S11]
-  B -->|Feature/refactor| E[S1 → S2-S11]
+  B -->|Simple fix| D[S1 → S7-S10]
+  B -->|Feature/refactor| E[S1 → S2-S10]
   B -->|Research| F[S1 → S2-S3 → S11]
 ```
 
@@ -88,22 +89,15 @@ Every subagent result passes through the [review gate](#review-gate) before bein
 
 ### S9 — Document
 
-`document-release` scans the diff against existing docs for stale references, missing entries, and outdated examples.
+`document-release` scans the diff against existing docs for stale references, missing entries, and outdated examples. When the audit flags sections needing major prose rewrites, `write-documentation` fires for those sections.
 
 ### S10 — Close branch
 
-`finishing-a-development-branch` verifies tests pass, presents options (merge, PR, keep, discard), and cleans up the worktree.
+`finishing-a-development-branch` verifies tests pass, presents options (merge, PR, keep, discard), cleans up the worktree, and runs the Land the Plane protocol: close beads, push to remotes, verify clean state. Branch paths terminate here — work is not done until both `bd dolt push` and `git push` succeed.
 
-### S11 — Land the Plane
+### S11 — Session close
 
-```bash
-bd close <epic-id> --reason "All tasks complete"
-bd dolt push
-git pull --rebase && git push
-git status    # must show "up to date with origin"
-```
-
-Work is not done until both `bd dolt push` and `git push` succeed. The next session runs `bd prime` to restore the full picture.
+Fires only on non-branch paths (research queries, quick tasks that didn't create a branch). Runs the same close ritual as S10's Land the Plane: `bd close` → `bd dolt push` → `git push` → `git status`. The next session runs `bd prime` to restore the full picture.
 
 ## Review gate
 
@@ -150,4 +144,4 @@ Two interrupt states can fire at any point in the FSM. They suspend the current 
 
 **Start:** The SessionStart hook fires automatically, injecting skill context and running `bd prime`. This surfaces unblocked beads, in-progress work from previous sessions, and persistent memories. Orient first, claim second, implement third.
 
-**End:** S11 (Land the Plane). Close all beads with evidence, push beads remote, push git, verify clean state. A session with uncommitted work or unpushed commits has not landed — the push is the definition of completion.
+**End:** S10 (Close Branch) for code paths, S11 (Session Close) for non-branch paths. Close all beads with evidence, push beads remote, push git, verify clean state. A session with uncommitted work or unpushed commits has not landed — the push is the definition of completion.

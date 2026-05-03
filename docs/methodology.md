@@ -69,7 +69,7 @@ Subsequent changes went further:
 
 ## The lifecycle
 
-A non-trivial feature request moves through 11 states. Simple tasks skip research and planning (S2–S6) but still pass through the quality pipeline (S7–S11).
+A non-trivial feature request moves through up to 10 states. Simple tasks skip research and planning (S2–S6) but still pass through the quality pipeline (S7–S10). S11 (Session Close) fires only on non-branch paths like research queries.
 
 ```mermaid
 graph TD
@@ -80,13 +80,14 @@ graph TD
   Step5 --> Step6["6. Plan<br/>Bite-sized tasks"]
   Step6 --> Step7["7. Implement<br/>TDD in worktree"]
   Step7 --> Step8["8. Verify<br/>Fresh evidence"]
-  Step8 --> Step9["9. Document<br/>Docs audit"]
-  Step9 --> Step10["10. Close Branch<br/>Merge / PR"]
-  Step10 --> Step11["11. Land the Plane<br/>bd close + git push"]
+  Step8 --> Step9["9. Document<br/>Audit + prose rewrite"]
+  Step9 --> Step10["10. Close Branch<br/>Merge / PR + Land the Plane"]
+  Step3 -.-> Step11["11. Session Close<br/>Non-branch paths only"]
 
   style Step1 fill:#6366f1,color:#fff
   style Step7 fill:#22c55e,color:#000
-  style Step11 fill:#f59e0b,color:#000
+  style Step10 fill:#f59e0b,color:#000
+  style Step11 fill:#64748b,color:#fff
 ```
 
 **Step 1 — Setup.** Every task begins with a bead. Before any research or code, the work is captured (`bd create`), claimed (`bd update --claim`), and synced. If the session dies, the bead record shows an in-progress item that can be recovered.
@@ -105,20 +106,11 @@ graph TD
 
 **Step 8 — Verification.** The full test suite runs fresh — not relying on the last run during development. "Tests pass" means a test command was just executed and its output is attached.
 
-**Step 9 — Documentation.** `document-release` scans the diff against existing docs for stale references, missing entries, and outdated examples.
+**Step 9 — Documentation.** `document-release` scans the diff against existing docs for stale references, missing entries, and outdated examples. When the audit flags sections needing major prose rewrites, `write-documentation` fires for those sections.
 
-**Step 10 — Close branch.** `finishing-a-development-branch` verifies tests pass, determines the base branch, presents options (merge, PR, keep, discard), and cleans up.
+**Step 10 — Close branch.** `finishing-a-development-branch` verifies tests pass, determines the base branch, presents options (merge, PR, keep, discard), cleans up, and runs the Land the Plane protocol: `bd close` → `bd dolt push` → `git push` → `git status`. Branch paths terminate here — work is not done until both task state and code reach the remote.
 
-**Step 11 — Land the Plane.**
-
-```bash
-bd close <epic-id> --reason "All tasks complete"
-bd dolt push
-git pull --rebase && git push
-git status    # must show "up to date with origin"
-```
-
-Work is not done until both task state (`bd dolt push`) and code (`git push`) reach the remote. The next session runs `bd prime` to restore the full picture.
+**Step 11 — Session close.** Fires only on non-branch paths (research queries, quick tasks that didn't create a branch). Runs the same close ritual as Step 10's Land the Plane: close beads, push to remotes, verify clean state. The next session runs `bd prime` to restore the full picture.
 
 ## Agent memory
 
@@ -166,7 +158,7 @@ An empirical finding: when a skill's YAML `description` field summarized the wor
 
 **Plugin subsumes beads hooks.** Beads' `bd setup claude` installs hooks that run `bd prime`. The plugin also needs to inject skill context. Rather than fire both and waste 3–4k tokens on redundant context, the plugin's hook does both jobs and warns if the standalone hooks are still installed.
 
-**Land the Plane in the terminal skill.** The session close protocol lives in `finishing-a-development-branch` rather than a separate skill. Both `subagent-driven-development` and `executing-plans` end by invoking it, so every pipeline path hits the mandatory push ritual without a separate dependency.
+**Land the Plane in the branch skill.** The session close protocol lives in `finishing-a-development-branch` (Step 6) rather than a separate skill. Branch paths terminate at S10, which includes the full push ritual. Non-branch paths (research queries) use S11 (SESSION_CLOSE) for the same ritual without the branch decision tree.
 
 **Skills are Markdown, not code.** Following Superpowers' zero-dependency philosophy, all skills are plain Markdown with YAML frontmatter. No build step. The only runtime dependency is `bd`, which is optional — skills still work without it, they just lose persistence.
 
