@@ -739,7 +739,7 @@
 <p><strong>Mid-session enforcement.</strong> A <code>UserPromptSubmit</code> hook fires on every user message, injecting skill trigger reminders that prevent the agent from forgetting to invoke skills as the session progresses.</p>
 <p><strong>Orchestrator-only design.</strong> Only the orchestrating agent creates, claims, and closes beads. Subagents focus on their job. The one exception is <code>implementer-prompt.md</code>, which is beads-aware by design — it includes bead lifecycle commands, mandatory skill invocations, and LSP-first code navigation.</p>
 <h2 id="the-lifecycle">The lifecycle</h2>
-<p>A non-trivial feature request moves through 11 states. Simple tasks skip research and planning (S2–S6) but still pass through the quality pipeline (S7–S11).</p>
+<p>A non-trivial feature request moves through up to 10 states. Simple tasks skip research and planning (S2–S6) but still pass through the quality pipeline (S7–S10). S11 (Session Close) fires only on non-branch paths like research queries.</p>
 <pre class="mermaid"><code>graph TD
   Step1["1. Setup&lt;br/&gt;Bead + claim + sync"] --&gt; Step2["2. Research&lt;br/&gt;Parallel agents investigate"]
   Step2 --&gt; Step3["3. Knowledge&lt;br/&gt;Write findings"]
@@ -748,13 +748,14 @@
   Step5 --&gt; Step6["6. Plan&lt;br/&gt;Bite-sized tasks"]
   Step6 --&gt; Step7["7. Implement&lt;br/&gt;TDD in worktree"]
   Step7 --&gt; Step8["8. Verify&lt;br/&gt;Fresh evidence"]
-  Step8 --&gt; Step9["9. Document&lt;br/&gt;Docs audit"]
-  Step9 --&gt; Step10["10. Close Branch&lt;br/&gt;Merge / PR"]
-  Step10 --&gt; Step11["11. Land the Plane&lt;br/&gt;bd close + git push"]
+  Step8 --&gt; Step9["9. Document&lt;br/&gt;Audit + prose rewrite"]
+  Step9 --&gt; Step10["10. Close Branch&lt;br/&gt;Merge / PR + Land the Plane"]
+  Step3 -.-&gt; Step11["11. Session Close&lt;br/&gt;Non-branch paths only"]
 
   style Step1 fill:#6366f1,color:#fff
   style Step7 fill:#22c55e,color:#000
-  style Step11 fill:#f59e0b,color:#000</code></pre>
+  style Step10 fill:#f59e0b,color:#000
+  style Step11 fill:#64748b,color:#fff</code></pre>
 <p><strong>Step 1 — Setup.</strong> Every task begins with a bead. Before any research or code, the work is captured (<code>bd create</code>), claimed (<code>bd update --claim</code>), and synced. If the session dies, the bead record shows an in-progress item that can be recovered.</p>
 <p><strong>Step 2 — Research.</strong> The <code>research-driven-development</code> skill dispatches two agents in parallel: a researcher investigates the problem domain while an <code>@explore</code> agent maps the affected code. Running both concurrently cuts research time roughly in half.</p>
 <p><strong>Step 3 — Knowledge capture.</strong> Findings are written to a persistent document. Key learnings go into <code>bd remember</code> so they surface in future sessions.</p>
@@ -763,15 +764,9 @@
 <p><strong>Step 6 — Planning.</strong> <code>writing-plans</code> breaks the design into bite-sized tasks (2–5 minutes each) with exact file paths, code, and verification steps. Every task becomes a bead.</p>
 <p><strong>Step 7 — Implementation.</strong> Code runs in an isolated git worktree under TDD. The orchestrator creates an epic with task children and dependency chains, then dispatches implementer subagents. When multiple tasks are unblocked, parallel batch mode runs up to 5 concurrently, each in its own worktree. After each task, a spec reviewer and code quality reviewer run in sequence — the bead closes only after both pass.</p>
 <p><strong>Step 8 — Verification.</strong> The full test suite runs fresh — not relying on the last run during development. "Tests pass" means a test command was just executed and its output is attached.</p>
-<p><strong>Step 9 — Documentation.</strong> <code>document-release</code> scans the diff against existing docs for stale references, missing entries, and outdated examples.</p>
-<p><strong>Step 10 — Close branch.</strong> <code>finishing-a-development-branch</code> verifies tests pass, determines the base branch, presents options (merge, PR, keep, discard), and cleans up.</p>
-<p><strong>Step 11 — Land the Plane.</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bd<span class="w"> </span>close<span class="w"> </span>&lt;epic-id&gt;<span class="w"> </span>--reason<span class="w"> </span><span class="s2">&quot;All tasks complete&quot;</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>bd<span class="w"> </span>dolt<span class="w"> </span>push
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>git<span class="w"> </span>pull<span class="w"> </span>--rebase<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>push
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>git<span class="w"> </span>status<span class="w">    </span><span class="c1"># must show &quot;up to date with origin&quot;</span>
-</code></pre></div>
-<p>Work is not done until both task state (<code>bd dolt push</code>) and code (<code>git push</code>) reach the remote. The next session runs <code>bd prime</code> to restore the full picture.</p>
+<p><strong>Step 9 — Documentation.</strong> <code>document-release</code> scans the diff against existing docs for stale references, missing entries, and outdated examples. When the audit flags sections needing major prose rewrites, <code>write-documentation</code> fires for those sections.</p>
+<p><strong>Step 10 — Close branch.</strong> <code>finishing-a-development-branch</code> verifies tests pass, determines the base branch, presents options (merge, PR, keep, discard), cleans up, and runs the Land the Plane protocol: <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code> → <code>git status</code>. Branch paths terminate here — work is not done until both task state and code reach the remote.</p>
+<p><strong>Step 11 — Session close.</strong> Fires only on non-branch paths (research queries, quick tasks that didn't create a branch). Runs the same close ritual as Step 10's Land the Plane: close beads, push to remotes, verify clean state. The next session runs <code>bd prime</code> to restore the full picture.</p>
 <h2 id="agent-memory">Agent memory</h2>
 <p>Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow. 17 of 22 skills now prompt for <code>bd remember</code> at their natural completion points — root causes after debugging, design decisions after brainstorming, review insights after code review — so memory capture happens within the skill workflow, not as a separate step.</p>
 <table>
@@ -862,7 +857,7 @@
 <p>An empirical finding: when a skill's YAML <code>description</code> field summarized the workflow ("code review between tasks"), Claude followed the description instead of reading the full skill content and did one review instead of the two the skill specified. As a result, every skill's <code>description</code> is a trigger condition ("when to use this"), not a workflow summary ("what this does"), which forces the full content to be read.</p>
 <h2 id="design-decisions">Design decisions</h2>
 <p><strong>Plugin subsumes beads hooks.</strong> Beads' <code>bd setup claude</code> installs hooks that run <code>bd prime</code>. The plugin also needs to inject skill context. Rather than fire both and waste 3–4k tokens on redundant context, the plugin's hook does both jobs and warns if the standalone hooks are still installed.</p>
-<p><strong>Land the Plane in the terminal skill.</strong> The session close protocol lives in <code>finishing-a-development-branch</code> rather than a separate skill. Both <code>subagent-driven-development</code> and <code>executing-plans</code> end by invoking it, so every pipeline path hits the mandatory push ritual without a separate dependency.</p>
+<p><strong>Land the Plane in the branch skill.</strong> The session close protocol lives in <code>finishing-a-development-branch</code> (Step 6) rather than a separate skill. Branch paths terminate at S10, which includes the full push ritual. Non-branch paths (research queries) use S11 (SESSION_CLOSE) for the same ritual without the branch decision tree.</p>
 <p><strong>Skills are Markdown, not code.</strong> Following Superpowers' zero-dependency philosophy, all skills are plain Markdown with YAML frontmatter. No build step. The only runtime dependency is <code>bd</code>, which is optional — skills still work without it, they just lose persistence.</p>
 <h2 id="sources">Sources</h2>
 <ul>
@@ -893,7 +888,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="May 2, 2026 16:50:15 UTC">May 2, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="May 3, 2026 09:08:51 UTC">May 3, 2026</span>
   </span>
 
     

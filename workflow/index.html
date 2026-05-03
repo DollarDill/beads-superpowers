@@ -574,10 +574,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#s11-land-the-plane" class="md-nav__link">
+  <a href="#s11-session-close" class="md-nav__link">
     <span class="md-ellipsis">
       
-        S11 — Land the Plane
+        S11 — Session close
       
     </span>
   </a>
@@ -714,12 +714,13 @@
   S7 --&gt; S8[Verify]
   S8 --&gt; S9[Document]
   S9 --&gt; S10[Close Branch]
-  S10 --&gt; S11[Land the Plane]
+  S3 -.-&gt; S11[Session Close]
 
   style S1 fill:#6366f1,color:#fff
   style S7 fill:#22c55e,color:#000
-  style S11 fill:#f59e0b,color:#000</code></pre>
-<p>S1–S6 scale with complexity — a typo fix goes straight from S1 to S7. S7–S11 run for every code change, no exceptions.</p>
+  style S10 fill:#f59e0b,color:#000
+  style S11 fill:#64748b,color:#fff</code></pre>
+<p>S1–S6 scale with complexity — a typo fix goes straight from S1 to S7. S7–S10 run for every code change. S11 (Session Close) fires only on non-branch paths like research queries.</p>
 <h2 id="triage">Triage</h2>
 <p>Every request is classified before entering the FSM:</p>
 <table>
@@ -739,12 +740,12 @@
 <tr>
 <td>Simple task</td>
 <td>"Fix this typo"</td>
-<td>S1 → S7–S11</td>
+<td>S1 → S7–S10</td>
 </tr>
 <tr>
 <td>Non-trivial task</td>
 <td>"Add a new feature"</td>
-<td>S1–S11 (full)</td>
+<td>S1–S10 (full)</td>
 </tr>
 <tr>
 <td>Research query</td>
@@ -753,12 +754,12 @@
 </tr>
 </tbody>
 </table>
-<p>Complexity scales the research and planning depth (S2–S6), not the quality gates (S7–S11).</p>
+<p>Complexity scales the research and planning depth (S2–S6), not the quality gates (S7–S10).</p>
 <pre class="mermaid"><code>graph TD
   A[User Request] --&gt; B{Type?}
   B --&gt;|Question| C[Answer directly]
-  B --&gt;|Simple fix| D[S1 → S7-S11]
-  B --&gt;|Feature/refactor| E[S1 → S2-S11]
+  B --&gt;|Simple fix| D[S1 → S7-S10]
+  B --&gt;|Feature/refactor| E[S1 → S2-S10]
   B --&gt;|Research| F[S1 → S2-S3 → S11]</code></pre>
 <h2 id="states">States</h2>
 <h3 id="s1-setup">S1 — Setup</h3>
@@ -780,16 +781,11 @@
 <h3 id="s8-verify">S8 — Verify</h3>
 <p><code>verification-before-completion</code> runs the full test suite fresh — not relying on the last run during development. "Tests pass" means a test command was just executed and its output is attached.</p>
 <h3 id="s9-document">S9 — Document</h3>
-<p><code>document-release</code> scans the diff against existing docs for stale references, missing entries, and outdated examples.</p>
+<p><code>document-release</code> scans the diff against existing docs for stale references, missing entries, and outdated examples. When the audit flags sections needing major prose rewrites, <code>write-documentation</code> fires for those sections.</p>
 <h3 id="s10-close-branch">S10 — Close branch</h3>
-<p><code>finishing-a-development-branch</code> verifies tests pass, presents options (merge, PR, keep, discard), and cleans up the worktree.</p>
-<h3 id="s11-land-the-plane">S11 — Land the Plane</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bd<span class="w"> </span>close<span class="w"> </span>&lt;epic-id&gt;<span class="w"> </span>--reason<span class="w"> </span><span class="s2">&quot;All tasks complete&quot;</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>bd<span class="w"> </span>dolt<span class="w"> </span>push
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>git<span class="w"> </span>pull<span class="w"> </span>--rebase<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>push
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>git<span class="w"> </span>status<span class="w">    </span><span class="c1"># must show &quot;up to date with origin&quot;</span>
-</code></pre></div>
-<p>Work is not done until both <code>bd dolt push</code> and <code>git push</code> succeed. The next session runs <code>bd prime</code> to restore the full picture.</p>
+<p><code>finishing-a-development-branch</code> verifies tests pass, presents options (merge, PR, keep, discard), cleans up the worktree, and runs the Land the Plane protocol: close beads, push to remotes, verify clean state. Branch paths terminate here — work is not done until both <code>bd dolt push</code> and <code>git push</code> succeed.</p>
+<h3 id="s11-session-close">S11 — Session close</h3>
+<p>Fires only on non-branch paths (research queries, quick tasks that didn't create a branch). Runs the same close ritual as S10's Land the Plane: <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code> → <code>git status</code>. The next session runs <code>bd prime</code> to restore the full picture.</p>
 <h2 id="review-gate">Review gate</h2>
 <p>When SDD delegates to a subagent, the result passes through four checks before being accepted:</p>
 <ol>
@@ -824,7 +820,7 @@
 <p><strong>CODE REVIEW</strong> — Fires when review feedback arrives. <code>receiving-code-review</code> enforces anti-sycophantic reception: evaluate each suggestion technically, surface disagreements explicitly, track changes made in response.</p>
 <h2 id="session-protocol">Session protocol</h2>
 <p><strong>Start:</strong> The SessionStart hook fires automatically, injecting skill context and running <code>bd prime</code>. This surfaces unblocked beads, in-progress work from previous sessions, and persistent memories. Orient first, claim second, implement third.</p>
-<p><strong>End:</strong> S11 (Land the Plane). Close all beads with evidence, push beads remote, push git, verify clean state. A session with uncommitted work or unpushed commits has not landed — the push is the definition of completion.</p>
+<p><strong>End:</strong> S10 (Close Branch) for code paths, S11 (Session Close) for non-branch paths. Close all beads with evidence, push beads remote, push git, verify clean state. A session with uncommitted work or unpushed commits has not landed — the push is the definition of completion.</p>
 
 
 
@@ -847,7 +843,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="May 2, 2026 16:06:16 UTC">May 2, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="May 3, 2026 09:08:51 UTC">May 3, 2026</span>
   </span>
 
     
