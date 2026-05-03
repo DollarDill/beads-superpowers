@@ -91,7 +91,7 @@ A Claude Code marketplace plugin that merges [Superpowers](https://github.com/ob
 - `docs/` — MkDocs Material source pages (6 pages + assets). Template variables (`{{ skill_count }}`) computed at build time via `main.py` macros plugin. Contains ONLY website content.
 - `decisions/` — Architecture Decision Records (ADRs). Tracked in git.
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs.
-- `tests/` — 5 test suites: brainstorm-server (Node.js), claude-code skill tests, explicit-skill-requests, skill-triggering, subagent-driven-dev.
+- `tests/` — 6 test suites: brainstorm-server (Node.js), claude-code skill tests, explicit-skill-requests, installer (Docker E2E), skill-triggering, subagent-driven-dev.
 - `scripts/` — `bump-version.sh` (sync version across 3 files), `sync-skill-count.sh` (sync skill counts across all files), `build-docs.sh`.
 - `install.sh` — curl installer. Installs plugin + yegge agent globally.
 - `mkdocs.yml` + `main.py` — MkDocs Material site config and macros plugin.
@@ -163,7 +163,7 @@ scripts/
   sync-skill-count.sh      # Sync skill counts across all files (idempotent)
   build-docs.sh            # Build MkDocs site
 skills/                    # 22 beads-native skills (auto-discovered, each has SKILL.md)
-tests/                     # Test infrastructure (5 suites)
+tests/                     # Test infrastructure (6 suites)
 install.sh                 # curl installer (installs plugin + yegge agent globally)
 mkdocs.yml                 # MkDocs Material site config
 ```
@@ -318,6 +318,13 @@ cd tests/claude-code && ./run-skill-tests.sh
 
 # Integration tests (full workflow execution, 10-30 min)
 cd tests/claude-code && ./run-skill-tests.sh --integration
+```
+
+### Running Installer E2E Test
+
+```bash
+# Requires Docker. Tests install/re-install/uninstall in a clean container.
+./tests/installer/run-tests.sh
 ```
 
 ## Version Management

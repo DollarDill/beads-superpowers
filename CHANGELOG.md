@@ -9,11 +9,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- E2E container test for `install.sh` — Docker-based test runs install/re-install/uninstall in a clean debian:12-slim container with 24 assertions. Entry point: `./tests/installer/run-tests.sh`.
+- `BEADS_SUPERPOWERS_TARBALL_URL` env var in `install.sh` — overrides the GitHub tarball download URL for local testing.
+- ADR-0004: E2E Container Testing for install.sh.
+
 ### Changed
 
 - `brainstorming`: optional stress-test step between spec approval and writing-plans — offers adversarial review when design is complex or high-risk
 - `brainstorming`: added `## Integration` section documenting skill relationships
 - `brainstorming` + `writing-plans`: standalone `open` call warning in User Review Gate — prevents hang when chained after `bd` commands
+
+### Fixed
+
+- `agent_count` unbound variable in `install.sh` `--test` mode — variable was local to `do_install()` but referenced in `print_next_steps()`.
 
 ## [0.5.3] - 2026-05-03
 
