@@ -302,3 +302,13 @@ From debugging sessions:
 - Random fixes approach: 2-3 hours of thrashing
 - First-time fix rate: 95% vs 40%
 - New bugs introduced: Near zero vs common
+
+## Integration
+
+**Invoked by:** Any bug, test failure, or unexpected behaviour. Interrupt skill — fires regardless of workflow position.
+
+**Called by:** **subagent-driven-development** — on integration test failures after batch merge.
+
+**Pairs with:**
+- **test-driven-development** — Phase 4 creates a failing test to prove the root cause, then follows TDD to fix it.
+- **verification-before-completion** — verify the fix before claiming success.
