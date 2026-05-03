@@ -157,3 +157,9 @@ This skills system uses **bd (beads)** for persistent task tracking across sessi
 - Only the orchestrating agent manages beads. Subagents (implementer, spec-reviewer, code-quality-reviewer) do NOT touch beads.
 - Every session ends with the Land the Plane protocol: `bd close` → `bd dolt push` → `git push` → `git status`.
 - Include bead IDs in commit messages: `git commit -m "Add feature X (bd-a1b2)"`
+
+## Integration
+
+**Invoked by:** `session-start` hook — auto-injected at session start. All other skills depend on this one having loaded first.
+
+**Invokes:** None explicitly. Routes to all skills via the "if even 1% chance a skill applies, invoke it" gate. The only skill explicitly named in the flowchart is **brainstorming** (checked before general skill matching).
