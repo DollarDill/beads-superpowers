@@ -25,6 +25,7 @@ theme:
     - navigation.sections
     - navigation.expand
     - navigation.top
+    - navigation.footer
     - toc.integrate
     - content.code.copy
   icon:
@@ -32,6 +33,9 @@ theme:
 
 plugins:
   - search
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: date
   - macros
 
 markdown_extensions:
@@ -66,3 +70,4 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/DollarDill/beads-superpowers
+copyright: Copyright &copy; 2026 Dillon Frawley
