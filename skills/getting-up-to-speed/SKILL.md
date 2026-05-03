@@ -176,3 +176,11 @@ These thoughts mean STOP — you're rationalizing skipping orientation:
 ## Output Contract
 
 The skill is complete when you have produced the structured summary AND emitted the trailing "I'm ready for your next instruction" line. No claiming, no continuation. Wait for user input.
+
+## Integration
+
+**Invoked by:** Orchestrator (yegge FSM) or user on-demand. No other skill invokes this directly.
+
+**Uses:** **dispatching-parallel-agents** — heavy path (500+ tracked files) dispatches @researcher + @explore in parallel.
+
+**Pairs with:** **project-init** — for fresh/empty repos with nothing to orient on, use project-init instead.
