@@ -24,14 +24,27 @@
       {{ item.render(nav_item, path, 1) }}
     {% endfor %}
   </ul>
-  {% if config.repo_url %}
-  <div class="sidebar-github">
-    <a class="btn-github-sidebar" href="{{ config.repo_url }}" target="_blank" rel="noopener">
+  <div class="sidebar-links">
+    {% if config.repo_url %}
+    <a class="btn-sidebar btn-sidebar--github" href="{{ config.repo_url }}" target="_blank" rel="noopener">
       <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true">
         <path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
       </svg>
       View on GitHub
     </a>
+    {% endif %}
+    <a class="btn-sidebar btn-sidebar--website" href="https://dillonfrawley.com" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+      </svg>
+      dillonfrawley.com
+    </a>
+    <a class="btn-sidebar btn-sidebar--coffee" href="https://buymeacoffee.com/dollardill" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <path fill="currentColor" d="M18.5 3H6a3 3 0 0 0-3 3v.5a3 3 0 0 0 3 3h.5v7A3.5 3.5 0 0 0 10 20h4a3.5 3.5 0 0 0 3.5-3.5v-7h1a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3zm-1 13.5a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-7h8v7zm3-10a1.5 1.5 0 0 1-1.5 1.5h-1V5h1A1.5 1.5 0 0 1 20.5 6.5z"/>
+        <path fill="currentColor" d="M10.5 11a.75.75 0 0 0-.75.75v3.5a.75.75 0 0 0 1.5 0v-3.5A.75.75 0 0 0 10.5 11zm3 0a.75.75 0 0 0-.75.75v3.5a.75.75 0 0 0 1.5 0v-3.5A.75.75 0 0 0 13.5 11z"/>
+      </svg>
+      Buy Me a Coffee
+    </a>
   </div>
-  {% endif %}
 </nav>

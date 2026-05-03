@@ -1,58 +1,76 @@
-/* "View on GitHub" sidebar button */
-.sidebar-github {
+/* Sidebar link buttons */
+.sidebar-links {
   padding: 16px;
   border-top: 1px solid var(--md-default-fg-color--lightest);
   margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.btn-github-sidebar {
+/* Shared button base */
+.btn-sidebar {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #fff;
-  color: #0f172a;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 600;
-  padding: 10px 16px;
+  padding: 9px 16px;
   border-radius: 8px;
   text-decoration: none;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
-.btn-github-sidebar:hover {
+.btn-sidebar:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
   text-decoration: none;
-  color: #0f172a;
 }
 
-/* Dark mode (slate scheme) */
-[data-md-color-scheme="slate"] .btn-github-sidebar {
-  background: #1e293b;
-  color: #e2e8f0;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+/* GitHub — dark/slate */
+.btn-sidebar--github {
+  background: #24292e;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
-[data-md-color-scheme="slate"] .btn-github-sidebar:hover {
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.5);
-  color: #e2e8f0;
+.btn-sidebar--github:hover {
+  background: #2f363d;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  color: #fff;
 }
 
-/* Hide on mobile drawer — the header icon is enough there */
+/* Website — indigo */
+.btn-sidebar--website {
+  background: #4f46e5;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+
+.btn-sidebar--website:hover {
+  background: #6366f1;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.45);
+  color: #fff;
+}
+
+/* Buy Me a Coffee — yellow (matches dillonfrawley.com) */
+.btn-sidebar--coffee {
+  background: #ffdd00;
+  color: #000;
+  box-shadow: 0 2px 8px rgba(255, 221, 0, 0.3);
+}
+
+.btn-sidebar--coffee:hover {
+  background: #ffed4a;
+  box-shadow: 0 4px 16px rgba(255, 221, 0, 0.5);
+  color: #000;
+}
+
+/* Dark mode — GitHub and website stay the same, no overrides needed */
+
+/* Hide on mobile drawer */
 @media screen and (max-width: 76.1875em) {
-  .sidebar-github {
+  .sidebar-links {
     display: none;
   }
-}
-
-/* Header link buttons (Buy Me a Coffee, website) */
-.btn-header-link {
-  opacity: 0.7;
-  transition: opacity 0.15s ease;
-}
-
-.btn-header-link:hover {
-  opacity: 1;
 }
