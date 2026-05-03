@@ -204,3 +204,13 @@ After the plan is approved, **use the `AskUserQuestion` tool** to offer the exec
 **If Inline Execution chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
 - Batch execution with checkpoints for review
+
+## Integration
+
+**Called by:** **brainstorming** — this is brainstorming's terminal state. After design approval, brainstorming invokes writing-plans.
+
+**Invokes:**
+- **subagent-driven-development** — execution handoff (user choice).
+- **executing-plans** — execution handoff (user choice).
+
+**Pairs with:** **stress-test** — optional adversarial review of the plan before execution.
