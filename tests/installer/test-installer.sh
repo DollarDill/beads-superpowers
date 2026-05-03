@@ -113,14 +113,14 @@ stop_http_server() {
     wait "$HTTP_PID" 2>/dev/null || true
 }
 
-INSTALL_CMD="BEADS_SUPERPOWERS_TARBALL_URL=http://localhost:8888/release.tar.gz bash /src/install.sh"
+TARBALL_URL="http://localhost:8888/release.tar.gz"
 
 # ============================================================
 echo "=== Group 1: Fresh Install ==="
 # ============================================================
 
 start_http_server
-$INSTALL_CMD --yes --version "$VERSION"
+BEADS_SUPERPOWERS_TARBALL_URL="$TARBALL_URL" bash /src/install.sh --yes --version "$VERSION"
 stop_http_server
 
 # Skills: count + spot-check
@@ -158,7 +158,7 @@ echo "=== Group 2: Idempotent Re-Install ==="
 
 start_http_server
 # Re-running with same version should exit 0 and say "already installed"
-output=$($INSTALL_CMD --yes --version "$VERSION" 2>&1) || true
+output=$(BEADS_SUPERPOWERS_TARBALL_URL="$TARBALL_URL" bash /src/install.sh --yes --version "$VERSION" 2>&1) || true
 stop_http_server
 
 if echo "$output" | grep -q "already installed"; then
