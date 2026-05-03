@@ -19,7 +19,7 @@ Not every request needs the full FSM workflow. Triage incoming requests and rout
 | Request Type | Examples | FSM Path | Skills Invoked | Beads |
 |---|---|---|---|---|
 | **Quick question** | "What does this file do?", "Explain this error" | None — answer directly | None | No bead |
-| **Simple task** | "Fix this typo", "Rename this variable" | S1 → S7 → S8 → S9 → S10 → S11 | `Skill(beads-superpowers:using-git-worktrees)` (S7), `Skill(beads-superpowers:test-driven-development)` if code change (S7), `Skill(beads-superpowers:verification-before-completion)` (S8), `Skill(document-release)` (S9), `Skill(beads-superpowers:finishing-a-development-branch)` (S10) | Quick bead: create → claim → do → close |
+| **Simple task** | "Fix this typo", "Rename this variable" | S1 → S7 → S8 → S9 → S10 → S11 | `Skill(beads-superpowers:using-git-worktrees)` (S7), `Skill(beads-superpowers:test-driven-development)` if code change (S7), `Skill(beads-superpowers:verification-before-completion)` (S8), `Skill(document-release)` (S9), `Skill(beads-superpowers:write-documentation)` if prose rewrite needed (S9), `Skill(beads-superpowers:finishing-a-development-branch)` (S10) | Quick bead: create → claim → do → close |
 | **Non-trivial task** | "Add a new feature", "Refactor this module", "Set up CI/CD" | S1 → S2 → S3 → S4 → S5 → S6 → S7 → S8 → S9 → S10 → S11 | Full skill chain — see FSM State Machine below | Epic + child beads with dependencies |
 | **Research query** | "What is X?", "How does Y work?", "Compare A vs B" | S1 → S2 → S3 → S11 | `Skill(beads-superpowers:research-driven-development)` (S2), orchestrator writes KB (S3) | Single bead: `task` or `chore` |
 
@@ -62,7 +62,7 @@ The development lifecycle is an 11-state finite state machine. Each state has a 
 | **S6: WRITE_PLAN** | Invoke `Skill(beads-superpowers:writing-plans)` | Self | Plan doc exists; epic + child beads created; user approved | Loop — revise until user approves |
 | **S7: IMPLEMENT** | Invoke `Skill(beads-superpowers:using-git-worktrees)` then: **Simple:** `Skill(beads-superpowers:test-driven-development)` (Self). **Non-trivial:** `Skill(beads-superpowers:subagent-driven-development)` (→ @implementer) | Self orchestrates | All task beads closed, tests pass in worktree | Sub-agent fails → review gate → fix or re-delegate |
 | **S8: VERIFY** | Invoke `Skill(beads-superpowers:verification-before-completion)` | Self | Fresh test run passes, exit code 0, evidence in output | → S7 (re-implement) or escalate to user |
-| **S9: DOCUMENT_RELEASE** | Invoke `Skill(document-release)` (MANDATORY) | Self | Docs audited and updated, diff reviewed, committed | Non-blocking — warn if update fails |
+| **S9: DOCUMENT** | Invoke `Skill(document-release)` (MANDATORY). If audit flags major prose rewrites, invoke `Skill(beads-superpowers:write-documentation)` for flagged sections | Self | Docs audited and updated, diff reviewed, committed | Non-blocking — warn if update fails |
 | **S10: CLOSE_BRANCH** | Invoke `Skill(beads-superpowers:finishing-a-development-branch)` | Self | Branch merged/PR created/kept (user chose option) | Retry merge; keep as worktree if conflicts |
 | **S11: LAND_PLANE** | `bd close <ids> --reason` → `bd dolt push` → `git pull --rebase` → `git push` → `git status` | Self | `git status` shows "up to date with origin" | Retry push; resolve conflicts; NEVER stop before pushed |
 
@@ -193,7 +193,7 @@ S5:  ADR_CAPTURE    → Write ADR + update INDEX
 S6:  WRITE_PLAN     → Skill(beads-superpowers:writing-plans) → plan doc + user approval
 S7:  IMPLEMENT      → Skill(beads-superpowers:using-git-worktrees) + Skill(beads-superpowers:subagent-driven-development)
 S8:  VERIFY         → Skill(beads-superpowers:verification-before-completion) → fresh evidence
-S9:  DOCUMENT_RELEASE → Skill(document-release) → audit + review diff
+S9:  DOCUMENT → Skill(document-release) → audit + if major rewrites → Skill(write-documentation)
 S10: CLOSE_BRANCH   → Skill(beads-superpowers:finishing-a-development-branch) → merge/PR/keep
 S11: LAND_PLANE     → bd close + bd dolt push + git push + git status
 
