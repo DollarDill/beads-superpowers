@@ -221,3 +221,11 @@ When replying to inline review comments on GitHub, reply in the comment thread (
 Verify. Question. Then implement.
 
 No performative agreement. Technical rigor always.
+
+## Integration
+
+**Invoked by:** Orchestrator interrupt — fires at any FSM state when code review feedback arrives.
+
+**Pairs with:** **requesting-code-review** — request/response pair. That skill dispatches the reviewer; this skill handles the feedback.
+
+**Used by:** **subagent-driven-development** — review feedback loops during two-stage review gates.
