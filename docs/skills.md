@@ -258,15 +258,15 @@ graph TD
   US --> SD["systematic-debugging"]
   US --> RDD["research-driven-development"]
   US --> WD["write-documentation"]
-  B --> ST["stress-test"]
-  ST --> WP["writing-plans"]
+  B -.-> ST["stress-test"]
+  B --> WP["writing-plans"]
   WP --> SDD["subagent-driven-development"]
   WP --> EP["executing-plans"]
+  SDD --> GW["using-git-worktrees"]
   SDD --> RCR["requesting-code-review"]
-  EP --> RCR
-  RCR --> VBC["verification-before-completion"]
-  VBC --> DR["document-release"]
-  DR --> FAB["finishing-a-development-branch"]
+  SDD --> SD
+  SDD --> FAB["finishing-a-development-branch"]
+  EP --> FAB
 
   style US fill:#6366f1,color:#fff
   style FAB fill:#f59e0b,color:#000
@@ -274,6 +274,4 @@ graph TD
   style SD fill:#ef4444,color:#fff
 ```
 
-The typical flow: brainstorming → stress-test → writing-plans → SDD/executing-plans → code review → verification → document-release → finishing-a-development-branch.
-
-Skills like `systematic-debugging` and `verification-before-completion` fire whenever their trigger is met, regardless of where in the workflow you are.
+Edges show direct skill-to-skill invocations only — transitions managed by the orchestrator (e.g., verification → document-release → finishing) are omitted. Dashed edges are optional. Skills like `systematic-debugging`, `verification-before-completion`, and `receiving-code-review` fire whenever their trigger is met, regardless of workflow position.
