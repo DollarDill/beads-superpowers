@@ -36,6 +36,10 @@ plugins:
   - git-revision-date-localized:
       enable_creation_date: true
       type: date
+  - panzoom:
+      full_screen: true
+      key: "alt"
+      hint_location: "bottom"
   - macros
 
 markdown_extensions:

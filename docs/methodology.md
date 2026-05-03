@@ -23,6 +23,12 @@ Superpowers enforced good process but forgot everything between sessions. Beads 
 The plugin installs {{ skill_count }} composable skills and a Dolt-backed task database. A `using-superpowers` bootstrap skill loads at session start and routes the agent to whichever skill fits the current task.
 
 ```mermaid
+---
+config:
+  flowchart:
+    nodeSpacing: 70
+    rankSpacing: 70
+---
 graph TB
   subgraph Superpowers ["Superpowers (Process Discipline)"]
     S1["{{ skill_count }} Composable Skills"]
@@ -72,6 +78,12 @@ Subsequent changes went further:
 A non-trivial feature request moves through up to 10 states. Simple tasks skip research and planning (S2–S6) but still pass through the quality pipeline (S7–S10). S11 (Session Close) fires only on non-branch paths like research queries.
 
 ```mermaid
+---
+config:
+  flowchart:
+    nodeSpacing: 70
+    rankSpacing: 70
+---
 graph TD
   Step1["1. Setup<br/>Bead + claim + sync"] --> Step2["2. Research<br/>Parallel agents investigate"]
   Step2 --> Step3["3. Knowledge<br/>Write findings"]

@@ -7,6 +7,12 @@ Want to use this workflow? Grab the [example-workflow/](https://github.com/Dolla
 ## The FSM
 
 ```mermaid
+---
+config:
+  flowchart:
+    nodeSpacing: 70
+    rankSpacing: 70
+---
 graph LR
   S1[Setup] --> S2[Research]
   S2 --> S3[Knowledge]
@@ -41,6 +47,12 @@ Every request is classified before entering the FSM:
 Complexity scales the research and planning depth (S2–S6), not the quality gates (S7–S10).
 
 ```mermaid
+---
+config:
+  flowchart:
+    nodeSpacing: 70
+    rankSpacing: 70
+---
 graph TD
   A[User Request] --> B{Type?}
   B -->|Question| C[Answer directly]
@@ -124,7 +136,7 @@ sequenceDiagram
   O->>R: Dispatch code reviewer
   R-->>O: Review result
   alt All gates pass
-    O->>W: Merge to main
+    O->>W: Merge to epic branch
   else Gates fail
     O->>S: Re-delegate with feedback
   end

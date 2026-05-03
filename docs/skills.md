@@ -40,6 +40,12 @@ Also available: `document-release`, `getting-up-to-speed`, `dispatching-parallel
 | **Writing** | [write-documentation](#write-documentation) |
 
 ```mermaid
+---
+config:
+  flowchart:
+    nodeSpacing: 70
+    rankSpacing: 70
+---
 graph TD
   subgraph Meta
     US["using-superpowers"]
@@ -252,6 +258,12 @@ Skills use `bd` commands to track work. Only the orchestrating agent manages bea
 ## How skills chain
 
 ```mermaid
+---
+config:
+  flowchart:
+    nodeSpacing: 70
+    rankSpacing: 70
+---
 graph TD
   US["using-superpowers<br/>(bootstrap)"] --> B["brainstorming"]
   US --> TDD["test-driven-development"]
