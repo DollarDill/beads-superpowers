@@ -52,13 +52,7 @@ cd your-project
 bd init
 ```
 
-This creates `.beads/` (config, metadata, git hooks), `CLAUDE.md`, and `AGENTS.md`. The plugin's own hooks supersede the ones `bd init` installs, so remove the duplicates right away:
-
-```bash
-bd setup claude --remove
-```
-
-If you skip this step, `bd prime` runs twice per session — same context injected at double the token cost.
+This creates `.beads/` (config, metadata, git hooks), `CLAUDE.md`, and `AGENTS.md`. The plugin's session-start hook automatically detects if `bd setup claude` hooks are present and skips its own `bd prime` call, so no manual cleanup is needed.
 
 ### Dolt remote (optional)
 
@@ -82,7 +76,7 @@ If `/skills` shows nothing, the plugin isn't installed. If `bd ready` fails, bea
 
 The plugin registers two hooks via `hooks/hooks.json`:
 
-**SessionStart** fires on every session start, clear, and compact. It reads the `using-superpowers` skill (which routes to all other skills), runs `bd prime` (captures beads state and persistent memories), checks for duplicate hooks, and outputs the combined context (~2–3k tokens).
+**SessionStart** fires on every session start, clear, and compact. It reads the `using-superpowers` skill (which routes to all other skills), runs `bd prime` (captures beads state and persistent memories) unless it detects `bd prime` is already registered as a hook elsewhere, and outputs the combined context (~2–3k tokens).
 
 **UserPromptSubmit** fires on every user message. It injects a reminder listing all {{ invocable_count }} invocable skills with their trigger conditions — "bug → systematic-debugging", "new feature → brainstorming", etc. This keeps the agent from forgetting about skills mid-session.
 
@@ -122,9 +116,9 @@ To override a skill's behaviour, add instructions to your project's `CLAUDE.md` 
 
 **`bd: command not found`** — Beads isn't installed or isn't on your PATH. Run `brew install beads` or `npm install -g @beads/bd`, then verify with `bd version`.
 
-**No `.beads` directory** — Run `bd init` in your project directory. Remember to run `bd setup claude --remove` afterwards.
+**No `.beads` directory** — Run `bd init` in your project directory. The plugin automatically handles duplicate hook detection.
 
-**Double context injection** — Both the plugin hook and `bd setup claude` hooks are active. Fix with `bd setup claude --remove`.
+**Double context injection** — The plugin detects `bd setup claude` hooks in project and global settings and automatically skips its own `bd prime` call. If you still see duplicates, run `bd setup claude --remove`.
 
 **Stale plugin cache** — The cache doesn't update when you edit skill files locally. Either symlink the cache to your checkout:
 

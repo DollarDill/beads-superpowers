@@ -218,9 +218,9 @@ GitHub sync is configured via:
 - `bd config set github.token <token>` (or `GITHUB_TOKEN` env var)
 - `bd config set github.repository DollarDill/beads-superpowers`
 
-### Duplicate Hook Warning
+### Duplicate Hook Detection
 
-If `bd setup claude` hooks are installed in `.claude/settings.json`, this plugin detects them and warns. Run `bd setup claude --remove` — the plugin's hook already handles `bd prime`.
+If `bd setup claude` hooks are installed in any settings file (project or global), the plugin's session-start hook detects them and automatically skips its own `bd prime` call to avoid duplicate context injection. No manual intervention needed.
 
 ## Skills (22 Total)
 

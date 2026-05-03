@@ -89,7 +89,7 @@ See [Getting Started — Troubleshooting](getting-started.md#troubleshooting) fo
 
 **`bd: command not found`** — `brew install beads` or `npm install -g @beads/bd`.
 
-**Double `bd prime`** — `bd setup claude --remove` (the plugin already handles `bd prime`).
+**Double `bd prime`** — The plugin automatically detects `bd setup claude` hooks and skips its own `bd prime` call. If you still see duplicates, run `bd setup claude --remove`.
 
 **`bd dolt push` fails** — No Dolt remote configured. Harmless if you don't need remote sync.
 

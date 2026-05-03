@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # SessionStart hook for beads-superpowers plugin
 # This hook subsumes both superpowers skill injection AND beads context (bd prime).
-# Users should run `bd setup claude --remove` to avoid duplicate hooks.
+# If bd prime is already registered as a hook elsewhere (e.g. bd setup claude),
+# we skip our bd prime call to avoid duplicate context injection.
 
 set -euo pipefail
 
@@ -16,20 +17,26 @@ if [ -d "$legacy_skills_dir" ]; then
     warning_message="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **WARNING:** Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead. To make this message go away, remove ~/.config/superpowers/skills</important-reminder>"
 fi
 
-# Check if bd setup claude hooks are still installed (duplicate detection)
-bd_hooks_warning=""
-if [ -f ".claude/settings.json" ] 2>/dev/null; then
-    if grep -q '"bd prime"' ".claude/settings.json" 2>/dev/null; then
-        bd_hooks_warning="\n\n<important-reminder>⚠️ **DUPLICATE HOOKS DETECTED:** bd setup claude hooks are still installed in .claude/settings.json. The beads-superpowers plugin already handles bd prime. Run \`bd setup claude --remove\` to remove the duplicate hooks and avoid redundant context injection.</important-reminder>"
+# Detect if bd prime is already registered as a hook elsewhere (e.g. bd setup claude).
+# Check project and global settings files — if found, skip our bd prime call.
+bd_prime_already_hooked=0
+for settings_file in \
+    ".claude/settings.json" \
+    ".claude/settings.local.json" \
+    "${HOME}/.claude/settings.json" \
+    "${HOME}/.claude/settings.local.json"; do
+    if [ -f "$settings_file" ] 2>/dev/null && grep -q '"bd prime"' "$settings_file" 2>/dev/null; then
+        bd_prime_already_hooked=1
+        break
     fi
-fi
+done
 
 # Read using-superpowers content
 using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
 
-# Run bd prime if available (captures beads workflow context)
+# Run bd prime if available AND not already hooked elsewhere
 beads_context=""
-if command -v bd &>/dev/null; then
+if [ "$bd_prime_already_hooked" -eq 0 ] && command -v bd &>/dev/null; then
     beads_context=$(bd prime 2>/dev/null || true)
 fi
 
@@ -47,10 +54,9 @@ escape_for_json() {
 using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
 beads_escaped=$(escape_for_json "$beads_context")
 warning_escaped=$(escape_for_json "$warning_message")
-bd_hooks_escaped=$(escape_for_json "$bd_hooks_warning")
 
 # Build combined session context: skills + beads workflow
-session_context="<EXTREMELY_IMPORTANT>\nYou have beads-superpowers.\n\n**Below is the full content of your 'beads-superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}${bd_hooks_escaped}\n</EXTREMELY_IMPORTANT>"
+session_context="<EXTREMELY_IMPORTANT>\nYou have beads-superpowers.\n\n**Below is the full content of your 'beads-superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
 
 # Append beads context if available
 if [ -n "$beads_context" ]; then

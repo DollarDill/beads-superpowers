@@ -218,7 +218,7 @@ Audits against [obra/superpowers](https://github.com/obra/superpowers) and [gast
 
 **Trigger:** After npx install, or when skills aren't activating.
 
-Registers the SessionStart hook in `.claude/settings.json` so skills activate automatically. Detects and removes duplicate hooks from `bd setup claude`.
+Registers the SessionStart hook in `.claude/settings.json` so skills activate automatically. The plugin's session-start hook automatically detects `bd setup claude` hooks and skips duplicate `bd prime` calls.
 
 ### project-init
 
