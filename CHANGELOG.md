@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- `brainstorming`: optional stress-test step between spec approval and writing-plans — offers adversarial review when design is complex or high-risk
+- `brainstorming`: added `## Integration` section documenting skill relationships
+- `brainstorming` + `writing-plans`: standalone `open` call warning in User Review Gate — prevents hang when chained after `bd` commands
+
 ## [0.5.3] - 2026-05-03
 
 ### Added

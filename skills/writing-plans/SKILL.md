@@ -137,6 +137,8 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 After self-review passes, **open the plan file in the user's editor** so they can review it, then gate progression with `AskUserQuestion`:
 
+**⚠️ Run `open` as a standalone Bash call** — never chain it after `bd` commands in the same invocation (e.g., `bd close <id> && open file.md`). The combination hangs.
+
 ```bash
 # Auto-open plan in user's editor (platform-detected)
 # macOS:

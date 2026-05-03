@@ -29,7 +29,8 @@ You MUST create a brainstorming session bead (`bd create "Brainstorming: <topic>
 6. **Write design doc** — save to `.internal/specs/YYYY-MM-DD-<topic>-design.md` and commit
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+9. **(Optional) Offer stress-test** — if the design is complex or high-risk, invoke `stress-test` skill for adversarial review before proceeding
+10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
@@ -45,6 +46,8 @@ digraph brainstorming {
     "Write design doc" [shape=box];
     "Spec self-review\n(fix inline)" [shape=box];
     "User reviews spec?" [shape=diamond];
+    "Design complex\nor risky?" [shape=diamond];
+    "Invoke stress-test skill" [shape=box];
     "Invoke writing-plans skill" [shape=doublecircle];
 
     "Explore project context" -> "Visual questions ahead?";
@@ -59,11 +62,14 @@ digraph brainstorming {
     "Write design doc" -> "Spec self-review\n(fix inline)";
     "Spec self-review\n(fix inline)" -> "User reviews spec?";
     "User reviews spec?" -> "Write design doc" [label="changes requested"];
-    "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
+    "User reviews spec?" -> "Design complex\nor risky?" [label="approved"];
+    "Design complex\nor risky?" -> "Invoke stress-test skill" [label="yes"];
+    "Design complex\nor risky?" -> "Invoke writing-plans skill" [label="no"];
+    "Invoke stress-test skill" -> "Invoke writing-plans skill";
 }
 ```
 
-**The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+**The terminal state is writing-plans.** The only other skill brainstorming may invoke is **stress-test** (optional, between spec approval and writing-plans). Do NOT invoke frontend-design, mcp-builder, or any other implementation skill.
 
 ## The Process
 
@@ -147,6 +153,8 @@ Fix any issues inline. No need to re-review — just fix and move on.
 **User Review Gate:**
 After the spec review loop passes, **open the spec file in the user's editor** so they can review it, then gate progression with `AskUserQuestion`:
 
+**⚠️ Run `open` as a standalone Bash call** — never chain it after `bd` commands in the same invocation (e.g., `bd close <id> && open file.md`). The combination hangs.
+
 ```bash
 # Auto-open spec in user's editor (platform-detected)
 # macOS:
@@ -176,8 +184,22 @@ If the user selects "Needs changes", make the requested changes and re-run the s
 
 **Implementation:**
 
+- **Optionally invoke stress-test first** if the design is complex or high-risk. Use the `AskUserQuestion` tool to offer:
+  ```json
+  {
+    "questions": [{
+      "question": "This design has some complexity. Want to stress-test it before planning?",
+      "header": "Stress test",
+      "options": [
+        {"label": "Yes, stress-test it", "description": "Run adversarial review to find gaps before committing to a plan"},
+        {"label": "No, proceed to planning", "description": "Skip stress-test and go straight to writing the implementation plan"}
+      ],
+      "multiSelect": false
+    }]
+  }
+  ```
 - Invoke the writing-plans skill to create a detailed implementation plan
-- Do NOT invoke any other skill. writing-plans is the next step.
+- Do NOT invoke any other skill besides stress-test (optional) and writing-plans.
 - Pass the brainstorming bead context forward: the epic bead created during plan execution should reference the brainstorming session bead via `bd dep add <epic-id> <brainstorming-bead-id> --type discovered-from`
 
 ## Key Principles
@@ -220,3 +242,9 @@ A question about a UI topic is not automatically a visual question. "What does p
 
 If they agree to the companion, read the detailed guide before proceeding:
 `skills/brainstorming/visual-companion.md`
+
+## Integration
+
+**Invokes:**
+- **stress-test** *(optional)* — after spec approval, before writing-plans. Offered when the design has significant complexity or risk.
+- **writing-plans** — terminal state. The only implementation skill brainstorming invokes.
