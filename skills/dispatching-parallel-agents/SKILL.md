@@ -134,6 +134,14 @@ Return: Summary of what you found and what you fixed.
 **Single task:** Only one task remaining — no parallelism benefit
 **Same files:** Tasks that modify the same files — merge conflicts likely even with worktree isolation
 
+## Integration
+
+**Invoked by:**
+- **subagent-driven-development** — parallel batch mode dispatches independent plan tasks concurrently, each in its own worktree. Uses this skill's dispatch pattern. See SDD Integration below.
+- **getting-up-to-speed** — heavy path (500+ tracked files) dispatches @researcher + @explore in parallel via this pattern.
+
+**Invokes:** None — this is a dispatch pattern skill, not a pipeline skill.
+
 ## SDD Integration
 
 Subagent-Driven Development uses this skill's **pattern** — not the skill itself — when executing plans with independent tasks.
