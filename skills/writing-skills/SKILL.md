@@ -660,3 +660,11 @@ If you discovered something reusable, capture it before closing:
 # Only if worth preserving for future sessions:
 bd remember "skill-craft: <meta-pattern for skill design>"
 ```
+
+## Integration
+
+**Invoked by:** No other skill invokes this directly. Meta-skill for creating and modifying skills — used on-demand.
+
+**Requires:** **test-driven-development** — REQUIRED BACKGROUND. The TDD RED-GREEN-REFACTOR cycle is the foundation of this skill's approach.
+
+**References:** `systematic-debugging` and `verification-before-completion` as examples of well-crafted skills with effective anti-rationalization patterns.
