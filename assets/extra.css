@@ -74,3 +74,8 @@
     display: none;
   }
 }
+
+/* Mermaid diagram containers — scrollable when overflowing */
+.mermaid {
+  overflow-x: auto;
+}
