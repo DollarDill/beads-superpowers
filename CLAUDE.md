@@ -89,7 +89,7 @@ A Claude Code marketplace plugin that merges [Superpowers](https://github.com/ob
 - `hooks/` — `session-start` (injects `using-superpowers` + `bd prime`) and `superpowers-reminder.sh` (UserPromptSubmit skill trigger reminders). Registered in `hooks/hooks.json`. Auto-discovered.
 - `example-workflow/` — Ready-to-use project template: `CLAUDE.md` (Karpathy behavioral principles + beads integration) and `agents/yegge.md` (11-state FSM orchestrator). `install.sh` copies `yegge.md` globally.
 - `docs/` — MkDocs Material source pages (6 pages + assets). Template variables (`{{ skill_count }}`) computed at build time via `main.py` macros plugin. Contains ONLY website content.
-- `decisions/` — Architecture Decision Records (ADRs). Tracked in git.
+- `decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs.
 - `tests/` — 6 test suites: brainstorm-server (Node.js), claude-code skill tests, explicit-skill-requests, installer (Docker E2E), skill-triggering, subagent-driven-dev.
 - `scripts/` — `bump-version.sh` (sync version across 3 files), `sync-skill-count.sh` (sync skill counts across all files), `build-docs.sh`.
@@ -140,7 +140,7 @@ assets/                    # Banner SVG
 docs/                      # MkDocs source pages — website content ONLY
   index.md, getting-started.md, methodology.md, skills.md, workflow.md, tips.md
   assets/                  # Banner SVG
-decisions/                 # Architecture Decision Records (ADR-0001..0003 + INDEX.md)
+decisions/                 # Architecture Decision Records (gitignored, local-only)
 .internal/                 # Working docs (gitignored)
   specs/                   # Design specs from brainstorming
   plans/                   # Implementation plans from writing-plans
