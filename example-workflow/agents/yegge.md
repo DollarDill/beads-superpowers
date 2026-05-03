@@ -19,11 +19,11 @@ Not every request needs the full FSM workflow. Triage incoming requests and rout
 | Request Type | Examples | FSM Path | Skills Invoked | Beads |
 |---|---|---|---|---|
 | **Quick question** | "What does this file do?", "Explain this error" | None — answer directly | None | No bead |
-| **Simple task** | "Fix this typo", "Rename this variable" | S1 → S7 → S8 → S9 → S10 → S11 | `Skill(beads-superpowers:using-git-worktrees)` (S7), `Skill(beads-superpowers:test-driven-development)` if code change (S7), `Skill(beads-superpowers:verification-before-completion)` (S8), `Skill(document-release)` (S9), `Skill(beads-superpowers:write-documentation)` if prose rewrite needed (S9), `Skill(beads-superpowers:finishing-a-development-branch)` (S10) | Quick bead: create → claim → do → close |
-| **Non-trivial task** | "Add a new feature", "Refactor this module", "Set up CI/CD" | S1 → S2 → S3 → S4 → S5 → S6 → S7 → S8 → S9 → S10 → S11 | Full skill chain — see FSM State Machine below | Epic + child beads with dependencies |
+| **Simple task** | "Fix this typo", "Rename this variable" | S1 → S7 → S8 → S9 → S10 | `Skill(beads-superpowers:using-git-worktrees)` (S7), `Skill(beads-superpowers:test-driven-development)` if code change (S7), `Skill(beads-superpowers:verification-before-completion)` (S8), `Skill(document-release)` (S9), `Skill(beads-superpowers:write-documentation)` if prose rewrite needed (S9), `Skill(beads-superpowers:finishing-a-development-branch)` (S10) | Quick bead: create → claim → do → close |
+| **Non-trivial task** | "Add a new feature", "Refactor this module", "Set up CI/CD" | S1 → S2 → S3 → S4 → S5 → S6 → S7 → S8 → S9 → S10 | Full skill chain — see FSM State Machine below | Epic + child beads with dependencies |
 | **Research query** | "What is X?", "How does Y work?", "Compare A vs B" | S1 → S2 → S3 → S11 | `Skill(beads-superpowers:research-driven-development)` (S2), orchestrator writes KB (S3) | Single bead: `task` or `chore` |
 
-**Routing principle:** Every task that changes code gets the quality pipeline (S7-S11: worktree → TDD → verify → docs → finish → land). Complexity scales the *research and planning* depth (S2-S6), not the quality gates.
+**Routing principle:** Every task that changes code gets the quality pipeline (S7-S10: worktree → TDD → verify → docs → finish). Complexity scales the *research and planning* depth (S2-S6), not the quality gates.
 
 **Triage overrides the hook.** The UserPromptSubmit hook says "if even 1% chance a skill applies, MUST invoke it." That rule is subordinate to triage. If triage routes to **Quick question**, answer directly — do NOT invoke any skill, even if the hook suggests one. Triage happens first, always.
 
@@ -64,7 +64,7 @@ The development lifecycle is an 11-state finite state machine. Each state has a 
 | **S8: VERIFY** | Invoke `Skill(beads-superpowers:verification-before-completion)` | Self | Fresh test run passes, exit code 0, evidence in output | → S7 (re-implement) or escalate to user |
 | **S9: DOCUMENT** | Invoke `Skill(document-release)` (MANDATORY). If audit flags major prose rewrites, invoke `Skill(beads-superpowers:write-documentation)` for flagged sections | Self | Docs audited and updated, diff reviewed, committed | Non-blocking — warn if update fails |
 | **S10: CLOSE_BRANCH** | Invoke `Skill(beads-superpowers:finishing-a-development-branch)` | Self | Branch merged/PR created/kept (user chose option) | Retry merge; keep as worktree if conflicts |
-| **S11: LAND_PLANE** | `bd close <ids> --reason` → `bd dolt push` → `git pull --rebase` → `git push` → `git status` | Self | `git status` shows "up to date with origin" | Retry push; resolve conflicts; NEVER stop before pushed |
+| **S11: SESSION_CLOSE** | `bd close <ids> --reason` → `bd dolt push` → `git pull --rebase` → `git push` → `git status`. Fires only on non-branch paths (e.g. research queries) where S10 was skipped. Branch paths terminate at S10 (which includes Land the Plane as Step 6). | Self | `git status` shows "up to date with origin" | Retry push; resolve conflicts; NEVER stop before pushed |
 
 ### Interrupt States
 
@@ -157,6 +157,7 @@ Recommend one of:
 5. **NEVER deviate from the plan without escalating** — If the plan doesn't work, explain why and propose a revised plan
 6. **NEVER make unrelated changes** — Stay focused on the task at hand
 7. **NEVER skip verification (S8)** — Evidence before claims, always
+8. **NEVER present options as plain text** — Use `AskUserQuestion` for ALL design choices, approach options, or clarifying questions with 2+ alternatives. Never list options in prose and ask the user to pick.
 
 ## Verification Hard Gate
 
@@ -194,11 +195,11 @@ S6:  WRITE_PLAN     → Skill(beads-superpowers:writing-plans) → plan doc + us
 S7:  IMPLEMENT      → Skill(beads-superpowers:using-git-worktrees) + Skill(beads-superpowers:subagent-driven-development)
 S8:  VERIFY         → Skill(beads-superpowers:verification-before-completion) → fresh evidence
 S9:  DOCUMENT → Skill(document-release) → audit + if major rewrites → Skill(write-documentation)
-S10: CLOSE_BRANCH   → Skill(beads-superpowers:finishing-a-development-branch) → merge/PR/keep
-S11: LAND_PLANE     → bd close + bd dolt push + git push + git status
+S10: CLOSE_BRANCH   → Skill(beads-superpowers:finishing-a-development-branch) → merge/PR/keep + Land the Plane
+S11: SESSION_CLOSE  → bd close + bd dolt push + git push + git status (non-branch paths only)
 
-Simple task shortcut:  S1 → S7 → S8 → S9 → S10 → S11
-Research query:        S1 → S2 → S3 → S11
+Simple task shortcut:  S1 → S7 → S8 → S9 → S10
+Non-branch paths:      S1 → S2 → S3 → S11 (research queries, no branch to close)
 Quick question:        Answer directly (no FSM)
 
 Interrupts (any state): DEBUG → Skill(beads-superpowers:systematic-debugging)
