@@ -494,3 +494,9 @@ If you discovered something reusable, capture it before closing:
 # Only if worth preserving for future sessions:
 bd remember "upstream: <drift finding or new capability>"
 ```
+
+## Integration
+
+**Invoked by:** No other skill invokes this directly. Standalone audit skill — run before releases or on-demand.
+
+**Invokes:** None. References other skills as audit targets but does not invoke them.
