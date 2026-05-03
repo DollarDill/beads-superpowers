@@ -249,6 +249,6 @@ User asks: "How does Dolt handle merge conflicts?"
 
 ## Integration
 
-**Invoked by:** Orchestrator (yegge FSM S2 — research phase) or user on-demand. No other skill invokes this directly.
+**Invoked by:** User on-demand, or during the research phase before planning. No other skill invokes this directly.
 
 **Invokes:** None. Dispatches @researcher and @explore agents in parallel internally, but does not invoke other skills.

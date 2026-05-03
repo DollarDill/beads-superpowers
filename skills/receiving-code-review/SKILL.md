@@ -224,7 +224,7 @@ No performative agreement. Technical rigor always.
 
 ## Integration
 
-**Invoked by:** Orchestrator interrupt — fires at any FSM state when code review feedback arrives.
+**Invoked by:** Interrupt — fires when code review feedback arrives, regardless of workflow position.
 
 **Pairs with:** **requesting-code-review** — request/response pair. That skill dispatches the reviewer; this skill handles the feedback.
 

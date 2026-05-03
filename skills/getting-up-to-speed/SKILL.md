@@ -179,7 +179,7 @@ The skill is complete when you have produced the structured summary AND emitted 
 
 ## Integration
 
-**Invoked by:** Orchestrator (yegge FSM) or user on-demand. No other skill invokes this directly.
+**Invoked by:** User on-demand or at session start. No other skill invokes this directly.
 
 **Uses:** **dispatching-parallel-agents** — heavy path (500+ tracked files) dispatches @researcher + @explore in parallel.
 
