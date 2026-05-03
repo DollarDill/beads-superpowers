@@ -257,3 +257,13 @@ git status    # MUST show "up to date with origin"
 - Clean up worktree for Options 1 & 4 only
 
 - Work is NOT complete until both syncs succeed
+
+## Integration
+
+**Called by:**
+- **subagent-driven-development** — terminal state after all tasks pass review.
+- **executing-plans** — terminal state after all tasks complete.
+
+**Pairs with:**
+- **document-release** — run docs audit before merge/PR.
+- **verification-before-completion** — tests must pass before merge options are presented.
