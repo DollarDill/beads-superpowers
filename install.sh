@@ -44,6 +44,7 @@ FLAG_VERSION=""
 UPGRADING=false
 HAS_BEADS=false
 VERSION=""
+agent_count=0
 
 # --- Colors (TTY-aware) ---
 if [ -t 1 ]; then
@@ -197,7 +198,7 @@ do_install() {
   trap 'rm -rf "'"$tmpdir"'"' EXIT
 
   info "Downloading beads-superpowers v$VERSION..."
-  local tarball_url="https://github.com/$REPO/archive/refs/tags/v${VERSION}.tar.gz"
+  local tarball_url="${BEADS_SUPERPOWERS_TARBALL_URL:-https://github.com/$REPO/archive/refs/tags/v${VERSION}.tar.gz}"
   if ! curl -fsSL "$tarball_url" -o "$tmpdir/release.tar.gz"; then
     error "Failed to download: $tarball_url"
     echo "  Check your network connection or try: --version <known-tag>"
@@ -224,7 +225,7 @@ do_install() {
 
   info "Installing agents to $AGENTS_DIR/..."
   mkdir -p "$AGENTS_DIR"
-  local agent_count=0
+  agent_count=0
   for agent in "${KNOWN_AGENTS[@]}"; do
     if [ -f "$tmpdir/extracted/example-workflow/agents/$agent.md" ]; then
       cp -f "$tmpdir/extracted/example-workflow/agents/$agent.md" "$AGENTS_DIR/$agent.md"
