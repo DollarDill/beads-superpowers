@@ -13,13 +13,41 @@
 
 A Claude Code plugin that makes your AI coding agent write tests before code, debug systematically instead of guessing, and remember what it worked on yesterday. 22 skills enforce the practices; a Dolt-backed issue tracker keeps context across sessions.
 
-## Install
+## Install the plugin
+
+### curl (recommended)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
 ```
 
-Then in any project: `bd init`. Run `/skills` in Claude Code to confirm.
+Installs {{ skill_count }} skills to `~/.claude/skills/` and configures the SessionStart hook. Supports `--yes` (skip prompts), `--version X.Y.Z` (pin version), `--dry-run` (preview), and `--uninstall`.
+
+### Claude Code Marketplace
+
+```bash
+claude plugin marketplace add DollarDill/beads-superpowers
+claude plugin install beads-superpowers@beads-superpowers-marketplace
+```
+
+Or as slash commands inside a Claude Code session: `/plugin marketplace add ...` and `/plugin install ...`.
+
+### npx (Vercel Skills CLI)
+
+```bash
+npx skills add DollarDill/beads-superpowers --all -y -g
+```
+
+After installing, tell Claude: **"Run the setup skill"** — this configures the SessionStart hook.
+
+## First project setup
+
+Initialise beads in your project:
+
+```bash
+cd your-project
+bd init
+```
 
 ## Docs
 
