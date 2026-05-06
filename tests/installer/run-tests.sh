@@ -44,7 +44,6 @@ info "Testing install.sh for beads-superpowers v$version"
 
 # --- Build tarball ---
 tarball=$(mktemp /tmp/beads-superpowers-release-XXXXXX.tar.gz)
-trap 'rm -f "$tarball"' EXIT
 
 info "Building local tarball..."
 tar czf "$tarball" \
@@ -54,6 +53,14 @@ tar czf "$tarball" \
 
 chmod 644 "$tarball"  # readable by container's non-root user
 info "Tarball: $(du -h "$tarball" | cut -f1)"
+
+# Generate checksums.txt alongside tarball
+checksums=$(mktemp /tmp/beads-superpowers-checksums-XXXXXX.txt)
+sha256sum "$tarball" | sed "s|$tarball|release.tar.gz|" > "$checksums"
+chmod 644 "$checksums"
+info "Checksums: $(cat "$checksums")"
+
+trap 'rm -f "$tarball" "$checksums"' EXIT
 
 # --- Build Docker image ---
 info "Building Docker image..."
@@ -70,6 +77,7 @@ exit_code=0
 docker run --rm \
     -v "$REPO_ROOT/install.sh:/src/install.sh:ro" \
     -v "$tarball:/src/release.tar.gz:ro" \
+    -v "$checksums:/src/checksums.txt:ro" \
     -v "$SCRIPT_DIR/test-installer.sh:/src/test-installer.sh:ro" \
     -e "VERSION=$version" \
     beads-installer-test \
