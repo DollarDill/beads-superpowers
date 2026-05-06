@@ -75,6 +75,69 @@ warn()    { printf "${YELLOW}warn${NC}  %s\n" "$1"; }
 error()   { printf "${RED}error${NC} %s\n" "$1" >&2; }
 success() { printf "${GREEN}✓${NC} %s\n" "$1"; }
 
+# --- Checksum ---
+compute_sha256() {
+  local file="$1"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$file" | awk '{print $1}'
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$file" | awk '{print $1}'
+  elif command -v openssl >/dev/null 2>&1; then
+    openssl dgst -sha256 "$file" | awk '{print $NF}'
+  else
+    echo ""
+  fi
+}
+
+verify_checksum() {
+  local tarball="$1" checksums_url="$2"
+
+  if [ "$FLAG_SKIP_CHECKSUM" = true ]; then
+    info "Checksum verification skipped (--skip-checksum)"
+    return 0
+  fi
+
+  local checksums_file
+  checksums_file=$(mktemp)
+
+  # Download checksums.txt
+  if ! curl -fsSL "$checksums_url" -o "$checksums_file" 2>/dev/null; then
+    warn "No checksums.txt found for this release — skipping verification"
+    rm -f "$checksums_file"
+    return 0
+  fi
+
+  # One tarball per release — read first hash (don't match by filename,
+  # which differs between GitHub's name and our local download name)
+  local expected_hash actual_hash
+  expected_hash=$(awk '{print $1; exit}' "$checksums_file")
+  rm -f "$checksums_file"
+
+  if [ -z "$expected_hash" ]; then
+    warn "Empty checksums.txt — skipping verification"
+    return 0
+  fi
+
+  # Compute actual hash
+  actual_hash=$(compute_sha256 "$tarball")
+
+  if [ -z "$actual_hash" ]; then
+    warn "No SHA-256 tool available (tried sha256sum, shasum, openssl) — skipping verification"
+    return 0
+  fi
+
+  if [ "$expected_hash" != "$actual_hash" ]; then
+    error "Checksum mismatch — tarball may be corrupted or tampered with."
+    echo "  Expected: $expected_hash"
+    echo "  Got:      $actual_hash"
+    echo "  Use --skip-checksum to bypass this check."
+    return 1
+  fi
+
+  success "Checksum verified (SHA-256)"
+  return 0
+}
+
 usage() {
   cat <<'USAGE'
 beads-superpowers installer
