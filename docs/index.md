@@ -1,8 +1,8 @@
 # beads-superpowers
 
-A Claude Code plugin with **{{ skill_count }}** skills that enforce development practices — TDD, systematic debugging, design-before-code, two-stage code review — and a persistent issue tracker that remembers context across sessions.
+A plugin for Claude Code, Codex, and OpenCode with **{{ skill_count }}** skills that enforce development practices — TDD, systematic debugging, design-before-code, two-stage code review — and a persistent issue tracker that remembers context across sessions.
 
-The skills come from [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent. The tracker comes from [Beads](https://github.com/gastownhall/beads) by Steve Yegge. This plugin wires them together so skills create and close issues as they run, and the tracker feeds context back into each new session.
+The skills come from [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent. The tracker comes from [Beads](https://github.com/gastownhall/beads) by Steve Yegge. This plugin wires them together so skills create and close issues as they run, and the tracker feeds context back into each new session. It works across Claude Code, Codex CLI, and OpenCode with a single install.
 
 **Current version:** v{{ version }} · {{ skill_count }} skills
 

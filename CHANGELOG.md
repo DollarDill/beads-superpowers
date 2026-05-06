@@ -18,6 +18,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Material theme footer restored — copyright, social links, and prev/next page navigation. The 0-byte `footer.html` override that suppressed the footer was removed.
 - `mkdocs-panzoom-plugin` for Mermaid diagrams — Alt+scroll to zoom, Alt+drag to pan, fullscreen toggle. Replaces the custom panzoom implementation lost in the v0.5.2 MkDocs migration.
 - Critical Rule #8 in `yegge.md`: always use `AskUserQuestion` for design choices with 2+ options — never present options as plain text.
+- **Codex CLI plugin support** — `.codex-plugin/plugin.json` and `marketplace.json` mirror the Claude Code plugin manifest. `hooks/codex-hooks.json` references the same hook scripts via `${CODEX_PLUGIN_ROOT}`. Skills auto-discovered from plugin bundle.
+- **OpenCode native TypeScript plugin** — `opencode/beads-superpowers-plugin.ts` provides 3 in-process hooks: session start (bd prime + skill injection), prompt reminders, and compaction resilience. Distributed via `install.sh`.
+- **OpenCode tool mapping reference** — `skills/using-superpowers/references/opencode-tools.md` maps Claude Code tool names to OpenCode equivalents (subagent dispatch, environment detection).
+- ADR-0007: Multi-CLI Plugin Architecture (Codex + OpenCode).
+- E2E tests for multi-CLI install/uninstall and hook format validation (6 scenarios: CC/Codex/generic × session-start/reminder).
 
 ### Changed
 
@@ -28,6 +33,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - S11 renamed `LAND_PLANE` → `SESSION_CLOSE` — fires only on non-branch paths (research queries). Branch paths terminate at S10, which includes Land the Plane as Step 6 of `finishing-a-development-branch`.
 - All 8 Mermaid diagrams across docs site audited for content accuracy and updated with increased `nodeSpacing`/`rankSpacing` (70) for readability.
 - Docs site content audit: 3 pages updated (methodology, workflow, getting-started), 3 verified accurate (index, skills, tips).
+- `hooks/session-start`: added `CODEX_PLUGIN_ROOT` detection — Codex gets the same `hookSpecificOutput` format as Claude Code. Removed stale `COPILOT_CLI` guard.
+- `hooks/superpowers-reminder.sh`: rewritten with multi-format output (Cursor/Claude Code+Codex/generic) instead of hardcoded Claude Code JSON.
+- `install.sh`: auto-detects Codex CLI and OpenCode, installs skills to `~/.codex/skills/` and `~/.config/opencode/skills/` respectively. OpenCode plugin copied to `~/.config/opencode/plugins/`.
+- Version sync expanded from 3 to 6 files — added `.codex-plugin/plugin.json`, `.codex-plugin/marketplace.json`, `opencode/package.json` to `.version-bump.json`.
 
 ### Fixed
 

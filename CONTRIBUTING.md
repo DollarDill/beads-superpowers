@@ -21,7 +21,7 @@ git switch -c feat/my-improvement
 
 **Hooks and scripts:** The session-start hook is bash on Unix, batch on Windows (polyglot via `run-hook.cmd`). See `.internal/windows/polyglot-hooks.md` for cross-platform details.
 
-**Plugin manifests:** Three files must stay in sync: `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and `package.json`. Use `./scripts/bump-version.sh <version>` to update all three, or `--check` to detect drift.
+**Plugin manifests:** Six files must stay in sync: `package.json`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, `.codex-plugin/marketplace.json`, and `opencode/package.json`. Use `./scripts/bump-version.sh <version>` to update all six, or `--check` to detect drift.
 
 ## Tests
 
@@ -38,7 +38,7 @@ cd tests/claude-code && ./run-skill-tests.sh --integration
 - [ ] Lint passes: `npx markdownlint-cli2 "**/*.md"`
 - [ ] No TodoWrite references in skills
 - [ ] Anti-rationalization tables, Iron Laws, Red Flags untouched
-- [ ] Version bumped in all 3 manifests if metadata changed
+- [ ] Version bumped in all 6 manifests if metadata changed (`./scripts/bump-version.sh --check`)
 - [ ] `CHANGELOG.md` updated under `[Unreleased]`
 
 ## Security

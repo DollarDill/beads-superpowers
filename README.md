@@ -11,17 +11,25 @@
 
 ---
 
-A Claude Code plugin that makes your AI coding agent write tests before code, debug systematically instead of guessing, and remember what it worked on yesterday. 22 skills enforce the practices; a Dolt-backed issue tracker keeps context across sessions.
+A plugin for Claude Code, Codex, and OpenCode that makes your AI coding agent write tests before code, debug systematically instead of guessing, and remember what it worked on yesterday. 22 skills enforce the practices; a Dolt-backed issue tracker keeps context across sessions.
 
-## Install the plugin
+## Install
 
-### curl (recommended)
+### curl (recommended — works with all supported CLIs)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
 ```
 
-Installs {{ skill_count }} skills to `~/.claude/skills/` and configures the SessionStart hook. Supports `--yes` (skip prompts), `--version X.Y.Z` (pin version), `--dry-run` (preview), and `--uninstall`.
+The installer auto-detects which CLIs you have and installs accordingly:
+
+| CLI | What gets installed |
+|-----|-------------------|
+| Claude Code | Skills to `~/.claude/skills/`, SessionStart + UserPromptSubmit hooks |
+| Codex | Skills to `~/.codex/skills/`, enable with `codex_hooks = true` in `~/.codex/config.toml` |
+| OpenCode | Skills to `~/.config/opencode/skills/`, native TypeScript plugin to `~/.config/opencode/plugins/` |
+
+Supports `--yes` (skip prompts), `--version X.Y.Z` (pin version), `--dry-run` (preview), and `--uninstall`.
 
 ### Claude Code Marketplace
 
@@ -30,15 +38,13 @@ claude plugin marketplace add DollarDill/beads-superpowers
 claude plugin install beads-superpowers@beads-superpowers-marketplace
 ```
 
-Or as slash commands inside a Claude Code session: `/plugin marketplace add ...` and `/plugin install ...`.
-
 ### npx (Vercel Skills CLI)
 
 ```bash
 npx skills add DollarDill/beads-superpowers --all -y -g
 ```
 
-After installing, tell Claude: **"Run the setup skill"** — this configures the SessionStart hook.
+After installing, tell your agent: **"Run the setup skill"** — this configures the SessionStart hook.
 
 ## First project setup
 

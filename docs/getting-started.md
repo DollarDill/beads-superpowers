@@ -2,7 +2,9 @@
 
 ## Prerequisites
 
-You need **Claude Code** ([claude.ai/claude-code](https://claude.ai/claude-code)) and the **`bd` CLI** ([gastownhall/beads](https://github.com/gastownhall/beads)).
+You need at least one supported CLI and the **`bd` CLI** ([gastownhall/beads](https://github.com/gastownhall/beads)).
+
+**Supported CLIs:** [Claude Code](https://claude.ai/claude-code), [Codex CLI](https://github.com/openai/codex), [OpenCode](https://github.com/anomalyco/opencode). The installer auto-detects which you have and installs accordingly.
 
 Install `bd`:
 
@@ -14,17 +16,25 @@ npm install -g @beads/bd    # any platform
 
 Verify with `bd version`.
 
-**Optional:** A [DoltHub](https://dolthub.com) account if you want cross-session sync via `bd dolt push/pull`. Without it, beads still works — just locally.
+**Optional:** A [DoltHub](https://dolthub.com) account if you want cross-session sync via `bd dolt push/pull`. Without it, beads still works locally.
 
 ## Install the plugin
 
-### curl (recommended)
+### curl (recommended — works with all supported CLIs)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
 ```
 
-Installs {{ skill_count }} skills to `~/.claude/skills/` and configures the SessionStart hook. Supports `--yes` (skip prompts), `--version X.Y.Z` (pin version), `--dry-run` (preview), and `--uninstall`.
+The installer detects which CLIs are on your system and installs skills and hooks for each:
+
+| CLI | Skills path | Hooks / Plugin |
+|-----|------------|----------------|
+| Claude Code | `~/.claude/skills/` | SessionStart + UserPromptSubmit hooks in `settings.json` |
+| Codex | `~/.codex/skills/` | Enable with `codex_hooks = true` in `~/.codex/config.toml` |
+| OpenCode | `~/.config/opencode/skills/` | TypeScript plugin at `~/.config/opencode/plugins/` (active automatically) |
+
+Supports `--yes` (skip prompts), `--version X.Y.Z` (pin version), `--dry-run` (preview), and `--uninstall`.
 
 ### Claude Code Marketplace
 
@@ -41,7 +51,7 @@ Or as slash commands inside a Claude Code session: `/plugin marketplace add ...`
 npx skills add DollarDill/beads-superpowers --all -y -g
 ```
 
-After installing, tell Claude: **"Run the setup skill"** — this configures the SessionStart hook.
+After installing, tell your agent: **"Run the setup skill"** — this configures the SessionStart hook.
 
 ## First project setup
 
@@ -65,12 +75,12 @@ bd dolt push    # test the connection
 
 ## Verify it works
 
-Start a fresh Claude Code session in your project, then:
+Start a fresh session in your CLI of choice, then:
 
-1. **Check skills loaded:** Type `/skills` — you should see {{ skill_count }} skills prefixed with `beads-superpowers:`
+1. **Check skills loaded:** Type `/skills` (Claude Code/Codex) or check the skill list in OpenCode — you should see {{ skill_count }} skills prefixed with `beads-superpowers:`
 2. **Check beads works:** Run `bd ready` and `bd stats` in the terminal
 
-If `/skills` shows nothing, the plugin isn't installed. If `bd ready` fails, beads isn't initialised in this project (`bd init`).
+If skills aren't showing, the plugin may not be installed for your CLI. If `bd ready` fails, beads isn't initialised in this project (`bd init`).
 
 ## How the hooks work
 
@@ -82,7 +92,7 @@ The plugin registers two hooks via `hooks/hooks.json`:
 
 ```mermaid
 sequenceDiagram
-  participant CC as Claude Code
+  participant CC as CLI (Claude Code / Codex / OpenCode)
   participant SH as SessionStart Hook
   participant UP as UserPromptSubmit Hook
   participant Agent as Agent

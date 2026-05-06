@@ -75,7 +75,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Project Overview
 
-A Claude Code marketplace plugin that merges [Superpowers](https://github.com/obra/superpowers) skills (v5.0.7) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.0.2). It gives AI coding agents 22 composable process-discipline skills (TDD, brainstorming, systematic debugging, two-stage code review, verification) plus persistent task memory via a Dolt-backed database.
+A plugin for Claude Code, Codex, and OpenCode that merges [Superpowers](https://github.com/obra/superpowers) skills (v5.0.7) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.0.2). It gives AI coding agents 22 composable process-discipline skills (TDD, brainstorming, systematic debugging, two-stage code review, verification) plus persistent task memory via a Dolt-backed database.
 
 **Repository:** <https://github.com/DollarDill/beads-superpowers>
 **Version:** 0.5.3
@@ -83,17 +83,19 @@ A Claude Code marketplace plugin that merges [Superpowers](https://github.com/ob
 
 ## Architecture
 
-- `.claude-plugin/` — Plugin manifest (`plugin.json`) and marketplace config (`marketplace.json`). Claude Code auto-discovers these.
+- `.claude-plugin/` — Claude Code plugin manifest (`plugin.json`) and marketplace config (`marketplace.json`). Auto-discovered by Claude Code.
+- `.codex-plugin/` — Codex CLI plugin manifest (`plugin.json`) and marketplace config (`marketplace.json`). Mirrors `.claude-plugin/` for Codex compatibility.
 - `skills/` — 22 skills, each in `skills/<name>/SKILL.md`. Some include prompt templates (`implementer-prompt.md`, `researcher-prompt.md`) or helper scripts. Auto-discovered by Claude Code — do NOT declare in `plugin.json`.
 - `agents/` — `code-reviewer.md` agent. Auto-discovered. Subagents (implementer, researcher) use prompt templates inside their skills, not standalone agent files.
-- `hooks/` — `session-start` (injects `using-superpowers` + `bd prime`) and `superpowers-reminder.sh` (UserPromptSubmit skill trigger reminders). Registered in `hooks/hooks.json`. Auto-discovered.
+- `hooks/` — `session-start` (injects `using-superpowers` + `bd prime`) and `superpowers-reminder.sh` (UserPromptSubmit skill trigger reminders). Multi-format output supports Claude Code, Codex, Cursor, and generic CLIs. Registered in `hooks/hooks.json` (Claude Code) and `hooks/codex-hooks.json` (Codex). Auto-discovered.
+- `opencode/` — Native OpenCode TypeScript plugin (`beads-superpowers-plugin.ts`). In-process hooks for session start, prompt reminders, and compaction resilience. Distributed via `install.sh`.
 - `example-workflow/` — Ready-to-use project template: `CLAUDE.md` (Karpathy behavioral principles + beads integration) and `agents/yegge.md` (11-state FSM orchestrator). `install.sh` copies `yegge.md` globally.
 - `docs/` — MkDocs Material source pages (6 pages + assets). Template variables (`{{ skill_count }}`) computed at build time via `main.py` macros plugin. Contains ONLY website content.
 - `decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs.
 - `tests/` — 6 test suites: brainstorm-server (Node.js), claude-code skill tests, explicit-skill-requests, installer (Docker E2E), skill-triggering, subagent-driven-dev.
-- `scripts/` — `bump-version.sh` (sync version across 3 files), `sync-skill-count.sh` (sync skill counts across all files), `build-docs.sh`.
-- `install.sh` — curl installer. Installs plugin + yegge agent globally.
+- `scripts/` — `bump-version.sh` (sync version across 6 files), `sync-skill-count.sh` (sync skill counts across all files), `build-docs.sh`.
+- `install.sh` — curl installer. Installs skills globally, auto-detects Claude Code, Codex, and OpenCode CLIs and installs to each.
 - `mkdocs.yml` + `main.py` — MkDocs Material site config and macros plugin.
 
 ## Key Design Decisions
@@ -133,8 +135,11 @@ cp -rf source dest          # NOT: cp -r source dest
 
 ```text
 .claude-plugin/
-  plugin.json              # Plugin manifest (auto-discovered by Claude Code)
-  marketplace.json         # Marketplace config for plugin discovery
+  plugin.json              # Claude Code plugin manifest (auto-discovered)
+  marketplace.json         # Claude Code marketplace config
+.codex-plugin/
+  plugin.json              # Codex CLI plugin manifest (mirrors .claude-plugin/)
+  marketplace.json         # Codex CLI marketplace config
 agents/                    # Code reviewer agent (auto-discovered)
 assets/                    # Banner SVG
 docs/                      # MkDocs source pages — website content ONLY
@@ -154,10 +159,14 @@ example-workflow/
   CLAUDE.md                # Karpathy behavioral principles + beads integration (generic project template)
   agents/yegge.md          # Orchestrator agent — 11-state FSM lifecycle
 hooks/
-  hooks.json               # SessionStart + UserPromptSubmit hook registration
-  session-start            # Bash: injects using-superpowers + runs bd prime
-  superpowers-reminder.sh  # UserPromptSubmit: injects skill trigger reminders
+  hooks.json               # Claude Code hook registration
+  codex-hooks.json         # Codex CLI hook registration (refs same scripts)
+  session-start            # Bash: injects using-superpowers + runs bd prime (multi-format output)
+  superpowers-reminder.sh  # UserPromptSubmit: skill trigger reminders (multi-format output)
   run-hook.cmd             # Windows polyglot wrapper
+opencode/
+  beads-superpowers-plugin.ts  # Native OpenCode TypeScript plugin (3 hooks)
+  package.json             # Plugin dependencies
 scripts/
   bump-version.sh          # Sync version across package.json + plugin manifests
   sync-skill-count.sh      # Sync skill counts across all files (idempotent)
@@ -329,11 +338,14 @@ cd tests/claude-code && ./run-skill-tests.sh --integration
 
 ## Version Management
 
-Version is declared in 3 files that must stay in sync:
+Version is declared in 6 files that must stay in sync:
 
 - `package.json`
 - `.claude-plugin/plugin.json`
 - `.claude-plugin/marketplace.json`
+- `.codex-plugin/plugin.json`
+- `.codex-plugin/marketplace.json`
+- `opencode/package.json`
 
 Use `scripts/bump-version.sh` to update all at once:
 
@@ -345,12 +357,12 @@ Use `scripts/bump-version.sh` to update all at once:
 ## Installation (for users, not contributors)
 
 ```bash
-# Option A: Marketplace
+# Option A: curl (recommended — auto-detects Claude Code, Codex, OpenCode)
+curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
+
+# Option B: Claude Code Marketplace
 claude plugin marketplace add DollarDill/beads-superpowers
 claude plugin install beads-superpowers@beads-superpowers-marketplace
-
-# Option B: curl (one command, no dependencies)
-curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
 ```
 
 ## Example Workflow
