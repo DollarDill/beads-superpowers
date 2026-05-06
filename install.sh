@@ -486,6 +486,162 @@ REMINDEREOF
   chmod +x "$REMINDER_SCRIPT"
 }
 
+try_plugin_install() {
+  # Skip if --version was specified (can't pin versions via plugin system)
+  [ -n "$FLAG_VERSION" ] && return 1
+
+  local installed=false
+
+  if [ "$HAS_CLAUDE" = 1 ]; then
+    info "Tier 1: Trying Claude Code plugin install..."
+    if claude plugin marketplace add DollarDill/beads-superpowers 2>/dev/null && \
+       claude plugin install beads-superpowers@beads-superpowers-marketplace 2>/dev/null; then
+      installed=true
+      success "Claude Code: plugin installed via marketplace"
+    else
+      warn "Claude Code plugin install failed — trying next method"
+    fi
+  fi
+
+  if [ "$HAS_CODEX" = 1 ]; then
+    info "Tier 1: Trying Codex plugin install..."
+    if codex plugin marketplace add DollarDill/beads-superpowers 2>/dev/null && \
+       codex plugin install beads-superpowers@beads-superpowers-marketplace 2>/dev/null; then
+      installed=true
+      success "Codex: plugin installed via marketplace"
+    else
+      warn "Codex plugin install failed — trying next method"
+    fi
+  fi
+
+  if [ "$installed" = true ]; then
+    INSTALL_TIER="plugin"
+    return 0
+  fi
+  return 1
+}
+
+try_npx_install() {
+  [ "$HAS_NPX" = 0 ] && return 1
+  # Skip if --version was specified (can't pin versions via npx)
+  [ -n "$FLAG_VERSION" ] && return 1
+
+  info "Tier 2: Trying npx skills install..."
+
+  local agents="-a claude-code"  # always target claude-code
+  [ "$HAS_CODEX" = 1 ] && agents="$agents -a codex"
+
+  # shellcheck disable=SC2086  # word splitting intentional: $agents expands to multiple -a flags
+  if npx skills add DollarDill/beads-superpowers $agents -g --copy -y 2>/dev/null; then
+    success "Skills installed via npx"
+
+    # npx doesn't install hooks — do it ourselves
+    setup_hooks || warn "Hook setup failed after npx install — run 'setup' skill manually"
+
+    INSTALL_TIER="npx"
+    return 0
+  fi
+
+  warn "npx skills install failed — trying next method"
+  return 1
+}
+
+try_tarball_install() {
+  [ "$HAS_CURL" = 0 ] && return 1
+
+  info "Tier 3: Trying tarball download..."
+
+  create_staging
+
+  local tarball_url="${BEADS_SUPERPOWERS_TARBALL_URL:-https://github.com/$REPO/archive/refs/tags/v${VERSION}.tar.gz}"
+  local checksums_url="${BEADS_SUPERPOWERS_CHECKSUMS_URL:-https://github.com/$REPO/releases/download/v${VERSION}/checksums.txt}"
+
+  if ! curl -fsSL "$tarball_url" -o "$STAGING_DIR/release.tar.gz"; then
+    warn "Tarball download failed — trying next method"
+    return 1
+  fi
+
+  # Checksum verification
+  if ! verify_checksum "$STAGING_DIR/release.tar.gz" "$checksums_url"; then
+    return 1
+  fi
+
+  info "Extracting..."
+  mkdir -p "$STAGING_DIR/extracted"
+  if ! tar xzf "$STAGING_DIR/release.tar.gz" --strip-components=1 -C "$STAGING_DIR/extracted"; then
+    warn "Tarball extraction failed — trying next method"
+    return 1
+  fi
+
+  if ! promote_staging "$STAGING_DIR/extracted/skills"; then
+    return 1
+  fi
+
+  # Optional: install agent
+  mkdir -p "$AGENTS_DIR"
+  for agent in "${KNOWN_AGENTS[@]}"; do
+    if [ -f "$STAGING_DIR/extracted/example-workflow/agents/$agent.md" ]; then
+      cp -f "$STAGING_DIR/extracted/example-workflow/agents/$agent.md" "$AGENTS_DIR/$agent.md"
+    fi
+  done
+
+  setup_hooks "$STAGING_DIR/extracted" || warn "Hook setup failed — run 'setup' skill manually"
+
+  INSTALL_TIER="tarball"
+  return 0
+}
+
+try_git_install() {
+  [ "$HAS_GIT" = 0 ] && return 1
+
+  info "Tier 3b: Trying git clone..."
+
+  create_staging
+
+  if ! git clone --depth 1 "https://github.com/$REPO.git" "$STAGING_DIR/repo" 2>/dev/null; then
+    warn "Git clone failed"
+    return 1
+  fi
+
+  if ! promote_staging "$STAGING_DIR/repo/skills"; then
+    return 1
+  fi
+
+  # Optional: install agent
+  mkdir -p "$AGENTS_DIR"
+  for agent in "${KNOWN_AGENTS[@]}"; do
+    if [ -f "$STAGING_DIR/repo/example-workflow/agents/$agent.md" ]; then
+      cp -f "$STAGING_DIR/repo/example-workflow/agents/$agent.md" "$AGENTS_DIR/$agent.md"
+    fi
+  done
+
+  setup_hooks "$STAGING_DIR/repo" || warn "Hook setup failed — run 'setup' skill manually"
+
+  INSTALL_TIER="git"
+  return 0
+}
+
+all_methods_failed() {
+  error "All installation methods failed."
+  echo
+  echo "Manual installation options:"
+  echo
+  echo "  Plugin (Claude Code):"
+  echo "    claude plugin marketplace add DollarDill/beads-superpowers"
+  echo "    claude plugin install beads-superpowers@beads-superpowers-marketplace"
+  echo
+  if command -v npx >/dev/null 2>&1; then
+    echo "  npx:"
+    echo "    npx skills add DollarDill/beads-superpowers -a claude-code -g --copy"
+    echo
+  fi
+  echo "  Git:"
+  echo "    git clone https://github.com/$REPO.git"
+  echo "    cp -r beads-superpowers/skills/* ~/.claude/skills/"
+  echo
+  exit 1
+}
+
 # --- Phase 3: Install ---
 do_install() {
   local tmpdir
