@@ -304,20 +304,18 @@ print_consent() {
   echo
   printf "${BOLD}beads-superpowers v%s installer${NC}\n" "$VERSION"
   echo
-  echo "This script will:"
-  if [ "$UPGRADING" = true ]; then
-    echo "  • Upgrade 22 skills in $SKILLS_DIR/"
-  else
-    echo "  • Download 22 skills to $SKILLS_DIR/"
+  echo "This script will install 22 skills using the best available method:"
+  if [ "$HAS_CLAUDE" = 1 ] || [ "$HAS_CODEX" = 1 ]; then
+    echo "  1. Plugin system (Claude Code / Codex)"
   fi
-  echo "  • Create SessionStart hook at $HOOK_SCRIPT"
-  echo "  • Create UserPromptSubmit hook at $REMINDER_SCRIPT"
-  echo "  • Register both hooks in $SETTINGS_FILE (backup created first)"
+  [ "$HAS_NPX" = 1 ] && echo "  2. npx skills add"
+  echo "  3. Direct download (tarball / git clone)"
+  echo
   if [ "$HAS_CODEX" = 1 ]; then
-    echo "  • Install skills to ~/.codex/skills/ (Codex CLI detected)"
+    echo "  Codex CLI detected — skills will also be installed to ~/.codex/skills/"
   fi
   if [ "$HAS_OPENCODE" = 1 ]; then
-    echo "  • Install skills + plugin to ~/.config/opencode/ (OpenCode detected)"
+    echo "  OpenCode detected — skills will also be installed to ~/.config/opencode/"
   fi
   echo
 }
@@ -330,43 +328,6 @@ wait_for_consent() {
   read -r
 }
 
-install_codex_support() {
-  local extract_dir="$1"
-  local codex_skills="$HOME/.codex/skills"
-  mkdir -p "$codex_skills"
-  local installed=0
-  for skill in "${KNOWN_SKILLS[@]}"; do
-    if [ -d "$extract_dir/skills/$skill" ]; then
-      cp -rf "$extract_dir/skills/$skill" "$codex_skills/$skill"
-      installed=$((installed + 1))
-    fi
-  done
-  success "Codex: installed $installed skills to $codex_skills/"
-  info "Codex: enable hooks with: [features] codex_hooks = true in ~/.codex/config.toml"
-}
-
-install_opencode_support() {
-  local extract_dir="$1"
-  local oc_skills="$HOME/.config/opencode/skills"
-  mkdir -p "$oc_skills"
-  local installed=0
-  for skill in "${KNOWN_SKILLS[@]}"; do
-    if [ -d "$extract_dir/skills/$skill" ]; then
-      cp -rf "$extract_dir/skills/$skill" "$oc_skills/$skill"
-      installed=$((installed + 1))
-    fi
-  done
-  success "OpenCode: installed $installed skills to $oc_skills/"
-
-  local oc_plugins="$HOME/.config/opencode/plugins"
-  mkdir -p "$oc_plugins"
-  if [ -f "$extract_dir/opencode/beads-superpowers-plugin.ts" ]; then
-    cp -f "$extract_dir/opencode/beads-superpowers-plugin.ts" "$oc_plugins/"
-    success "OpenCode: installed plugin to $oc_plugins/"
-  else
-    warn "OpenCode plugin not found in release tarball — skipping"
-  fi
-}
 
 uninstall_codex_support() {
   local codex_skills="$HOME/.codex/skills"
@@ -642,77 +603,57 @@ all_methods_failed() {
   exit 1
 }
 
-# --- Phase 3: Install ---
+# --- Phase 3: Install (tier cascade) ---
+do_auto_uninstall_previous() {
+  [ -z "$PREVIOUS_TIER" ] && return 0
+
+  info "Auto-uninstalling previous install (tier: $PREVIOUS_TIER)..."
+  case "$PREVIOUS_TIER" in
+    plugin)
+      claude plugin uninstall beads-superpowers@beads-superpowers-marketplace 2>/dev/null || true
+      codex plugin uninstall beads-superpowers@beads-superpowers-marketplace 2>/dev/null || true
+      ;;
+    npx|tarball|git)
+      for skill in "${KNOWN_SKILLS[@]}"; do
+        rm -rf "${SKILLS_DIR:?}/$skill" 2>/dev/null
+      done
+      rm -f "$HOOK_SCRIPT" "$REMINDER_SCRIPT" 2>/dev/null
+      if [ -f "$SETTINGS_FILE" ] && [ "$HAS_PYTHON3" = 1 ]; then
+        python3 -c "
+import json
+sf = '$SETTINGS_FILE'
+with open(sf) as f:
+    s = json.load(f)
+h = s.get('hooks', {})
+for k in ['SessionStart', 'UserPromptSubmit']:
+    if k in h:
+        h[k] = [e for e in h[k] if 'beads-superpowers' not in json.dumps(e)]
+with open(sf, 'w') as f:
+    json.dump(s, f, indent=2)
+    f.write('\n')
+" 2>/dev/null || true
+      fi
+      ;;
+  esac
+  uninstall_codex_support 2>/dev/null || true
+  uninstall_opencode_support 2>/dev/null || true
+  success "Previous install cleaned up"
+}
+
 do_install() {
-  local tmpdir
-  tmpdir=$(mktemp -d)
-  trap 'rm -rf "'"$tmpdir"'"' EXIT
+  # Auto-uninstall previous tier if switching
+  do_auto_uninstall_previous
 
-  info "Downloading beads-superpowers v$VERSION..."
-  local tarball_url="${BEADS_SUPERPOWERS_TARBALL_URL:-https://github.com/$REPO/archive/refs/tags/v${VERSION}.tar.gz}"
-  if ! curl -fsSL "$tarball_url" -o "$tmpdir/release.tar.gz"; then
-    error "Failed to download: $tarball_url"
-    echo "  Check your network connection or try: --version <known-tag>"
-    exit 1
-  fi
+  # Tier cascade — first success wins
+  try_plugin_install || \
+  try_npx_install || \
+  try_tarball_install || \
+  try_git_install || \
+  all_methods_failed
 
-  info "Extracting..."
-  mkdir -p "$tmpdir/extracted"
-  tar xzf "$tmpdir/release.tar.gz" --strip-components=1 -C "$tmpdir/extracted"
-
-  mkdir -p "$SKILLS_DIR" "$HOOKS_DIR"
-
-  info "Installing skills to $SKILLS_DIR/..."
-  local installed_count=0
-  for skill in "${KNOWN_SKILLS[@]}"; do
-    if [ -d "$tmpdir/extracted/skills/$skill" ]; then
-      rm -rf "${SKILLS_DIR:?}/$skill"
-      cp -rf "$tmpdir/extracted/skills/$skill" "$SKILLS_DIR/$skill"
-      installed_count=$((installed_count + 1))
-    else
-      warn "Skill not found in release tarball: $skill"
-    fi
-  done
-
-  info "Installing agents to $AGENTS_DIR/..."
-  mkdir -p "$AGENTS_DIR"
-  agent_count=0
-  for agent in "${KNOWN_AGENTS[@]}"; do
-    if [ -f "$tmpdir/extracted/example-workflow/agents/$agent.md" ]; then
-      cp -f "$tmpdir/extracted/example-workflow/agents/$agent.md" "$AGENTS_DIR/$agent.md"
-      agent_count=$((agent_count + 1))
-    else
-      warn "Agent not found in release tarball: $agent.md"
-    fi
-  done
-
-  # Multi-CLI support
-  if [ "$HAS_CODEX" = 1 ]; then
-    install_codex_support "$tmpdir/extracted"
-  fi
-  if [ "$HAS_OPENCODE" = 1 ]; then
-    install_opencode_support "$tmpdir/extracted"
-  fi
-
-  info "Creating SessionStart hook..."
-  write_hook_script
-
-  info "Creating UserPromptSubmit hook..."
-  write_reminder_script
-
-  if [ -f "$SETTINGS_FILE" ]; then
-    local backup
-    backup="${SETTINGS_FILE}.backup-$(date +%Y%m%d-%H%M%S)"
-    cp -f "$SETTINGS_FILE" "$backup"
-    info "Settings backup: ${backup/$HOME/\~}"
-  fi
-
-  info "Registering hook in settings.json..."
-  register_hook
-
-  echo "$VERSION" > "$VERSION_FILE"
-
-  success "Installed $installed_count skills and $agent_count agents"
+  # Write version file with tier info
+  mkdir -p "$(dirname "$VERSION_FILE")"
+  echo "${VERSION}:${INSTALL_TIER}" > "$VERSION_FILE"
 }
 
 write_hook_script() {
@@ -762,15 +703,6 @@ HOOKEOF
   chmod +x "$HOOK_SCRIPT"
 }
 
-write_reminder_script() {
-  # Copy the hook script from the tarball — single source of truth is hooks/superpowers-reminder.sh
-  if [ -f "$tmpdir/extracted/hooks/superpowers-reminder.sh" ]; then
-    cp -f "$tmpdir/extracted/hooks/superpowers-reminder.sh" "$REMINDER_SCRIPT"
-    chmod +x "$REMINDER_SCRIPT"
-  else
-    warn "hooks/superpowers-reminder.sh not found in release tarball"
-  fi
-}
 
 register_hook() {
   python3 << PYEOF
@@ -821,29 +753,26 @@ do_verify() {
     warn "Expected >= 22 skills, found $count"
   fi
 
-  if bash "$HOOK_SCRIPT" 2>/dev/null | python3 -m json.tool > /dev/null 2>&1; then
-    success "Hook produces valid JSON"
-  else
-    warn "Hook did not produce valid JSON — check $HOOK_SCRIPT"
-  fi
+  # Hook checks only for non-plugin tiers (plugin manages its own hooks)
+  if [ "$INSTALL_TIER" != "plugin" ]; then
+    if [ -f "$HOOK_SCRIPT" ] && bash "$HOOK_SCRIPT" 2>/dev/null | python3 -m json.tool > /dev/null 2>&1; then
+      success "Hook produces valid JSON"
+    else
+      warn "Hook did not produce valid JSON — check $HOOK_SCRIPT"
+    fi
 
-  if [ -f "$SETTINGS_FILE" ] && python3 -c "
+    if [ -f "$SETTINGS_FILE" ] && python3 -c "
 import json; d=json.load(open('$SETTINGS_FILE'))
 assert any('beads-superpowers' in json.dumps(e) for e in d.get('hooks',{}).get('SessionStart',[]))
 " 2>/dev/null; then
-    success "Hook registered in settings.json"
-  else
-    warn "Hook not found in settings.json"
+      success "Hook registered in settings.json"
+    else
+      warn "Hook not found in settings.json"
+    fi
   fi
 
-  local agents_found=0
-  for agent in "${KNOWN_AGENTS[@]}"; do
-    [ -f "$AGENTS_DIR/$agent.md" ] && agents_found=$((agents_found + 1))
-  done
-  if [ "$agents_found" -eq "${#KNOWN_AGENTS[@]}" ]; then
-    success "Agents installed: $agents_found"
-  else
-    warn "Expected ${#KNOWN_AGENTS[@]} agents, found $agents_found"
+  if [ -f "$VERSION_FILE" ]; then
+    success "Version file: $(cat "$VERSION_FILE")"
   fi
 }
 
@@ -852,12 +781,12 @@ print_next_steps() {
   local count
   count=$(find "$SKILLS_DIR" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
   echo
-  success "beads-superpowers v$VERSION installed ($count skills, $agent_count agent(s), hook configured)"
+  success "beads-superpowers v$VERSION installed ($count skills via $INSTALL_TIER)"
   echo
   echo "Next steps:"
   echo "  1. Restart Claude Code (or start a new session) to activate skills"
   echo "  2. Run /skills to verify — you should see 22+ skills available"
-  if [ "$HAS_BEADS" = false ]; then
+  if [ "$HAS_BEADS" != true ]; then
     echo
     echo "  3. Install beads for persistent task tracking:"
     echo "       brew install beads          # macOS (Homebrew)"
@@ -883,35 +812,40 @@ print_next_steps() {
 do_uninstall() {
   info "Uninstalling beads-superpowers..."
 
-  local removed=0
-  for skill in "${KNOWN_SKILLS[@]}"; do
-    if [ -d "$SKILLS_DIR/$skill" ]; then
-      rm -rf "${SKILLS_DIR:?}/$skill"
-      removed=$((removed + 1))
-    fi
-  done
-  info "Removed $removed skill directories"
-
-  for agent in "${KNOWN_AGENTS[@]}"; do
-    if [ -f "$AGENTS_DIR/$agent.md" ]; then
-      rm -f "$AGENTS_DIR/$agent.md"
-    fi
-  done
-  info "Removed agent definitions"
-
-  if [ -f "$HOOK_SCRIPT" ]; then
-    rm -f "$HOOK_SCRIPT"
-    info "Removed SessionStart hook script"
+  local installed_tier="tarball"
+  if [ -f "$VERSION_FILE" ]; then
+    local installed
+    installed=$(cat "$VERSION_FILE" 2>/dev/null || echo "unknown")
+    installed_tier="${installed#*:}"
+    [ "$installed_tier" = "$installed" ] && installed_tier="tarball"
   fi
 
-  if [ -f "$REMINDER_SCRIPT" ]; then
-    rm -f "$REMINDER_SCRIPT"
-    info "Removed UserPromptSubmit hook script"
-  fi
+  case "$installed_tier" in
+    plugin)
+      claude plugin uninstall beads-superpowers@beads-superpowers-marketplace 2>/dev/null || true
+      codex plugin uninstall beads-superpowers@beads-superpowers-marketplace 2>/dev/null || true
+      ;;
+    npx|tarball|git)
+      local removed=0
+      for skill in "${KNOWN_SKILLS[@]}"; do
+        if [ -d "$SKILLS_DIR/$skill" ]; then
+          rm -rf "${SKILLS_DIR:?}/$skill"
+          removed=$((removed + 1))
+        fi
+      done
+      info "Removed $removed skill directories"
 
-  if [ -f "$SETTINGS_FILE" ]; then
-    cp -f "$SETTINGS_FILE" "${SETTINGS_FILE}.backup-$(date +%Y%m%d-%H%M%S)"
-    python3 << PYEOF
+      for agent in "${KNOWN_AGENTS[@]}"; do
+        [ -f "$AGENTS_DIR/$agent.md" ] && rm -f "$AGENTS_DIR/$agent.md"
+      done
+      info "Removed agent definitions"
+
+      rm -f "$HOOK_SCRIPT" "$REMINDER_SCRIPT"
+      info "Removed hook scripts"
+
+      if [ -f "$SETTINGS_FILE" ] && command -v python3 >/dev/null 2>&1; then
+        cp -f "$SETTINGS_FILE" "${SETTINGS_FILE}.backup-$(date +%Y%m%d-%H%M%S)"
+        python3 << PYEOF
 import json
 sf = "$SETTINGS_FILE"
 with open(sf) as f:
@@ -924,8 +858,10 @@ with open(sf, "w") as f:
     json.dump(settings, f, indent=2)
     f.write("\n")
 PYEOF
-    info "Removed hooks from settings.json"
-  fi
+        info "Removed hooks from settings.json"
+      fi
+      ;;
+  esac
 
   uninstall_codex_support
   uninstall_opencode_support
@@ -939,19 +875,17 @@ print_dry_run() {
   echo
   printf "${BOLD}beads-superpowers v%s installer (dry run)${NC}\n" "$VERSION"
   echo
-  echo "Would perform these actions:"
-  echo "  1. Download release tarball from GitHub"
-  echo "  2. Copy 22 skills to $SKILLS_DIR/"
-  echo "  3. Copy yegge agent to $AGENTS_DIR/"
-  echo "  4. Create hook script at $HOOK_SCRIPT"
-  echo "  5. Backup $SETTINGS_FILE"
-  echo "  6. Register SessionStart hook in settings.json"
-  echo "  7. Write version marker to $VERSION_FILE"
+  echo "Would install 22 skills using the best available method:"
+  if [ "$HAS_CLAUDE" = 1 ] || [ "$HAS_CODEX" = 1 ]; then
+    echo "  1. Plugin system (Claude Code / Codex)"
+  fi
+  [ "$HAS_NPX" = 1 ] && echo "  2. npx skills add"
+  echo "  3. Direct download (tarball / git clone)"
   if [ "$HAS_CODEX" = 1 ]; then
-    echo "  8. Install skills to ~/.codex/skills/ (Codex CLI detected)"
+    echo "  + Codex CLI skills"
   fi
   if [ "$HAS_OPENCODE" = 1 ]; then
-    echo "  9. Install skills + plugin to ~/.config/opencode/ (OpenCode detected)"
+    echo "  + OpenCode skills + plugin"
   fi
   echo
   echo "No files were modified."
