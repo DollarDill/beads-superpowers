@@ -9,6 +9,7 @@
 #   curl -fsSL <url> | bash -s -- --dry-run         # Preview
 #   curl -fsSL <url> | bash -s -- --uninstall       # Remove
 
+# shellcheck disable=SC2034  # detection/flag vars consumed by later install tiers
 set -euo pipefail
 
 # --- Configuration ---
@@ -41,10 +42,22 @@ FLAG_DRY_RUN=false
 FLAG_UNINSTALL=false
 FLAG_TEST=false
 FLAG_VERSION=""
+# shellcheck disable=SC2034  # FLAG_SKIP_CHECKSUM used in later install tiers
+FLAG_SKIP_CHECKSUM=false
 UPGRADING=false
+# shellcheck disable=SC2034  # PREVIOUS_TIER used in later install tiers
+PREVIOUS_TIER=""
 HAS_BEADS=false
-HAS_CODEX=false
-HAS_OPENCODE=false
+HAS_CLAUDE=0
+HAS_CODEX=0
+HAS_OPENCODE=0
+HAS_NPX=0
+HAS_GIT=0
+HAS_CURL=0
+HAS_WGET=0
+HAS_PYTHON3=0
+# shellcheck disable=SC2034  # INSTALL_TIER used in later install tiers
+INSTALL_TIER=""
 VERSION=""
 agent_count=0
 
@@ -76,6 +89,7 @@ Flags:
   --test          Install to /tmp/beads-superpowers-test/ (verifies then cleans up)
   --uninstall     Remove beads-superpowers skills, hook, and settings entry
   --version X.Y.Z Pin to a specific version (default: latest GitHub release)
+  --skip-checksum   Skip SHA-256 checksum verification (tarball downloads)
   --help, -h      Show this help
 
 Environment:
@@ -86,30 +100,31 @@ USAGE
 parse_flags() {
   while [ $# -gt 0 ]; do
     case "$1" in
-      --yes|-y)     FLAG_YES=true ;;
-      --dry-run)    FLAG_DRY_RUN=true ;;
-      --test)       FLAG_TEST=true ;;
-      --uninstall)  FLAG_UNINSTALL=true ;;
-      --version)    shift; FLAG_VERSION="${1:-}"; [ -z "$FLAG_VERSION" ] && { error "--version requires a value"; exit 1; } ;;
-      --help|-h)    usage; exit 0 ;;
-      *)            error "Unknown flag: $1"; usage; exit 1 ;;
+      --yes|-y)          FLAG_YES=true ;;
+      --dry-run)         FLAG_DRY_RUN=true ;;
+      --test)            FLAG_TEST=true ;;
+      --uninstall)       FLAG_UNINSTALL=true ;;
+      --version)         shift; FLAG_VERSION="${1:-}"; [ -z "$FLAG_VERSION" ] && { error "--version requires a value"; exit 1; } ;;
+      --skip-checksum)   FLAG_SKIP_CHECKSUM=true ;;
+      --help|-h)         usage; exit 0 ;;
+      *)                 error "Unknown flag: $1"; usage; exit 1 ;;
     esac
     shift
   done
 }
 
 # --- Phase 1: Checks ---
-check_prerequisites() {
-  local missing=()
-  command -v curl >/dev/null 2>&1    || missing+=(curl)
-  command -v python3 >/dev/null 2>&1 || missing+=(python3)
-  command -v tar >/dev/null 2>&1     || missing+=(tar)
-  if [ ${#missing[@]} -gt 0 ]; then
-    error "Missing required tools: ${missing[*]}"
-    echo "  Install via: brew install ${missing[*]}  (macOS)"
-    echo "           or: apt install ${missing[*]}   (Linux)"
-    exit 1
-  fi
+# shellcheck disable=SC2034  # vars are consumed by later install tiers
+detect_tools() {
+  command -v claude   >/dev/null 2>&1 && HAS_CLAUDE=1
+  command -v codex    >/dev/null 2>&1 && HAS_CODEX=1
+  command -v opencode >/dev/null 2>&1 && HAS_OPENCODE=1
+  command -v npx      >/dev/null 2>&1 && HAS_NPX=1
+  command -v git      >/dev/null 2>&1 && HAS_GIT=1
+  command -v curl     >/dev/null 2>&1 && HAS_CURL=1
+  command -v wget     >/dev/null 2>&1 && HAS_WGET=1
+  command -v python3  >/dev/null 2>&1 && HAS_PYTHON3=1
+  command -v bd       >/dev/null 2>&1 && HAS_BEADS=true
 }
 
 detect_upstream_conflict() {
@@ -143,8 +158,10 @@ resolve_version() {
     VERSION="$FLAG_VERSION"
     return
   fi
-  VERSION=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null \
-    | python3 -c "import json,sys; print(json.load(sys.stdin)['tag_name'].lstrip('v'))" 2>/dev/null) || true
+  if [ "$HAS_CURL" = 1 ]; then
+    VERSION=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null \
+      | grep '"tag_name"' | head -1 | sed 's/.*"v\([^"]*\)".*/\1/') || true
+  fi
   if [ -z "$VERSION" ]; then
     warn "Could not fetch latest version from GitHub API. Using fallback: v$FALLBACK_VERSION"
     VERSION="$FALLBACK_VERSION"
@@ -153,27 +170,29 @@ resolve_version() {
 
 detect_existing_install() {
   if [ -f "$VERSION_FILE" ]; then
-    local installed
+    local installed installed_version installed_tier
     installed=$(cat "$VERSION_FILE" 2>/dev/null || echo "unknown")
-    if [ "$installed" = "$VERSION" ]; then
-      success "beads-superpowers v$VERSION is already installed."
+    installed_version="${installed%%:*}"
+    installed_tier="${installed#*:}"
+    # If no colon separator, legacy format — treat as tarball tier
+    if [ "$installed_version" = "$installed_tier" ]; then
+      installed_tier="tarball"
+    fi
+    if [ "$installed_version" = "$VERSION" ] && [ -z "$INSTALL_TIER" ]; then
+      success "beads-superpowers v$VERSION is already installed (via $installed_tier)."
       exit 0
     fi
-    info "Upgrading beads-superpowers: v$installed → v$VERSION"
+    if [ "$installed_version" != "$VERSION" ]; then
+      info "Upgrading beads-superpowers: v$installed_version → v$VERSION"
+    else
+      info "Reinstalling beads-superpowers v$VERSION (tier change: $installed_tier → new)"
+    fi
     UPGRADING=true
+    # shellcheck disable=SC2034  # PREVIOUS_TIER used in later install tiers
+    PREVIOUS_TIER="$installed_tier"
   fi
 }
 
-detect_beads() {
-  if command -v bd >/dev/null 2>&1; then HAS_BEADS=true; fi
-}
-
-detect_clis() {
-  HAS_CODEX=false
-  HAS_OPENCODE=false
-  command -v codex    >/dev/null 2>&1 && HAS_CODEX=true
-  command -v opencode >/dev/null 2>&1 && HAS_OPENCODE=true
-}
 
 # --- Phase 2: Consent ---
 print_consent() {
@@ -189,10 +208,10 @@ print_consent() {
   echo "  • Create SessionStart hook at $HOOK_SCRIPT"
   echo "  • Create UserPromptSubmit hook at $REMINDER_SCRIPT"
   echo "  • Register both hooks in $SETTINGS_FILE (backup created first)"
-  if [ "$HAS_CODEX" = true ]; then
+  if [ "$HAS_CODEX" = 1 ]; then
     echo "  • Install skills to ~/.codex/skills/ (Codex CLI detected)"
   fi
-  if [ "$HAS_OPENCODE" = true ]; then
+  if [ "$HAS_OPENCODE" = 1 ]; then
     echo "  • Install skills + plugin to ~/.config/opencode/ (OpenCode detected)"
   fi
   echo
@@ -319,11 +338,10 @@ do_install() {
   done
 
   # Multi-CLI support
-  detect_clis
-  if [ "$HAS_CODEX" = true ]; then
+  if [ "$HAS_CODEX" = 1 ]; then
     install_codex_support "$tmpdir/extracted"
   fi
-  if [ "$HAS_OPENCODE" = true ]; then
+  if [ "$HAS_OPENCODE" = 1 ]; then
     install_opencode_support "$tmpdir/extracted"
   fi
 
@@ -497,14 +515,14 @@ print_next_steps() {
     echo "       npm install -g @beads/bd   # any platform (npm)"
     echo "  4. In each project: bd init"
   fi
-  if [ "$HAS_CODEX" = true ]; then
+  if [ "$HAS_CODEX" = 1 ]; then
     echo
     printf '  %bCodex CLI:%b\n' "${BOLD}" "${NC}"
     echo "    Add to ~/.codex/config.toml:"
     echo "      [features]"
     echo "      codex_hooks = true"
   fi
-  if [ "$HAS_OPENCODE" = true ]; then
+  if [ "$HAS_OPENCODE" = 1 ]; then
     echo
     printf '  %bOpenCode:%b\n' "${BOLD}" "${NC}"
     echo "    Plugin installed — skills and hooks are active automatically."
@@ -580,10 +598,10 @@ print_dry_run() {
   echo "  5. Backup $SETTINGS_FILE"
   echo "  6. Register SessionStart hook in settings.json"
   echo "  7. Write version marker to $VERSION_FILE"
-  if [ "$HAS_CODEX" = true ]; then
+  if [ "$HAS_CODEX" = 1 ]; then
     echo "  8. Install skills to ~/.codex/skills/ (Codex CLI detected)"
   fi
-  if [ "$HAS_OPENCODE" = true ]; then
+  if [ "$HAS_OPENCODE" = 1 ]; then
     echo "  9. Install skills + plugin to ~/.config/opencode/ (OpenCode detected)"
   fi
   echo
@@ -680,7 +698,7 @@ assert d['hooks']['UserPromptSubmit']
 # --- Main ---
 main() {
   parse_flags "$@"
-  check_prerequisites
+  detect_tools
 
   # Handle test mode — runs install + verify + uninstall in temp dir
   if [ "$FLAG_TEST" = true ]; then
@@ -696,7 +714,6 @@ main() {
 
   detect_upstream_conflict
   resolve_version
-  detect_clis
 
   # Handle dry-run before existing-install detection (which may exit 0)
   if [ "$FLAG_DRY_RUN" = true ]; then
@@ -705,7 +722,6 @@ main() {
   fi
 
   detect_existing_install
-  detect_beads
 
   print_consent
   wait_for_consent
