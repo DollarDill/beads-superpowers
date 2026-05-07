@@ -23,8 +23,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **OpenCode tool mapping reference** — `skills/using-superpowers/references/opencode-tools.md` maps Claude Code tool names to OpenCode equivalents (subagent dispatch, environment detection).
 - ADR-0007: Multi-CLI Plugin Architecture (Codex + OpenCode).
 - E2E tests for multi-CLI install/uninstall and hook format validation (6 scenarios: CC/Codex/generic × session-start/reminder).
+- **3-tier fallback chain** in `install.sh` — tries plugin system (Claude Code/Codex marketplace) first, then `npx skills add`, then tarball download, then git clone. Each tier cleans up on failure before trying the next.
+- **SHA-256 checksum validation** for tarball downloads — 3-tool fallback (`sha256sum` → `shasum` → `openssl`), on by default, `--skip-checksum` to bypass. `checksums.txt` published as a GitHub Release asset.
+- **Atomic rollback** via staging directory — skills install to a temp dir first, only move to final location on complete success. No partial installs on failure.
+- `BEADS_SUPERPOWERS_CHECKSUMS_URL` env var in `install.sh` — overrides the checksums.txt download URL for local testing.
+- ADR-0008: Installer Hardening — 3-Tier Fallback Chain with Checksums and Atomic Rollback.
+- E2E tests for checksum validation (valid/corrupted/missing/skip), fallback chain (PATH stub-based tool hiding), atomic rollback (read-only target dir), and `bd` integration (hook JSON with bd in PATH).
+- Claude Code CLI, `bd`, and `wget` added to E2E Docker test container.
+- GitHub Action step in release workflow to generate and upload `checksums.txt` alongside release tarballs.
 
 ### Changed
+
+- `install.sh`: refactored from monolithic `do_install` to 4 tier functions (`try_plugin_install`, `try_npx_install`, `try_tarball_install`, `try_git_install`) with a cascade orchestrator.
+- `install.sh`: prerequisites are now lazy — each tier checks its own deps instead of a global hard-fail at startup. `python3` only required for Tiers 2/3 (settings.json registration).
+- `install.sh`: version file now stores `version:tier` format (e.g., `0.5.3:tarball`). Tier-aware uninstall reads the tier and cleans up the right paths. Auto-uninstalls the previous tier on tier-switch reinstall.
+- `install.sh`: `--version X.Y.Z` now forces Tier 3 (tarball) since plugin/npx can't pin versions.
+- `install.sh`: `resolve_version` uses `grep`+`sed` instead of `python3` for GitHub API JSON parsing.
 
 - `brainstorming`: optional stress-test step between spec approval and writing-plans — offers adversarial review when design is complex or high-risk
 - `brainstorming`: added `## Integration` section documenting skill relationships

@@ -31,6 +31,12 @@ cd tests/claude-code && ./run-skill-tests.sh
 
 # Full workflow integration (10-30 min)
 cd tests/claude-code && ./run-skill-tests.sh --integration
+
+# Installer E2E (requires Docker) — install/uninstall + checksum/fallback/rollback
+./tests/installer/run-tests.sh
+
+# Quick installer test (no Docker) — install/verify/uninstall in /tmp
+bash install.sh --test
 ```
 
 ## Before you open a PR

@@ -34,7 +34,7 @@ The installer detects which CLIs are on your system and installs skills and hook
 | Codex | `~/.codex/skills/` | Enable with `codex_hooks = true` in `~/.codex/config.toml` |
 | OpenCode | `~/.config/opencode/skills/` | TypeScript plugin at `~/.config/opencode/plugins/` (active automatically) |
 
-Supports `--yes` (skip prompts), `--version X.Y.Z` (pin version), `--dry-run` (preview), and `--uninstall`.
+Supports `--yes` (skip prompts), `--version X.Y.Z` (pin version), `--dry-run` (preview), `--skip-checksum` (bypass SHA-256 verification), and `--uninstall`.
 
 ### Claude Code Marketplace
 
@@ -62,10 +62,11 @@ codex_hooks = true
 ### npx (Vercel Skills CLI)
 
 ```bash
-npx skills add DollarDill/beads-superpowers --all -y -g
+npx skills add DollarDill/beads-superpowers -a claude-code -g --copy -y
 # npx installs skills only — no hooks. Run the setup skill in your
 # chosen agentic terminal to configure the SessionStart and
 # UserPromptSubmit hooks.
+# Use -a codex to also install for Codex CLI.
 ```
 
 ## First project setup

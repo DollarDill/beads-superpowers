@@ -95,7 +95,7 @@ A plugin for Claude Code, Codex, and OpenCode that merges [Superpowers](https://
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs.
 - `tests/` — 6 test suites: brainstorm-server (Node.js), claude-code skill tests, explicit-skill-requests, installer (Docker E2E), skill-triggering, subagent-driven-dev.
 - `scripts/` — `bump-version.sh` (sync version across 6 files), `sync-skill-count.sh` (sync skill counts across all files), `build-docs.sh`.
-- `install.sh` — curl installer. Installs skills globally, auto-detects Claude Code, Codex, and OpenCode CLIs and installs to each.
+- `install.sh` — curl installer with 3-tier fallback chain (plugin system → npx → tarball/git clone). SHA-256 checksum validation, atomic rollback via staging directory, lazy prerequisites. Auto-detects Claude Code, Codex, and OpenCode CLIs.
 - `mkdocs.yml` + `main.py` — MkDocs Material site config and macros plugin.
 
 ## Key Design Decisions
@@ -332,8 +332,12 @@ cd tests/claude-code && ./run-skill-tests.sh --integration
 ### Running Installer E2E Test
 
 ```bash
-# Requires Docker. Tests install/re-install/uninstall in a clean container.
+# Requires Docker. Tests install/re-install/uninstall + checksum validation,
+# fallback chain, atomic rollback, and bd integration in a clean container.
 ./tests/installer/run-tests.sh
+
+# Quick local test (no Docker required) — install/verify/uninstall in /tmp
+bash install.sh --test
 ```
 
 ## Version Management
