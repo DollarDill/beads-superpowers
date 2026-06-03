@@ -17,17 +17,17 @@ Skills use Claude Code tool names. When you encounter these in a skill, use your
 OpenCode supports custom subagents via `.opencode/agents/` (Markdown with YAML frontmatter).
 Built-in types: Build (primary), Plan (primary), General (subagent), Explore (subagent, read-only).
 
-When a skill says to dispatch a named agent type:
+When a skill says to dispatch an agent via a prompt template:
 
-1. Find the agent's prompt file (e.g., `agents/code-reviewer.md` or the skill's
-   local prompt template like `code-quality-reviewer-prompt.md`)
+1. Find the skill's prompt template file (e.g., `code-reviewer.md`,
+   `code-quality-reviewer-prompt.md`)
 2. Read the prompt content
 3. Fill any template placeholders (`{BASE_SHA}`, `{WHAT_WAS_IMPLEMENTED}`, etc.)
 4. Use `@agent` mention or `task` tool to dispatch with the filled content
 
 | Skill instruction | OpenCode equivalent |
 |-------------------|---------------------|
-| `Task tool (superpowers:code-reviewer)` | Dispatch via `task` tool with `code-reviewer.md` content |
+| `Task tool (general-purpose)` with template from `code-reviewer.md` | Dispatch via `task` tool with template content |
 | `Task tool (general-purpose)` with inline prompt | Dispatch via `task` tool with the same prompt |
 
 ## Environment detection

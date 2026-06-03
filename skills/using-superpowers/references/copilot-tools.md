@@ -27,7 +27,7 @@ Copilot CLI's `task` tool accepts an `agent_type` parameter:
 |-------------------|----------------------|
 | `general-purpose` | `"general-purpose"` |
 | `Explore` | `"explore"` |
-| Named plugin agents (e.g. `superpowers:code-reviewer`) | Discovered automatically from installed plugins |
+| `general-purpose` with prompt template | Dispatch with template content as prompt |
 
 ## Async shell sessions
 
