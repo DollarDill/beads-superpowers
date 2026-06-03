@@ -176,7 +176,7 @@ An empirical finding: when a skill's YAML `description` field summarized the wor
 
 ## Sources
 
-- [obra/superpowers](https://github.com/obra/superpowers) v5.0.7 — 14 composable skills for AI agents (MIT)
-- [gastownhall/beads](https://github.com/gastownhall/beads) v1.0.2 — Persistent issue tracker for AI agents (MIT)
+- [obra/superpowers](https://github.com/obra/superpowers) v5.1.0 — 14 composable skills for AI agents (MIT)
+- [gastownhall/beads](https://github.com/gastownhall/beads) v1.0.4 — Persistent issue tracker for AI agents (MIT)
 - Cialdini, R. B. (2021). *Influence: The Psychology of Persuasion* (New and Expanded Edition). Harper Business.
 - Meincke, L., et al. (2025). AI agent compliance with explicit vs hedged instructions. Referenced in `skills/writing-skills/persuasion-principles.md`.

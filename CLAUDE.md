@@ -75,7 +75,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Project Overview
 
-A plugin for Claude Code, Codex, and OpenCode that merges [Superpowers](https://github.com/obra/superpowers) skills (v5.0.7) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.0.2). It gives AI coding agents 22 composable process-discipline skills (TDD, brainstorming, systematic debugging, two-stage code review, verification) plus persistent task memory via a Dolt-backed database.
+A plugin for Claude Code, Codex, and OpenCode that merges [Superpowers](https://github.com/obra/superpowers) skills (v5.1.0) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.0.4). It gives AI coding agents 22 composable process-discipline skills (TDD, brainstorming, systematic debugging, two-stage code review, verification) plus persistent task memory via a Dolt-backed database.
 
 **Repository:** <https://github.com/DollarDill/beads-superpowers>
 **Version:** 0.5.3
@@ -408,7 +408,7 @@ ln -s ~/workplace/beads-superpowers \
 
 | Source | Version | What We Track |
 |--------|---------|---------------|
-| [obra/superpowers](https://github.com/obra/superpowers) | v5.0.7 (baseline) | Skill content, new skills, hook changes |
-| [gastownhall/beads](https://github.com/gastownhall/beads) | v1.0.2 (baseline) | CLI commands, new features, bd prime format |
+| [obra/superpowers](https://github.com/obra/superpowers) | v5.1.0 (baseline) | Skill content, new skills, hook changes |
+| [gastownhall/beads](https://github.com/gastownhall/beads) | v1.0.4 (baseline) | CLI commands, new features, bd prime format |
 
 Use the `auditing-upstream-drift` skill to check for staleness.
