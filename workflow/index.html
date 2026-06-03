@@ -841,14 +841,15 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><code>writing-plans</code> decomposes the design into bite-sized tasks (2–5 min each) with exact file paths, code, and verification steps. Every task becomes a bead. Plan must be user-approved. No "TBD" or "as needed" — every step is concrete or the plan isn't ready.</p>
 <h3 id="s7-implement">S7 — Implement</h3>
 <p>Code runs in an isolated worktree under TDD (red-green-refactor). The orchestrator creates an epic bead with task children and dependency chains, then dispatches implementer subagents.</p>
+<p>Before creating the worktree, the skill runs pre-flight checks: it verifies the agent isn't already inside a worktree and isn't in a submodule, and asks for consent when the creation is user-initiated rather than SDD-automated.</p>
 <p>When multiple tasks are unblocked, <strong>parallel batch mode</strong> runs up to 5 concurrently, each in its own worktree. Sequential mode runs one at a time when tasks have dependencies.</p>
-<p>Every subagent result passes through the <a href="#review-gate">review gate</a> before being accepted.</p>
+<p>Every subagent result passes through the <a href="#review-gate">review gate</a> before being accepted. Dependency chains between tasks use <code>bd batch</code> for atomic wiring — if any dependency fails to register, the whole batch rolls back rather than leaving orphaned state.</p>
 <h3 id="s8-verify">S8 — Verify</h3>
 <p><code>verification-before-completion</code> runs the full test suite fresh — not relying on the last run during development. "Tests pass" means a test command was just executed and its output is attached.</p>
 <h3 id="s9-document">S9 — Document</h3>
 <p><code>document-release</code> scans the diff against existing docs for stale references, missing entries, and outdated examples. When the audit flags sections needing major prose rewrites, <code>write-documentation</code> fires for those sections.</p>
 <h3 id="s10-close-branch">S10 — Close branch</h3>
-<p><code>finishing-a-development-branch</code> verifies tests pass, presents options (merge, PR, keep, discard), cleans up the worktree, and runs the Land the Plane protocol: close beads, push to remotes, verify clean state. Branch paths terminate here — work is not done until both <code>bd dolt push</code> and <code>git push</code> succeed.</p>
+<p><code>finishing-a-development-branch</code> detects the environment (normal repo, named-branch worktree, or detached HEAD) and presents context-aware options — 4 choices for normal/worktree, 3 for detached HEAD (merge is unavailable). Provenance-based cleanup only removes worktrees inside <code>.worktrees/</code>. Ends with the Land the Plane protocol: close beads, push to remotes, verify clean state. Branch paths terminate here — work is not done until both <code>bd dolt push</code> and <code>git push</code> succeed.</p>
 <h3 id="s11-session-close">S11 — Session close</h3>
 <p>Fires only on non-branch paths (research queries, quick tasks that didn't create a branch). Runs the same close ritual as S10's Land the Plane: <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code> → <code>git status</code>. The next session runs <code>bd prime</code> to restore the full picture.</p>
 <h2 id="review-gate">Review gate</h2>
@@ -933,7 +934,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="May 3, 2026 09:24:52 UTC">May 3, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 3, 2026 09:30:55 UTC">June 3, 2026</span>
   </span>
 
     

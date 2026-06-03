@@ -1062,10 +1062,10 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p>Anti-sycophancy protocol. Requires technical evaluation of each suggestion rather than blind acceptance. Escalates disagreements explicitly.</p>
 <h3 id="using-git-worktrees">using-git-worktrees</h3>
 <p><strong>Trigger:</strong> Feature work needing isolation, or before executing plans.</p>
-<p>Creates and manages isolated git worktrees via <code>bd worktree</code>. Supports multiple concurrent worktrees for parallel subagent work — one per task, max 5.</p>
+<p>Creates and manages isolated git worktrees via <code>bd worktree</code>. Pre-flight checks detect existing worktree isolation, submodule contexts, and prompt for consent (skipped when SDD-dispatched). Supports multiple concurrent worktrees for parallel subagent work — one per task, max 5. Use <code>bd -C .worktrees/&lt;name&gt;</code> for cross-worktree commands.</p>
 <h3 id="finishing-a-development-branch">finishing-a-development-branch</h3>
 <p><strong>Trigger:</strong> Implementation complete, tests pass, ready to integrate.</p>
-<p>Decision tree: merge locally, create PR, keep branch, or discard. Ends with the mandatory Land the Plane sequence: <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code>.</p>
+<p>Detects environment (normal repo, named-branch worktree, or detached HEAD) and adapts options — 4 choices for normal/worktree, 3 for detached HEAD (no merge). Provenance-based cleanup only removes <code>.worktrees/</code> paths. Ends with the mandatory Land the Plane sequence: <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code>.</p>
 <h3 id="document-release">document-release</h3>
 <p><strong>Trigger:</strong> After code changes are committed, before PR merge.</p>
 <p>Walks through README, CHANGELOG, CLAUDE.md, CONTRIBUTING, and other docs to find and fix drift against shipped code.</p>
@@ -1142,6 +1142,21 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <td>Attach evidence</td>
 <td><code>bd note &lt;id&gt; "context"</code></td>
 <td>verification</td>
+</tr>
+<tr>
+<td>Explain dependencies</td>
+<td><code>bd ready --explain</code></td>
+<td>systematic-debugging, executing-plans</td>
+</tr>
+<tr>
+<td>Atomic batch ops</td>
+<td><code>bd batch</code> (stdin)</td>
+<td>SDD, executing-plans, finishing-branch</td>
+</tr>
+<tr>
+<td>Cross-worktree ops</td>
+<td><code>bd -C &lt;path&gt; &lt;cmd&gt;</code></td>
+<td>using-git-worktrees, SDD</td>
 </tr>
 <tr>
 <td>Sync to remote</td>
@@ -1225,7 +1240,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="May 3, 2026 10:57:52 UTC">May 3, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 3, 2026 09:24:06 UTC">June 3, 2026</span>
   </span>
 
     
