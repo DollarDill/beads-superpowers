@@ -73,6 +73,14 @@ Subsequent changes went further:
 
 **Orchestrator-only design.** Only the orchestrating agent creates, claims, and closes beads. Subagents focus on their job. The one exception is `implementer-prompt.md`, which is beads-aware by design — it includes bead lifecycle commands, mandatory skill invocations, and LSP-first code navigation.
 
+**Safety-aware worktree creation.** The `using-git-worktrees` skill now runs pre-flight checks before creating worktrees: environment detection (`GIT_DIR` vs `GIT_COMMON`) catches nested-worktree-from-worktree mistakes, a submodule guard prevents worktree creation in submodule contexts where git's shared `.git` pointer breaks, and a conditional consent flow asks the user before creating worktrees in manual contexts while skipping the prompt during automated SDD execution.
+
+**Environment-aware branch finishing.** `finishing-a-development-branch` detects whether the agent is in a normal repository, a named-branch worktree, or a detached HEAD, and adapts the option menu accordingly — 4 choices in normal and worktree contexts, 3 for detached HEAD where merge is impossible. Provenance-based cleanup only removes worktrees inside `.worktrees/`, leaving externally created worktrees untouched.
+
+**Template-only code review dispatch.** The standalone `agents/code-reviewer.md` file was removed. Code review now dispatches through the prompt template at `skills/requesting-code-review/code-reviewer.md`, matching upstream superpowers v5.1.0. One source of truth per subagent role, consistent with the prompt template pattern already used for the implementer and researcher.
+
+**Atomic beads operations.** Skills that create multiple beads in sequence — epics with child tasks and dependency chains — can now use `bd batch` to run the whole set as a single transaction. If any operation fails, the entire batch rolls back, preventing orphaned beads from partial failures.
+
 ## The lifecycle
 
 A non-trivial feature request moves through up to 10 states. Simple tasks skip research and planning (S2–S6) but still pass through the quality pipeline (S7–S10). S11 (Session Close) fires only on non-branch paths like research queries.
@@ -120,7 +128,7 @@ graph TD
 
 **Step 9 — Documentation.** `document-release` scans the diff against existing docs for stale references, missing entries, and outdated examples. When the audit flags sections needing major prose rewrites, `write-documentation` fires for those sections.
 
-**Step 10 — Close branch.** `finishing-a-development-branch` verifies tests pass, determines the base branch, presents options (merge, PR, keep, discard), cleans up, and runs the Land the Plane protocol: `bd close` → `bd dolt push` → `git push` → `git status`. Branch paths terminate here — work is not done until both task state and code reach the remote.
+**Step 10 — Close branch.** `finishing-a-development-branch` detects the current environment — normal repository, named-branch worktree, or detached HEAD — and presents context-aware options: 4 choices for normal and worktree contexts, 3 for detached HEAD where merge is unavailable. Provenance-based cleanup only removes worktrees inside `.worktrees/`, leaving externally created worktrees alone. The skill ends with the Land the Plane protocol: `bd close` → `bd dolt push` → `git push` → `git status`. Branch paths terminate here — work is not done until both task state and code reach the remote.
 
 **Step 11 — Session close.** Fires only on non-branch paths (research queries, quick tasks that didn't create a branch). Runs the same close ritual as Step 10's Land the Plane: close beads, push to remotes, verify clean state. The next session runs `bd prime` to restore the full picture.
 
@@ -171,6 +179,8 @@ An empirical finding: when a skill's YAML `description` field summarized the wor
 **Plugin subsumes beads hooks.** Beads' `bd setup claude` installs hooks that run `bd prime`. The plugin also needs to inject skill context. Rather than fire both and waste 3–4k tokens on redundant context, the plugin's hook does both jobs and warns if the standalone hooks are still installed.
 
 **Land the Plane in the branch skill.** The session close protocol lives in `finishing-a-development-branch` (Step 6) rather than a separate skill. Branch paths terminate at S10, which includes the full push ritual. Non-branch paths (research queries) use S11 (SESSION_CLOSE) for the same ritual without the branch decision tree.
+
+**Template-only agent dispatch.** Code review was the last subagent dispatched via a standalone agent file (`agents/code-reviewer.md`). In v0.6.0 the file was removed and the reviewer dispatches through its skill's prompt template, matching the implementer and researcher. All subagent definitions now live inside the skills that use them.
 
 **Skills are Markdown, not code.** Following Superpowers' zero-dependency philosophy, all skills are plain Markdown with YAML frontmatter. No build step. The only runtime dependency is `bd`, which is optional — skills still work without it, they just lose persistence.
 
