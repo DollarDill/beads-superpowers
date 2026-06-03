@@ -9,7 +9,7 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
-**Core principle:** Verify tests → Present options → Execute choice → Clean up.
+**Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
@@ -47,7 +47,24 @@ bd find-duplicates
 
 If `bd preflight` or `bd find-duplicates` reports issues, fix them before proceeding. Then continue to Step 2.
 
-### Step 2: Determine Base Branch
+### Step 2: Detect Environment
+
+Run the following to determine the git context:
+
+```bash
+GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
+GIT_COMMON=$(git rev-parse --git-common-dir 2>/dev/null)
+IS_WORKTREE=$( [ "$GIT_DIR" != "$GIT_COMMON" ] && echo "yes" || echo "no" )
+IS_DETACHED=$( git symbolic-ref HEAD >/dev/null 2>&1 && echo "no" || echo "yes" )
+```
+
+| Context | Detection | Menu |
+|---------|-----------|------|
+| Normal repo | `git rev-parse --git-dir` equals `git rev-parse --git-common-dir`, and `git symbolic-ref HEAD` succeeds | Full 4 options |
+| Named-branch worktree | `git rev-parse --git-dir` differs from `git rev-parse --git-common-dir`, and `git symbolic-ref HEAD` succeeds | Full 4 options |
+| Detached HEAD | `git symbolic-ref HEAD` fails (exit code 128) | Reduced 3 options (no "Merge locally") |
+
+### Step 3: Determine Base Branch
 
 ```bash
 # Try common base branches
@@ -56,9 +73,11 @@ git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 
 Or ask: "This branch split from main - is that correct?"
 
-### Step 3: Present Options
+### Step 4: Present Options
 
-**Use the `AskUserQuestion` tool** to present exactly these 4 options. Do NOT output them as text — invoke the tool for structured input:
+**Use the `AskUserQuestion` tool** to present options. Do NOT output them as text — invoke the tool for structured input.
+
+**For normal repo or named-branch worktree** (`IS_DETACHED=no`), present all 4 options:
 
 ```json
 {
@@ -88,9 +107,37 @@ Or ask: "This branch split from main - is that correct?"
 }
 ```
 
-**Don't add explanation** — the tool options are self-describing. Map the user's selection to Option 1–4 in Step 4.
+**For detached HEAD** (`IS_DETACHED=yes`), present 3 options (omit "Merge locally"):
 
-### Step 4: Execute Choice
+```json
+{
+  "questions": [{
+    "question": "Implementation complete. How would you like to finish this work?",
+    "header": "Branch",
+    "options": [
+      {
+        "label": "Create Pull Request",
+        "description": "Push branch to origin and open a PR via gh cli"
+      },
+      {
+        "label": "Keep as-is",
+        "description": "Leave the worktree intact — handle it later"
+      },
+      {
+        "label": "Discard work",
+        "description": "Permanently delete all commits in this worktree (requires confirmation)"
+      }
+    ],
+    "multiSelect": false
+  }]
+}
+```
+
+Note: Merge is unavailable because HEAD is detached — there is no branch to merge.
+
+**Don't add explanation** — the tool options are self-describing. Map the user's selection to the corresponding option in Step 5.
+
+### Step 5: Execute Choice
 
 #### Option 1: Merge Locally
 
@@ -111,7 +158,7 @@ git merge <feature-branch>
 git branch -d <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 6)
 
 #### Option 2: Push and Create PR
 
@@ -130,7 +177,7 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 6)
 
 #### Option 3: Keep As-Is
 
@@ -158,9 +205,9 @@ git checkout <base-branch>
 git branch -D <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 6)
 
-### Step 5: Cleanup Worktree
+### Step 6: Cleanup Worktree
 
 **For Options 1, 2, 4:**
 
@@ -169,9 +216,15 @@ Check if in worktree:
 bd worktree info
 ```
 
-If yes:
+If yes, check provenance before removing:
+
 ```bash
-bd worktree remove <worktree-name>
+# Only remove worktrees inside .worktrees/ (created by our tooling)
+WORKTREE_PATH=$(bd worktree info --path 2>/dev/null)
+case "$WORKTREE_PATH" in
+  */.worktrees/*) bd worktree remove <worktree-name> ;;
+  *) echo "WARNING: This worktree is not inside .worktrees/ — it may have been created externally. Skipping automatic removal." ;;
+esac
 ```
 
 **For Option 3:** Keep worktree.
@@ -183,9 +236,9 @@ If you discovered something reusable, capture it before closing:
 bd remember "lesson: <pattern or insight from this branch>"
 ```
 
-### Step 6: Land the Plane
+### Step 7: Land the Plane
 
-**After executing the chosen option (Steps 1-5), complete the session close ritual. This is MANDATORY.**
+**After executing the chosen option (Steps 1-6), complete the session close ritual. This is MANDATORY.**
 
 Work is NOT complete until `git push` succeeds.
 
@@ -222,7 +275,7 @@ git status    # MUST show "up to date with origin"
 | 3. Keep as-is | - | - | ✓ | - |
 | 4. Discard | - | - | - | ✓ (force) |
 
-**Step 6 (Land the Plane) applies to ALL options.** After executing any option above, complete the session close ritual: close beads, `bd dolt push`, `git push`, `git status`.
+**Step 7 (Land the Plane) applies to ALL options.** After executing any option above, complete the session close ritual: close beads, `bd dolt push`, `git push`, `git status`.
 
 ## Common Mistakes
 
@@ -232,7 +285,7 @@ git status    # MUST show "up to date with origin"
 
 **Open-ended questions**
 - **Problem:** "What should I do next?" → ambiguous
-- **Fix:** Use `AskUserQuestion` tool with exactly 4 structured options
+- **Fix:** Use `AskUserQuestion` tool with structured options (4 for normal/worktree context, 3 for detached HEAD)
 
 **Automatic worktree cleanup**
 - **Problem:** Remove worktree when might need it (Option 2, 3)
@@ -252,9 +305,11 @@ git status    # MUST show "up to date with origin"
 
 **Always:**
 - Verify tests before offering options
-- Present exactly 4 options via `AskUserQuestion` tool
-- Get typed confirmation for Option 4
-- Clean up worktree for Options 1 & 4 only
+- Detect environment before presenting options (Step 2)
+- Present 4 options for normal/worktree context, 3 for detached HEAD, via `AskUserQuestion` tool
+- Get typed confirmation for discard option
+- Clean up worktree for merge/PR/discard options only (not keep-as-is)
+- Check worktree provenance before automatic removal
 
 - Work is NOT complete until both syncs succeed
 
