@@ -85,6 +85,14 @@ Subsequent changes went further:
 
 **Atomic beads operations.** Skills that create multiple beads in sequence — epics with child tasks and dependency chains — can now use `bd batch` to run the whole set as a single transaction. If any operation fails, the entire batch rolls back, preventing orphaned beads from partial failures.
 
+**Deterministic self-review.** The `writing-plans` skill runs `bd lint` on the epic and every child task before the manual judgment checks (spec coverage, placeholder scan, type consistency). Tool checks catch missing required sections — Acceptance Criteria on tasks, Success Criteria on epics — that human review tends to skip.
+
+**Structured blocker handling.** `executing-plans` classifies blockers into three types instead of treating them as undifferentiated stops: `bd defer` for time-gated work, `bd create` + `bd dep add` for missing prerequisites, and `bd human` for decisions that require a person. Each type has a concrete command, so the agent acts on the blocker rather than just reporting it.
+
+**Swarm-aware parallel dispatch.** Before dispatching subagents in parallel batch mode, `subagent-driven-development` runs `bd swarm validate` to analyze the dependency graph. The output shows wave structure, maximum parallelism, and dependency warnings — enough to plan batch sizes and catch missing edges before wasting subagent runs on tasks that will immediately block.
+
+**Claim-before-worktree ordering.** `using-git-worktrees` now claims the bead before creating the worktree, not after. The earlier ordering left a window where a worktree existed with no owner on the corresponding bead — if the session crashed between creation and claiming, the work was orphaned.
+
 ## The lifecycle
 
 A non-trivial feature request moves through up to 10 states. Simple tasks skip research and planning (S2–S6) but still pass through the quality pipeline (S7–S10). S11 (Session Close) fires only on non-branch paths like research queries.
@@ -145,7 +153,7 @@ Because beads tracks every process step, the memory types agents need are popula
 | Working | `bd show --current` | What am I doing right now? |
 | Short-term | `bd list --status=in_progress` | What's active? |
 | Long-term | `bd remember` + `bd prime` | What did I learn last week? |
-| Procedural | `bd formula` | How do I do this kind of task? |
+| Procedural | Skill checklists + `bd ready` | How do I do this kind of task? |
 | Episodic | `events` table | What happened and when? |
 | Semantic | `bd search`, `bd query` | Where's the related work? |
 | Prospective | `bd ready` | What should I do next? |

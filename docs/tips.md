@@ -58,9 +58,13 @@ description: Quick-reference bd command cheat sheet, skill routing table, troubl
 | `bd stats` | Open/closed/blocked counts |
 | `bd doctor` | Diagnose config problems |
 | `bd preflight` | PR readiness check |
+| `bd lint [id...]` | Check issues for missing required sections |
 | `bd note <id> "context"` | Append evidence to a bead |
 | `bd stale` | Beads with no recent activity |
 | `bd find-duplicates` | Semantically similar beads |
+| `bd defer <id> --until="..."` | Defer work to a future date |
+| `bd human <id>` | Flag issue for human decision |
+| `bd swarm validate <epic>` | Analyze parallel work graph |
 
 **Land the Plane:** Every session ends with `bd close` → `bd dolt push` → `git push`. The `finishing-a-development-branch` skill enforces this.
 
