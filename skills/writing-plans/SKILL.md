@@ -125,6 +125,14 @@ Every step must contain the actual content an engineer needs. These are **plan f
 
 After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
 
+**0. Deterministic checks:** Run these commands and fix anything they flag before proceeding to the judgment checks below:
+
+```bash
+bd lint <epic-id>                                                    # required-section check on the epic
+bd list --parent <epic-id> --json | jq -r '.[].id' | xargs -n1 bd lint   # same check on each child task
+bd ready --parent <epic-id> --explain                                # confirm dependency ordering
+```
+
 **1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
 
 **2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
