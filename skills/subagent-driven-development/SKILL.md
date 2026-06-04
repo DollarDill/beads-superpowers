@@ -104,6 +104,7 @@ When `bd ready --parent <epic-id>` returns multiple unblocked tasks, those tasks
 digraph parallel_batch {
     rankdir=TB;
 
+    "bd swarm validate <epic-id>" [shape=box];
     "bd ready --parent <epic-id>" [shape=box];
     "How many unblocked?" [shape=diamond];
     "0: All done → finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
@@ -120,6 +121,7 @@ digraph parallel_batch {
     "systematic-debugging → fix" [shape=box];
     "Handle failed tasks" [shape=box];
 
+    "bd swarm validate <epic-id>" -> "bd ready --parent <epic-id>";
     "bd ready --parent <epic-id>" -> "How many unblocked?";
     "How many unblocked?" -> "0: All done → finishing-a-development-branch" [label="0"];
     "How many unblocked?" -> "1: Sequential mode (run in epic worktree)" [label="1"];
@@ -147,15 +149,22 @@ digraph parallel_batch {
 1. Orchestrator creates epic worktree (once, at the start):
      bd worktree create <epic-name>
 
-2. Get unblocked tasks:
+2. Analyze the work graph before dispatching:
+     bd swarm validate <epic-id>
+     → Shows wave structure (which tasks can run concurrently vs sequentially),
+       max parallelism, estimated worker-sessions, and dependency warnings.
+     Use this to plan batch sizes and catch missing dependencies before
+     wasting subagent runs on tasks that will block.
+
+3. Get unblocked tasks:
      bd ready --parent <epic-id>
      → Returns N tasks with no unresolved dependencies
 
-3. If N > 1 (parallel batch, cap at 5 per batch):
+4. If N > 1 (parallel batch, cap at 5 per batch):
    For each task in the batch:
      bd worktree create <task-name> --branch feature/<epic>/<task>
 
-4. Dispatch all subagents in parallel:
+5. Dispatch all subagents in parallel:
    Read ./implementer-prompt.md, then one Agent tool call per task, ALL in the same message:
      Agent({
        description: "Implement Task N: <name>",
@@ -163,20 +172,20 @@ digraph parallel_batch {
        subagent_type: "general-purpose"
      })
 
-5. Two-stage review per task (can also run in parallel):
+6. Two-stage review per task (can also run in parallel):
    Spec compliance review → Code quality review
 
-6. For each task that passes review:
+7. For each task that passes review:
      cd <epic-worktree-path>
      git merge feature/<epic>/<task>
      bd worktree remove <task-name>
      bd close <task-id> --reason "Completed: reviews passed"
 
-7. Run full test suite on epic worktree (integration check):
+8. Run full test suite on epic worktree (integration check):
    If fail → invoke systematic-debugging → fix before next batch
 
-8. Re-run bd ready --parent <epic-id>
-   Repeat from step 2 until no tasks remain
+9. Re-run bd ready --parent <epic-id>
+   Repeat from step 3 until no tasks remain
 
 9. If N == 1 at any point:
    Sequential mode — run in epic worktree directly, no per-task worktree needed
