@@ -116,6 +116,8 @@ The skill itself tells you which.
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
 
+**Skill override acknowledgment:** If the user asks to skip a skill that would normally apply, name the skill being skipped and acknowledge the override before proceeding (e.g., "The brainstorming skill would normally apply here, but you've asked to skip design exploration").
+
 ## Beads Issue Tracking
 
 This skills system uses **bd (beads)** for persistent task tracking across sessions. Beads replaces TodoWrite, TaskCreate, and markdown TODO lists.

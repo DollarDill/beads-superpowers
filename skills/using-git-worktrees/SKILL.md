@@ -93,6 +93,14 @@ If inside a submodule, warn and **stop**. Do NOT create worktrees inside submodu
 
 ## Creation Steps
 
+### 0. Claim the bead first
+
+Before creating the worktree, claim the issue you're about to work on. This prevents ownerless work — you own the bead before any environment exists.
+
+```bash
+bd update <issue-id> --claim
+```
+
 ### 1. Create Worktree with `bd worktree create`
 
 ```bash

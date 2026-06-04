@@ -19,7 +19,26 @@ Load plan, review critically, execute all tasks, report when complete.
 1. Read plan file
 2. Review critically - identify any questions or concerns about the plan
 3. If concerns: Raise them with your human partner before starting
-4. If no concerns: Create epic bead (`bd create "Epic: <plan-name>" -t epic`) and child beads for each task (`bd create "Task N: <title>" -t task --parent <epic-id>`), then proceed
+4. If no concerns: Create epic bead and child beads for each task, then proceed
+
+   ```bash
+   # Create epic — use --acceptance for success criteria
+   bd create "Epic: <plan-name>" -t epic --acceptance "All tasks pass, tests green"
+
+   # Create tasks — use --body-file for long descriptions, --acceptance for done criteria
+   # Use --silent to capture the ID for dependency wiring
+   TASK_ID=$(bd create "Task N: <title>" -t task --parent <epic-id> \
+     --body-file <step-details-file> \
+     --acceptance "<done criteria>" \
+     --silent)
+   ```
+
+   > **Tip — rich bead fields:**
+   > - `--body-file <file>` — avoids shell escaping issues with multi-line descriptions
+   > - `--acceptance "<criteria>"` — stores done criteria separately from description
+   > - `--design "<notes>"` or `--design-file <file>` — stores design context
+   > - `--notes "<text>"` — stores open questions or supplementary context
+   > - `--silent` — returns only the created ID (for scripting and dependency wiring)
 
    > **Tip — atomic dependency wiring:** After creating task beads, wire dependency chains atomically using `bd batch` to prevent orphaned deps if one operation fails:
    > ```bash
@@ -30,12 +49,13 @@ Load plan, review critically, execute all tasks, report when complete.
 ### Step 2: Execute Tasks
 
 For each task:
-1. Claim the task: `bd update <task-id> --claim`
-2. Follow each step exactly (plan has bite-sized steps)
-3. Run verifications as specified
-4. Close the task: `bd close <task-id> --reason "description of what was completed"`
-5. Check for next task: `bd ready --parent <epic-id>` (use `bd ready --explain` to see dependency reasoning if task ordering is unclear)
-6. Check epic progress: `bd epic status <epic-id>` to see overall completion
+1. **Check description quality** before claiming: if the task description is a bare title with no actionable steps or context, STOP — do not claim it. Surface the gap to the user or orchestrator.
+2. Claim the task: `bd update <task-id> --claim`
+3. Follow each step exactly (plan has bite-sized steps)
+4. Run verifications as specified
+5. Close the task: `bd close <task-id> --reason "description of what was completed"`
+6. Check for next task: `bd ready --parent <epic-id>` (use `bd ready --explain` to see dependency reasoning if task ordering is unclear)
+7. Check epic progress: `bd epic status <epic-id>` to see overall completion
 
 ### Step 3: Complete Development
 
@@ -52,6 +72,14 @@ After all tasks complete and verified:
 - Plan has critical gaps preventing starting
 - You don't understand an instruction
 - Verification fails repeatedly
+
+**Structured blocker handling:** When you hit a blocker, classify it and use the appropriate response:
+
+| Blocker type | Action | Command |
+|---|---|---|
+| **Time-based** (waiting on deploy, external process) | Defer the task for later | `bd defer <task-id> --until="<date>"` |
+| **Missing work** (prerequisite not built yet) | Create the missing task and wire dependency | `bd create "Missing: <title>" -t task --parent <epic-id>` then `bd dep add <blocked-id> <new-id>` |
+| **Human decision needed** (architecture choice, ambiguous requirement) | Flag for human input | `bd human <task-id>` |
 
 **Ask for clarification rather than guessing.**
 

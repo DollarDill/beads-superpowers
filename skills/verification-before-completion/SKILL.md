@@ -50,6 +50,15 @@ Skip any step = lying, not verifying
 | Agent completed | VCS diff shows changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
 
+## If Verification Cannot Run
+
+When no verification command exists (no test suite, CI down, external dependency unavailable):
+
+1. **Record the gap:** `bd note <id> "verification blocked: <reason>"`
+2. **Create a blocker:** `bd create "Set up verification for <feature>" -t task` and `bd dep add <current-task> <new-task>`
+3. **Document partial verification:** Note what WAS verifiable (e.g., "linter passes, manual smoke test done, but no automated test suite exists")
+4. **Never silently skip:** A bead closed without verification evidence AND without a documented gap is worse than a bead left open
+
 ## Red Flags - STOP
 
 - Using "should", "probably", "seems to"
