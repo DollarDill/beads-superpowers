@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Claim-before-worktree ordering in `using-git-worktrees` — claim the bead before creating the worktree to prevent ownerless work.
 - "If Verification Cannot Run" section in `verification-before-completion` — handles edge cases where no verification command exists (no test suite, CI down, external dependency unavailable).
 - Skill override acknowledgment in `using-superpowers` — name the skipped skill and acknowledge the override when user asks to bypass.
+- `bd swarm validate` pre-step in `subagent-driven-development` parallel batch mode — analyzes the work graph for wave structure, max parallelism, and dependency warnings before dispatching subagents.
 
 ## [0.6.0] - 2026-06-03
 
