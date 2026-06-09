@@ -20,6 +20,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - "If Verification Cannot Run" section in `verification-before-completion` — handles edge cases where no verification command exists (no test suite, CI down, external dependency unavailable).
 - Skill override acknowledgment in `using-superpowers` — name the skipped skill and acknowledge the override when user asks to bypass.
 - `bd swarm validate` pre-step in `subagent-driven-development` parallel batch mode — analyzes the work graph for wave structure, max parallelism, and dependency warnings before dispatching subagents.
+- Structured `AskUserQuestion` interaction in `stress-test` — replaces plain-text "Do you agree?" with Agree / Disagree / Discuss further options per branch. Includes branch tracking status lines and re-ask confirmation gates after disagreement iteration.
+- Mode A/B findings output in `stress-test` — Mode A edits the source artifact inline (specs, plans in `.internal/`); Mode B writes a standalone report to `.internal/stress-tests/`. `AskUserQuestion` disambiguates when target is unclear.
+- Reflexion self-review (Phase 4.5) in `stress-test` — internal self-critique pass after documenting findings. Checks coverage, depth, and missed angles; loops back to interrogation if gaps found. Capped at one pass to prevent infinite recursion.
+- DCI-injected `$VISUAL`/`$EDITOR` preference in `stress-test` Mode B — same fallback chain as `brainstorming` and `writing-plans`.
+- Phase 1 restore point in `stress-test` — commits or stashes the target artifact before inline edits begin, preserving a clean rollback point.
 
 ### Removed
 
