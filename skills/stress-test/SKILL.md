@@ -52,27 +52,46 @@ Identify every decision branch in the target:
 
 ### Phase 3: Interrogate One Branch at a Time
 
-For each branch, ask a single focused question. **Always provide your recommended answer.**
+For each branch, present your question and recommendation as text, then use the `AskUserQuestion` tool for structured response.
+
+**Per-branch flow:**
+
+1. Present the **question + recommendation** as text in the message body (reasoning needs room to breathe)
+2. Immediately follow with `AskUserQuestion`:
+
+```json
+{
+  "questions": [{
+    "question": "<1-sentence summary of the branch being interrogated>",
+    "header": "Stress test",
+    "options": [
+      {"label": "Agree", "description": "Accept the recommendation and move to the next branch"},
+      {"label": "Disagree", "description": "I have a different view — let me explain"},
+      {"label": "Discuss further", "description": "I want to explore this branch more before deciding"}
+    ],
+    "multiSelect": false
+  }]
+}
+```
+
+**Response handling:**
+
+- **Agree** — Mark branch resolved, emit status line, advance to next branch
+- **Disagree** — Ask "What's your alternative?" as text (open-ended — disagreements need space). Iterate until the branch resolves, then re-ask the same 3-option `AskUserQuestion` on the revised position.
+- **Discuss further** — Explore deeper (code, docs, implications), present updated analysis, then re-ask the same `AskUserQuestion`
+
+**Branch tracking:** After each branch resolves, emit a status line:
 
 ```
-Question: "The plan uses polling every 30s for status updates.
-Have you considered WebSockets instead?"
-
-My recommendation: "Polling is the right call here.
-WebSocket adds connection management complexity for a feature
-that's checked infrequently. The 30s interval is fine for
-non-real-time status. However, I'd add an exponential backoff
-if the server returns errors."
-
-Do you agree, or does your context suggest otherwise?
+✓ Resolved: 3/7 branches (2 agreed, 1 modified)
+Remaining: Error handling, Scale, Rollback, Testing strategy
 ```
 
 **Rules:**
-- One question at a time — never batch
-- Always state your recommendation — don't just ask open-ended questions
+- One branch at a time — never batch
+- Always state your recommendation in the message body BEFORE the `AskUserQuestion` — the recommendation is the substance; the click is just the gate
 - If you can answer by exploring the codebase, do that instead of asking
 - When the user agrees, move on. When they push back, explore deeper.
-- Track resolved vs unresolved branches
 
 ### Phase 4: Document Findings
 
