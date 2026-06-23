@@ -428,6 +428,57 @@ async function runTests() {
       return Promise.resolve();
     });
 
+    // ========== Auth & Hardening ==========
+    console.log('\n--- Auth & Hardening ---');
+
+    await test('rejects HTTP / with no key (403)', async () => {
+      const res = await fetch(`http://localhost:${TEST_PORT}/`, { auth: false });
+      assert.strictEqual(res.status, 403, 'no-key request must be 403');
+    });
+
+    await test('rejects /files/* with no key (403)', async () => {
+      const res = await fetch(`http://localhost:${TEST_PORT}/files/anything`, { auth: false });
+      assert.strictEqual(res.status, 403);
+    });
+
+    await test('authorized response sets session cookie + security headers', async () => {
+      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      const setCookie = (res.headers['set-cookie'] || []).join(';');
+      assert(/brainstorm-key-/.test(setCookie), 'sets session cookie');
+      assert(/HttpOnly/i.test(setCookie), 'cookie is HttpOnly');
+      assert.strictEqual(res.headers['x-frame-options'], 'DENY');
+      assert(String(res.headers['content-security-policy']).includes("frame-ancestors 'none'"), 'CSP frame-ancestors none');
+    });
+
+    await test('rejects WebSocket upgrade with no key', async () => {
+      await new Promise((resolve, reject) => {
+        const ws = new WebSocket(`ws://localhost:${TEST_PORT}/`, WS_OPTS); // valid Origin, no key
+        ws.on('open', () => { ws.close(); reject(new Error('should not open without key')); });
+        ws.on('error', () => resolve());
+      });
+    });
+
+    await test('rejects WebSocket upgrade with bad Origin', async () => {
+      await new Promise((resolve, reject) => {
+        const ws = new WebSocket(wsUrl('/'), { headers: { Origin: 'http://evil.example' } });
+        ws.on('open', () => { ws.close(); reject(new Error('bad origin should be rejected')); });
+        ws.on('error', () => resolve());
+      });
+    });
+
+    await test('file server refuses dotfiles', async () => {
+      fs.writeFileSync(path.join(CONTENT_DIR, '.secret'), 'top secret');
+      const res = await fetch(`http://localhost:${TEST_PORT}/files/.secret`);
+      assert.notStrictEqual(res.status, 200, 'dotfile must not be served');
+    });
+
+    await test('server-info exposes idle_timeout_ms and keyed url', () => {
+      const info = JSON.parse(fs.readFileSync(path.join(STATE_DIR, 'server-info'), 'utf-8').trim());
+      assert.strictEqual(typeof info.idle_timeout_ms, 'number', 'idle_timeout_ms present');
+      assert(String(info.url).includes('?key='), 'url carries session key');
+      return Promise.resolve();
+    });
+
     // ========== Summary ==========
     console.log(`\n--- Results: ${passed} passed, ${failed} failed ---`);
     if (failed > 0) process.exit(1);
