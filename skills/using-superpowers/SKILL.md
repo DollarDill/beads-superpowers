@@ -141,6 +141,8 @@ This skills system uses **bd (beads)** for persistent task tracking across sessi
 | Complete work | `bd close <id> --reason "description"` |
 | Check remaining work | `bd ready --parent <epic-id>` |
 | Show blocked issues | `bd blocked` |
+| Compound query (replaces list+jq) | `bd query "status=open AND priority<=1"` |
+| Count, grouped | `bd count --by-status` (or `--by-priority`/`--by-type`) |
 | Epic completion status | `bd epic status <id>` |
 | Add dependency | `bd dep add <child-id> <depends-on-id>` |
 | View dependency tree | `bd dep tree <epic-id>` |

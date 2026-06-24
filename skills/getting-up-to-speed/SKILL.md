@@ -53,14 +53,16 @@ echo "tracked=$TRACKED beads=$HAS_BEADS git=$HAS_GIT"
 
 ## Phase 1 — Beads context (single parallel batch)
 
-Issue all six commands in **one message, multiple Bash tool calls in parallel**:
+Issue all of these commands in **one message, multiple Bash tool calls in parallel**:
 
 - `bd prime`
 - `bd ready`
 - `bd blocked`
-- `bd list --status open --status in_progress`
+- `bd query "status=open OR status=in_progress"` — compound-query open + in-progress work in one call (the v1.0.5 query language replaces `bd list` + jq)
 - `bd memories`
 - `bd stats`
+- `bd count --by-status` — ledger counts grouped by status; feeds the Phase 4 "Beads ledger" line
+- `bd count --by-priority` — open-work priority breakdown
 
 If `bd` is not installed or `.beads/` is missing, skip Phase 1 entirely and emit "**Beads:** not installed/initialized — skipped" in the Phase 4 summary.
 
@@ -125,11 +127,11 @@ Produce **exactly this Markdown structure**. Heading levels are H2; tables and l
 ## Current State
 **Git:** <branch> <clean|N changes>, <in sync|N ahead|N behind> origin. Latest = `<sha>` <subject>. Tags: <top 5>.
 **Last release:** <if version detectable> shipped: <CHANGELOG bullet summary>. `[Unreleased]` <empty|has N entries>.
-**Beads ledger:** <total> total · <closed> closed · <open> open · <in-progress> · <blocked>.
+**Beads ledger:** <total> total · <closed> closed · <open> open · <in-progress> · <blocked>. (counts from `bd count --by-status`; <blocked> from `bd blocked`)
 
 | Bead | Pri | Title |
 |---|---|---|
-<Up to 10 open ready beads, sorted by priority. Top 3 were drilled into in Phase 3.>
+<Up to 10 open ready beads, sorted by priority. Top 3 were drilled into in Phase 3. Source: `bd ready`, or `bd query "status=open" --sort priority --limit 10` for the full open set.>
 
 **Known operational quirks:** <from `bd memories` keyword scan; from docs/known-issues/* if present>
 **Other captured memories:** <one line per memory not surfaced above>

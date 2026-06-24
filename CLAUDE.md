@@ -195,6 +195,8 @@ This plugin uses `bd` (beads) for ALL task tracking.
 | Check remaining | `bd ready --parent <epic-id>` |
 | Explain ready/blocked | `bd ready --explain` |
 | Show blocked | `bd blocked` |
+| Compound query (replaces list+jq) | `bd query "status=open AND priority<=1"` |
+| Count, grouped | `bd count --by-status` (or `--by-priority`/`--by-type`) |
 | Epic status | `bd epic status <id>` |
 | Add dependency | `bd dep add <child> <depends-on>` |
 | Store learning | `bd remember "insight"` |
