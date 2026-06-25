@@ -29,18 +29,18 @@ fi
 
 echo ""
 
-# Test 2: Verify skill describes correct workflow order
-echo "Test 2: Workflow ordering..."
+# Test 2: Verify skill describes the single-reviewer model
+echo "Test 2: Single task-reviewer model..."
 
-output=$(run_claude "In the subagent-driven-development skill, which review happens first: spec compliance or code quality? Answer with just the order." 30)
+output=$(run_claude "In the subagent-driven-development skill, does ONE task reviewer return both a spec-compliance verdict and a code-quality verdict in a single pass, or are there two separate sequential reviewers? Answer briefly." 30)
 
-# Check that Claude correctly identifies spec compliance as first
+# Check that Claude identifies a single reviewer returning both verdicts
 # Use multiple greps since assert_contains uses basic grep (no -E for alternation)
-if echo "$output" | grep -iq "spec.*first\|first.*spec\|spec.*before\|spec.*then"; then
-    echo "  [PASS] Spec compliance before code quality"
+if echo "$output" | grep -iq "one\|single\|both\|same reviewer\|task reviewer"; then
+    echo "  [PASS] Single task reviewer returns both verdicts"
 else
-    echo "  [FAIL] Spec compliance before code quality"
-    echo "  Expected Claude to indicate spec compliance comes first"
+    echo "  [FAIL] Single task reviewer returns both verdicts"
+    echo "  Expected Claude to indicate one reviewer returns spec + quality verdicts"
     echo "  Output: $output"
     exit 1
 fi
@@ -85,10 +85,10 @@ fi
 
 echo ""
 
-# Test 5: Verify spec compliance reviewer is skeptical
-echo "Test 5: Spec compliance reviewer mindset..."
+# Test 5: Verify the task reviewer is skeptical
+echo "Test 5: Task reviewer mindset..."
 
-output=$(run_claude "What is the spec compliance reviewer's attitude toward the implementer's report in subagent-driven-development?" 30)
+output=$(run_claude "What is the task reviewer's attitude toward the implementer's report in subagent-driven-development?" 30)
 
 if assert_contains "$output" "not trust\|don't trust\|skeptical\|verify.*independently\|suspiciously" "Reviewer is skeptical"; then
     : # pass
