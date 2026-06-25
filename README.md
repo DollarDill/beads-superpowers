@@ -141,17 +141,85 @@ curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/i
 
 The installer detects OpenCode and copies skills to `~/.config/opencode/skills/` and the TypeScript plugin to `~/.config/opencode/plugins/` (active automatically).
 
-### Tier 2 — Community / Best-effort
+### Tier 2 — Best-effort
 
-These paths work but are not tested by us. Use with that in mind.
+Config validated; not E2E-tested by us. Use with that in mind.
 
-| CLI | How to install | Status |
-|-----|----------------|--------|
-| Cursor | `npx skills add DollarDill/beads-superpowers -g --copy -y`, then run the `setup` skill to register hooks | community-verified, not tested by us — last reviewed 2026-06 |
-| Gemini CLI | `npx skills add DollarDill/beads-superpowers -g --copy -y` | community-verified, not tested by us — last reviewed 2026-06 |
-| GitHub Copilot CLI | `npx skills add DollarDill/beads-superpowers -g --copy -y` | community-verified, not tested by us — last reviewed 2026-06 |
+#### Cursor
 
-For other CLIs, see [obra/superpowers' install list](https://github.com/obra/superpowers#installation) — the same `npx skills add` mechanism applies.
+```text
+/add-plugin beads-superpowers
+```
+
+Run this command inside Cursor Agent. Update via the Marketplace UI. Note: config validated by us; not E2E-tested.
+
+#### Gemini CLI
+
+```bash
+gemini extensions install https://github.com/DollarDill/beads-superpowers
+```
+
+Update:
+
+```bash
+gemini extensions update beads-superpowers
+```
+
+#### GitHub Copilot CLI
+
+```bash
+copilot plugin marketplace add DollarDill/beads-superpowers
+copilot plugin install beads-superpowers@beads-superpowers-marketplace
+```
+
+Update:
+
+```bash
+copilot plugin update beads-superpowers
+```
+
+Note: rides the Claude-plugin fallback (skills + session-start via the shared `hooks/hooks.json`), the same mechanism upstream ships; requires Copilot CLI v1.0.11+ for session-start context injection.
+
+#### Kimi Code
+
+```text
+/plugins install https://github.com/DollarDill/beads-superpowers
+```
+
+Run `/new` after install to start a fresh session with the plugin active.
+
+#### Antigravity
+
+```bash
+agy plugin install https://github.com/DollarDill/beads-superpowers
+```
+
+Note: reuses the Claude plugin manifest — the same mechanism upstream verified; not E2E-tested by us.
+
+#### Factory Droid
+
+```bash
+droid plugin marketplace add https://github.com/DollarDill/beads-superpowers
+droid plugin install beads-superpowers@beads-superpowers-marketplace
+```
+
+Note: reuses the Claude plugin manifest — the same mechanism upstream verified; not E2E-tested by us.
+
+#### Pi
+
+```bash
+pi install git:github.com/DollarDill/beads-superpowers
+```
+
+Note: config validated by us; not E2E-tested.
+
+#### Universal fallback (npx)
+
+Works on any CLI that supports the Vercel Skills format:
+
+```bash
+npx skills add DollarDill/beads-superpowers -g --copy -y
+```
 
 ### Alternative: scripted install (`curl | bash`)
 
@@ -190,6 +258,18 @@ claude plugin marketplace update beads-superpowers-marketplace
 
 ```bash
 codex plugin marketplace update beads-superpowers-marketplace
+```
+
+**Gemini CLI:**
+
+```bash
+gemini extensions update beads-superpowers
+```
+
+**Copilot CLI:**
+
+```bash
+copilot plugin update beads-superpowers
 ```
 
 **OpenCode / scripted / npx:**
