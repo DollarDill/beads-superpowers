@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Tiered platform support.** README and `docs/getting-started.md` now present a two-tier Supported Platforms table: **Verified** (Claude Code, Codex, OpenCode — install-tested) and **Best-effort / community** (Cursor, Gemini CLI, GitHub Copilot CLI), each Best-effort row stamped "community-verified, not tested by us — last reviewed 2026-06"; the long tail delegates to `npx skills add` + upstream's install list. (ADR-0016)
 - **README restructured** to the upstream section order: Quickstart → How it works → Prerequisites → Installation → What's Inside (skills grouped by category) → Updating, with a prominent prerequisite note that native install does not bootstrap the beads/Dolt database (`brew install beads` → install plugin → `bd init`).
 - `docs/index.md` now reflects the Verified/Best-effort tiers and links to Getting Started for per-platform install paths.
+- **Full public-documentation audit + prose pass.** Every human-facing surface (README, all six docs-site pages, CONTRIBUTING, the example-workflow README) was run through the `write-documentation` checks for clarity and register, preserving all facts, install commands, and MkDocs macros. Stale references were corrected (CI release skill-count floor 15 → 22, PR-template count 20 → 22, `SECURITY.md` supported versions 0.6.x → 0.7.x, root `CLAUDE.md` version + cache paths 0.7.0 → 0.7.1), and the GitHub repository description and topics were refreshed.
 
 ### Added
 
