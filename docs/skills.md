@@ -162,7 +162,7 @@ Coordinates concurrent subagents for independent work — plan tasks, subsystem 
 
 **Trigger:** Before writing any implementation code.
 
-Iron Law: no production code without a failing test first. Requires explicit evidence of the failing test output before any implementation is touched. RED-GREEN-REFACTOR, no shortcuts.
+Iron Law: no production code without a failing test first — explicit failing-test output required before touching any implementation. RED-GREEN-REFACTOR, no shortcuts.
 
 ### systematic-debugging
 
@@ -174,7 +174,7 @@ Four-phase root cause analysis: observe, hypothesize, isolate, fix. Requires a c
 
 **Trigger:** Before claiming work is done, fixed, or passing.
 
-The agent must run verification commands and show actual output — not assert from memory — before closing a bead or creating a PR. Evidence before assertions, always.
+The agent must run verification commands and show actual output — not assert from memory — before closing a bead or creating a PR. Evidence before assertions.
 
 ### requesting-code-review
 
@@ -186,7 +186,7 @@ Dispatches a code reviewer subagent that checks the diff against the original re
 
 **Trigger:** When review feedback arrives, especially if unclear or questionable.
 
-Anti-sycophancy protocol. Requires technical evaluation of each suggestion rather than blind acceptance. Escalates disagreements explicitly.
+Anti-sycophancy protocol: requires technical evaluation of each suggestion rather than blind acceptance, with disagreements escalated explicitly.
 
 ### using-git-worktrees
 
