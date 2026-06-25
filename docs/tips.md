@@ -92,7 +92,7 @@ description: Quick-reference bd command cheat sheet, skill routing table, troubl
 | Research a topic | `research-driven-development` |
 | Write human-facing prose | `write-documentation` |
 
-The `using-superpowers` bootstrap skill (auto-loaded at session start) has the full routing logic. If unsure, ask Claude to read it.
+The `using-superpowers` bootstrap skill (auto-loaded at session start) has the full routing logic; if unsure, ask Claude to read it.
 
 ## Common issues
 
@@ -108,7 +108,7 @@ See [Getting Started — Troubleshooting](getting-started.md#troubleshooting) fo
 
 ## Windows
 
-The SessionStart hook (`hooks/session-start`) is bash. On Windows, the polyglot wrapper `hooks/run-hook.cmd` calls it via Git Bash. The `.cmd` file is valid as both a batch file and a bash script — on Windows, `cmd.exe` finds Git Bash and re-executes; on Unix, the `:` command is a no-op and bash runs the rest. Works without WSL as long as Git for Windows is installed.
+The SessionStart hook (`hooks/session-start`) is bash. On Windows, the polyglot wrapper `hooks/run-hook.cmd` calls it via Git Bash. The `.cmd` file is valid as both a batch file and a bash script — on Windows, `cmd.exe` finds Git Bash and re-executes; on Unix, the `:` command is a no-op and bash runs the rest. It works without WSL as long as Git for Windows is installed.
 
 Skills are pure Markdown with no platform-specific code. Only the hook wrapper handles platform differences.
 
