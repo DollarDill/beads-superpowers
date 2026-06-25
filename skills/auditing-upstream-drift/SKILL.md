@@ -25,6 +25,20 @@ This is the quality gate for the beads-superpowers plugin. It verifies everythin
 | **Superpowers** | [obra/superpowers](https://github.com/obra/superpowers) | v6.0.3 | Skills content, new skills, hook structure, plugin manifest |
 | **Beads** | [gastownhall/beads](https://github.com/gastownhall/beads) | v1.0.5 | CLI commands, new features, bd prime format, deprecations |
 
+## Known Deliberate Divergences
+
+These shared skills intentionally differ from upstream superpowers. When Phase 5 (Check 5.3) flags them as CHANGED, that is expected — do **not** revert them toward upstream. Adopt only upstream changes that don't reverse these decisions.
+
+| Area / Skill | We do | Upstream does | Why |
+|---|---|---|---|
+| **All shared skills** | `bd` task tracking — beads is the ledger | `TodoWrite` / markdown TODOs | The fork's reason for existence: cross-session persistence |
+| **using-git-worktrees, finishing-a-development-branch** | `bd worktree` Iron Law; reject native-tool-first selection | native worktree tool first → `.worktrees/` → raw `git worktree` | native-first bypasses beads-DB sharing across worktrees (ADR-0014; audit finding #6) |
+| **finishing-a-development-branch** | Land the Plane (`bd close` → `bd dolt push` → `git push`) | no session-close ritual | core to the beads workflow |
+| **subagent-driven-development** | beads is the durable ledger; Parallel Batch Mode kept; `bd merge-slot` optional | markdown progress ledger | beads survives compaction; single orchestrator already serializes merges (ADR-0013, ADR-0012) |
+| **using-superpowers, writing-skills** | Claude Code tool names + per-CLI `references/` maps | fully vendor-neutral tool vocabulary | we ship multi-CLI adapters, not one neutral vocabulary (ADR-0006) |
+
+When a CHANGED skill from Phase 5 matches a row here, mark it **SKIP (deliberate divergence)** in the report — not drift.
+
 ## The Audit Process
 
 You MUST create an audit bead and complete ALL 7 phases in order:
@@ -283,6 +297,8 @@ For changed skills, categorise each:
 - **Safe merge**: Change doesn't touch our beads-integrated sections
 - **Conflict**: Change touches our modified sections → manual review
 - **New content**: New sections added → assess and add with beads awareness
+
+**Before categorising, check [Known Deliberate Divergences](#known-deliberate-divergences)** — skills listed there are *expected* to be CHANGED; mark them SKIP (deliberate divergence), not Conflict.
 
 **Check 5.4 — New companion files:**
 ```bash
