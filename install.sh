@@ -2,7 +2,8 @@
 # beads-superpowers installer (scripted / advanced install)
 # https://github.com/DollarDill/beads-superpowers
 #
-# Preferred install for Claude Code, Codex, OpenCode: use the native plugin system.
+# Preferred install for Claude Code / Codex: use the native plugin system.
+# For OpenCode: use this script (it deploys the TypeScript plugin natively).
 # Use this script for: beads/Dolt bootstrap, npx/scripted hook registration,
 # optional yegge.md agent install, version pinning (--version), or CI automation.
 #

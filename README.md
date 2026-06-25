@@ -72,9 +72,12 @@ The fastest path — Claude Code with native plugin install:
 
 ```bash
 brew install beads                    # 1. Install bd (requires beads v1.0.5+)
-# In a Claude Code session:
-/plugin marketplace add DollarDill/beads-superpowers
-/plugin install beads-superpowers@beads-superpowers-marketplace
+# From your shell:
+claude plugin marketplace add DollarDill/beads-superpowers
+claude plugin install beads-superpowers@beads-superpowers-marketplace
+# Or, inside a Claude Code session:
+# /plugin marketplace add DollarDill/beads-superpowers
+# /plugin install beads-superpowers@beads-superpowers-marketplace
 # Then in your project directory:
 bd init                               # 2. Bootstrap the Dolt database for this project
 ```

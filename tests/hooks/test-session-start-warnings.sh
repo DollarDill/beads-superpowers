@@ -17,6 +17,13 @@ out=$(HOME="$tmp" bash "$HOOK" 2>&1)
 echo "$out" | grep -qi "obra/superpowers appears installed" || { echo "FAIL: no collision warning from installed_plugins.json"; fail=1; }
 rm -rf "$tmp"
 
+# Case 2b: upstream present via second handle — superpowers@superpowers-marketplace.
+tmp=$(mktemp -d); mkdir -p "$tmp/.claude/plugins"
+printf '{"plugins":{"superpowers@superpowers-marketplace":{"enabled":true}}}\n' > "$tmp/.claude/plugins/installed_plugins.json"
+out=$(HOME="$tmp" bash "$HOOK" 2>&1)
+echo "$out" | grep -qi "obra/superpowers appears installed" || { echo "FAIL: no collision warning from superpowers-marketplace handle"; fail=1; }
+rm -rf "$tmp"
+
 # Case 3: clean HOME, bd present → NO collision warning (no false positive).
 tmp=$(mktemp -d); mkdir -p "$tmp/.claude"
 out=$(HOME="$tmp" bash "$HOOK" 2>&1)
