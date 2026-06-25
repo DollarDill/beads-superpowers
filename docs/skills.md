@@ -120,7 +120,7 @@ Bootstrap skill injected at every session start. Routes the agent to the correct
 
 ### writing-skills
 
-Meta-skill for creating and modifying skills. Enforces TDD-for-process-docs: new skills need a failing test before the SKILL.md is written. Frontmatter descriptions must be trigger conditions, not workflow summaries (see CSO in [Methodology](methodology.md)).
+Meta-skill for creating and modifying skills. Enforces TDD-for-process-docs: new skills need a failing test before the SKILL.md is written. Frontmatter descriptions must be trigger conditions, not workflow summaries (see SDO in [Methodology](methodology.md)).
 
 ### brainstorming
 

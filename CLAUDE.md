@@ -117,7 +117,7 @@ A plugin for Claude Code, Codex, and OpenCode that merges [Superpowers](https://
 - **Worktree path default** — `bd worktree create <name>` creates at `./<name>` (sibling to repo files), NOT `.worktrees/<name>`. Pass the full path: `bd worktree create .worktrees/<name>`.
 - **Worktree detection** — Use `git rev-parse --is-inside-work-tree`, NOT `[ -d .git ]`. In a worktree, `.git` is a file, not a directory.
 - **Plugin cache goes stale** — After modifying skills, the installed plugin cache is outdated. Symlink the cache to this repo (see "Syncing Source" section below). `claude plugin update` has a [cache bug](https://github.com/anthropics/claude-code/issues/14061).
-- **Skill `description` field trap** — Putting workflow descriptions in skill `description` frontmatter causes Claude to follow the description instead of reading the full skill body (CSO problem). Descriptions should state trigger conditions only.
+- **Skill `description` field trap** — Putting workflow descriptions in skill `description` frontmatter causes Claude to follow the description instead of reading the full skill body (SDO problem). Descriptions should state trigger conditions only.
 
 ## Non-Interactive Shell Commands
 
@@ -292,7 +292,7 @@ If `bd setup claude` hooks are installed in any settings file (project or global
 
 ### Key Anti-Patterns
 
-- Putting workflow descriptions in skill `description` fields (causes Claude to follow description instead of reading full skill — see CSO in METHODOLOGY.md)
+- Putting workflow descriptions in skill `description` fields (causes Claude to follow description instead of reading full skill — see SDO in docs/methodology.md)
 - Softening bright-line rules ("consider" instead of "MUST")
 - Adding platform-specific code to skills (skills are pure Markdown)
 

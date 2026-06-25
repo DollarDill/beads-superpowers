@@ -182,9 +182,9 @@ The `writing-skills` meta-skill revealed that TDD principles apply to process do
 
 Every rule in every skill has been verified through adversarial pressure testing, not designed from theory alone.
 
-### Claude Search Optimization (CSO)
+### Skill Discovery Optimization (SDO)
 
-An empirical finding: when a skill's YAML `description` field summarized the workflow ("code review between tasks"), Claude followed the description instead of reading the full skill content and did one review instead of the two the skill specified. As a result, every skill's `description` is a trigger condition ("when to use this"), not a workflow summary ("what this does"), which forces the full content to be read.
+An empirical finding: when a skill's YAML `description` field summarized the workflow ("code review between tasks"), the agent followed the description instead of reading the full skill content and did one review instead of the two the skill specified. As a result, every skill's `description` is a trigger condition ("when to use this"), not a workflow summary ("what this does"), which forces the full content to be read.
 
 ## Design decisions
 
