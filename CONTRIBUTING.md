@@ -17,11 +17,11 @@ git switch -c feat/my-improvement
 
 ## Making changes
 
-**Skills:** Read the closest existing skill first — match its tone and structure. Use `bd` commands for task tracking. Include a `bd remember` prompt at the skill's natural completion point (see existing skills for the pattern). Update `CHANGELOG.md` when you're done.
+**Skills:** Read the closest existing skill first and match its tone and structure. Use `bd` commands for task tracking. Include a `bd remember` prompt at the skill's natural completion point (see existing skills for the pattern). Update `CHANGELOG.md` when you're done.
 
 **Hooks and scripts:** The session-start hook is bash on Unix, batch on Windows (polyglot via `run-hook.cmd`). See `.internal/windows/polyglot-hooks.md` for cross-platform details.
 
-**Plugin manifests:** Six files must stay in sync: `package.json`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, `.codex-plugin/marketplace.json`, and `opencode/package.json`. Use `./scripts/bump-version.sh <version>` to update all six, or `--check` to detect drift.
+**Plugin manifests:** Six files must stay in sync: `package.json`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, `.codex-plugin/marketplace.json`, and `opencode/package.json`. Use `./scripts/bump-version.sh <version>` to update all six, or use `--check` to detect drift.
 
 ## Tests
 
