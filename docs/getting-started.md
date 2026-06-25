@@ -1,16 +1,12 @@
 ---
-description: Install beads-superpowers via curl, marketplace, or npx for Claude Code, Codex, and OpenCode. Set up your first project with bd init in under 5 minutes.
+description: Install beads-superpowers via the native plugin system, curl, or npx for Claude Code, Codex, and OpenCode. Set up your first project with bd init in under 5 minutes.
 ---
 
 # Getting Started
 
 ## Prerequisites
 
-You need at least one supported CLI and the **`bd` CLI** ([gastownhall/beads](https://github.com/gastownhall/beads)).
-
-**Supported CLIs:** [Claude Code](https://claude.ai/claude-code), [Codex CLI](https://github.com/openai/codex), [OpenCode](https://github.com/anomalyco/opencode). The installer auto-detects which you have and installs accordingly.
-
-Install `bd`:
+**`bd` must be installed before the plugin will work.** The plugin registers hooks that call `bd` on every session start; if `bd` isn't present, those hooks fail silently and you lose persistent memory.
 
 ```bash
 brew install beads          # macOS / Linux
@@ -18,38 +14,48 @@ brew install beads          # macOS / Linux
 npm install -g @beads/bd    # any platform
 ```
 
-Verify with `bd version`.
+Verify with `bd version`. Then install the plugin (see below), then run `bd init` in each project.
+
+**Note:** Native plugin install (Tier 1) installs skills and hooks automatically. It does NOT run `bd init` — you must do that yourself per project.
 
 **Optional:** A [DoltHub](https://dolthub.com) account if you want cross-session sync via `bd dolt push/pull`. Without it, beads still works locally.
 
+## Supported Platforms
+
+### Tier 1 — Verified
+
+These paths are tested end-to-end. Prefer them.
+
+| CLI | Install method |
+|-----|---------------|
+| Claude Code | Native plugin marketplace (see below) |
+| Codex CLI | Native plugin marketplace + `codex_hooks = true` (see below) |
+| OpenCode | curl installer (see below) |
+
+### Tier 2 — Community / Best-effort
+
+These paths work but are not tested by us. Use with that in mind.
+
+| CLI | How to install | Status |
+|-----|----------------|--------|
+| Cursor | `npx skills add DollarDill/beads-superpowers -g --copy -y`, then run the `setup` skill to register hooks | community-verified, not tested by us — last reviewed 2026-06 |
+| Gemini CLI | `npx skills add DollarDill/beads-superpowers -g --copy -y` | community-verified, not tested by us — last reviewed 2026-06 |
+| GitHub Copilot CLI | `npx skills add DollarDill/beads-superpowers -g --copy -y` | community-verified, not tested by us — last reviewed 2026-06 |
+
 ## Install the plugin
 
-### curl (recommended — works with all supported CLIs)
+> **⚠️ Coexistence warning:** Do not install alongside [obra/superpowers](https://github.com/obra/superpowers). Skill names collide — pick one or the other.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
-```
-
-The installer detects which CLIs are on your system and installs skills and hooks for each:
-
-| CLI | Skills path | Hooks / Plugin |
-|-----|------------|----------------|
-| Claude Code | `~/.claude/skills/` | SessionStart + UserPromptSubmit hooks in `settings.json` |
-| Codex | `~/.codex/skills/` | Enable with `codex_hooks = true` in `~/.codex/config.toml` |
-| OpenCode | `~/.config/opencode/skills/` | TypeScript plugin at `~/.config/opencode/plugins/` (active automatically) |
-
-Supports `--yes` (skip prompts), `--version X.Y.Z` (pin version), `--dry-run` (preview), `--skip-checksum` (bypass SHA-256 verification), and `--uninstall`.
-
-### Claude Code Marketplace
+### Claude Code
 
 ```bash
 claude plugin marketplace add DollarDill/beads-superpowers
 claude plugin install beads-superpowers@beads-superpowers-marketplace
 ```
 
-Or as slash commands inside a Claude Code session: `/plugin marketplace add ...` and `/plugin install ...`.
+Or as slash commands inside a Claude Code session: `/plugin marketplace add DollarDill/beads-superpowers` then `/plugin install beads-superpowers@beads-superpowers-marketplace`.
 
-### Codex CLI Marketplace
+### Codex CLI
 
 ```bash
 codex plugin marketplace add DollarDill/beads-superpowers
@@ -62,6 +68,40 @@ After installing, enable hooks in `~/.codex/config.toml`:
 [features]
 codex_hooks = true
 ```
+
+### OpenCode
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
+```
+
+The installer detects OpenCode and copies skills to `~/.config/opencode/skills/` and the TypeScript plugin to `~/.config/opencode/plugins/` (active automatically).
+
+### Scripted install (`curl | bash`)
+
+The curl installer also works for Claude Code and Codex when you need more than a plain plugin install:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
+```
+
+The installer auto-detects which CLIs are on your system and installs skills and hooks for each:
+
+| CLI | Skills path | Hooks / Plugin |
+|-----|------------|----------------|
+| Claude Code | `~/.claude/skills/` | SessionStart + UserPromptSubmit hooks in `settings.json` |
+| Codex | `~/.codex/skills/` | Enable with `codex_hooks = true` in `~/.codex/config.toml` |
+| OpenCode | `~/.config/opencode/skills/` | TypeScript plugin at `~/.config/opencode/plugins/` (active automatically) |
+
+Use the scripted install when you need any of:
+
+- **Beads/Dolt bootstrap** — auto-detects whether `bd` is installed and guides setup
+- **Hook registration** — writes SessionStart and UserPromptSubmit entries to `settings.json` (required when using npx or manual install paths)
+- **`yegge.md` orchestrator** — optionally installs the 11-state FSM agent globally
+- **Version pinning** — `--version X.Y.Z` for reproducible CI installs
+- **CI environments** — use `--yes --skip-checksum` for unattended runs
+
+Supports `--yes` (skip prompts), `--version X.Y.Z`, `--dry-run`, `--skip-checksum`, and `--uninstall`.
 
 ### npx (Vercel Skills CLI)
 
@@ -92,6 +132,30 @@ For cross-session sync of your task history:
 bd dolt remote add origin https://doltremoteapi.dolthub.com/your-org/your-repo
 bd dolt push    # test the connection
 ```
+
+## Updating
+
+**Claude Code:**
+
+```bash
+claude plugin marketplace update beads-superpowers-marketplace
+```
+
+**Codex CLI:**
+
+```bash
+codex plugin marketplace update beads-superpowers-marketplace
+```
+
+**OpenCode / scripted / npx:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
+# or
+npx skills add DollarDill/beads-superpowers -g --copy -y
+```
+
+Re-running the installer or `npx skills add` overwrites the existing installation. No `bd init` needed — your existing `.beads/` database is untouched.
 
 ## Verify it works
 
