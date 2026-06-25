@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Install beads-superpowers via curl, marketplace, or npx for Claude Code, Codex, and OpenCode. Set up your first project with bd init in under 5 minutes.">
+        <meta name="description" content="Install beads-superpowers via the native plugin system, curl, or npx for Claude Code, Codex, and OpenCode. Set up your first project with bd init in under 5 minutes.">
       
       
         <meta name="author" content="Dillon Frawley">
@@ -68,7 +68,7 @@
   
 <meta property="og:type" content="website" />
 <meta property="og:title" content="Getting Started - beads-superpowers" />
-<meta property="og:description" content="Install beads-superpowers via curl, marketplace, or npx for Claude Code, Codex, and OpenCode. Set up your first project with bd init in under 5 minutes." />
+<meta property="og:description" content="Install beads-superpowers via the native plugin system, curl, or npx for Claude Code, Codex, and OpenCode. Set up your first project with bd init in under 5 minutes." />
 <meta property="og:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/getting-started.png" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="1200" />
@@ -76,10 +76,10 @@
 <meta property="og:url" content="https://dollardill.github.io/beads-superpowers/getting-started/" />
 <meta property="twitter:card" content="summary_large_image" />
 <meta property="twitter:title" content="Getting Started - beads-superpowers" />
-<meta property="twitter:description" content="Install beads-superpowers via curl, marketplace, or npx for Claude Code, Codex, and OpenCode. Set up your first project with bd init in under 5 minutes." />
+<meta property="twitter:description" content="Install beads-superpowers via the native plugin system, curl, or npx for Claude Code, Codex, and OpenCode. Set up your first project with bd init in under 5 minutes." />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/getting-started.png" />
 <meta name="panzoom-theme" content="material">
-<meta name="panzoom-data" content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'> </head>
+<meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
   
   
     
@@ -380,6 +380,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#supported-platforms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported Platforms
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Supported Platforms">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tier-1-verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tier 1 — Verified
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tier-2-community-best-effort" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tier 2 — Community / Best-effort
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#install-the-plugin" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -392,10 +431,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#curl-recommended-works-with-all-supported-clis" class="md-nav__link">
+  <a href="#claude-code" class="md-nav__link">
     <span class="md-ellipsis">
       
-        curl (recommended — works with all supported CLIs)
+        Claude Code
       
     </span>
   </a>
@@ -403,10 +442,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#claude-code-marketplace" class="md-nav__link">
+  <a href="#codex-cli" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Claude Code Marketplace
+        Codex CLI
       
     </span>
   </a>
@@ -414,10 +453,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#codex-cli-marketplace" class="md-nav__link">
+  <a href="#opencode" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Codex CLI Marketplace
+        OpenCode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scripted-install-curl-bash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scripted install (curl | bash)
       
     </span>
   </a>
@@ -465,6 +515,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#updating" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Updating
+      
+    </span>
+  </a>
   
 </li>
       
@@ -673,20 +734,93 @@
 
 <h1 id="getting-started">Getting Started</h1>
 <h2 id="prerequisites">Prerequisites</h2>
-<p>You need at least one supported CLI and the <strong><code>bd</code> CLI</strong> (<a href="https://github.com/gastownhall/beads">gastownhall/beads</a>).</p>
-<p><strong>Supported CLIs:</strong> <a href="https://claude.ai/claude-code">Claude Code</a>, <a href="https://github.com/openai/codex">Codex CLI</a>, <a href="https://github.com/anomalyco/opencode">OpenCode</a>. The installer auto-detects which you have and installs accordingly.</p>
-<p>Install <code>bd</code>:</p>
+<p><strong><code>bd</code> must be installed before the plugin will work.</strong> The plugin registers hooks that call <code>bd</code> on every session start; if <code>bd</code> isn't present, those hooks fail silently and you lose persistent memory.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>brew<span class="w"> </span>install<span class="w"> </span>beads<span class="w">          </span><span class="c1"># macOS / Linux</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># or</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>npm<span class="w"> </span>install<span class="w"> </span>-g<span class="w"> </span>@beads/bd<span class="w">    </span><span class="c1"># any platform</span>
 </code></pre></div>
-<p>Verify with <code>bd version</code>.</p>
+<p>Verify with <code>bd version</code>. Then install the plugin (see below), then run <code>bd init</code> in each project.</p>
+<p><strong>Note:</strong> Native plugin install (Tier 1) installs skills and hooks automatically. It does NOT run <code>bd init</code> — you must do that yourself per project.</p>
 <p><strong>Optional:</strong> A <a href="https://dolthub.com">DoltHub</a> account if you want cross-session sync via <code>bd dolt push/pull</code>. Without it, beads still works locally.</p>
+<h2 id="supported-platforms">Supported Platforms</h2>
+<h3 id="tier-1-verified">Tier 1 — Verified</h3>
+<p>These paths are tested end-to-end. Prefer them.</p>
+<table>
+<thead>
+<tr>
+<th>CLI</th>
+<th>Install method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Claude Code</td>
+<td>Native plugin marketplace (see below)</td>
+</tr>
+<tr>
+<td>Codex CLI</td>
+<td>Native plugin marketplace + <code>codex_hooks = true</code> (see below)</td>
+</tr>
+<tr>
+<td>OpenCode</td>
+<td>curl installer (see below)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tier-2-community-best-effort">Tier 2 — Community / Best-effort</h3>
+<p>These paths work but are not tested by us. Use with that in mind.</p>
+<table>
+<thead>
+<tr>
+<th>CLI</th>
+<th>How to install</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cursor</td>
+<td><code>npx skills add DollarDill/beads-superpowers -g --copy -y</code>, then run the <code>setup</code> skill to register hooks</td>
+<td>community-verified, not tested by us — last reviewed 2026-06</td>
+</tr>
+<tr>
+<td>Gemini CLI</td>
+<td><code>npx skills add DollarDill/beads-superpowers -g --copy -y</code></td>
+<td>community-verified, not tested by us — last reviewed 2026-06</td>
+</tr>
+<tr>
+<td>GitHub Copilot CLI</td>
+<td><code>npx skills add DollarDill/beads-superpowers -g --copy -y</code></td>
+<td>community-verified, not tested by us — last reviewed 2026-06</td>
+</tr>
+</tbody>
+</table>
 <h2 id="install-the-plugin">Install the plugin</h2>
-<h3 id="curl-recommended-works-with-all-supported-clis">curl (recommended — works with all supported CLIs)</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
+<blockquote>
+<p><strong>⚠️ Coexistence warning:</strong> Do not install alongside <a href="https://github.com/obra/superpowers">obra/superpowers</a>. Skill names collide — pick one or the other.</p>
+</blockquote>
+<h3 id="claude-code">Claude Code</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>claude<span class="w"> </span>plugin<span class="w"> </span>marketplace<span class="w"> </span>add<span class="w"> </span>DollarDill/beads-superpowers
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>claude<span class="w"> </span>plugin<span class="w"> </span>install<span class="w"> </span>beads-superpowers@beads-superpowers-marketplace
 </code></pre></div>
-<p>The installer detects which CLIs are on your system and installs skills and hooks for each:</p>
+<p>Or as slash commands inside a Claude Code session: <code>/plugin marketplace add DollarDill/beads-superpowers</code> then <code>/plugin install beads-superpowers@beads-superpowers-marketplace</code>.</p>
+<h3 id="codex-cli">Codex CLI</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>codex<span class="w"> </span>plugin<span class="w"> </span>marketplace<span class="w"> </span>add<span class="w"> </span>DollarDill/beads-superpowers
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>codex<span class="w"> </span>plugin<span class="w"> </span>install<span class="w"> </span>beads-superpowers@beads-superpowers-marketplace
+</code></pre></div>
+<p>After installing, enable hooks in <code>~/.codex/config.toml</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">[features]</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">codex_hooks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+</code></pre></div>
+<h3 id="opencode">OpenCode</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
+</code></pre></div>
+<p>The installer detects OpenCode and copies skills to <code>~/.config/opencode/skills/</code> and the TypeScript plugin to <code>~/.config/opencode/plugins/</code> (active automatically).</p>
+<h3 id="scripted-install-curl-bash">Scripted install (<code>curl | bash</code>)</h3>
+<p>The curl installer also works for Claude Code and Codex when you need more than a plain plugin install:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
+</code></pre></div>
+<p>The installer auto-detects which CLIs are on your system and installs skills and hooks for each:</p>
 <table>
 <thead>
 <tr>
@@ -713,38 +847,46 @@
 </tr>
 </tbody>
 </table>
-<p>Supports <code>--yes</code> (skip prompts), <code>--version X.Y.Z</code> (pin version), <code>--dry-run</code> (preview), <code>--skip-checksum</code> (bypass SHA-256 verification), and <code>--uninstall</code>.</p>
-<h3 id="claude-code-marketplace">Claude Code Marketplace</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>claude<span class="w"> </span>plugin<span class="w"> </span>marketplace<span class="w"> </span>add<span class="w"> </span>DollarDill/beads-superpowers
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>claude<span class="w"> </span>plugin<span class="w"> </span>install<span class="w"> </span>beads-superpowers@beads-superpowers-marketplace
-</code></pre></div>
-<p>Or as slash commands inside a Claude Code session: <code>/plugin marketplace add ...</code> and <code>/plugin install ...</code>.</p>
-<h3 id="codex-cli-marketplace">Codex CLI Marketplace</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>codex<span class="w"> </span>plugin<span class="w"> </span>marketplace<span class="w"> </span>add<span class="w"> </span>DollarDill/beads-superpowers
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>codex<span class="w"> </span>plugin<span class="w"> </span>install<span class="w"> </span>beads-superpowers@beads-superpowers-marketplace
-</code></pre></div>
-<p>After installing, enable hooks in <code>~/.codex/config.toml</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">[features]</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">codex_hooks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-</code></pre></div>
+<p>Use the scripted install when you need any of:</p>
+<ul>
+<li><strong>Beads/Dolt bootstrap</strong> — auto-detects whether <code>bd</code> is installed and guides setup</li>
+<li><strong>Hook registration</strong> — writes SessionStart and UserPromptSubmit entries to <code>settings.json</code> (required when using npx or manual install paths)</li>
+<li><strong><code>yegge.md</code> orchestrator</strong> — optionally installs the 11-state FSM agent globally</li>
+<li><strong>Version pinning</strong> — <code>--version X.Y.Z</code> for reproducible CI installs</li>
+<li><strong>CI environments</strong> — use <code>--yes --skip-checksum</code> for unattended runs</li>
+</ul>
+<p>Supports <code>--yes</code> (skip prompts), <code>--version X.Y.Z</code>, <code>--dry-run</code>, <code>--skip-checksum</code>, and <code>--uninstall</code>.</p>
 <h3 id="npx-vercel-skills-cli">npx (Vercel Skills CLI)</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>npx<span class="w"> </span>skills<span class="w"> </span>add<span class="w"> </span>DollarDill/beads-superpowers<span class="w"> </span>-a<span class="w"> </span>claude-code<span class="w"> </span>-g<span class="w"> </span>--copy<span class="w"> </span>-y
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="c1"># npx installs skills only — no hooks. Run the setup skill in your</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># chosen agentic terminal to configure the SessionStart and</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># UserPromptSubmit hooks.</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># Use -a codex to also install for Codex CLI.</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>npx<span class="w"> </span>skills<span class="w"> </span>add<span class="w"> </span>DollarDill/beads-superpowers<span class="w"> </span>-a<span class="w"> </span>claude-code<span class="w"> </span>-g<span class="w"> </span>--copy<span class="w"> </span>-y
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># npx installs skills only — no hooks. Run the setup skill in your</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1"># chosen agentic terminal to configure the SessionStart and</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># UserPromptSubmit hooks.</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># Use -a codex to also install for Codex CLI.</span>
 </code></pre></div>
 <h2 id="first-project-setup">First project setup</h2>
 <p>Initialise beads in your project:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nb">cd</span><span class="w"> </span>your-project
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>bd<span class="w"> </span>init
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nb">cd</span><span class="w"> </span>your-project
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>bd<span class="w"> </span>init
 </code></pre></div>
 <p>This creates <code>.beads/</code> (config, metadata, git hooks), <code>CLAUDE.md</code>, and <code>AGENTS.md</code>. The plugin's session-start hook automatically detects if <code>bd setup claude</code> hooks are present and skips its own <code>bd prime</code> call, so no manual cleanup is needed.</p>
 <h3 id="dolt-remote-optional">Dolt remote (optional)</h3>
 <p>For cross-session sync of your task history:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>bd<span class="w"> </span>dolt<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>origin<span class="w"> </span>https://doltremoteapi.dolthub.com/your-org/your-repo
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>bd<span class="w"> </span>dolt<span class="w"> </span>push<span class="w">    </span><span class="c1"># test the connection</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>bd<span class="w"> </span>dolt<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>origin<span class="w"> </span>https://doltremoteapi.dolthub.com/your-org/your-repo
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>bd<span class="w"> </span>dolt<span class="w"> </span>push<span class="w">    </span><span class="c1"># test the connection</span>
 </code></pre></div>
+<h2 id="updating">Updating</h2>
+<p><strong>Claude Code:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>claude<span class="w"> </span>plugin<span class="w"> </span>marketplace<span class="w"> </span>update<span class="w"> </span>beads-superpowers-marketplace
+</code></pre></div>
+<p><strong>Codex CLI:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>codex<span class="w"> </span>plugin<span class="w"> </span>marketplace<span class="w"> </span>update<span class="w"> </span>beads-superpowers-marketplace
+</code></pre></div>
+<p><strong>OpenCode / scripted / npx:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="c1"># or</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>npx<span class="w"> </span>skills<span class="w"> </span>add<span class="w"> </span>DollarDill/beads-superpowers<span class="w"> </span>-g<span class="w"> </span>--copy<span class="w"> </span>-y
+</code></pre></div>
+<p>Re-running the installer or <code>npx skills add</code> overwrites the existing installation. No <code>bd init</code> needed — your existing <code>.beads/</code> database is untouched.</p>
 <h2 id="verify-it-works">Verify it works</h2>
 <p>Start a fresh session in your CLI of choice, then:</p>
 <ol>
@@ -754,7 +896,7 @@
 <p>If skills aren't showing, the plugin may not be installed for your CLI. If <code>bd ready</code> fails, beads isn't initialised in this project (<code>bd init</code>).</p>
 <h2 id="how-the-hooks-work">How the hooks work</h2>
 <p>The plugin registers two hooks via <code>hooks/hooks.json</code>:</p>
-<p><strong>SessionStart</strong> fires on every session start, clear, and compact. It reads the <code>using-superpowers</code> skill (which routes to all other skills), runs <code>bd prime</code> (captures beads state and persistent memories) unless it detects <code>bd prime</code> is already registered as a hook elsewhere, and outputs the combined context (~2–3k tokens).</p>
+<p><strong>SessionStart</strong> fires on every session start, clear, and compact. It reads the <code>using-superpowers</code> skill (which routes to all other skills), runs <code>bd prime</code> to capture beads state and persistent memories, and outputs the combined context (~2–3k tokens). If <code>bd prime</code> is already registered as a hook elsewhere, this step is skipped automatically.</p>
 <p><strong>UserPromptSubmit</strong> fires on every user message. It injects a reminder listing all 21 invocable skills with their trigger conditions — "bug → systematic-debugging", "new feature → brainstorming", etc. This keeps the agent from forgetting about skills mid-session.</p>
 <div class="panzoom-box" data-key="alt" id="panzoom0" oncontextmenu="return false;">
     
@@ -811,9 +953,9 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><strong>No <code>.beads</code> directory</strong> — Run <code>bd init</code> in your project directory. The plugin automatically handles duplicate hook detection.</p>
 <p><strong>Double context injection</strong> — The plugin detects <code>bd setup claude</code> hooks in project and global settings and automatically skips its own <code>bd prime</code> call. If you still see duplicates, run <code>bd setup claude --remove</code>.</p>
 <p><strong>Stale plugin cache</strong> — The cache doesn't update when you edit skill files locally. Either symlink the cache to your checkout:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.7.0
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>ln<span class="w"> </span>-s<span class="w"> </span>~/workplace/beads-superpowers<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.7.0
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.7.1
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>ln<span class="w"> </span>-s<span class="w"> </span>~/workplace/beads-superpowers<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.7.1
 </code></pre></div>
 <p>Or reinstall. Note: <code>claude plugin update</code> has a known <a href="https://github.com/anthropics/claude-code/issues/14061">cache bug</a> — the symlink is more reliable.</p>
 <p><strong>Hook not firing</strong> — Check the hook is executable: <code>chmod +x hooks/session-start</code>.</p>
@@ -840,7 +982,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 3, 2026 09:47:52 UTC">June 3, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 25, 2026 14:56:37 UTC">June 25, 2026</span>
   </span>
 
     

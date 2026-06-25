@@ -79,7 +79,7 @@
 <meta property="twitter:description" content="Complete reference for 22 composable skills with trigger map, category breakdown, bd command usage, and chaining diagrams showing how skills invoke each other." />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/skills.png" />
 <meta name="panzoom-theme" content="material">
-<meta name="panzoom-data" content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'> </head>
+<meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
   
   
     
@@ -1064,19 +1064,19 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p>Coordinates concurrent subagents for independent work — plan tasks, subsystem changes, anything without shared mutable state. Used by SDD's parallel batch mode for the dispatch pattern.</p>
 <h3 id="test-driven-development">test-driven-development</h3>
 <p><strong>Trigger:</strong> Before writing any implementation code.</p>
-<p>Iron Law: no production code without a failing test first. Requires explicit evidence of the failing test output before any implementation is touched. RED-GREEN-REFACTOR, no shortcuts.</p>
+<p>Iron Law: no production code without a failing test first — explicit failing-test output required before touching any implementation. RED-GREEN-REFACTOR, no shortcuts.</p>
 <h3 id="systematic-debugging">systematic-debugging</h3>
 <p><strong>Trigger:</strong> Any bug, test failure, or unexpected behavior — before proposing fixes.</p>
 <p>Four-phase root cause analysis: observe, hypothesize, isolate, fix. Requires a confirmed root cause before any code change. Blocks "just try this and see."</p>
 <h3 id="verification-before-completion">verification-before-completion</h3>
 <p><strong>Trigger:</strong> Before claiming work is done, fixed, or passing.</p>
-<p>The agent must run verification commands and show actual output — not assert from memory — before closing a bead or creating a PR. Evidence before assertions, always.</p>
+<p>The agent must run verification commands and show actual output — not assert from memory — before closing a bead or creating a PR. Evidence before assertions.</p>
 <h3 id="requesting-code-review">requesting-code-review</h3>
 <p><strong>Trigger:</strong> After completing tasks, major features, or before merging.</p>
 <p>Dispatches a code reviewer subagent that checks the diff against the original requirements, reporting strengths, issues grouped by severity, and an overall assessment. The reviewer gets the original requirements alongside the diff.</p>
 <h3 id="receiving-code-review">receiving-code-review</h3>
 <p><strong>Trigger:</strong> When review feedback arrives, especially if unclear or questionable.</p>
-<p>Anti-sycophancy protocol. Requires technical evaluation of each suggestion rather than blind acceptance. Escalates disagreements explicitly.</p>
+<p>Anti-sycophancy protocol: requires technical evaluation of each suggestion rather than blind acceptance, with disagreements escalated explicitly.</p>
 <h3 id="using-git-worktrees">using-git-worktrees</h3>
 <p><strong>Trigger:</strong> Feature work needing isolation, or before executing plans.</p>
 <p>Creates and manages isolated git worktrees via <code>bd worktree</code>. Pre-flight checks detect existing worktree isolation, submodule contexts, and prompt for consent (skipped when SDD-dispatched). Supports multiple concurrent worktrees for parallel subagent work — one per task, max 5. Use <code>bd -C .worktrees/&lt;name&gt;</code> for cross-worktree commands.</p>
@@ -1287,7 +1287,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 25, 2026 10:44:23 UTC">June 25, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 25, 2026 15:03:23 UTC">June 25, 2026</span>
   </span>
 
     

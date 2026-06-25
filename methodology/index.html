@@ -79,7 +79,7 @@
 <meta property="twitter:description" content="Bright-line rules and anti-rationalization tables enforce agent discipline. Dolt-backed beads track every task across sessions through a 10-state lifecycle." />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/methodology.png" />
 <meta name="panzoom-theme" content="material">
-<meta name="panzoom-data" content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'> </head>
+<meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
   
   
     
@@ -848,7 +848,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 </div>
 <p><strong>Step 1 — Setup.</strong> Every task begins with a bead. Before any research or code, the work is captured (<code>bd create</code>), claimed (<code>bd update --claim</code>), and synced. If the session dies, the bead record shows an in-progress item that can be recovered.</p>
 <p><strong>Step 2 — Research.</strong> The <code>research-driven-development</code> skill dispatches two agents in parallel: a researcher investigates the problem domain while an <code>@explore</code> agent maps the affected code. Running both concurrently cuts research time roughly in half.</p>
-<p><strong>Step 3 — Knowledge capture.</strong> Findings are written to a persistent document. Key learnings go into <code>bd remember</code> so they surface in future sessions.</p>
+<p><strong>Step 3 — Knowledge capture.</strong> Findings are written to a persistent document; key learnings go into <code>bd remember</code> so they surface in future sessions.</p>
 <p><strong>Step 4 — Brainstorming.</strong> The <code>brainstorming</code> skill walks through context, clarifying questions, 2–3 approaches with trade-offs, and a design spec committed to git. It ends by invoking <code>writing-plans</code> — not by jumping to code. The <code>stress-test</code> skill may fire here to interrogate the design adversarially.</p>
 <p><strong>Step 5 — Decision capture.</strong> Architecture decisions become ADRs in <code>decisions/</code> — explicit, timestamped records with context, rationale, and consequences.</p>
 <p><strong>Step 6 — Planning.</strong> <code>writing-plans</code> breaks the design into bite-sized tasks (2–5 minutes each) with exact file paths, code, and verification steps. Every task becomes a bead.</p>
@@ -858,7 +858,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><strong>Step 10 — Close branch.</strong> <code>finishing-a-development-branch</code> detects the current environment — normal repository, named-branch worktree, or detached HEAD — and presents context-aware options: 4 choices for normal and worktree contexts, 3 for detached HEAD where merge is unavailable. Provenance-based cleanup only removes worktrees inside <code>.worktrees/</code>, leaving externally created worktrees alone. The skill ends with the Land the Plane protocol: <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code> → <code>git status</code>. Branch paths terminate here — work is not done until both task state and code reach the remote.</p>
 <p><strong>Step 11 — Session close.</strong> Fires only on non-branch paths (research queries, quick tasks that didn't create a branch). Runs the same close ritual as Step 10's Land the Plane: close beads, push to remotes, verify clean state. The next session runs <code>bd prime</code> to restore the full picture.</p>
 <h2 id="agent-memory">Agent memory</h2>
-<p>Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow. 21 of 22 skills now prompt for <code>bd remember</code> at their natural completion points — root causes after debugging, design decisions after brainstorming, review insights after code review — so memory capture happens within the skill workflow, not as a separate step.</p>
+<p>Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow. 21 of the 22 skills now prompt for <code>bd remember</code> at their natural completion points — root causes after debugging, design decisions after brainstorming, review insights after code review — so memory capture happens within the skill workflow, not as a separate step.</p>
 <table>
 <thead>
 <tr>
@@ -979,7 +979,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 25, 2026 10:44:23 UTC">June 25, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 25, 2026 15:01:48 UTC">June 25, 2026</span>
   </span>
 
     
