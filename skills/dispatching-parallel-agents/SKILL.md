@@ -181,6 +181,8 @@ After all 3 pass review:
   Run full test suite → integration check
 ```
 
+> **Concurrent orchestrators (optional — `bd merge-slot`):** The merges above are run by a single orchestrator, one at a time, so there is no merge race in the normal flow. If two or more orchestrators or sessions ever run this pattern concurrently against the same repo, serialize their merges with the beads v1.0.5 merge slot: `bd merge-slot create` once, then `bd merge-slot acquire` before each `git merge` and `bd merge-slot release` after — so only one orchestrator resolves conflicts at a time.
+
 ## Real Example from Session
 
 **Scenario:** 6 test failures across 3 files after major refactoring
