@@ -9,6 +9,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Installation reframed around native per-CLI plugin install.** Native plugin install is now the primary, recommended path in the README and docs; `curl | bash` is documented as a scoped "scripted / advanced install" fallback (its unique roles: beads/Dolt bootstrap, hook registration for the npx/scripted path, optional `yegge.md` agent, version pinning via `--version`, and CI). The curl installer remains fully functional and tested (`install.sh --test` passes) — no behavior changed, only its framing. (ADR-0015)
+- **Tiered platform support.** README and `docs/getting-started.md` now present a two-tier Supported Platforms table: **Verified** (Claude Code, Codex, OpenCode — install-tested) and **Best-effort / community** (Cursor, Gemini CLI, GitHub Copilot CLI), each Best-effort row stamped "community-verified, not tested by us — last reviewed 2026-06"; the long tail delegates to `npx skills add` + upstream's install list. (ADR-0016)
+- **README restructured** to the upstream section order: Quickstart → How it works → Prerequisites → Installation → What's Inside (skills grouped by category) → Updating, with a prominent prerequisite note that native install does not bootstrap the beads/Dolt database (`brew install beads` → install plugin → `bd init`).
+- `docs/index.md` now reflects the Verified/Best-effort tiers and links to Getting Started for per-platform install paths.
+
+### Added
+
+- **`auditing-upstream-drift`:** registered CLI-only beads integration (direct `bd` CLI + one SessionStart `bd prime` hook; no beads Claude plugin or `beads-mcp` server) as a Known Deliberate Divergence. (ADR-0017)
+- **`hooks/session-start`:** emits a one-line hint when `bd` is absent, and a non-fatal collision warning when obra/superpowers is detected alongside this plugin (skill names collide). Covered by a new CI-wired test `tests/hooks/test-session-start-warnings.sh`.
+
 ## [0.7.0] - 2026-06-25
 
 ### Added
