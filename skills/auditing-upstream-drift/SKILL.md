@@ -37,6 +37,7 @@ These shared skills intentionally differ from upstream superpowers. When Phase 5
 | **subagent-driven-development** | beads is the durable ledger; Parallel Batch Mode kept; `bd merge-slot` optional | markdown progress ledger | beads survives compaction; single orchestrator already serializes merges (ADR-0013, ADR-0012) |
 | **using-superpowers, writing-skills** | Claude Code tool names + per-CLI `references/` maps | fully vendor-neutral tool vocabulary | we ship multi-CLI adapters, not one neutral vocabulary (ADR-0006) |
 | **Beads integration** | CLI-only: call `bd` directly in skills + one SessionStart `bd prime` hook; no beads Claude plugin or beads-mcp server | Claude plugin + MCP server | Lowest overhead; full `bd` command coverage; matches beads' own "CLI + hooks when shell is available" guidance (ADR-0017) |
+| **brainstorming, writing-plans** | stress-test (a fork-only skill) is offered at the approval gate via a 3-option "Approved + stress-test" gate folded into the upstream Approved/Needs-changes review gate | 2-option review gate; no stress-test (stress-test does not exist upstream) | stress-test is one of our 7 fork-unique skills; offering it at every spec/plan gate is intended fork behavior (ADR-0020) |
 
 When a CHANGED skill from Phase 5 matches a row here, mark it **SKIP (deliberate divergence)** in the report — not drift.
 
