@@ -524,10 +524,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#claude-search-optimization-cso" class="md-nav__link">
+  <a href="#skill-discovery-optimization-sdo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Claude Search Optimization (CSO)
+        Skill Discovery Optimization (SDO)
       
     </span>
   </a>
@@ -852,13 +852,13 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><strong>Step 4 — Brainstorming.</strong> The <code>brainstorming</code> skill walks through context, clarifying questions, 2–3 approaches with trade-offs, and a design spec committed to git. It ends by invoking <code>writing-plans</code> — not by jumping to code. The <code>stress-test</code> skill may fire here to interrogate the design adversarially.</p>
 <p><strong>Step 5 — Decision capture.</strong> Architecture decisions become ADRs in <code>decisions/</code> — explicit, timestamped records with context, rationale, and consequences.</p>
 <p><strong>Step 6 — Planning.</strong> <code>writing-plans</code> breaks the design into bite-sized tasks (2–5 minutes each) with exact file paths, code, and verification steps. Every task becomes a bead.</p>
-<p><strong>Step 7 — Implementation.</strong> Code runs in an isolated git worktree under TDD. The orchestrator creates an epic with task children and dependency chains, then dispatches implementer subagents. When multiple tasks are unblocked, parallel batch mode runs up to 5 concurrently, each in its own worktree. After each task, a spec reviewer and code quality reviewer run in sequence — the bead closes only after both pass.</p>
+<p><strong>Step 7 — Implementation.</strong> Code runs in an isolated git worktree under TDD. The orchestrator creates an epic with task children and dependency chains, then dispatches implementer subagents. When multiple tasks are unblocked, parallel batch mode runs up to 5 concurrently, each in its own worktree. After each task, one read-only reviewer returns a spec-compliance verdict and a code-quality verdict in a single pass; the bead closes only after that review passes. Task briefs, implementer reports, and review diffs move between stages as files under a per-worktree <code>.superpowers/sdd/</code> directory, keeping the orchestrator's context lean.</p>
 <p><strong>Step 8 — Verification.</strong> The full test suite runs fresh — not relying on the last run during development. "Tests pass" means a test command was just executed and its output is attached.</p>
 <p><strong>Step 9 — Documentation.</strong> <code>document-release</code> scans the diff against existing docs for stale references, missing entries, and outdated examples. When the audit flags sections needing major prose rewrites, <code>write-documentation</code> fires for those sections.</p>
 <p><strong>Step 10 — Close branch.</strong> <code>finishing-a-development-branch</code> detects the current environment — normal repository, named-branch worktree, or detached HEAD — and presents context-aware options: 4 choices for normal and worktree contexts, 3 for detached HEAD where merge is unavailable. Provenance-based cleanup only removes worktrees inside <code>.worktrees/</code>, leaving externally created worktrees alone. The skill ends with the Land the Plane protocol: <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code> → <code>git status</code>. Branch paths terminate here — work is not done until both task state and code reach the remote.</p>
 <p><strong>Step 11 — Session close.</strong> Fires only on non-branch paths (research queries, quick tasks that didn't create a branch). Runs the same close ritual as Step 10's Land the Plane: close beads, push to remotes, verify clean state. The next session runs <code>bd prime</code> to restore the full picture.</p>
 <h2 id="agent-memory">Agent memory</h2>
-<p>Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow. 17 of 22 skills now prompt for <code>bd remember</code> at their natural completion points — root causes after debugging, design decisions after brainstorming, review insights after code review — so memory capture happens within the skill workflow, not as a separate step.</p>
+<p>Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow. 21 of 22 skills now prompt for <code>bd remember</code> at their natural completion points — root causes after debugging, design decisions after brainstorming, review insights after code review — so memory capture happens within the skill workflow, not as a separate step.</p>
 <table>
 <thead>
 <tr>
@@ -943,8 +943,8 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 </tbody>
 </table>
 <p>Every rule in every skill has been verified through adversarial pressure testing, not designed from theory alone.</p>
-<h3 id="claude-search-optimization-cso">Claude Search Optimization (CSO)</h3>
-<p>An empirical finding: when a skill's YAML <code>description</code> field summarized the workflow ("code review between tasks"), Claude followed the description instead of reading the full skill content and did one review instead of the two the skill specified. As a result, every skill's <code>description</code> is a trigger condition ("when to use this"), not a workflow summary ("what this does"), which forces the full content to be read.</p>
+<h3 id="skill-discovery-optimization-sdo">Skill Discovery Optimization (SDO)</h3>
+<p>An empirical finding: when a skill's YAML <code>description</code> field summarized the workflow ("code review between tasks"), the agent followed the description instead of reading the full skill content and skipped steps the full skill specified. As a result, every skill's <code>description</code> is a trigger condition ("when to use this"), not a workflow summary ("what this does"), which forces the full content to be read.</p>
 <h2 id="design-decisions">Design decisions</h2>
 <p><strong>Plugin subsumes beads hooks.</strong> Beads' <code>bd setup claude</code> installs hooks that run <code>bd prime</code>. The plugin also needs to inject skill context. Rather than fire both and waste 3–4k tokens on redundant context, the plugin's hook does both jobs and warns if the standalone hooks are still installed.</p>
 <p><strong>Land the Plane in the branch skill.</strong> The session close protocol lives in <code>finishing-a-development-branch</code> (Step 6) rather than a separate skill. Branch paths terminate at S10, which includes the full push ritual. Non-branch paths (research queries) use S11 (SESSION_CLOSE) for the same ritual without the branch decision tree.</p>
@@ -952,8 +952,8 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><strong>Skills are Markdown, not code.</strong> Following Superpowers' zero-dependency philosophy, all skills are plain Markdown with YAML frontmatter. No build step. The only runtime dependency is <code>bd</code>, which is optional — skills still work without it, they just lose persistence.</p>
 <h2 id="sources">Sources</h2>
 <ul>
-<li><a href="https://github.com/obra/superpowers">obra/superpowers</a> v5.1.0 — 14 composable skills for AI agents (MIT)</li>
-<li><a href="https://github.com/gastownhall/beads">gastownhall/beads</a> v1.0.4 — Persistent issue tracker for AI agents (MIT)</li>
+<li><a href="https://github.com/obra/superpowers">obra/superpowers</a> v6.0.3 — 14 composable skills for AI agents (MIT)</li>
+<li><a href="https://github.com/gastownhall/beads">gastownhall/beads</a> v1.0.5 — Persistent issue tracker for AI agents (MIT)</li>
 <li>Cialdini, R. B. (2021). <em>Influence: The Psychology of Persuasion</em> (New and Expanded Edition). Harper Business.</li>
 <li>Meincke, L., et al. (2025). AI agent compliance with explicit vs hedged instructions. Referenced in <code>skills/writing-skills/persuasion-principles.md</code>.</li>
 </ul>
@@ -979,7 +979,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 4, 2026 15:21:39 UTC">June 4, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 25, 2026 10:44:23 UTC">June 25, 2026</span>
   </span>
 
     

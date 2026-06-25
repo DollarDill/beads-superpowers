@@ -1043,7 +1043,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <h3 id="using-superpowers">using-superpowers</h3>
 <p>Bootstrap skill injected at every session start. Routes the agent to the correct skill for the current task. All other skills depend on this one having loaded first.</p>
 <h3 id="writing-skills">writing-skills</h3>
-<p>Meta-skill for creating and modifying skills. Enforces TDD-for-process-docs: new skills need a failing test before the SKILL.md is written. Frontmatter descriptions must be trigger conditions, not workflow summaries (see CSO in <a href="../methodology/">Methodology</a>).</p>
+<p>Meta-skill for creating and modifying skills. Enforces TDD-for-process-docs: new skills need a failing test before the SKILL.md is written. Frontmatter descriptions must be trigger conditions, not workflow summaries (see SDO in <a href="../methodology/">Methodology</a>).</p>
 <h3 id="brainstorming">brainstorming</h3>
 <p><strong>Trigger:</strong> Before any creative work — features, components, or behavior changes.</p>
 <p>Socratic design exploration. Asks structured questions to surface requirements, constraints, and design alternatives. Produces a committed design spec. Ends by invoking <code>writing-plans</code>, not by jumping to code.</p>
@@ -1052,10 +1052,10 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p>Breaks a design into bite-sized tasks (2–5 minutes each) with exact file paths, code, and verification steps. Every task becomes a bead with dependency ordering.</p>
 <h3 id="stress-test">stress-test</h3>
 <p><strong>Trigger:</strong> When a design or plan needs adversarial scrutiny. Also triggers on "grill me", "poke holes", "challenge this design".</p>
-<p>Interrogates every branch of the decision tree with recommended answers, forcing explicit agreement or rejection of each critique. Typically runs between brainstorming and writing-plans.</p>
+<p>Interrogates every branch of the decision tree with recommended answers and structured <code>AskUserQuestion</code> responses (Agree / Disagree / Discuss further). Tracks branch resolution progress, writes findings inline (Mode A) or to a standalone report (Mode B), and runs a reflexion self-review before closing. Typically runs between brainstorming and writing-plans.</p>
 <h3 id="subagent-driven-development">subagent-driven-development</h3>
 <p><strong>Trigger:</strong> When executing a plan with independent tasks.</p>
-<p>Dispatches a fresh subagent per task with two-stage code review between tasks. The orchestrator tracks beads; subagents don't touch them. When multiple tasks are unblocked, <strong>parallel batch mode</strong> runs up to 5 concurrently, each in its own worktree.</p>
+<p>Dispatches a fresh subagent per task with a single read-only task review between tasks — one reviewer returns a spec-compliance verdict and a code-quality verdict in one pass. The orchestrator tracks beads; subagents don't touch them. When multiple tasks are unblocked, <strong>parallel batch mode</strong> runs up to 5 concurrently, each in its own worktree.</p>
 <h3 id="executing-plans">executing-plans</h3>
 <p><strong>Trigger:</strong> When executing a plan in a single session with review checkpoints.</p>
 <p>Runs a multi-phase plan sequentially: claim, implement, verify against acceptance criteria, close, next phase. Designed to complement <code>writing-plans</code> output directly.</p>
@@ -1073,7 +1073,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p>The agent must run verification commands and show actual output — not assert from memory — before closing a bead or creating a PR. Evidence before assertions, always.</p>
 <h3 id="requesting-code-review">requesting-code-review</h3>
 <p><strong>Trigger:</strong> After completing tasks, major features, or before merging.</p>
-<p>Dispatches a code reviewer subagent that runs two stages: spec compliance first, then code quality. The reviewer gets the original requirements alongside the diff.</p>
+<p>Dispatches a code reviewer subagent that checks the diff against the original requirements, reporting strengths, issues grouped by severity, and an overall assessment. The reviewer gets the original requirements alongside the diff.</p>
 <h3 id="receiving-code-review">receiving-code-review</h3>
 <p><strong>Trigger:</strong> When review feedback arrives, especially if unclear or questionable.</p>
 <p>Anti-sycophancy protocol. Requires technical evaluation of each suggestion rather than blind acceptance. Escalates disagreements explicitly.</p>
@@ -1146,6 +1146,16 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <td>SDD, executing-plans</td>
 </tr>
 <tr>
+<td>Compound query</td>
+<td><code>bd query "status=open AND priority&lt;=1"</code></td>
+<td>getting-up-to-speed (replaces <code>bd list</code> + jq)</td>
+</tr>
+<tr>
+<td>Grouped counts</td>
+<td><code>bd count --by-status</code></td>
+<td>getting-up-to-speed (also <code>--by-priority</code>/<code>--by-type</code>)</td>
+</tr>
+<tr>
 <td>Add dependency</td>
 <td><code>bd dep add &lt;child&gt; &lt;parent&gt;</code></td>
 <td>SDD, writing-plans</td>
@@ -1153,7 +1163,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <tr>
 <td>Store learning</td>
 <td><code>bd remember "insight"</code></td>
-<td>17 of 22 skills prompt for this</td>
+<td>21 of 22 skills prompt for this</td>
 </tr>
 <tr>
 <td>Attach evidence</td>
@@ -1277,7 +1287,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 4, 2026 15:21:39 UTC">June 4, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 25, 2026 10:44:23 UTC">June 25, 2026</span>
   </span>
 
     
