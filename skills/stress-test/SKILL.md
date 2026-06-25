@@ -236,8 +236,8 @@ bd remember "design: <gap or insight revealed by stress testing>"
 ## Integration
 
 **Called by:**
-- **brainstorming** — optional step between design approval and writing-plans
-- **writing-plans** — optional step between plan approval and execution
+- **brainstorming** — offered at the spec-review gate every time; runs between design approval and writing-plans
+- **writing-plans** — offered at the plan-review gate every time; runs between plan approval and execution
 - Any workflow where a decision needs adversarial scrutiny
 
 **Pairs with:**
