@@ -1,0 +1,15 @@
+{
+  "name": "beads-superpowers",
+  "displayName": "Beads Superpowers",
+  "description": "Plugin merging Superpowers skills with Beads issue tracking. 22 skills + persistent task memory for AI coding agents.",
+  "version": "0.7.1",
+  "author": {
+    "name": "Dillon Frawley"
+  },
+  "homepage": "https://github.com/DollarDill/beads-superpowers",
+  "repository": "https://github.com/DollarDill/beads-superpowers",
+  "license": "MIT",
+  "keywords": ["beads", "superpowers", "tdd", "debugging", "issue-tracking", "agents"],
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks-cursor.json"
+}
