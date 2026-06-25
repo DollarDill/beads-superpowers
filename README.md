@@ -11,7 +11,7 @@
 
 ---
 
-A plugin for Claude Code, Codex, and OpenCode that makes your AI coding agent write tests before code, debug systematically instead of guessing, and remember what it worked on yesterday. 22 skills enforce the practices; a Dolt-backed issue tracker keeps context across sessions.
+A plugin for Claude Code, Codex, OpenCode, and 7 more AI coding agents that makes your agent write tests before code, debug systematically instead of guessing, and remember what it worked on yesterday. 22 skills enforce the practices; a Dolt-backed issue tracker keeps context across sessions.
 
 ## How it works
 
@@ -87,6 +87,8 @@ bd init                               # 2. Bootstrap the Dolt database for this 
 ```
 
 Start a new Claude Code session and type "where are we" — the agent will load your `bd` context and pick up where you left off.
+
+Using a different agent? See [Installation](#installation) for native install on Codex, OpenCode, Cursor, Gemini CLI, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi.
 
 ## Prerequisites
 
