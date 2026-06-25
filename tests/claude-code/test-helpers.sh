@@ -31,12 +31,14 @@ run_claude() {
 
 # Check if output contains a pattern
 # Usage: assert_contains "output" "pattern" "test name"
+# Case-insensitive: these assertions match free-form model prose where
+# capitalization varies run to run (e.g. "Do Not Trust" vs "not trust").
 assert_contains() {
     local output="$1"
     local pattern="$2"
     local test_name="${3:-test}"
 
-    if echo "$output" | grep -q "$pattern"; then
+    if echo "$output" | grep -qi "$pattern"; then
         echo "  [PASS] $test_name"
         return 0
     else

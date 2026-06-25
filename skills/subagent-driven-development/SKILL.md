@@ -391,7 +391,7 @@ Conversation memory does not survive compaction, and a controller that loses its
 - Review checkpoints automatic
 
 **Efficiency gains:**
-- No file reading overhead (controller provides full text)
+- Task brief and review diffs handed as files (see File Handoffs) — large text stays out of the controller's context
 - Controller curates exactly what context is needed
 - Subagent gets complete information upfront
 - Questions surfaced before work begins (not after)

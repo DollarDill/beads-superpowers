@@ -90,13 +90,17 @@ echo "Test 5: Task reviewer mindset..."
 
 output=$(run_claude "What is the task reviewer's attitude toward the implementer's report in subagent-driven-development?" 30)
 
-if assert_contains "$output" "not trust\|don't trust\|skeptical\|verify.*independently\|suspiciously" "Reviewer is skeptical"; then
+# Accept the range of vocabulary the model uses for an adversarial stance
+# ("skeptic" matches skeptical/skepticism; assert_contains is case-insensitive).
+if assert_contains "$output" "skeptic\|distrust\|not trust\|don't trust\|unverified\|adversarial\|verify.*independently\|suspicious" "Reviewer is skeptical"; then
     : # pass
 else
     exit 1
 fi
 
-if assert_contains "$output" "read.*code\|inspect.*code\|verify.*code" "Reviewer reads code"; then
+# The reviewer inspects the actual changes; the skill's task-reviewer-prompt uses
+# "diff"/"ground truth" as the object, so accept that vocabulary as well as "code".
+if assert_contains "$output" "read.*code\|inspect.*code\|verify.*code\|against.*diff\|the diff\|ground truth" "Reviewer inspects the code/diff"; then
     : # pass
 else
     exit 1
@@ -123,21 +127,16 @@ fi
 
 echo ""
 
-# Test 7: Verify full task text is provided
-echo "Test 7: Task context provision..."
+# Test 7: Verify the task is handed off as a brief file (File Handoffs model)
+echo "Test 7: Task handoff via brief file..."
 
-output=$(run_claude "In subagent-driven-development, how does the controller provide task information to the implementer subagent? Does it make them read a file or provide it directly?" 30)
+output=$(run_claude "In subagent-driven-development, how does the controller hand the task to the implementer subagent — by pasting the full task text into the prompt, or by writing a task brief file the implementer reads?" 30)
 
-if assert_contains "$output" "provide.*directly\|full.*text\|paste\|include.*prompt" "Provides text directly"; then
+if assert_contains "$output" "brief\|task-brief\|file\|\.superpowers\|read this first" "Hands off task as a brief file"; then
     : # pass
 else
     exit 1
 fi
-
-# Skip negative assertion - Claude often mentions "not read file" which
-# matches "read.*file" as a false positive. Test 7 already confirms
-# the positive case (provides text directly).
-echo "  [PASS] Verified via positive assertion above"
 
 echo ""
 

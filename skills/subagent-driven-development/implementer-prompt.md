@@ -12,7 +12,8 @@ Agent tool (subagent_type: "general-purpose"):
 
     ## Task Description
 
-    [FULL TEXT of task from plan - paste it here, don't make subagent read file]
+    Read your task brief first: [BRIEF_FILE] — it is your requirements. (The controller
+    writes it with `scripts/task-brief <plan-file> <N>`; see the skill's File Handoffs section.)
 
     ## Context
 
