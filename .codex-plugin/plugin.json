@@ -1,6 +1,6 @@
 {
   "name": "beads-superpowers",
-  "description": "Plugin for Claude Code, Codex, and OpenCode merging Superpowers skills with Beads issue tracking. 22 skills + persistent task memory for AI coding agents.",
+  "description": "Superpowers skills + Beads issue tracking for Claude Code, Codex, OpenCode, and 7 more AI coding agents. 22 skills + persistent task memory.",
   "version": "0.7.1",
   "author": {
     "name": "Dillon Frawley"

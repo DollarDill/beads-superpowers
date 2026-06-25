@@ -1,5 +1,6 @@
 {
   "name": "beads-superpowers-opencode",
+  "description": "Superpowers skills + Beads issue tracking for Claude Code, Codex, OpenCode, and 7 more AI coding agents — TDD, debugging, persistent task memory.",
   "version": "0.7.1",
   "type": "module",
   "dependencies": {

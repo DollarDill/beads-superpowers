@@ -2,7 +2,7 @@
   "name": "beads-superpowers",
   "version": "0.7.1",
   "type": "module",
-  "description": "Superpowers + Beads: skills and persistent issue tracking for AI agents",
+  "description": "Superpowers skills + Beads issue tracking for Claude Code, Codex, OpenCode, and 7 more AI coding agents — TDD, debugging, persistent task memory.",
   "keywords": ["pi-package"],
   "pi": {
     "extensions": ["./.pi/extensions/superpowers.ts"],

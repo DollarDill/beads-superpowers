@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "beads-superpowers",
-      "description": "Superpowers skills + Beads issue tracking: TDD, debugging, collaboration, and persistent project management for AI agents",
+      "description": "Superpowers skills + Beads issue tracking for Claude Code, Codex, OpenCode, and 7 more AI coding agents: TDD, debugging, code review, and persistent task memory.",
       "version": "0.7.1",
       "source": "./",
       "author": {
