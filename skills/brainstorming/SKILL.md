@@ -29,7 +29,7 @@ You MUST create a brainstorming session bead (`bd create "Brainstorming: <topic>
 6. **Write design doc** — save to `.internal/specs/YYYY-MM-DD-<topic>-design.md` and commit
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **(Optional) Offer stress-test** — if the design is complex or high-risk, invoke `stress-test` skill for adversarial review before proceeding
+9. **Spec-review gate offers stress-test** — the spec-review gate (step 8) includes an "Approved + stress-test" option, offered every time; if selected, invoke `stress-test` before writing-plans
 10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
@@ -44,7 +44,7 @@ digraph brainstorming {
     "Write design doc" [shape=box];
     "Spec self-review\n(fix inline)" [shape=box];
     "User reviews spec?" [shape=diamond];
-    "Design complex\nor risky?" [shape=diamond];
+    "Stress-test selected\nat gate?" [shape=diamond];
     "Invoke stress-test skill" [shape=box];
     "Invoke writing-plans skill" [shape=doublecircle];
 
@@ -57,9 +57,9 @@ digraph brainstorming {
     "Write design doc" -> "Spec self-review\n(fix inline)";
     "Spec self-review\n(fix inline)" -> "User reviews spec?";
     "User reviews spec?" -> "Write design doc" [label="changes requested"];
-    "User reviews spec?" -> "Design complex\nor risky?" [label="approved"];
-    "Design complex\nor risky?" -> "Invoke stress-test skill" [label="yes"];
-    "Design complex\nor risky?" -> "Invoke writing-plans skill" [label="no"];
+    "User reviews spec?" -> "Stress-test selected\nat gate?" [label="approved"];
+    "Stress-test selected\nat gate?" -> "Invoke stress-test skill" [label="selected"];
+    "Stress-test selected\nat gate?" -> "Invoke writing-plans skill" [label="skipped"];
     "Invoke stress-test skill" -> "Invoke writing-plans skill";
 }
 ```
@@ -168,13 +168,16 @@ fi
 
 Then immediately use the `AskUserQuestion` tool:
 
+<!-- Canonical 3-option stress-test gate — keep identical to writing-plans/SKILL.md (ADR-0020) -->
+
 ```json
 {
   "questions": [{
-    "question": "Spec opened in your editor at `<path>`. Review it and let me know when ready.",
+    "question": "Spec opened in your editor at `<path>`. Review it and let me know how to proceed.",
     "header": "Spec review",
     "options": [
-      {"label": "Approved", "description": "Spec looks good — proceed to writing the implementation plan"},
+      {"label": "Approved + stress-test (Recommended)", "description": "Spec looks good — run an adversarial stress-test before writing the plan"},
+      {"label": "Approved", "description": "Spec looks good — skip stress-test and proceed to writing the implementation plan"},
       {"label": "Needs changes", "description": "I want to revise the spec before proceeding"}
     ],
     "multiSelect": false
@@ -182,26 +185,16 @@ Then immediately use the `AskUserQuestion` tool:
 }
 ```
 
-If the user selects "Needs changes", make the requested changes and re-run the spec review loop. Only proceed to writing-plans once approved.
+Route on the answer:
+- **Approved + stress-test** → invoke the `stress-test` skill with the spec path (`.internal/specs/YYYY-MM-DD-<topic>-design.md`) as the Mode-A artifact; when it completes, invoke `writing-plans`.
+- **Approved** → invoke `writing-plans` directly.
+- **Needs changes** → make the requested changes and re-run the spec review loop. Only proceed once approved.
 
 **Implementation:**
 
-- **Optionally invoke stress-test first** if the design is complex or high-risk. Use the `AskUserQuestion` tool to offer:
-  ```json
-  {
-    "questions": [{
-      "question": "This design has some complexity. Want to stress-test it before planning?",
-      "header": "Stress test",
-      "options": [
-        {"label": "Yes, stress-test it", "description": "Run adversarial review to find gaps before committing to a plan"},
-        {"label": "No, proceed to planning", "description": "Skip stress-test and go straight to writing the implementation plan"}
-      ],
-      "multiSelect": false
-    }]
-  }
-  ```
-- Invoke the writing-plans skill to create a detailed implementation plan
-- Do NOT invoke any other skill besides stress-test (optional) and writing-plans.
+- The stress-test offer now lives in the spec-review gate above (the "Approved + stress-test" option) — there is no separate stress-test prompt.
+- Invoke the writing-plans skill to create a detailed implementation plan (after stress-test, if selected).
+- Do NOT invoke any other skill besides stress-test (offered at the gate) and writing-plans.
 - Pass the brainstorming bead context forward: the epic bead created during plan execution should reference the brainstorming session bead via `bd dep add <epic-id> <brainstorming-bead-id> --type discovered-from`
 
 ## Key Principles
@@ -248,5 +241,5 @@ If they agree to the companion, read the detailed guide before proceeding:
 ## Integration
 
 **Invokes:**
-- **stress-test** *(optional)* — after spec approval, before writing-plans. Offered when the design has significant complexity or risk.
+- **stress-test** *(optional)* — offered at the spec-review gate every time (the "Approved + stress-test" option), before writing-plans.
 - **writing-plans** — terminal state. The only implementation skill brainstorming invokes.
