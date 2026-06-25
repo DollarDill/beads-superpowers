@@ -1,13 +1,15 @@
 ---
 title: beads-superpowers — Process Discipline and Persistent Memory for AI Coding Agents
-description: 22 skills enforce TDD, debugging, and code review for AI agents. Dolt-backed task memory persists across sessions. Supports Claude Code, Codex, and OpenCode.
+description: 22 skills enforce TDD, debugging, and code review for AI agents. Dolt-backed task memory persists across sessions. Verified on Claude Code, Codex, and OpenCode.
 ---
 
 # beads-superpowers
 
-A plugin for Claude Code, Codex, and OpenCode with **{{ skill_count }}** skills that enforce development practices — TDD, systematic debugging, design-before-code, code review — and a persistent issue tracker that remembers context across sessions.
+A plugin for AI coding agents with **{{ skill_count }}** skills that enforce development practices — TDD, systematic debugging, design-before-code, code review — and a persistent issue tracker that remembers context across sessions.
 
-The skills come from [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent. The tracker comes from [Beads](https://github.com/gastownhall/beads) by Steve Yegge. This plugin wires them together so skills create and close issues as they run, and the tracker feeds context back into each new session. It works across Claude Code, Codex CLI, and OpenCode with a single install.
+The skills come from [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent. The tracker comes from [Beads](https://github.com/gastownhall/beads) by Steve Yegge. This plugin wires them together so skills create and close issues as they run, and the tracker feeds context back into each new session.
+
+**Verified** on Claude Code, Codex CLI, and OpenCode. **Best-effort / community** support for Cursor, Gemini CLI, and GitHub Copilot CLI. See [Getting Started](getting-started.md#supported-platforms) for install paths by platform.
 
 **Current version:** v{{ version }} · {{ skill_count }} skills
 
