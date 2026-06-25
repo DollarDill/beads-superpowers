@@ -45,7 +45,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-- `systematic-debugging`: the extended-thinking keyword in the skill body was un-hyphenated (`Ultrathink`), which silently triggered extended thinking every time the skill loaded. Hyphenated to `Ultra-think` to match upstream superpowers v6.0.3.
+- `subagent-driven-development`: completed the file-handoff adoption that v6.0.3 introduced. The skill had contradicted itself — the "File Handoffs" section said to hand the implementer a task brief *file*, while `implementer-prompt.md` and an "Efficiency gains" bullet still said to paste the full task text and "don't make subagent read file." Both are now reconciled to the file-based model: the implementer reads its task brief at `[BRIEF_FILE]` (written by `scripts/task-brief`), matching upstream.
+- `claude-code` skill tests: the SDD fast test never reached clean completion. The cause was brittle assertions, not latency — `assert_contains` matched model prose case-sensitively (so "Do Not Trust" missed `not trust` and "skepticism" missed `skeptical`). Made `assert_contains` case-insensitive, broadened the reviewer-mindset assertions to the vocabulary the model actually uses (skeptic/distrust/unverified/adversarial; code/diff/ground truth), and updated the task-handoff test to the brief-file model. The suite now runs green end-to-end (verified across two consecutive full runs); the nine sequential model calls need a generous outer timeout (≥600 s).
 - `auditing-upstream-drift`: corrected the skill's own stale self-checks — the skill-count check expected 15 skills (now 22), the version-consistency check covered 3 manifests (now all 6, including the Codex and OpenCode manifests), and Check 3.1 no longer false-fails on the `getting-up-to-speed` "TodoWrite is forbidden" prohibition line.
 
 ## [0.6.0] - 2026-06-03
