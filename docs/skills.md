@@ -116,7 +116,7 @@ graph TD
 
 ### using-superpowers
 
-Bootstrap skill injected at every session start. Routes the agent to the correct skill for the current task. All other skills depend on this one having loaded first.
+Bootstrap skill injected at every session start. Routes the agent to the correct skill for the current task, and carries the production-grade doctrine that holds every session to a no-shortcuts, no-silent-descope, never-a-security-regression standard. All other skills depend on this one having loaded first.
 
 ### writing-skills
 
@@ -204,13 +204,13 @@ Detects environment (normal repo, named-branch worktree, or detached HEAD) and a
 
 **Trigger:** After code changes are committed, before PR merge.
 
-Walks through README, CHANGELOG, CLAUDE.md, CONTRIBUTING, and other docs to find and fix drift against shipped code.
+Walks through README, CHANGELOG, CLAUDE.md, CONTRIBUTING, and other docs to find and fix drift against shipped code. A coverage map catches docs that are missing entirely — a new flag or command with no reference page — not only stale ones, and each CHANGELOG entry is scored against a what-changed, why-care, how-to-use test.
 
 ### getting-up-to-speed
 
 **Trigger:** Session start, after compaction, or "catch me up" / "where are we".
 
-Runs `bd prime`, deep-dives the codebase (adaptive to repo size), and produces a structured current-state summary.
+Runs `bd prime`, deep-dives the codebase (adaptive to repo size), and produces a structured current-state summary. A pre-emit verification gate holds every claim in that summary to a command actually run in the session, and a beads-versus-git check flags work that shipped but was left open.
 
 ### auditing-upstream-drift
 
