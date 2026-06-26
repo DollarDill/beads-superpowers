@@ -164,6 +164,9 @@ Thresholds: **<2 → rewrite** the entry; **3 → gold** (preserve as-is or mino
 - **Never bump VERSION silently:** Always ask, even if already bumped
 - **Be specific about changes:** Every edit gets a one-line summary
 - **Discoverability:** Every doc file must be reachable from README or CLAUDE.md
+- **Coverage map informs, never generates:** flag gaps for beads/PR body; never auto-write doc pages (point gaps at `write-documentation`). Diagram-drift is flag-only — never auto-edit a diagram.
+- **Never early-exit without the coverage map:** the Step 1.5 empty-check may exit only after the coverage map confirms zero new public surface AND zero `.md` changed. When in doubt, run the full audit — a false-skip ships undocumented surface.
+- **Offer doc-debt, don't auto-create:** present coverage gaps; create `docs-debt` beads only on confirmation, and dedupe against existing open ones.
 
 If you discovered something reusable, capture it before closing:
 
