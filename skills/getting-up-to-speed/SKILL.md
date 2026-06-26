@@ -130,34 +130,44 @@ Produce **exactly this Markdown structure**. Heading levels are H2; tables and l
 
 ```markdown
 ## What `<project>` Is
-<1–3 sentence synthesis. Mentions language/runtime, primary purpose, and any merge/fork lineage if discoverable from CHANGELOG/README.>
+<1–3 sentence synthesis. Language/runtime, primary purpose, merge/fork lineage if discoverable.> [✅ source: CLAUDE.md / README / CHANGELOG]
 
 | Layer | Source | Role |
 |---|---|---|
 <Optional table — used when project merges/wraps multiple subsystems. Skipped for simple repos.>
 
 ## Architecture Highlights
-- **<key design decision 1>** — <one-line consequence>
-- **<key design decision 2>** — <one-line consequence>
-<3–6 bullets, sourced from CLAUDE.md / README / a METHODOLOGY-style doc.>
+- **<key design decision 1>** — <one-line consequence> [✅ source: CLAUDE.md Key Design Decisions]
+- **<key design decision 2>** — <one-line consequence> [⚠️ source: README §Arch; verify: still matches code]
+<3–6 bullets, sourced from CLAUDE.md / README / a METHODOLOGY-style doc. Each carries a confidence glyph + source.>
 
 ## Repo Layout (verified)
 <code-fenced tree, ONLY directories actually present per `find` output. Never invented.>
 
 ## Current State
-**Git:** <branch> <clean|N changes>, <in sync|N ahead|N behind> origin. Latest = `<sha>` <subject>. Tags: <top 5>.
-**Last release:** <if version detectable> shipped: <CHANGELOG bullet summary>. `[Unreleased]` <empty|has N entries>.
-**Beads ledger:** <total> total · <closed> closed · <open> open · <in-progress> · <blocked>. (counts from `bd count --by-status`; <blocked> from `bd blocked`)
+**Git:** <branch> · <clean | N uncommitted (M staged)> · <in sync | N ahead | N behind> origin · latest `<sha>` <subject> · tags <top 5>.
+**Working tree:** <top-N changed files with +X/-Y counts; binary as `(binary)`; `+K untracked`>. (omit this line if the tree is clean — never dump the diff)
+**Last release:** <if version detectable> shipped: <CHANGELOG bullet summary>. `[Unreleased]` <empty | has N entries>.
+**Beads ledger:** <total> total · <closed> · <open> · <in-progress> · <blocked>. (verified, from `bd count --by-status`; <blocked> from `bd blocked`)
+**Continuity check:** <✓ ledger consistent with git | ⚠️ <bead> appears in <sha> on <base> — verify it shouldn't be closed | skipped (no beads) | unavailable>.
 
 | Bead | Pri | Title |
 |---|---|---|
 <Up to 10 open ready beads, sorted by priority. Top 3 were drilled into in Phase 3. Source: `bd ready`, or `bd query "status=open" --sort priority --limit 10` for the full open set.>
 
-**Known operational quirks:** <from `bd memories` keyword scan; from docs/known-issues/* if present>
+## Recent Activity
+- <last 3–5 commits as a narrative of what shipped> [source: git log]
+- <in-progress beads + where they were mid-way> [source: bd query in-progress]
+- <after compaction: the prior in-session thread / decisions>
+<Backward delta only. Degrades to "Fresh session — no prior in-session delta" when none. Does NOT restate the open-ready bead table above, nor the Last release line.>
+
+**Known operational quirks:** <from `bd memories` keyword scan; from docs/known-issues/* if present> [source: bd memories]
 **Other captured memories:** <one line per memory not surfaced above>
 
 ---
-I'm ready for your next instruction. The highest-priority unblocked work right now is **`<bead-id>`** (<priority> — <title>).
+<after-compaction only: "Welcome back — last thread was <X>.">
+I'm ready for your next instruction. Highest-priority unblocked work: **`<bead-id>`** (<priority> — <title>).
+If you want to start it, the fitting skill is **<skill>** — but I'll wait for your call; I won't claim or begin anything.
 ```
 
 ### Verification Gate (run before emitting)
