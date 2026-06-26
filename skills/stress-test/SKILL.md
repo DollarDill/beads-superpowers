@@ -5,7 +5,7 @@ description: Use when a design, plan, or decision needs adversarial scrutiny bef
 
 # Stress Test: Adversarial Design Interrogation
 
-> **Source:** Inspired by [mattpocock/skills grill-me](https://github.com/mattpocock/skills/blob/main/grill-me/SKILL.md)
+> **Source:** Inspired by [mattpocock/skills grilling](https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md)
 
 **Announce at start:** "I'm using the stress-test skill to interrogate this design."
 
@@ -89,7 +89,7 @@ Remaining: Error handling, Scale, Rollback, Testing strategy
 ```
 
 **Rules:**
-- One branch at a time — never batch
+- One branch at a time — never batch. Wait for the user's response on each branch before presenting the next; surfacing several at once is bewildering and dilutes the recommendation each one deserves.
 - Always state your recommendation in the message body BEFORE the `AskUserQuestion` — the recommendation is the substance; the click is just the gate
 - If you can answer by exploring the codebase, do that instead of asking
 - When the user agrees, move on. When they push back, explore deeper.
