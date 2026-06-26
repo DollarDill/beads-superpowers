@@ -1,6 +1,6 @@
 ---
 name: getting-up-to-speed
-description: Use at the start of a session, after compaction, or whenever you need to orient on an unfamiliar or stale codebase. Loads beads context, deep-dives the codebase, and produces a structured 'current state' summary. Triggers on phrases like "catch me up", "where are we", "orient me", "what's the state of this project", "bring me up to speed", "load context", "session orientation".
+description: Orients on an unfamiliar or stale codebase at the start of a session, after compaction, or whenever the project state is unclear. Loads beads context, deep-dives the codebase, and produces a structured 'current state' summary. Triggers on phrases like "catch me up", "where are we", "orient me", "what's the state of this project", "bring me up to speed", "load context", "session orientation".
 ---
 
 # Getting Up to Speed
@@ -29,6 +29,16 @@ Pre-step: Detect repo scale  →  Phase 1: Beads (parallel)  →  Phase 2: Codeb
                                                                      ↓
                                        Phase 4: Synthesize summary  ←  Phase 3: Top open beads drilldown
 ```
+
+## Progress Checklist
+
+Copy this into your working response and check each item off as you complete it (all paths — Light included):
+
+- [ ] Pre-step: repo scale detected (Light / Medium / Heavy)
+- [ ] Phase 1: beads context loaded (or skipped — no beads)
+- [ ] Phase 2: codebase explored (path-appropriate)
+- [ ] Phase 3: top open beads drilled (or skipped — no beads)
+- [ ] Phase 4: summary emitted + verification gate passed
 
 ## Pre-step: Detect repo scale
 
@@ -108,37 +118,67 @@ If Phase 1 was skipped (no beads), skip Phase 3.
 
 Produce **exactly this Markdown structure**. Heading levels are H2; tables and lists scale to project content. Sections you cannot fill from earlier phases are marked with the degraded-state language from the Edge Cases table — never invented.
 
+**Evidence + confidence convention:**
+
+- **Inferred/synthesized claims** ("What it is", "Architecture Highlights", "Known operational quirks") each carry `[<glyph> source: <file/cmd>]` — glyph is ✅ high / ⚠️ medium / ❓ low — plus `verify: <what>` when below high.
+- **Deterministically-verified sections** (Repo Layout from `find`, Git from git, Beads ledger from `bd count`) are ground truth — labeled `(verified)` at the heading, no per-line tags. Tag where trust varies, never as filler.
+
+**Cross-checks to compute (orchestrator-run, all paths — never delegated to sub-agents):**
+
+- **Working tree:** from `git status --porcelain` (full list incl. untracked, status codes `M`/`A`/`D`/`R`/`??`) + `git diff --numstat` (added/deleted per tracked file; binary shows `-`). Rank tracked changes by added+deleted; show top-N with `+X/-Y` counts; render binary as `(binary)`; list the untracked count separately. Never dump the diff.
+- **Continuity check (in-progress beads only):** resolve the base branch as `git symbolic-ref refs/remotes/origin/HEAD` (strip to branch name), falling back to `main` then `master`; if none resolves, mark the check "unavailable". For each in-progress bead, run `git log --grep="<bead-id>" --oneline <base>`. If the bead ID appears in a commit reachable from the base branch, flag it advisory: `⚠️ <bead> appears in <sha> on <base> — verify it shouldn't be closed`. A multi-commit epic legitimately keeps shipping while open, so judge — do not auto-conclude. A bead whose ID is in no commit is NOT flagged. Skip the check when beads are absent. Deeper hygiene (stale branches, orphans, lint) → point to `bd doctor` / `bd stale` / `bd orphans`; do not reimplement it here.
+
 ```markdown
 ## What `<project>` Is
-<1–3 sentence synthesis. Mentions language/runtime, primary purpose, and any merge/fork lineage if discoverable from CHANGELOG/README.>
+<1–3 sentence synthesis. Language/runtime, primary purpose, merge/fork lineage if discoverable.> [✅ source: CLAUDE.md / README / CHANGELOG]
 
 | Layer | Source | Role |
 |---|---|---|
 <Optional table — used when project merges/wraps multiple subsystems. Skipped for simple repos.>
 
 ## Architecture Highlights
-- **<key design decision 1>** — <one-line consequence>
-- **<key design decision 2>** — <one-line consequence>
-<3–6 bullets, sourced from CLAUDE.md / README / a METHODOLOGY-style doc.>
+- **<key design decision 1>** — <one-line consequence> [✅ source: CLAUDE.md Key Design Decisions]
+- **<key design decision 2>** — <one-line consequence> [⚠️ source: README §Arch; verify: still matches code]
+<3–6 bullets, sourced from CLAUDE.md / README / a METHODOLOGY-style doc. Each carries a confidence glyph + source.>
 
 ## Repo Layout (verified)
 <code-fenced tree, ONLY directories actually present per `find` output. Never invented.>
 
 ## Current State
-**Git:** <branch> <clean|N changes>, <in sync|N ahead|N behind> origin. Latest = `<sha>` <subject>. Tags: <top 5>.
-**Last release:** <if version detectable> shipped: <CHANGELOG bullet summary>. `[Unreleased]` <empty|has N entries>.
-**Beads ledger:** <total> total · <closed> closed · <open> open · <in-progress> · <blocked>. (counts from `bd count --by-status`; <blocked> from `bd blocked`)
+**Git:** <branch> · <clean | N uncommitted (M staged)> · <in sync | N ahead | N behind> origin · latest `<sha>` <subject> · tags <top 5>.
+**Working tree:** <top-N changed files with +X/-Y counts; binary as `(binary)`; `+K untracked`>. (omit this line if the tree is clean — never dump the diff)
+**Last release:** <if version detectable> shipped: <CHANGELOG bullet summary>. `[Unreleased]` <empty | has N entries>.
+**Beads ledger:** <total> total · <closed> · <open> · <in-progress> · <blocked>. (verified, from `bd count --by-status`; <blocked> from `bd blocked`)
+**Continuity check:** <✓ ledger consistent with git | ⚠️ <bead> appears in <sha> on <base> — verify it shouldn't be closed | skipped (no beads) | unavailable>.
 
 | Bead | Pri | Title |
 |---|---|---|
 <Up to 10 open ready beads, sorted by priority. Top 3 were drilled into in Phase 3. Source: `bd ready`, or `bd query "status=open" --sort priority --limit 10` for the full open set.>
 
-**Known operational quirks:** <from `bd memories` keyword scan; from docs/known-issues/* if present>
+## Recent Activity
+- <last 3–5 commits as a narrative of what shipped> [source: git log]
+- <in-progress beads + where they were mid-way> [source: bd query in-progress]
+- <after compaction: the prior in-session thread / decisions>
+<Backward delta only. Degrades to "Fresh session — no prior in-session delta" when none. Does NOT restate the open-ready bead table above, nor the Last release line.>
+
+**Known operational quirks:** <from `bd memories` keyword scan; from docs/known-issues/* if present> [source: bd memories]
 **Other captured memories:** <one line per memory not surfaced above>
 
 ---
-I'm ready for your next instruction. The highest-priority unblocked work right now is **`<bead-id>`** (<priority> — <title>).
+<after-compaction only: "Welcome back — last thread was <X>.">
+I'm ready for your next instruction. Highest-priority unblocked work: **`<bead-id>`** (<priority> — <title>).
+If you want to start it, the fitting skill is **<skill>** — but I'll wait for your call; I won't claim or begin anything.
 ```
+
+### Verification Gate (run before emitting)
+
+Validate each line; fix or mark degraded, then re-check. Only emit once all pass:
+
+1. Every Current State fact (git, working tree, ledger, continuity) traces to a command you ran THIS session — not memory, not assumption.
+2. Every inferred claim has a confidence glyph + source tag.
+3. Any section you could not fill from a command → degraded-state language from the Edge Cases table. NEVER invent.
+4. The continuity check ran (or is marked skipped/unavailable).
+5. The Progress Checklist is fully ticked (or items marked skipped with reason).
 
 The trailing "I'm ready" line is the **terminal contract**: the skill stops here. Do NOT auto-claim the next bead. Do NOT start working on anything. The user drives the next move.
 
@@ -161,6 +201,10 @@ bd remember "corrected: <updated insight>"  # Replace if needed
 | Detached HEAD | Output `HEAD detached at <sha>` instead of branch name |
 | Empty git log | `git log` exits non-zero; catch and emit "no commits yet" |
 | `find` errors on missing dirs | Each `find` is independent and uses `2>/dev/null` — missing dirs skipped silently |
+| After compaction, no prior thread recoverable | Recent Activity → "Fresh session — no prior in-session delta" |
+| Working tree has hundreds of changed files | Summarize top-N by change-size + "+K more"; never dump the diff |
+| Open/in-progress bead whose ID is in no commit | NOT a divergence — work uncommitted or convention not followed; do not flag |
+| `git log --grep` errors or base branch undetectable | Mark continuity check "unavailable"; do not block the summary |
 
 ## Red Flags / Anti-Rationalization
 
@@ -174,10 +218,14 @@ These thoughts mean STOP — you're rationalizing skipping orientation:
 | "I'll skip Phase 3 — looking at open beads is busywork" | Phase 3 is what surfaces "this Dolt setup is broken" before you waste 20 minutes on it. |
 | "I'll auto-claim the top P0" | Forbidden. Orient and stop. User drives. |
 | "This is a small repo, I can skim" | Run the Light path of this skill. It's still 30 seconds and produces a summary you can refer back to. |
+| "The summary looks complete, I'll emit it" | Run the Verification Gate first — every line traces to a command this session. |
+| "I'll tag confidence later" | An inferred claim without a glyph + source is an unverified guess. Tag inline. |
+| "Beads and git probably agree" | Run the continuity check. A shipped-but-still-open bead is exactly what it catches. |
+| "I'll suggest they start the top bead" | Suggest the *skill*; don't claim or begin. The terminal contract is absolute. |
 
 ## Output Contract
 
-The skill is complete when you have produced the structured summary AND emitted the trailing "I'm ready for your next instruction" line. No claiming, no continuation. Wait for user input.
+The skill is complete when you have produced the structured summary, **the Verification Gate has passed**, AND emitted the trailing "I'm ready for your next instruction" line. No claiming, no continuation. Wait for user input.
 
 ## Integration
 
