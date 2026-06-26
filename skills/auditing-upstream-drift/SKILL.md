@@ -179,8 +179,7 @@ Verify the beads integration is complete and no stale references remain.
 
 **Check 3.1 — Zero active TodoWrite references:**
 ```bash
-results=$(grep -rn "TodoWrite" skills/ | grep -v "Do NOT use TodoWrite" | grep -v "replaces TodoWrite" | grep -v "TodoWrite is forbidden" | grep -v "auditing-upstream-drift")
-[ -z "$results" ] && echo "PASS: zero active TodoWrite" || echo "FAIL: $results"
+bash scripts/check-todowrite.sh && echo "PASS: zero active TodoWrite" || echo "FAIL: see output above"
 ```
 
 The only allowed TodoWrite references are prohibitions ("Do NOT use TodoWrite", "TodoWrite is forbidden") and this audit skill's own grep patterns.
@@ -207,7 +206,7 @@ results=$(grep -rn "/path/to/superpowers" tests/)
 
 **Check 3.5 — Zero TodoWrite in tests:**
 ```bash
-results=$(grep -rn "TodoWrite" tests/)
+results=$(grep -rn "TodoWrite" tests/ | grep -v "tests/skills/test-todowrite-gate.sh")
 [ -z "$results" ] && echo "PASS" || echo "FAIL: TodoWrite in tests: $results"
 ```
 

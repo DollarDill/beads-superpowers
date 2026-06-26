@@ -99,7 +99,7 @@ When modifying skills in this repo:
 
 - Skills are plain Markdown in `skills/<name>/SKILL.md`
 - All task tracking uses `bd` commands — never TodoWrite
-- Test changes by verifying `grep -r "TodoWrite" skills/` returns only prohibition references
+- Test changes by running `bash scripts/check-todowrite.sh` (the canonical TodoWrite gate)
 - The SessionStart hook at `hooks/session-start` injects `using-superpowers` + `bd prime`
 - The single task review prompt (`task-reviewer-prompt.md`) is NOT beads-aware — orchestrator only. Exception: `implementer-prompt.md` and `researcher-prompt.md` ARE beads-aware (include skill invocations, bead lifecycle, LSP instructions).
 - Subagent prompt templates live inside their respective skills: `skills/subagent-driven-development/implementer-prompt.md`, `skills/research-driven-development/researcher-prompt.md`. Skills own their dispatch prompts — no standalone agent files for subagents.

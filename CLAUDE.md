@@ -288,7 +288,7 @@ If `bd setup claude` hooks are installed in any settings file (project or global
 1. **Do NOT remove** anti-rationalization tables, Iron Laws, or Red Flags sections
 2. **Do NOT add** TodoWrite references — use `bd` commands
 3. **Do NOT modify** the task review prompt (`task-reviewer-prompt.md`) with beads commands — orchestrator only. Exception: `implementer-prompt.md` IS beads-aware by design (includes skill invocations, bead lifecycle, LSP instructions).
-4. Verify after changes: `grep -r "TodoWrite" skills/ | grep -v "Do NOT use" | grep -v "replaces"` — must return empty
+4. Verify after changes: run `bash scripts/check-todowrite.sh` — must report "No active TodoWrite references"
 
 ### Key Anti-Patterns
 
@@ -312,8 +312,8 @@ claude plugin validate .claude-plugin/plugin.json
 # Verify skill counts are consistent
 ./scripts/sync-skill-count.sh --check
 
-# Verify zero active TodoWrite references
-grep -r "TodoWrite" skills/ | grep -v "Do NOT use TodoWrite" | grep -v "replaces TodoWrite"
+# Verify zero active TodoWrite references (canonical gate)
+bash scripts/check-todowrite.sh
 
 # Verify beads integration (should be 30+)
 grep -r "bd create\|bd close\|bd ready" skills/ | wc -l
