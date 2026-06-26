@@ -9,8 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-06-26
+
 ### Added
 
+- **Native support for 7 more AI coding agents.** Beyond the verified trio (Claude Code, Codex, OpenCode), the plugin now ships native per-CLI config for Cursor, Gemini CLI, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi — each with its own install section in the README and a tiered, honest "best-effort, not E2E-tested by us" label. `install.sh` auto-detects all of them. (ADR-0018, ADR-0019)
 - **Production-Grade Doctrine.** Every session now carries a bright-line doctrine: treat every project as a production-facing system with real users, so the agent never takes shortcuts, silently descopes a requirement, or accepts a material-risk trade-off on its own judgment — and never accepts a security regression (a hard floor). Code review, the task reviewer, and the completion gate now block security regressions by rule. Stated once in `using-superpowers`, referenced across the judgment and gate skills. (ADR-0023)
 
 ### Changed
