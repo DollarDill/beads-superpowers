@@ -73,7 +73,7 @@ Create bead (`bd create`), claim it (`bd update --claim`), sync remote (`bd dolt
 
 ### S2 — Research
 
-`research-driven-development` dispatches a researcher subagent and an `@explore` agent in parallel. One investigates the problem domain, the other maps affected code and dependencies. If one fails, the other's findings are enough to proceed.
+`research-driven-development` decomposes the topic into sub-questions and dispatches one researcher per sub-question in parallel — with an `@explore` agent mapping affected code and dependencies when the topic is codebase-relevant. The orchestrator then verifies each load-bearing claim against the verbatim quote its researcher returned, and runs one capped gap-closing round if any claim rests on a single source.
 
 ### S3 — Knowledge capture
 

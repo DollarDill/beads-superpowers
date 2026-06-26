@@ -234,7 +234,7 @@ Three paths: fresh init, bootstrap from remote, or recovery when Dolt history ha
 
 **Trigger:** Research questions, "what is X", "how does Y work", "compare A vs B".
 
-Dispatches a researcher subagent and `@explore` in parallel, synthesizes findings into a persistent document. Iron Law: no research without a document — verbal answers without persistent artifacts are prohibited.
+Decomposes the topic into sub-questions, dispatches one researcher per sub-question in parallel (plus `@explore` for codebase-relevant topics), verifies each load-bearing claim against a verbatim source quote, and synthesizes findings into a persistent document with per-finding confidence. Iron Law: no research without a document — verbal answers without persistent artifacts are prohibited.
 
 ### write-documentation
 

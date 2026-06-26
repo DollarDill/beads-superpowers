@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - **Stress-test is now offered at every approval gate.** The `brainstorming` spec-review and `writing-plans` plan-review gates include an "Approved + stress-test" option (listed first, recommended), so the optional adversarial design review is surfaced every time — not only when a design was judged "complex." Choose it to run `stress-test` on the spec or plan before continuing; plain "Approved" skips it. (ADR-0020)
+- **`research-driven-development` now decomposes, verifies, and right-sizes its research.** Instead of handing the raw topic to a fixed pair of agents, it breaks the topic into sub-questions and dispatches one researcher each (each with an objective, output format, sources, and boundaries), scales the agent count to the question (a hard cap of 5), verifies every load-bearing claim against a verbatim source quote, tags each finding's confidence, and runs one capped gap-closing round when a claim rests on a single source. Grounded in a study of the most-adopted deep-research systems. (ADR-0021)
 
 ## [0.7.1] - 2026-06-26
 
