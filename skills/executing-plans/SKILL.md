@@ -98,6 +98,7 @@ After all tasks complete and verified:
 - Reference skills when plan says to
 - Stop when blocked, don't guess
 - Never start implementation on main/master branch without explicit user consent
+- **Production-Grade Doctrine (see using-superpowers):** you are shipping to a production system with real users. Never skip a verification, drop a task, or accept a security regression to make progress. `bd defer`/`bd human` are for genuine blockers — never a quiet way to descope required work. Surface a warranted shortcut to the user; a security regression is never acceptable.
 
 If you discovered something reusable, capture it before closing:
 

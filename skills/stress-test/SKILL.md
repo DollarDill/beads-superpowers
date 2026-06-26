@@ -49,6 +49,7 @@ Identify every decision branch in the target:
 - Scale (does this work at 10x? 100x?)
 - Failure modes (what's the worst case?)
 - Alternatives not considered (what about approach W?)
+- **Security & risk (mandatory branch):** does any branch take a shortcut, descope a requirement, or accept material risk? Does anything weaken or bypass a security control, or introduce a vulnerability? Per the Production-Grade Doctrine (see using-superpowers), a design that does fails the stress test by default. (If the design has no security surface, resolve this branch as "no security surface — N/A" — do not fabricate a finding.)
 
 ### Phase 3: Interrogate One Branch at a Time
 
@@ -215,6 +216,8 @@ bd remember "design: <gap or insight revealed by stress testing>"
 | "I don't want to slow things down" | Catching a flaw now saves 10x the time later |
 | "They clicked Agree fast, so this is going well" | Speed ≠ depth — fast agreement might mean they're not reading your recommendation carefully. Don't reduce rigor. |
 | "I can shorten my recommendation since they just need to click" | The recommendation IS the value. AskUserQuestion replaces how the user responds, not how thoroughly you interrogate. |
+| "It's a reasonable trade-off" | Name the downside and its blast radius. A material-risk trade-off is surfaced to the user, never waved through — and a security regression is never acceptable. |
+| "Security's out of scope for this design" | Security is in scope for every design. If a branch touches auth, data, input, or secrets, interrogate it. |
 
 ## Red Flags
 
@@ -225,6 +228,7 @@ bd remember "design: <gap or insight revealed by stress testing>"
 - Forget to provide your own recommended answer
 - End without a findings summary
 - Present the `AskUserQuestion` without a substantive recommendation preceding it in the message body
+- Wave through a shortcut, a silent descope, a material-risk trade-off, or a security regression — these fail the stress test by default (Production-Grade Doctrine)
 
 **Always:**
 - Provide a recommended answer for every question

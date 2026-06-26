@@ -13,6 +13,8 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
+**Production-Grade Doctrine (see using-superpowers):** every spec requirement MUST map to a task. Never silently descope — a deliberate cut is surfaced to the user as a tracked decision, never an omission. Never plan a shortcut or a security regression.
+
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
 **Save plans to:** `.internal/plans/YYYY-MM-DD-<feature-name>.md`
@@ -157,7 +159,7 @@ bd list --parent <epic-id> --json | jq -r '.[].id' | xargs -n1 bd lint   # same 
 bd ready --parent <epic-id> --explain                                # confirm dependency ordering
 ```
 
-**1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
+**1. Spec coverage:** Skim each requirement in the spec. Every one MUST map to a task — point to it. A requirement with no task is either added as a task or surfaced to the user as an explicit, acknowledged cut. Silent omission is a plan failure.
 
 **2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
 
