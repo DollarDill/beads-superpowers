@@ -30,6 +30,16 @@ Pre-step: Detect repo scale  →  Phase 1: Beads (parallel)  →  Phase 2: Codeb
                                        Phase 4: Synthesize summary  ←  Phase 3: Top open beads drilldown
 ```
 
+## Progress Checklist
+
+Copy this into your working response and check each item off as you complete it (all paths — Light included):
+
+- [ ] Pre-step: repo scale detected (Light / Medium / Heavy)
+- [ ] Phase 1: beads context loaded (or skipped — no beads)
+- [ ] Phase 2: codebase explored (path-appropriate)
+- [ ] Phase 3: top open beads drilled (or skipped — no beads)
+- [ ] Phase 4: summary emitted + verification gate passed
+
 ## Pre-step: Detect repo scale
 
 Run this single command first to pick a path. Uses git plumbing (`rev-parse --is-inside-work-tree`) and a probe of `bd ready` so it works correctly inside git worktrees and submodules — checking for a literal `.git`/`.beads` directory misidentifies worktrees as "no git" because `.git` there is a file, not a directory.
@@ -140,6 +150,16 @@ Produce **exactly this Markdown structure**. Heading levels are H2; tables and l
 I'm ready for your next instruction. The highest-priority unblocked work right now is **`<bead-id>`** (<priority> — <title>).
 ```
 
+### Verification Gate (run before emitting)
+
+Validate each line; fix or mark degraded, then re-check. Only emit once all pass:
+
+1. Every Current State fact (git, working tree, ledger, continuity) traces to a command you ran THIS session — not memory, not assumption.
+2. Every inferred claim has a confidence glyph + source tag.
+3. Any section you could not fill from a command → degraded-state language from the Edge Cases table. NEVER invent.
+4. The continuity check ran (or is marked skipped/unavailable).
+5. The Progress Checklist is fully ticked (or items marked skipped with reason).
+
 The trailing "I'm ready" line is the **terminal contract**: the skill stops here. Do NOT auto-claim the next bead. Do NOT start working on anything. The user drives the next move.
 
 If any memories from Phase 1 are stale or incorrect, clean them up:
@@ -177,7 +197,7 @@ These thoughts mean STOP — you're rationalizing skipping orientation:
 
 ## Output Contract
 
-The skill is complete when you have produced the structured summary AND emitted the trailing "I'm ready for your next instruction" line. No claiming, no continuation. Wait for user input.
+The skill is complete when you have produced the structured summary, **the Verification Gate has passed**, AND emitted the trailing "I'm ready for your next instruction" line. No claiming, no continuation. Wait for user input.
 
 ## Integration
 
