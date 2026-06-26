@@ -118,6 +118,16 @@ If Phase 1 was skipped (no beads), skip Phase 3.
 
 Produce **exactly this Markdown structure**. Heading levels are H2; tables and lists scale to project content. Sections you cannot fill from earlier phases are marked with the degraded-state language from the Edge Cases table — never invented.
 
+**Evidence + confidence convention:**
+
+- **Inferred/synthesized claims** ("What it is", "Architecture Highlights", "Known operational quirks") each carry `[<glyph> source: <file/cmd>]` — glyph is ✅ high / ⚠️ medium / ❓ low — plus `verify: <what>` when below high.
+- **Deterministically-verified sections** (Repo Layout from `find`, Git from git, Beads ledger from `bd count`) are ground truth — labeled `(verified)` at the heading, no per-line tags. Tag where trust varies, never as filler.
+
+**Cross-checks to compute (orchestrator-run, all paths — never delegated to sub-agents):**
+
+- **Working tree:** from `git status --porcelain` (full list incl. untracked, status codes `M`/`A`/`D`/`R`/`??`) + `git diff --numstat` (added/deleted per tracked file; binary shows `-`). Rank tracked changes by added+deleted; show top-N with `+X/-Y` counts; render binary as `(binary)`; list the untracked count separately. Never dump the diff.
+- **Continuity check (in-progress beads only):** resolve the base branch as `git symbolic-ref refs/remotes/origin/HEAD` (strip to branch name), falling back to `main` then `master`; if none resolves, mark the check "unavailable". For each in-progress bead, run `git log --grep="<bead-id>" --oneline <base>`. If the bead ID appears in a commit reachable from the base branch, flag it advisory: `⚠️ <bead> appears in <sha> on <base> — verify it shouldn't be closed`. A multi-commit epic legitimately keeps shipping while open, so judge — do not auto-conclude. A bead whose ID is in no commit is NOT flagged. Skip the check when beads are absent. Deeper hygiene (stale branches, orphans, lint) → point to `bd doctor` / `bd stale` / `bd orphans`; do not reimplement it here.
+
 ```markdown
 ## What `<project>` Is
 <1–3 sentence synthesis. Mentions language/runtime, primary purpose, and any merge/fork lineage if discoverable from CHANGELOG/README.>
