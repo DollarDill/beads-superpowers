@@ -1,6 +1,6 @@
 ---
 name: getting-up-to-speed
-description: Use at the start of a session, after compaction, or whenever you need to orient on an unfamiliar or stale codebase. Loads beads context, deep-dives the codebase, and produces a structured 'current state' summary. Triggers on phrases like "catch me up", "where are we", "orient me", "what's the state of this project", "bring me up to speed", "load context", "session orientation".
+description: Orients on an unfamiliar or stale codebase at the start of a session, after compaction, or whenever the project state is unclear. Loads beads context, deep-dives the codebase, and produces a structured 'current state' summary. Triggers on phrases like "catch me up", "where are we", "orient me", "what's the state of this project", "bring me up to speed", "load context", "session orientation".
 ---
 
 # Getting Up to Speed
@@ -201,6 +201,10 @@ bd remember "corrected: <updated insight>"  # Replace if needed
 | Detached HEAD | Output `HEAD detached at <sha>` instead of branch name |
 | Empty git log | `git log` exits non-zero; catch and emit "no commits yet" |
 | `find` errors on missing dirs | Each `find` is independent and uses `2>/dev/null` — missing dirs skipped silently |
+| After compaction, no prior thread recoverable | Recent Activity → "Fresh session — no prior in-session delta" |
+| Working tree has hundreds of changed files | Summarize top-N by change-size + "+K more"; never dump the diff |
+| Open/in-progress bead whose ID is in no commit | NOT a divergence — work uncommitted or convention not followed; do not flag |
+| `git log --grep` errors or base branch undetectable | Mark continuity check "unavailable"; do not block the summary |
 
 ## Red Flags / Anti-Rationalization
 
@@ -214,6 +218,10 @@ These thoughts mean STOP — you're rationalizing skipping orientation:
 | "I'll skip Phase 3 — looking at open beads is busywork" | Phase 3 is what surfaces "this Dolt setup is broken" before you waste 20 minutes on it. |
 | "I'll auto-claim the top P0" | Forbidden. Orient and stop. User drives. |
 | "This is a small repo, I can skim" | Run the Light path of this skill. It's still 30 seconds and produces a summary you can refer back to. |
+| "The summary looks complete, I'll emit it" | Run the Verification Gate first — every line traces to a command this session. |
+| "I'll tag confidence later" | An inferred claim without a glyph + source is an unverified guess. Tag inline. |
+| "Beads and git probably agree" | Run the continuity check. A shipped-but-still-open bead is exactly what it catches. |
+| "I'll suggest they start the top bead" | Suggest the *skill*; don't claim or begin. The terminal contract is absolute. |
 
 ## Output Contract
 
