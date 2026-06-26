@@ -1041,7 +1041,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 </div>
 <h2 id="all-skills">All skills</h2>
 <h3 id="using-superpowers">using-superpowers</h3>
-<p>Bootstrap skill injected at every session start. Routes the agent to the correct skill for the current task. All other skills depend on this one having loaded first.</p>
+<p>Bootstrap skill injected at every session start. Routes the agent to the correct skill for the current task, and carries the production-grade doctrine that holds every session to a no-shortcuts, no-silent-descope, never-a-security-regression standard. All other skills depend on this one having loaded first.</p>
 <h3 id="writing-skills">writing-skills</h3>
 <p>Meta-skill for creating and modifying skills. Enforces TDD-for-process-docs: new skills need a failing test before the SKILL.md is written. Frontmatter descriptions must be trigger conditions, not workflow summaries (see SDO in <a href="../methodology/">Methodology</a>).</p>
 <h3 id="brainstorming">brainstorming</h3>
@@ -1085,10 +1085,10 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p>Detects environment (normal repo, named-branch worktree, or detached HEAD) and adapts options — 4 choices for normal/worktree, 3 for detached HEAD (no merge). Provenance-based cleanup only removes <code>.worktrees/</code> paths. Ends with the mandatory Land the Plane sequence: <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code>.</p>
 <h3 id="document-release">document-release</h3>
 <p><strong>Trigger:</strong> After code changes are committed, before PR merge.</p>
-<p>Walks through README, CHANGELOG, CLAUDE.md, CONTRIBUTING, and other docs to find and fix drift against shipped code.</p>
+<p>Walks through README, CHANGELOG, CLAUDE.md, CONTRIBUTING, and other docs to find and fix drift against shipped code. A coverage map catches docs that are missing entirely — a new flag or command with no reference page — not only stale ones, and each CHANGELOG entry is scored against a what-changed, why-care, how-to-use test.</p>
 <h3 id="getting-up-to-speed">getting-up-to-speed</h3>
 <p><strong>Trigger:</strong> Session start, after compaction, or "catch me up" / "where are we".</p>
-<p>Runs <code>bd prime</code>, deep-dives the codebase (adaptive to repo size), and produces a structured current-state summary.</p>
+<p>Runs <code>bd prime</code>, deep-dives the codebase (adaptive to repo size), and produces a structured current-state summary. A pre-emit verification gate holds every claim in that summary to a command actually run in the session, and a beads-versus-git check flags work that shipped but was left open.</p>
 <h3 id="auditing-upstream-drift">auditing-upstream-drift</h3>
 <p><strong>Trigger:</strong> Before a plugin release, or when checking for staleness.</p>
 <p>Audits against <a href="https://github.com/obra/superpowers">obra/superpowers</a> and <a href="https://github.com/gastownhall/beads">gastownhall/beads</a> for new skills, changed commands, and documentation improvements to port.</p>
@@ -1100,7 +1100,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p>Three paths: fresh init, bootstrap from remote, or recovery when Dolt history has diverged.</p>
 <h3 id="research-driven-development">research-driven-development</h3>
 <p><strong>Trigger:</strong> Research questions, "what is X", "how does Y work", "compare A vs B".</p>
-<p>Dispatches a researcher subagent and <code>@explore</code> in parallel, synthesizes findings into a persistent document. Iron Law: no research without a document — verbal answers without persistent artifacts are prohibited.</p>
+<p>Decomposes the topic into sub-questions, dispatches one researcher per sub-question in parallel (plus <code>@explore</code> for codebase-relevant topics), verifies each load-bearing claim against a verbatim source quote, and synthesizes findings into a persistent document with per-finding confidence. Iron Law: no research without a document — verbal answers without persistent artifacts are prohibited.</p>
 <h3 id="write-documentation">write-documentation</h3>
 <p><strong>Trigger:</strong> Writing or rewriting human-facing prose — docs, guides, emails, PR descriptions, release notes.</p>
 <p>14-rule writing system adapted from <a href="https://github.com/Anbeeld/WRITING.md">WRITING.md</a>. Context-first drafting, required checks as revision pass, targets the patterns that make LLM prose recognizable (regularity, catalog prose, false crispness). Pairs with <code>document-release</code> (which handles <em>when</em> to update, not <em>how</em> to write).</p>
@@ -1287,7 +1287,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 25, 2026 15:03:23 UTC">June 25, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 26, 2026 10:27:53 UTC">June 26, 2026</span>
   </span>
 
     

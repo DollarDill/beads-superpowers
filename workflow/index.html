@@ -847,11 +847,11 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <h3 id="s1-setup">S1 — Setup</h3>
 <p>Create bead (<code>bd create</code>), claim it (<code>bd update --claim</code>), sync remote (<code>bd dolt pull</code>). If the session dies, the bead record shows in-progress work that can be recovered.</p>
 <h3 id="s2-research">S2 — Research</h3>
-<p><code>research-driven-development</code> dispatches a researcher subagent and an <code>@explore</code> agent in parallel. One investigates the problem domain, the other maps affected code and dependencies. If one fails, the other's findings are enough to proceed.</p>
+<p><code>research-driven-development</code> decomposes the topic into sub-questions and dispatches one researcher per sub-question in parallel — with an <code>@explore</code> agent mapping affected code and dependencies when the topic is codebase-relevant. The orchestrator then verifies each load-bearing claim against the verbatim quote its researcher returned, and runs one capped gap-closing round if any claim rests on a single source.</p>
 <h3 id="s3-knowledge-capture">S3 — Knowledge capture</h3>
 <p>Synthesize research into a persistent document. Store key learnings with <code>bd remember</code>. Forces a coherence check — contradictions between researcher and explorer surface here, not during implementation.</p>
 <h3 id="s4-brainstorm">S4 — Brainstorm</h3>
-<p><code>brainstorming</code> explores the solution space through structured questions, surfaces assumptions, and produces a design spec committed to git. The design must be user-approved before moving forward. <code>stress-test</code> may fire here to interrogate the design adversarially.</p>
+<p><code>brainstorming</code> explores the solution space through structured questions, surfaces assumptions, and produces a design spec committed to git. The design must be user-approved before moving forward. The spec-review gate offers a <code>stress-test</code> every time to interrogate the design adversarially.</p>
 <h3 id="s5-decision-capture">S5 — Decision capture</h3>
 <p>Write an ADR in <code>decisions/</code> — context, decision, consequences, alternatives considered. Transforms implicit brainstorming decisions into explicit records.</p>
 <h3 id="s6-plan">S6 — Plan</h3>
@@ -951,7 +951,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 25, 2026 15:01:11 UTC">June 25, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 26, 2026 04:39:33 UTC">June 26, 2026</span>
   </span>
 
     
