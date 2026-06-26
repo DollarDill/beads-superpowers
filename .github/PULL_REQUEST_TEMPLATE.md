@@ -16,7 +16,7 @@
 - [ ] CI passes locally (`npx markdownlint-cli2 "**/*.md"`)
 - [ ] If I added or modified a skill, I did NOT add `TodoWrite` references — only `bd` commands
 - [ ] If I added or modified a skill, I did NOT remove anti-rationalization tables, Iron Laws, or Red Flags
-- [ ] If I changed plugin metadata, I bumped the version in all 3 manifests via `scripts/bump-version.sh`
+- [ ] If I changed plugin metadata, I bumped the version in all 9 manifests via `scripts/bump-version.sh`
 - [ ] I updated `CHANGELOG.md` under `## [Unreleased]`
 - [ ] I updated `README.md` if user-facing behaviour changed
 
@@ -24,7 +24,7 @@
 
 ```bash
 ls -d skills/*/ | wc -l                                                    # Should be 22
-grep -r "TodoWrite" skills/ | grep -v "Do NOT use" | grep -v "replaces"    # Should be empty
+bash scripts/check-todowrite.sh                                            # "No active TodoWrite references"
 grep -r "bd create\|bd close\|bd ready" skills/ | wc -l                    # Should be 30+
 bash hooks/session-start 2>&1 | python3 -m json.tool                       # Should be valid JSON
 ./scripts/bump-version.sh --check                                          # Should pass
