@@ -301,12 +301,12 @@ You: I'm using Subagent-Driven Development to execute this plan.
 
 [Read plan file once: .internal/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]
-[Create epic bead: bd create "Feature: hook installation" -t epic -p 2]
-[Create child beads for each task:]
-[  bd create "Task 1: Hook installation script" -t task --parent <epic-id>]
-[  bd create "Task 2: Platform detection" -t task --parent <epic-id>]
-[  bd create "Task 3: Integration tests" -t task --parent <epic-id>]
-[Set dependencies: bd dep add <task-3-id> <task-1-id>]
+[Create epic + tasks + deps atomically via bd create --graph (ADR-0030):]
+[  Build plan.json: {nodes:[{key,title,type,priority,parent_key}],]
+[                   edges:[{from_key:<dependent>,to_key:<dependency>,type}]}]
+[  bd create --graph plan.json --dry-run   <- dry-run first]
+[  bd create --graph plan.json]
+[  Fallback: sequential bd create loop + bd dep add if --graph unavailable]
 [  Tip: wire multiple deps atomically to avoid orphaned deps if one fails:]
 [  printf 'dep add <task-3-id> <task-1-id>\ndep add <task-3-id> <task-2-id>\n' | bd batch]
 
