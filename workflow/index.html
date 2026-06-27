@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="An 11-state FSM orchestrator routes requests through triage, research, planning, TDD implementation, a 4-check review gate, and parallel batch mode for speed.">
+        <meta name="description" content="A lean orchestrator triages each request and routes it to the skills that own each step — research, planning, TDD implementation, a review gate, and parallel batch mode — instead of a rigid state machine.">
       
       
         <meta name="author" content="Dillon Frawley">
@@ -68,7 +68,7 @@
   
 <meta property="og:type" content="website" />
 <meta property="og:title" content="Example Workflow - beads-superpowers" />
-<meta property="og:description" content="An 11-state FSM orchestrator routes requests through triage, research, planning, TDD implementation, a 4-check review gate, and parallel batch mode for speed." />
+<meta property="og:description" content="A lean orchestrator triages each request and routes it to the skills that own each step — research, planning, TDD implementation, a review gate, and parallel batch mode — instead of a rigid state machine." />
 <meta property="og:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/workflow.png" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="1200" />
@@ -76,7 +76,7 @@
 <meta property="og:url" content="https://dollardill.github.io/beads-superpowers/workflow/" />
 <meta property="twitter:card" content="summary_large_image" />
 <meta property="twitter:title" content="Example Workflow - beads-superpowers" />
-<meta property="twitter:description" content="An 11-state FSM orchestrator routes requests through triage, research, planning, TDD implementation, a 4-check review gate, and parallel batch mode for speed." />
+<meta property="twitter:description" content="A lean orchestrator triages each request and routes it to the skills that own each step — research, planning, TDD implementation, a review gate, and parallel batch mode — instead of a rigid state machine." />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/workflow.png" />
 <meta name="panzoom-theme" content="material">
 <meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
@@ -450,10 +450,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-fsm" class="md-nav__link">
+  <a href="#the-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The FSM
+        The flow
       
     </span>
   </a>
@@ -472,22 +472,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#states" class="md-nav__link">
+  <a href="#the-steps" class="md-nav__link">
     <span class="md-ellipsis">
       
-        States
+        The steps
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="States">
+    <nav class="md-nav" aria-label="The steps">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#s1-setup" class="md-nav__link">
+  <a href="#setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        S1 — Setup
+        Setup
       
     </span>
   </a>
@@ -495,10 +495,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#s2-research" class="md-nav__link">
+  <a href="#research" class="md-nav__link">
     <span class="md-ellipsis">
       
-        S2 — Research
+        Research
       
     </span>
   </a>
@@ -506,10 +506,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#s3-knowledge-capture" class="md-nav__link">
+  <a href="#knowledge-capture" class="md-nav__link">
     <span class="md-ellipsis">
       
-        S3 — Knowledge capture
+        Knowledge capture
       
     </span>
   </a>
@@ -517,10 +517,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#s4-brainstorm" class="md-nav__link">
+  <a href="#brainstorm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        S4 — Brainstorm
+        Brainstorm
       
     </span>
   </a>
@@ -528,10 +528,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#s5-decision-capture" class="md-nav__link">
+  <a href="#decision-capture" class="md-nav__link">
     <span class="md-ellipsis">
       
-        S5 — Decision capture
+        Decision capture
       
     </span>
   </a>
@@ -539,10 +539,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#s6-plan" class="md-nav__link">
+  <a href="#plan" class="md-nav__link">
     <span class="md-ellipsis">
       
-        S6 — Plan
+        Plan
       
     </span>
   </a>
@@ -550,10 +550,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#s7-implement" class="md-nav__link">
+  <a href="#implement" class="md-nav__link">
     <span class="md-ellipsis">
       
-        S7 — Implement
+        Implement
       
     </span>
   </a>
@@ -561,10 +561,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#s8-verify" class="md-nav__link">
+  <a href="#verify" class="md-nav__link">
     <span class="md-ellipsis">
       
-        S8 — Verify
+        Verify
       
     </span>
   </a>
@@ -572,10 +572,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#s9-document" class="md-nav__link">
+  <a href="#document" class="md-nav__link">
     <span class="md-ellipsis">
       
-        S9 — Document
+        Document
       
     </span>
   </a>
@@ -583,10 +583,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#s10-close-branch" class="md-nav__link">
+  <a href="#finish" class="md-nav__link">
     <span class="md-ellipsis">
       
-        S10 — Close branch
+        Finish
       
     </span>
   </a>
@@ -594,10 +594,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#s11-session-close" class="md-nav__link">
+  <a href="#session-close" class="md-nav__link">
     <span class="md-ellipsis">
       
-        S11 — Session close
+        Session close
       
     </span>
   </a>
@@ -721,9 +721,9 @@
 
 
 <h1 id="example-workflow">Example Workflow</h1>
-<p>How beads-superpowers skills orchestrate a development lifecycle through an 11-state FSM.</p>
+<p>How beads-superpowers skills orchestrate a development lifecycle. The <code>yegge</code> orchestrator triages each request and routes it to the skills that own each step; for non-trivial work it runs the full flow below and lets each skill enforce its own gates. It is a router, not a state machine — nothing is gated by an unenforceable "no step may be skipped" rule.</p>
 <p>Want to use this workflow? Grab the <a href="https://github.com/DollarDill/beads-superpowers/tree/main/example-workflow">example-workflow/</a> directory — it has a ready-to-use CLAUDE.md and the <a href="https://github.com/DollarDill/beads-superpowers/blob/main/example-workflow/agents/yegge.md">yegge.md</a> orchestrator agent.</p>
-<h2 id="the-fsm">The FSM</h2>
+<h2 id="the-flow">The flow</h2>
 <div class="panzoom-box" data-key="alt" id="panzoom0" oncontextmenu="return false;">
     
     <nav class="panzoom-nav">
@@ -752,28 +752,24 @@ config:
     rankSpacing: 70
 ---
 graph LR
-  S1[Setup] --&gt; S2[Research]
-  S2 --&gt; S3[Knowledge]
-  S3 --&gt; S4[Brainstorm]
-  S4 --&gt; S5[Decide]
-  S5 --&gt; S6[Plan]
-  S6 --&gt; S7[Implement]
-  S7 --&gt; S8[Verify]
-  S8 --&gt; S9[Document]
-  S9 --&gt; S10[Close Branch]
-  S3 -.-&gt; S11[Session Close]
+  T[Triage] --&gt; R[Research]
+  R --&gt; B[Brainstorm]
+  B --&gt; P[Plan]
+  P --&gt; I[Implement]
+  I --&gt; V[Verify]
+  V --&gt; D[Document]
+  D --&gt; F[Finish]
 
-  style S1 fill:#6366f1,color:#fff
-  style S7 fill:#22c55e,color:#000
-  style S10 fill:#f59e0b,color:#000
-  style S11 fill:#64748b,color:#fff</code></pre> 
+  style T fill:#6366f1,color:#fff
+  style I fill:#22c55e,color:#000
+  style F fill:#f59e0b,color:#000</code></pre> 
     <div class="panzoom-info-box panzoom-info-box-bottom panzoom-hidden">
 Hold "Alt" / "Option" to enable pan &amp; zoom
 </div>
 </div>
-<p>S1–S6 scale with complexity — a typo fix goes straight from S1 to S7. S7–S10 run for every code change. S11 (Session Close) fires only on non-branch paths like research queries.</p>
+<p>Research, brainstorming, and planning scale with complexity — a typo fix skips straight to the implement-verify-finish tail. The quality steps (implement, verify, document, finish) run for every code change. Verification is required on every path, including the lightest one.</p>
 <h2 id="triage">Triage</h2>
-<p>Every request is classified before entering the FSM:</p>
+<p>Every request is classified first, and the classification decides how much process it gets:</p>
 <table>
 <thead>
 <tr>
@@ -786,26 +782,26 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <tr>
 <td>Quick question</td>
 <td>"What does this file do?"</td>
-<td>Answer directly, no FSM</td>
+<td>Answer directly, no bead</td>
 </tr>
 <tr>
-<td>Simple task</td>
+<td>Simple change</td>
 <td>"Fix this typo"</td>
-<td>S1 → S7–S10</td>
+<td>Do it directly, verify, commit — no worktree or PR</td>
 </tr>
 <tr>
-<td>Non-trivial task</td>
+<td>Non-trivial</td>
 <td>"Add a new feature"</td>
-<td>S1–S10 (full)</td>
+<td>The full flow</td>
 </tr>
 <tr>
 <td>Research query</td>
 <td>"How does X work?"</td>
-<td>S1 → S2–S3 → S11</td>
+<td>Research, write the findings, done</td>
 </tr>
 </tbody>
 </table>
-<p>Complexity scales the research and planning depth (S2–S6), not the quality gates (S7–S10).</p>
+<p>Complexity scales the research and planning depth, not the quality gates. A simple change still gets verified; it just skips the worktree, the doc audit, and the PR ceremony.</p>
 <div class="panzoom-box" data-key="alt" id="panzoom0" oncontextmenu="return false;">
     
     <nav class="panzoom-nav">
@@ -836,46 +832,45 @@ config:
 graph TD
   A[User Request] --&gt; B{Type?}
   B --&gt;|Question| C[Answer directly]
-  B --&gt;|Simple fix| D[S1 → S7-S10]
-  B --&gt;|Feature/refactor| E[S1 → S2-S10]
-  B --&gt;|Research| F[S1 → S2-S3 → S11]</code></pre> 
+  B --&gt;|Simple change| D[Do it, verify, commit]
+  B --&gt;|Feature/refactor| E[Full flow]
+  B --&gt;|Research| F[Research → write-up → close]</code></pre> 
     <div class="panzoom-info-box panzoom-info-box-bottom panzoom-hidden">
 Hold "Alt" / "Option" to enable pan &amp; zoom
 </div>
 </div>
-<h2 id="states">States</h2>
-<h3 id="s1-setup">S1 — Setup</h3>
-<p>Create bead (<code>bd create</code>), claim it (<code>bd update --claim</code>), sync remote (<code>bd dolt pull</code>). If the session dies, the bead record shows in-progress work that can be recovered.</p>
-<h3 id="s2-research">S2 — Research</h3>
+<h2 id="the-steps">The steps</h2>
+<h3 id="setup">Setup</h3>
+<p>Create a bead (<code>bd create</code>), claim it (<code>bd update --claim</code>), and sync the beads DB (<code>bd dolt pull</code> when a remote is configured). If the session dies, the bead record shows the in-progress work so the next session can recover it.</p>
+<h3 id="research">Research</h3>
 <p><code>research-driven-development</code> decomposes the topic into sub-questions and dispatches one researcher per sub-question in parallel — with an <code>@explore</code> agent mapping affected code and dependencies when the topic is codebase-relevant. The orchestrator then verifies each load-bearing claim against the verbatim quote its researcher returned, and runs one capped gap-closing round if any claim rests on a single source.</p>
-<h3 id="s3-knowledge-capture">S3 — Knowledge capture</h3>
-<p>Synthesize research into a persistent document. Store key learnings with <code>bd remember</code>. Forces a coherence check — contradictions between researcher and explorer surface here, not during implementation.</p>
-<h3 id="s4-brainstorm">S4 — Brainstorm</h3>
-<p><code>brainstorming</code> explores the solution space through structured questions, surfaces assumptions, and produces a design spec committed to git. The design must be user-approved before moving forward. The spec-review gate offers a <code>stress-test</code> every time to interrogate the design adversarially.</p>
-<h3 id="s5-decision-capture">S5 — Decision capture</h3>
-<p>Write an ADR in <code>decisions/</code> — context, decision, consequences, alternatives considered. Transforms implicit brainstorming decisions into explicit records.</p>
-<h3 id="s6-plan">S6 — Plan</h3>
-<p><code>writing-plans</code> decomposes the design into bite-sized tasks (2–5 min each) with exact file paths, code, and verification steps. Every task becomes a bead. Plan must be user-approved. No "TBD" or "as needed" — every step is concrete or the plan isn't ready.</p>
-<h3 id="s7-implement">S7 — Implement</h3>
+<h3 id="knowledge-capture">Knowledge capture</h3>
+<p>Synthesize the research into a persistent document and store key learnings with <code>bd remember</code>. This forces a coherence check: contradictions between what the researcher and the explorer found surface here, not midway through implementation.</p>
+<h3 id="brainstorm">Brainstorm</h3>
+<p><code>brainstorming</code> explores the solution space through structured questions, surfaces assumptions, and produces a design spec committed to git. The design must be user-approved before anything moves forward, and the spec-review gate offers a <code>stress-test</code> every time to interrogate it adversarially.</p>
+<h3 id="decision-capture">Decision capture</h3>
+<p>When a real architectural choice gets made, write an ADR in <code>decisions/</code> — context, decision, consequences, alternatives considered. It turns an implicit brainstorming decision into an explicit record a later reader can trace.</p>
+<h3 id="plan">Plan</h3>
+<p><code>writing-plans</code> breaks the design into bite-sized tasks (2–5 minutes each) with exact file paths, code, and verification steps, and every task becomes a bead. The plan must be user-approved. There is no "TBD" or "as needed" — every step is concrete, or the plan isn't ready.</p>
+<h3 id="implement">Implement</h3>
 <p>Code runs in an isolated worktree under TDD (red-green-refactor). The orchestrator creates an epic bead with task children and dependency chains, then dispatches implementer subagents.</p>
-<p>Before creating the worktree, the skill runs pre-flight checks: it verifies the agent isn't already inside a worktree and isn't in a submodule, and asks for consent when the creation is user-initiated rather than SDD-automated.</p>
-<p>When multiple tasks are unblocked, <strong>parallel batch mode</strong> runs up to 5 concurrently, each in its own worktree. Sequential mode runs one at a time when tasks have dependencies.</p>
-<p>Every subagent result passes through the <a href="#review-gate">review gate</a> before being accepted. Dependency chains between tasks use <code>bd batch</code> for atomic wiring — if any dependency fails to register, the whole batch rolls back rather than leaving orphaned state.</p>
-<h3 id="s8-verify">S8 — Verify</h3>
-<p><code>verification-before-completion</code> runs the full test suite fresh — not relying on the last run during development. "Tests pass" means a test command was just executed and its output is attached.</p>
-<h3 id="s9-document">S9 — Document</h3>
-<p><code>document-release</code> scans the diff against existing docs for stale references, missing entries, and outdated examples. When the audit flags sections needing major prose rewrites, <code>write-documentation</code> fires for those sections.</p>
-<h3 id="s10-close-branch">S10 — Close branch</h3>
-<p><code>finishing-a-development-branch</code> detects the environment (normal repo, named-branch worktree, or detached HEAD) and presents context-aware options — 4 choices for normal/worktree, 3 for detached HEAD (merge is unavailable). Provenance-based cleanup only removes worktrees inside <code>.worktrees/</code>. Ends with the Land the Plane protocol: close beads, push to remotes, verify clean state. Branch paths terminate here — work is not done until both <code>bd dolt push</code> and <code>git push</code> succeed.</p>
-<h3 id="s11-session-close">S11 — Session close</h3>
-<p>Fires only on non-branch paths (research queries, quick tasks that didn't create a branch). Runs the same close ritual as S10's Land the Plane: <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code> → <code>git status</code>. The next session runs <code>bd prime</code> to restore the full picture.</p>
+<p>Before creating the worktree, the skill runs pre-flight checks: it confirms the agent isn't already inside a worktree or a submodule, and asks for consent when a human, rather than the SDD automation, kicked it off.</p>
+<p>When several tasks are unblocked, <strong>parallel batch mode</strong> runs up to five concurrently, each in its own worktree; sequential mode runs one at a time when tasks depend on each other. Every subagent result passes through the <a href="#review-gate">review gate</a> before it's accepted, and dependency chains are wired atomically with <code>bd batch</code> — if one dependency fails to register, the whole batch rolls back rather than leaving orphaned state.</p>
+<h3 id="verify">Verify</h3>
+<p><code>verification-before-completion</code> runs the full test suite fresh, rather than trusting the last run during development. "Tests pass" means a test command was just executed and its output is attached. This holds on every path, the light one included.</p>
+<h3 id="document">Document</h3>
+<p><code>document-release</code> scans the diff against the existing docs for stale references, missing entries, and outdated examples. When the audit flags a section that needs a real prose rewrite, <code>write-documentation</code> takes that section.</p>
+<h3 id="finish">Finish</h3>
+<p><code>finishing-a-development-branch</code> detects the environment — normal repo, named-branch worktree, or detached HEAD — and presents context-aware options: four choices for normal and worktree contexts, three for detached HEAD, where merging is unavailable. Provenance-based cleanup only removes worktrees inside <code>.worktrees/</code>. It ends with the Land the Plane protocol: close beads, push to the remotes, verify a clean tree. Branch work isn't done until both <code>bd dolt push</code> and <code>git push</code> succeed.</p>
+<h3 id="session-close">Session close</h3>
+<p>On non-branch paths — research queries, quick tasks that never created a branch — the same close ritual runs without the merge step: <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code> → <code>git status</code>. The next session runs <code>bd prime</code> to restore the full picture.</p>
 <h2 id="review-gate">Review gate</h2>
-<p>When SDD delegates to a subagent, the result passes through four checks before being accepted:</p>
+<p>When SDD delegates to a subagent, the result passes through four checks before it's accepted:</p>
 <ol>
-<li><strong>Test suite</strong> — Run independently in the worktree. The subagent's own test run is not sufficient.</li>
-<li><strong>Diff review</strong> — Check for scope creep. Changes not in the plan are grounds for rejection.</li>
-<li><strong>Code review</strong> — <code>requesting-code-review</code> verifies spec compliance against acceptance criteria.</li>
-<li><strong>Acceptance criteria</strong> — Each criterion from the plan is explicitly verified.</li>
+<li><strong>Test suite</strong> — Run independently in the worktree. The subagent's own test run is not enough.</li>
+<li><strong>Diff review</strong> — Check for scope creep. Changes that aren't in the plan are grounds for rejection.</li>
+<li><strong>Code review</strong> — <code>requesting-code-review</code> verifies spec compliance against the acceptance criteria.</li>
+<li><strong>Acceptance criteria</strong> — Each criterion from the plan is verified explicitly.</li>
 </ol>
 <div class="panzoom-box" data-key="alt" id="panzoom0" oncontextmenu="return false;">
     
@@ -921,14 +916,14 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 Hold "Alt" / "Option" to enable pan &amp; zoom
 </div>
 </div>
-<p>A subagent reporting "done" is a claim, not evidence. The gate converts the claim into evidence.</p>
+<p>A subagent reporting "done" is a claim, not evidence. The gate is what turns the claim into evidence.</p>
 <h2 id="interrupts">Interrupts</h2>
-<p>Two interrupt states can fire at any point in the FSM. They suspend the current state, handle the interrupt, and return.</p>
-<p><strong>DEBUG</strong> — Fires on bugs, test failures, or unexpected behavior. <code>systematic-debugging</code> enforces a 4-phase investigation (observe → hypothesize → investigate → fix) before any code change. Prevents jumping from "tests fail" to "try this fix" without understanding why.</p>
-<p><strong>CODE REVIEW</strong> — Fires when review feedback arrives. <code>receiving-code-review</code> enforces anti-sycophantic reception: evaluate each suggestion technically, surface disagreements explicitly, track changes made in response.</p>
+<p>Two interrupts can fire at any point. They suspend the current step, handle the interrupt, and return.</p>
+<p><strong>Debug</strong> — Fires on bugs, test failures, or unexpected behavior. <code>systematic-debugging</code> enforces a four-phase investigation (observe → hypothesize → investigate → fix) before any code change, so you don't jump from "tests fail" to "try this fix" without understanding why.</p>
+<p><strong>Code review</strong> — Fires when review feedback arrives. <code>receiving-code-review</code> enforces anti-sycophantic reception: evaluate each suggestion technically, surface disagreements explicitly, and track what actually changed in response.</p>
 <h2 id="session-protocol">Session protocol</h2>
-<p><strong>Start:</strong> The SessionStart hook fires automatically, injecting skill context and running <code>bd prime</code>. This surfaces unblocked beads, in-progress work from previous sessions, and persistent memories. Orient before claiming; claim before implementing.</p>
-<p><strong>End:</strong> S10 (Close Branch) for code paths, S11 (Session Close) for non-branch paths. Close all beads with evidence, push beads remote, push git, verify clean state. A session with uncommitted work or unpushed commits has not landed — the push is the definition of completion.</p>
+<p><strong>Start:</strong> The SessionStart hook fires automatically, injecting skill context and running <code>bd prime</code>. That surfaces unblocked beads, in-progress work from previous sessions, and persistent memories. Orient before claiming; claim before implementing.</p>
+<p><strong>End:</strong> Finish for code paths, Session close for non-branch paths. Close every bead with evidence, push the beads remote, push git, verify a clean tree. A session with uncommitted work or unpushed commits hasn't landed — the push is what completion means.</p>
 
 
 
@@ -951,7 +946,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 26, 2026 04:39:33 UTC">June 26, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 27, 2026 14:45:58 UTC">June 27, 2026</span>
   </span>
 
     
