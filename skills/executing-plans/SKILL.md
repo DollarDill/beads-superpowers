@@ -81,6 +81,8 @@ After all tasks complete and verified:
 | **Missing work** (prerequisite not built yet) | Create the missing task and wire dependency | `bd create "Missing: <title>" -t task --parent <epic-id>` then `bd dep add <blocked-id> <new-id>` |
 | **Human decision needed** (architecture choice, ambiguous requirement) | Flag for human input | `bd human <task-id>` |
 
+> **Discovered-work bead stamp:** `bd create "[spec] <title>" -t task --parent <epic-id> --notes "Severity:/Confidence:/Evidence:"` — see `verification-before-completion` → Agent-Filed Bead Discipline.
+
 **Ask for clarification rather than guessing.**
 
 ## When to Revisit Earlier Steps
