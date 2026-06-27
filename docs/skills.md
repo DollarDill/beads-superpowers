@@ -25,6 +25,7 @@ The UserPromptSubmit hook reminds the agent on every message which skill applies
 | Received review feedback | `receiving-code-review` |
 | Writing human-facing prose | `write-documentation` |
 | Branch complete | `finishing-a-development-branch` |
+| Consolidate or dedup memories | `memory-curator` |
 
 Also available: `document-release`, `getting-up-to-speed`, `dispatching-parallel-agents`, `project-init`, `setup`, `writing-skills`, `auditing-upstream-drift`
 
@@ -38,7 +39,7 @@ Also available: `document-release`, `getting-up-to-speed`, `dispatching-parallel
 | **Quality** | [test-driven-development](#test-driven-development), [systematic-debugging](#systematic-debugging), [verification-before-completion](#verification-before-completion) |
 | **Review** | [requesting-code-review](#requesting-code-review), [receiving-code-review](#receiving-code-review) |
 | **Infrastructure** | [using-git-worktrees](#using-git-worktrees), [finishing-a-development-branch](#finishing-a-development-branch) |
-| **Lifecycle** | [document-release](#document-release), [getting-up-to-speed](#getting-up-to-speed), [auditing-upstream-drift](#auditing-upstream-drift) |
+| **Lifecycle** | [document-release](#document-release), [getting-up-to-speed](#getting-up-to-speed), [auditing-upstream-drift](#auditing-upstream-drift), [memory-curator](#memory-curator) |
 | **Setup** | [setup](#setup), [project-init](#project-init) |
 | **Research** | [research-driven-development](#research-driven-development) |
 | **Writing** | [write-documentation](#write-documentation) |
@@ -82,6 +83,7 @@ graph TD
     DR["document-release"]
     GUS["getting-up-to-speed"]
     AUD["auditing-drift"]
+    MC["memory-curator"]
   end
   subgraph Setup
     SET["setup"]
@@ -217,6 +219,12 @@ Runs `bd prime`, deep-dives the codebase (adaptive to repo size), and produces a
 **Trigger:** Before a plugin release, or when checking for staleness.
 
 Audits against [obra/superpowers](https://github.com/obra/superpowers) and [gastownhall/beads](https://github.com/gastownhall/beads) for new skills, changed commands, and documentation improvements to port.
+
+### memory-curator
+
+**Trigger:** At session-close when several new memories were captured, or on-demand for a full sweep.
+
+Turns a session's raw `bd remember` notes into well-structured, deduplicated, consolidated memories using the in-session agent — no runtime, key, or embeddings. The scope is deliberately evidence-led (ADR-0034): quality-gated capture, reflection-consolidation, and pruning, not structural richness. It never mutates the store silently — it proposes a reviewed command list, and you approve before anything is written.
 
 ### setup
 

@@ -774,7 +774,7 @@ do_verify() {
   if [ "$count" -ge 21 ]; then
     success "Skill count: $count"
   else
-    warn "Expected >= 22 skills, found $count"
+    warn "Expected >= 23 skills, found $count"
   fi
 
   # Hook checks only for non-plugin tiers (plugin manages its own hooks)
@@ -809,7 +809,7 @@ print_next_steps() {
   echo
   echo "Next steps:"
   echo "  1. Restart Claude Code (or start a new session) to activate skills"
-  echo "  2. Run /skills to verify — you should see 22+ skills available"
+  echo "  2. Run /skills to verify — you should see 23+ skills available"
   if [ "$HAS_BEADS" != true ]; then
     echo
     echo "  3. Install beads for persistent task tracking:"

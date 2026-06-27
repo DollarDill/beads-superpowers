@@ -75,7 +75,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Project Overview
 
-A plugin for Claude Code, Codex, and OpenCode (verified) plus 7 best-effort harnesses — Cursor, Gemini CLI, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi — that merges [Superpowers](https://github.com/obra/superpowers) skills (v6.0.3) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.0.5). It gives AI coding agents 22 composable process-discipline skills (TDD, brainstorming, systematic debugging, code review, verification) plus persistent task memory via a Dolt-backed database.
+A plugin for Claude Code, Codex, and OpenCode (verified) plus 7 best-effort harnesses — Cursor, Gemini CLI, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi — that merges [Superpowers](https://github.com/obra/superpowers) skills (v6.0.3) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.0.5). It gives AI coding agents 23 composable process-discipline skills (TDD, brainstorming, systematic debugging, code review, verification) plus persistent task memory via a Dolt-backed database.
 
 **Repository:** <https://github.com/DollarDill/beads-superpowers>
 **Version:** 0.7.2
@@ -171,7 +171,7 @@ scripts/
   bump-version.sh          # Sync version across package.json + plugin manifests
   sync-skill-count.sh      # Sync skill counts across all files (idempotent)
   build-docs.sh            # Build MkDocs site
-skills/                    # 22 beads-native skills (auto-discovered, each has SKILL.md)
+skills/                    # 23 beads-native skills (auto-discovered, each has SKILL.md)
 tests/                     # Test infrastructure (6 suites)
 install.sh                 # curl installer — 3-tier fallback (plugin → npx → tarball/git), checksums, atomic rollback
 mkdocs.yml                 # MkDocs Material site config
@@ -219,6 +219,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 - Only the orchestrating agent manages beads — subagents do NOT touch beads
 - Include bead IDs in commit messages: `git commit -m "Add feature (bd-a1b2)"`
 - Every session ends with Land the Plane: `bd close` → `bd dolt push` → `git push`
+- At session-close, if several new memories were captured, offer a `memory-curator` pass (consolidate/dedup/structure; confirm-never-auto) before the push. On-demand sweep via `Skill(memory-curator)`.
 
 ### GitHub Issue Sync
 
@@ -239,7 +240,7 @@ GitHub sync is configured via:
 
 If `bd setup claude` hooks are installed in any settings file (project or global), the plugin's session-start hook detects them and automatically skips its own `bd prime` call to avoid duplicate context injection. No manual intervention needed.
 
-## Skills (22 Total)
+## Skills (23 Total)
 
 | Skill | Purpose |
 |-------|---------|
@@ -265,6 +266,7 @@ If `bd setup claude` hooks are installed in any settings file (project or global
 | getting-up-to-speed | Session orientation — bd context + adaptive codebase deep-dive + structured current-state summary |
 | research-driven-development | Parallel research agents → synthesized knowledge base document. Triggers on "research this", "what is X", "how does Y work" |
 | write-documentation | Human-quality prose for all human-facing text — 14-rule writing system with context-first drafting and required checks |
+| memory-curator | Session-close/on-demand memory consolidation — quality-gated extract, dedup, consolidate, prune (evidence-led, ADR-0034) |
 
 ## Modifying Skills
 
