@@ -81,7 +81,7 @@ Synthesize the research into a persistent document and store key learnings with 
 
 ### Decision capture
 
-When a real architectural choice gets made, write an ADR in `decisions/` — context, decision, consequences, alternatives considered. It turns an implicit brainstorming decision into an explicit record a later reader can trace.
+When a choice is hard to reverse, surprising without its context, and a real trade-off, the agent offers to record an ADR in `decisions/` — context, decision, consequences, alternatives considered. The three-part gate keeps records scarce, so a routine clarification never becomes one. It turns an implicit decision into an explicit record a later reader can trace.
 
 ### Plan
 

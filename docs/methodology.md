@@ -114,7 +114,7 @@ graph TD
 
 **Step 4 — Brainstorming.** The `brainstorming` skill walks through context, clarifying questions, 2–3 approaches with trade-offs, and a design spec committed to git. It ends by invoking `writing-plans` — not by jumping to code. The spec-review gate offers a `stress-test` every time, to interrogate the design adversarially before planning.
 
-**Step 5 — Decision capture.** Architecture decisions become ADRs in `decisions/` — explicit, timestamped records with context, rationale, and consequences.
+**Step 5 — Decision capture.** When a choice is hard to reverse, surprising without its context, and the result of a real trade-off, the agent offers to record it as an Architecture Decision Record in `decisions/` — a timestamped note of the context, decision, rationale, and consequences. All three conditions have to hold, so a routine clarification or scope call never turns into one. The rule lives once in `using-superpowers` and is echoed where decisions actually get made: brainstorming, planning, stress-testing, and the pivot in a debugging session.
 
 **Step 6 — Planning.** `writing-plans` breaks the design into bite-sized tasks (2–5 minutes each) with exact file paths, code, and verification steps. Every task becomes a bead.
 
