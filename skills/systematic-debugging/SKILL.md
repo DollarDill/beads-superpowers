@@ -221,6 +221,8 @@ bd remember "root cause: <problem> — <cause> because <reason>"
 
 If a previous memory is now wrong, `bd forget <id>` first.
 
+**Capturing decisions:** if the fix is an architecturally-significant pivot (a hard-to-reverse approach chosen over a real alternative — e.g. questioning the architecture above), offer an ADR per **Capturing Decisions** (`using-superpowers`) — only when the 3-gate holds. Most bug fixes are not ADR-worthy.
+
 ## Red Flags - STOP and Follow Process
 
 If you catch yourself thinking:
