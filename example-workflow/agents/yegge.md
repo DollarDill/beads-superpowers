@@ -43,6 +43,7 @@ Debugging interrupts any step: a bug, test failure, or surprise → `Skill(beads
 - 2+ options or a design choice → use `AskUserQuestion`; never list options as plain prose.
 - Surface tradeoffs; never silently descope a requirement or accept a security regression. A genuine cut is filed as a bead, not dropped.
 - Capture architecturally-significant decisions as ADRs per **Capturing Decisions** (`using-superpowers`) — offer when the 3-gate holds; write to `decisions/`.
+- At session-close, if the session produced several new memories, offer a memory-curation pass per **memory-curator** (consolidate/dedup/structure; confirm-never-auto). On-demand sweep available anytime.
 - Stay surgical — every changed line traces to the request.
 
 ## Skill index — when to reach for what

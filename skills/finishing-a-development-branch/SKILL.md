@@ -287,6 +287,24 @@ Evidence: <file:line / failing test / repro | none>"
 
 Drop the `[spec]` prefix when the item is Confirmed (evidence cited).
 
+**3.5. Offer memory curation (conditional) — before the push.** If this session produced curation-worthy volume — roughly **3+ new `bd remember` calls** — OFFER (do not auto-run) a capture-enrichment pass now, so curated memories are included in the `bd dolt push` below. Use `AskUserQuestion`:
+
+```json
+{
+  "questions": [{
+    "question": "This session captured several new memories. Run a memory-curation pass (consolidate/dedup/structure) before closing?",
+    "header": "Curate memory",
+    "options": [
+      {"label": "Yes, curate", "description": "Invoke memory-curator to enrich + dedup this session's memories (you review the command list before anything is written)"},
+      {"label": "Skip", "description": "Leave memories as-is; the on-demand sweep is always available later"}
+    ],
+    "multiSelect": false
+  }]
+}
+```
+
+If selected, invoke `Skill(memory-curator)` (it proposes a reviewed command list; you approve before any write). Below the ~3-memory threshold, stay silent — do NOT prompt every close (offer fatigue retired a similar over-firing hook). Applies to ALL session closes, branch and non-branch.
+
 ```bash
 # 4. Push beads to Dolt remote
 bd dolt push
