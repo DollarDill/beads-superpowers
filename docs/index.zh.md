@@ -10,7 +10,7 @@ machine_translated: true
 
 技能来自 Jesse Vincent 的 [Superpowers](https://github.com/obra/superpowers)；追踪器来自 Steve Yegge 的 [Beads](https://github.com/gastownhall/beads)。本插件将二者整合，使技能在运行时自动创建和关闭议题，追踪器则在每个新会话开始时回注上下文。
 
-**已验证**支持 Claude Code、Codex CLI 和 OpenCode。**尽力支持** Cursor、Gemini CLI、GitHub Copilot CLI、Kimi Code、Antigravity、Factory Droid 和 Pi 的原生集成。各平台安装路径请参阅[快速入门](getting-started.md#supported-platforms)。
+**已验证**支持 Claude Code、Codex CLI 和 OpenCode。**尽力支持** Cursor、Gemini CLI、GitHub Copilot CLI、Kimi Code、Antigravity、Factory Droid 和 Pi 的原生集成。各平台安装路径请参阅[快速入门](getting-started.md)。
 
 **当前版本：** v{{ version }} · {{ skill_count }} 个技能
 

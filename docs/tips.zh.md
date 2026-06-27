@@ -99,7 +99,7 @@ description: 快速参考 bd 命令速查表、技能路由表、常见问题故
 
 ## 常见问题
 
-安装和配置问题，请参阅[入门指南——故障排查](getting-started.md#troubleshooting)。以下是最常见问题的快速解决方法：
+安装和配置问题，请参阅[入门指南——故障排查](getting-started.md)。以下是最常见问题的快速解决方法：
 
 **技能未加载** — `/plugins` 应列出 beads-superpowers，`/skills` 应显示 {{ skill_count }} 个技能。若未显示，请重新安装。
 
