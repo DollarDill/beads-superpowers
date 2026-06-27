@@ -79,7 +79,7 @@
 <meta property="twitter:description" content="Bright-line rules and anti-rationalization tables enforce agent discipline. Dolt-backed beads track every task across sessions through a 10-state lifecycle." />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/methodology.png" />
 <meta name="panzoom-theme" content="material">
-<meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
+<meta name="panzoom-data" content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'> </head>
   
   
     
@@ -842,7 +842,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><strong>Step 2 — Research.</strong> The <code>research-driven-development</code> skill decomposes the topic into sub-questions and dispatches one researcher per sub-question in parallel — plus an <code>@explore</code> agent that maps the affected code when the topic touches the codebase. Running them concurrently cuts research time sharply, and each agent returns a verbatim quote for every load-bearing claim so findings can be verified against their sources.</p>
 <p><strong>Step 3 — Knowledge capture.</strong> Findings are written to a persistent document; key learnings go into <code>bd remember</code> so they surface in future sessions.</p>
 <p><strong>Step 4 — Brainstorming.</strong> The <code>brainstorming</code> skill walks through context, clarifying questions, 2–3 approaches with trade-offs, and a design spec committed to git. It ends by invoking <code>writing-plans</code> — not by jumping to code. The spec-review gate offers a <code>stress-test</code> every time, to interrogate the design adversarially before planning.</p>
-<p><strong>Step 5 — Decision capture.</strong> Architecture decisions become ADRs in <code>decisions/</code> — explicit, timestamped records with context, rationale, and consequences.</p>
+<p><strong>Step 5 — Decision capture.</strong> When a choice is hard to reverse, surprising without its context, and the result of a real trade-off, the agent offers to record it as an Architecture Decision Record in <code>decisions/</code> — a timestamped note of the context, decision, rationale, and consequences. All three conditions have to hold, so a routine clarification or scope call never turns into one. The rule lives once in <code>using-superpowers</code> and is echoed where decisions actually get made: brainstorming, planning, stress-testing, and the pivot in a debugging session.</p>
 <p><strong>Step 6 — Planning.</strong> <code>writing-plans</code> breaks the design into bite-sized tasks (2–5 minutes each) with exact file paths, code, and verification steps. Every task becomes a bead.</p>
 <p><strong>Step 7 — Implementation.</strong> Code runs in an isolated git worktree under TDD. The orchestrator creates an epic with task children and dependency chains, then dispatches implementer subagents. When multiple tasks are unblocked, parallel batch mode runs up to 5 concurrently, each in its own worktree. After each task, one read-only reviewer returns a spec-compliance verdict and a code-quality verdict in a single pass; the bead closes only after that review passes. Task briefs, implementer reports, and review diffs move between stages as files under a per-worktree <code>.superpowers/sdd/</code> directory, keeping the orchestrator's context lean.</p>
 <p><strong>Step 8 — Verification.</strong> The full test suite runs fresh — not relying on the last run during development. "Tests pass" means a test command was just executed and its output is attached.</p>
@@ -971,7 +971,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 27, 2026 12:58:16 UTC">June 27, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 27, 2026 16:06:45 UTC">June 27, 2026</span>
   </span>
 
     
