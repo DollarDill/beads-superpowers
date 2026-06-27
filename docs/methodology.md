@@ -73,27 +73,9 @@ Subsequent changes went further:
 
 **Parallel batch mode.** When `bd ready --parent` returns multiple unblocked tasks, `subagent-driven-development` executes them concurrently (max 5 per batch), each in its own `bd worktree`.
 
-**Dynamic Context Injection.** The `research-driven-development` skill uses Claude Code's `!` backtick syntax to resolve its output directory at skill load time, with per-project config, environment variable, or default fallback.
-
 **Mid-session enforcement.** A `UserPromptSubmit` hook fires on every user message, injecting skill trigger reminders that prevent the agent from forgetting to invoke skills as the session progresses.
 
 **Orchestrator-only design.** Only the orchestrating agent creates, claims, and closes beads. Subagents focus on their job. The one exception is `implementer-prompt.md`, which is beads-aware by design — it includes bead lifecycle commands, mandatory skill invocations, and LSP-first code navigation.
-
-**Safety-aware worktree creation.** The `using-git-worktrees` skill now runs pre-flight checks before creating worktrees: environment detection (`GIT_DIR` vs `GIT_COMMON`) catches nested-worktree-from-worktree mistakes, a submodule guard prevents worktree creation in submodule contexts where git's shared `.git` pointer breaks, and a conditional consent flow asks the user before creating worktrees in manual contexts while skipping the prompt during automated SDD execution.
-
-**Environment-aware branch finishing.** `finishing-a-development-branch` detects whether the agent is in a normal repository, a named-branch worktree, or a detached HEAD, and adapts the option menu accordingly — 4 choices in normal and worktree contexts, 3 for detached HEAD where merge is impossible. Provenance-based cleanup only removes worktrees inside `.worktrees/`, leaving externally created worktrees untouched.
-
-**Template-only code review dispatch.** The standalone `agents/code-reviewer.md` file was removed. Code review now dispatches through the prompt template at `skills/requesting-code-review/code-reviewer.md`, matching upstream superpowers v5.1.0. One source of truth per subagent role, consistent with the prompt template pattern already used for the implementer and researcher.
-
-**Atomic beads operations.** Skills that create multiple beads in sequence — epics with child tasks and dependency chains — can now use `bd batch` to run the whole set as a single transaction. If any operation fails, the entire batch rolls back, preventing orphaned beads from partial failures.
-
-**Deterministic self-review.** The `writing-plans` skill runs `bd lint` on the epic and every child task before the manual judgment checks (spec coverage, placeholder scan, type consistency). Tool checks catch missing required sections — Acceptance Criteria on tasks, Success Criteria on epics — that human review tends to skip.
-
-**Structured blocker handling.** `executing-plans` classifies blockers into three types instead of treating them as undifferentiated stops: `bd defer` for time-gated work, `bd create` + `bd dep add` for missing prerequisites, and `bd human` for decisions that require a person. Each type has a concrete command, so the agent acts on the blocker rather than just reporting it.
-
-**Swarm-aware parallel dispatch.** Before dispatching subagents in parallel batch mode, `subagent-driven-development` runs `bd swarm validate` to analyze the dependency graph. The output shows wave structure, maximum parallelism, and dependency warnings — enough to plan batch sizes and catch missing edges before wasting subagent runs on tasks that will immediately block.
-
-**Claim-before-worktree ordering.** `using-git-worktrees` now claims the bead before creating the worktree, not after. The earlier ordering left a window where a worktree existed with no owner on the corresponding bead — if the session crashed between creation and claiming, the work was orphaned.
 
 ## The lifecycle
 
