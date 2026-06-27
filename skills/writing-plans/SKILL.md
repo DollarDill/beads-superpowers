@@ -220,6 +220,8 @@ If you discovered something reusable, capture it before closing:
 bd remember "pattern: <planning insight for future tasks>"
 ```
 
+> When filing a bead for discovered/follow-up work, stamp it per **Agent-Filed Bead Discipline** (`verification-before-completion`).
+
 ## Execution Handoff
 
 After the plan is approved, **use the `AskUserQuestion` tool** to offer the execution choice:

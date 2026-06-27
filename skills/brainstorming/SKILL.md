@@ -137,6 +137,8 @@ bd remember "design: <key design decision and rationale>"
 
 If a previous memory is now wrong, `bd forget <id>` first.
 
+> When filing a bead for discovered/follow-up work, stamp it per **Agent-Filed Bead Discipline** (`verification-before-completion`).
+
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:
 
