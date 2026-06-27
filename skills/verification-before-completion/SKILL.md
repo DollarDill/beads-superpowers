@@ -38,6 +38,25 @@ BEFORE claiming any status or expressing satisfaction:
 Skip any step = lying, not verifying
 ```
 
+## Agent-Filed Bead Discipline
+
+When a skill **files a bead for discovered/follow-up work** (not planned work), stamp it so a human can triage risk at a glance.
+
+- **Title:** prefix `[spec]` ONLY if speculative. Confirmed beads keep clean titles.
+- **Body/notes — always include this 3-field stamp:**
+  ```
+  Severity: Critical | Important | Minor
+  Confidence: Confirmed | Speculative
+  Evidence: <file:line / failing test / repro>   (or: none)
+  ```
+- **Mechanical rule:** evidence cited → `Confidence: Confirmed`; no evidence → `Confidence: Speculative`. Applies at all severities. **Never blocks filing** (surface-and-mark — Production-Grade Doctrine).
+- **What counts as evidence** (claim-substantiating AND checkable, not "a string exists"):
+  - ✅ `parser.ts:142 — returns null on empty input (fails t_parse_empty)`
+  - ❌ `parser.ts — looks wrong`
+- **High-severity nudge:** a `Critical`/`Important` bead filed without evidence MUST add one line: `Why this severity w/o evidence: <reason>`.
+- **Priority (`-p`) stays human-owned** — do not infer priority from severity.
+- **Honest limit:** this disciplines the instruction surface, not every runtime bead. `Confidence: Confirmed` is a falsifiable triage hint that lowers verification cost, not proof. The convention is forward-only — pre-existing beads stay unstamped.
+
 ## Common Failures
 
 | Claim | Requires | Not Sufficient |
