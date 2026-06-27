@@ -1,46 +1,46 @@
 
 <!doctype html>
-<html lang="en" class="no-js">
+<html lang="zh" class="no-js">
   <head>
     
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Install beads-superpowers via the native plugin system, curl, or npx for Claude Code, Codex, and OpenCode. Set up your first project with bd init in under 5 minutes.">
+        <meta name="description" content="通过原生插件系统、curl 或 npx 为 Claude Code、Codex 和 OpenCode 安装 beads-superpowers。在 5 分钟内使用 bd init 设置您的第一个项目。">
       
       
         <meta name="author" content="Dillon Frawley">
       
       
-        <link rel="canonical" href="https://dollardill.github.io/beads-superpowers/getting-started/">
+        <link rel="canonical" href="https://dollardill.github.io/beads-superpowers/zh/getting-started/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../">
       
       
         <link rel="next" href="../methodology/">
       
       
         
-          <link rel="alternate" href="./" hreflang="en">
+          <link rel="alternate" href="../../getting-started/" hreflang="en">
         
-          <link rel="alternate" href="../zh/getting-started/" hreflang="zh">
+          <link rel="alternate" href="./" hreflang="zh">
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Getting Started - beads-superpowers</title>
+        <title>快速开始 - beads-superpowers</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -59,11 +59,13 @@
       
     
     
-      <link rel="stylesheet" href="../assets/extra.css">
+      <link rel="stylesheet" href="../../assets/extra.css">
     
-      <link rel="stylesheet" href="../assets/stylesheets/panzoom.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/panzoom.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+      <link rel="stylesheet" href="../../assets/stylesheets/panzoom.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -71,17 +73,17 @@
     
   
 <meta property="og:type" content="website" />
-<meta property="og:title" content="Getting Started - beads-superpowers" />
-<meta property="og:description" content="Install beads-superpowers via the native plugin system, curl, or npx for Claude Code, Codex, and OpenCode. Set up your first project with bd init in under 5 minutes." />
-<meta property="og:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/getting-started.png" />
+<meta property="og:title" content="快速开始 - beads-superpowers" />
+<meta property="og:description" content="通过原生插件系统、curl 或 npx 为 Claude Code、Codex 和 OpenCode 安装 beads-superpowers。在 5 分钟内使用 bd init 设置您的第一个项目。" />
+<meta property="og:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/zh/getting-started.png" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:url" content="https://dollardill.github.io/beads-superpowers/getting-started/" />
+<meta property="og:url" content="https://dollardill.github.io/beads-superpowers/zh/getting-started/" />
 <meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:title" content="Getting Started - beads-superpowers" />
-<meta property="twitter:description" content="Install beads-superpowers via the native plugin system, curl, or npx for Claude Code, Codex, and OpenCode. Set up your first project with bd init in under 5 minutes." />
-<meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/getting-started.png" />
+<meta property="twitter:title" content="快速开始 - beads-superpowers" />
+<meta property="twitter:description" content="通过原生插件系统、curl 或 npx 为 Claude Code、Codex 和 OpenCode 安装 beads-superpowers。在 5 分钟内使用 bd init 设置您的第一个项目。" />
+<meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/zh/getting-started.png" />
 <meta name="panzoom-theme" content="material">
 <meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
   
@@ -102,8 +104,8 @@
     <div data-md-component="skip">
       
         
-        <a href="#getting-started" class="md-skip">
-          Skip to content
+        <a href="#_1" class="md-skip">
+          跳转至
         </a>
       
     </div>
@@ -117,8 +119,8 @@
   
 
 <header class="md-header md-header--shadow" data-md-component="header">
-  <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="beads-superpowers" class="md-header__button md-logo" aria-label="beads-superpowers" data-md-component="logo">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../" title="beads-superpowers" class="md-header__button md-logo" aria-label="beads-superpowers" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -138,7 +140,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Getting Started
+              快速开始
             
           </span>
         </div>
@@ -178,20 +180,20 @@
       <div class="md-header__option">
   <div class="md-select">
     
-    <button class="md-header__button md-icon" aria-label="Select language">
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
     </button>
     <div class="md-select__inner">
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="./" hreflang="en" class="md-select__link">
+            <a href="../../getting-started/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
         
           <li class="md-select__item">
-            <a href="../zh/getting-started/" hreflang="zh" class="md-select__link">
+            <a href="./" hreflang="zh" class="md-select__link">
               中文
             </a>
           </li>
@@ -212,16 +214,16 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
         
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
         
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
       </label>
-      <nav class="md-search__options" aria-label="Search">
+      <nav class="md-search__options" aria-label="查找">
         
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         </button>
@@ -232,7 +234,7 @@
       <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
         <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
-            Initializing search
+            正在初始化搜索引擎
           </div>
           <ol class="md-search-result__list" role="presentation"></ol>
         </div>
@@ -244,7 +246,7 @@
     
     
       <div class="md-header__source">
-        <a href="https://github.com/DollarDill/beads-superpowers" title="Go to repository" class="md-source" data-md-component="source">
+        <a href="https://github.com/DollarDill/beads-superpowers" title="前往仓库" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
@@ -280,9 +282,9 @@
 
   
 
-<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="导航栏" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="beads-superpowers" class="md-nav__button md-logo" aria-label="beads-superpowers" data-md-component="logo">
+    <a href="../" title="beads-superpowers" class="md-nav__button md-logo" aria-label="beads-superpowers" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -292,7 +294,7 @@
   </label>
   
     <div class="md-nav__source">
-      <a href="https://github.com/DollarDill/beads-superpowers" title="Go to repository" class="md-source" data-md-component="source">
+      <a href="https://github.com/DollarDill/beads-superpowers" title="前往仓库" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
@@ -312,14 +314,14 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Home
+    首页
   
 
     
@@ -355,7 +357,7 @@
   <span class="md-ellipsis">
     
   
-    Getting Started
+    快速开始
   
 
     
@@ -373,7 +375,7 @@
   <span class="md-ellipsis">
     
   
-    Getting Started
+    快速开始
   
 
     
@@ -385,7 +387,7 @@
       
         
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+<nav class="md-nav md-nav--secondary" aria-label="目录">
   
   
   
@@ -394,15 +396,15 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      目录
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#prerequisites" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Prerequisites
+        前提条件
       
     </span>
   </a>
@@ -410,22 +412,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#supported-platforms" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Supported Platforms
+        支持的平台
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Supported Platforms">
+    <nav class="md-nav" aria-label="支持的平台">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#tier-1-verified" class="md-nav__link">
+  <a href="#1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tier 1 — Verified
+        第 1 层 — 已验证
       
     </span>
   </a>
@@ -433,10 +435,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tier-2-best-effort" class="md-nav__link">
+  <a href="#2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tier 2 — Best-effort
+        第 2 层 — 尽力而为
       
     </span>
   </a>
@@ -449,15 +451,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#install-the-plugin" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Install the plugin
+        安装插件
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Install the plugin">
+    <nav class="md-nav" aria-label="安装插件">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -494,10 +496,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#scripted-install-curl-bash" class="md-nav__link">
+  <a href="#curl-bash" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Scripted install (curl | bash)
+        脚本安装（curl | bash）
       
     </span>
   </a>
@@ -505,10 +507,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#npx-vercel-skills-cli" class="md-nav__link">
+  <a href="#npxvercel-skills-cli" class="md-nav__link">
     <span class="md-ellipsis">
       
-        npx (Vercel Skills CLI)
+        npx（Vercel Skills CLI）
       
     </span>
   </a>
@@ -521,22 +523,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#first-project-setup" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        First project setup
+        首次项目设置
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="First project setup">
+    <nav class="md-nav" aria-label="首次项目设置">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#dolt-remote-optional" class="md-nav__link">
+  <a href="#dolt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Dolt remote (optional)
+        Dolt 远端（可选）
       
     </span>
   </a>
@@ -549,10 +551,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#updating" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Updating
+        更新
       
     </span>
   </a>
@@ -560,10 +562,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#verify-it-works" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Verify it works
+        验证是否正常工作
       
     </span>
   </a>
@@ -571,10 +573,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-the-hooks-work" class="md-nav__link">
+  <a href="#_8" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How the hooks work
+        钩子的工作原理
       
     </span>
   </a>
@@ -582,10 +584,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#configuration" class="md-nav__link">
+  <a href="#_9" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Configuration
+        配置
       
     </span>
   </a>
@@ -593,10 +595,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#troubleshooting" class="md-nav__link">
+  <a href="#_10" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Troubleshooting
+        故障排除
       
     </span>
   </a>
@@ -625,7 +627,7 @@
   <span class="md-ellipsis">
     
   
-    Methodology
+    方法论
   
 
     
@@ -652,7 +654,7 @@
   <span class="md-ellipsis">
     
   
-    Skills Reference
+    技能参考
   
 
     
@@ -679,7 +681,7 @@
   <span class="md-ellipsis">
     
   
-    Example Workflow
+    工作流示例
   
 
     
@@ -706,7 +708,7 @@
   <span class="md-ellipsis">
     
   
-    Tips & Tricks
+    技巧与窍门
   
 
     
@@ -762,58 +764,62 @@
   
 
 
-<h1 id="getting-started">Getting Started</h1>
-<h2 id="prerequisites">Prerequisites</h2>
-<p><strong><code>bd</code> must be installed before the plugin will work.</strong> The plugin registers hooks that call <code>bd</code> on every session start; if <code>bd</code> isn't present, those hooks fail silently and you lose persistent memory.</p>
+<div class="admonition warning">
+<p class="admonition-title">机器翻译</p>
+<p>本页面由 AI 自动翻译，可能存在术语或语义偏差。如有疑问，请以<a href="./">英文原文</a>为准。</p>
+</div>
+<h1 id="_1">快速开始</h1>
+<h2 id="_2">前提条件</h2>
+<p><strong><code>bd</code> 必须在插件生效之前安装。</strong> 该插件注册的钩子在每次会话启动时调用 <code>bd</code>；如果 <code>bd</code> 不存在，这些钩子将静默失败，您将丢失持久记忆。</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>brew<span class="w"> </span>install<span class="w"> </span>beads<span class="w">          </span><span class="c1"># macOS / Linux</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># or</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>npm<span class="w"> </span>install<span class="w"> </span>-g<span class="w"> </span>@beads/bd<span class="w">    </span><span class="c1"># any platform</span>
 </code></pre></div>
-<p>Verify with <code>bd version</code>. Then install the plugin (see below), then run <code>bd init</code> in each project.</p>
-<p><strong>Note:</strong> Native plugin install (Tier 1) installs skills and hooks automatically. It does NOT run <code>bd init</code> — you must do that yourself per project.</p>
-<p><strong>Optional:</strong> A <a href="https://dolthub.com">DoltHub</a> account if you want cross-session sync via <code>bd dolt push/pull</code>. Without it, beads still works locally.</p>
-<h2 id="supported-platforms">Supported Platforms</h2>
-<h3 id="tier-1-verified">Tier 1 — Verified</h3>
-<p>These paths are tested end-to-end. Prefer them.</p>
+<p>使用 <code>bd version</code> 验证安装。然后安装插件（见下文），再在每个项目中运行 <code>bd init</code>。</p>
+<p><strong>注意：</strong> 原生插件安装（第 1 层）会自动安装技能和钩子。它不会运行 <code>bd init</code>——您必须在每个项目中自行完成。</p>
+<p><strong>可选：</strong> 如果您需要通过 <code>bd dolt push/pull</code> 实现跨会话同步，则需要一个 <a href="https://dolthub.com">DoltHub</a> 账户。没有它，Beads 仍然可以在本地正常工作。</p>
+<h2 id="_3">支持的平台</h2>
+<h3 id="1">第 1 层 — 已验证</h3>
+<p>这些路径经过端到端测试，推荐优先使用。</p>
 <table>
 <thead>
 <tr>
 <th>CLI</th>
-<th>Install method</th>
+<th>安装方式</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Claude Code</td>
-<td>Native plugin marketplace (see below)</td>
+<td>原生插件市场（见下文）</td>
 </tr>
 <tr>
 <td>Codex CLI</td>
-<td>Native plugin marketplace + <code>codex_hooks = true</code> (see below)</td>
+<td>原生插件市场 + <code>codex_hooks = true</code>（见下文）</td>
 </tr>
 <tr>
 <td>OpenCode</td>
-<td>curl installer (see below)</td>
+<td>curl 安装程序（见下文）</td>
 </tr>
 </tbody>
 </table>
-<h3 id="tier-2-best-effort">Tier 2 — Best-effort</h3>
-<p>Config validated; not E2E-tested by us. Use with that in mind.</p>
+<h3 id="2">第 2 层 — 尽力而为</h3>
+<p>配置已验证；未经我们端到端测试。请在了解这一情况的前提下使用。</p>
 <table>
 <thead>
 <tr>
 <th>CLI</th>
-<th>Install</th>
-<th>Update</th>
-<th>Notes</th>
+<th>安装</th>
+<th>更新</th>
+<th>备注</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Cursor</td>
-<td><code>/add-plugin beads-superpowers</code> (in Cursor Agent)</td>
-<td>Marketplace UI</td>
-<td>config validated by us; not E2E-tested</td>
+<td><code>/add-plugin beads-superpowers</code>（在 Cursor Agent 中）</td>
+<td>市场 UI</td>
+<td>配置已由我们验证；未经端到端测试</td>
 </tr>
 <tr>
 <td>Gemini CLI</td>
@@ -825,11 +831,11 @@
 <td>GitHub Copilot CLI</td>
 <td><code>copilot plugin marketplace add DollarDill/beads-superpowers</code> then <code>copilot plugin install beads-superpowers@beads-superpowers-marketplace</code></td>
 <td><code>copilot plugin update beads-superpowers</code></td>
-<td>rides the Claude-plugin fallback (skills + session-start via the shared <code>hooks/hooks.json</code>), the same mechanism upstream ships; requires Copilot CLI v1.0.11+</td>
+<td>使用 Claude 插件回退（技能 + 通过共享 <code>hooks/hooks.json</code> 的 session-start），与上游相同的机制；需要 Copilot CLI v1.0.11+</td>
 </tr>
 <tr>
 <td>Kimi Code</td>
-<td><code>/plugins install https://github.com/DollarDill/beads-superpowers</code> (run <code>/new</code> after)</td>
+<td><code>/plugins install https://github.com/DollarDill/beads-superpowers</code>（之后运行 <code>/new</code>）</td>
 <td>—</td>
 <td></td>
 </tr>
@@ -837,131 +843,131 @@
 <td>Antigravity</td>
 <td><code>agy plugin install https://github.com/DollarDill/beads-superpowers</code></td>
 <td>—</td>
-<td>reuses the Claude plugin manifest — the same mechanism upstream verified; not E2E-tested by us</td>
+<td>复用 Claude 插件清单——与上游已验证的相同机制；未经我们端到端测试</td>
 </tr>
 <tr>
 <td>Factory Droid</td>
 <td><code>droid plugin marketplace add https://github.com/DollarDill/beads-superpowers</code> then <code>droid plugin install beads-superpowers@beads-superpowers-marketplace</code></td>
 <td>—</td>
-<td>reuses the Claude plugin manifest — the same mechanism upstream verified; not E2E-tested by us</td>
+<td>复用 Claude 插件清单——与上游已验证的相同机制；未经我们端到端测试</td>
 </tr>
 <tr>
 <td>Pi</td>
 <td><code>pi install git:github.com/DollarDill/beads-superpowers</code></td>
 <td>—</td>
-<td>config validated by us; not E2E-tested</td>
+<td>配置已由我们验证；未经端到端测试</td>
 </tr>
 </tbody>
 </table>
-<h2 id="install-the-plugin">Install the plugin</h2>
+<h2 id="_4">安装插件</h2>
 <blockquote>
-<p><strong>⚠️ Coexistence warning:</strong> Do not install alongside <a href="https://github.com/obra/superpowers">obra/superpowers</a>. Skill names collide — pick one or the other.</p>
+<p><strong>⚠️ 共存警告：</strong> 请勿与 <a href="https://github.com/obra/superpowers">obra/superpowers</a> 同时安装。技能名称会冲突——请二选一。</p>
 </blockquote>
 <h3 id="claude-code">Claude Code</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>claude<span class="w"> </span>plugin<span class="w"> </span>marketplace<span class="w"> </span>add<span class="w"> </span>DollarDill/beads-superpowers
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>claude<span class="w"> </span>plugin<span class="w"> </span>install<span class="w"> </span>beads-superpowers@beads-superpowers-marketplace
 </code></pre></div>
-<p>Or as slash commands inside a Claude Code session: <code>/plugin marketplace add DollarDill/beads-superpowers</code> then <code>/plugin install beads-superpowers@beads-superpowers-marketplace</code>.</p>
+<p>或在 Claude Code 会话中使用斜杠命令：<code>/plugin marketplace add DollarDill/beads-superpowers</code>，然后 <code>/plugin install beads-superpowers@beads-superpowers-marketplace</code>。</p>
 <h3 id="codex-cli">Codex CLI</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>codex<span class="w"> </span>plugin<span class="w"> </span>marketplace<span class="w"> </span>add<span class="w"> </span>DollarDill/beads-superpowers
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>codex<span class="w"> </span>plugin<span class="w"> </span>install<span class="w"> </span>beads-superpowers@beads-superpowers-marketplace
 </code></pre></div>
-<p>After installing, enable hooks in <code>~/.codex/config.toml</code>:</p>
+<p>安装后，在 <code>~/.codex/config.toml</code> 中启用钩子：</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">[features]</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">codex_hooks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 </code></pre></div>
 <h3 id="opencode">OpenCode</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
 </code></pre></div>
-<p>The installer detects OpenCode and copies skills to <code>~/.config/opencode/skills/</code> and the TypeScript plugin to <code>~/.config/opencode/plugins/</code> (active automatically).</p>
-<h3 id="scripted-install-curl-bash">Scripted install (<code>curl | bash</code>)</h3>
-<p>The curl installer also works for Claude Code and Codex when you need more than a plain plugin install:</p>
+<p>安装程序检测到 OpenCode 后，会将技能复制到 <code>~/.config/opencode/skills/</code>，并将 TypeScript 插件复制到 <code>~/.config/opencode/plugins/</code>（自动激活）。</p>
+<h3 id="curl-bash">脚本安装（<code>curl | bash</code>）</h3>
+<p>当您需要的不仅仅是普通插件安装时，curl 安装程序同样适用于 Claude Code 和 Codex：</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
 </code></pre></div>
-<p>The installer auto-detects which CLIs are on your system and installs skills and hooks for each:</p>
+<p>安装程序自动检测系统上的 CLI 并为每个 CLI 安装技能和钩子：</p>
 <table>
 <thead>
 <tr>
 <th>CLI</th>
-<th>Skills path</th>
-<th>Hooks / Plugin</th>
+<th>技能路径</th>
+<th>钩子 / 插件</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Claude Code</td>
 <td><code>~/.claude/skills/</code></td>
-<td>SessionStart + UserPromptSubmit hooks in <code>settings.json</code></td>
+<td><code>settings.json</code> 中的 SessionStart + UserPromptSubmit 钩子</td>
 </tr>
 <tr>
 <td>Codex</td>
 <td><code>~/.codex/skills/</code></td>
-<td>Enable with <code>codex_hooks = true</code> in <code>~/.codex/config.toml</code></td>
+<td>在 <code>~/.codex/config.toml</code> 中使用 <code>codex_hooks = true</code> 启用</td>
 </tr>
 <tr>
 <td>OpenCode</td>
 <td><code>~/.config/opencode/skills/</code></td>
-<td>TypeScript plugin at <code>~/.config/opencode/plugins/</code> (active automatically)</td>
+<td><code>~/.config/opencode/plugins/</code> 处的 TypeScript 插件（自动激活）</td>
 </tr>
 </tbody>
 </table>
-<p>Use the scripted install when you need any of:</p>
+<p>在以下任一情况下，请使用脚本安装：</p>
 <ul>
-<li><strong>Beads/Dolt bootstrap</strong> — auto-detects whether <code>bd</code> is installed and guides setup</li>
-<li><strong>Hook registration</strong> — writes SessionStart and UserPromptSubmit entries to <code>settings.json</code> (required when using npx or manual install paths)</li>
-<li><strong><code>yegge.md</code> orchestrator</strong> — optionally installs the orchestrator agent globally</li>
-<li><strong>Version pinning</strong> — <code>--version X.Y.Z</code> for reproducible CI installs</li>
-<li><strong>CI environments</strong> — use <code>--yes --skip-checksum</code> for unattended runs</li>
+<li><strong>Beads/Dolt 引导</strong> — 自动检测 <code>bd</code> 是否已安装并引导配置</li>
+<li><strong>钩子注册</strong> — 将 SessionStart 和 UserPromptSubmit 条目写入 <code>settings.json</code>（使用 npx 或手动安装路径时必需）</li>
+<li><strong><code>yegge.md</code> 协调器</strong> — 可选择在全局安装协调器智能体</li>
+<li><strong>版本固定</strong> — 使用 <code>--version X.Y.Z</code> 实现可重现的 CI 安装</li>
+<li><strong>CI 环境</strong> — 使用 <code>--yes --skip-checksum</code> 进行无人值守运行</li>
 </ul>
-<p>Supports <code>--yes</code> (skip prompts), <code>--version X.Y.Z</code>, <code>--dry-run</code>, <code>--skip-checksum</code>, and <code>--uninstall</code>.</p>
-<h3 id="npx-vercel-skills-cli">npx (Vercel Skills CLI)</h3>
+<p>支持 <code>--yes</code>（跳过提示）、<code>--version X.Y.Z</code>、<code>--dry-run</code>、<code>--skip-checksum</code> 和 <code>--uninstall</code>。</p>
+<h3 id="npxvercel-skills-cli">npx（Vercel Skills CLI）</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>npx<span class="w"> </span>skills<span class="w"> </span>add<span class="w"> </span>DollarDill/beads-superpowers<span class="w"> </span>-a<span class="w"> </span>claude-code<span class="w"> </span>-g<span class="w"> </span>--copy<span class="w"> </span>-y
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># npx installs skills only — no hooks. Run the setup skill in your</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1"># chosen agentic terminal to configure the SessionStart and</span>
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># UserPromptSubmit hooks.</span>
 <a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># Use -a codex to also install for Codex CLI.</span>
 </code></pre></div>
-<h2 id="first-project-setup">First project setup</h2>
-<p>Initialise beads in your project:</p>
+<h2 id="_5">首次项目设置</h2>
+<p>在您的项目中初始化 Beads：</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nb">cd</span><span class="w"> </span>your-project
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>bd<span class="w"> </span>init
 </code></pre></div>
-<p>This creates <code>.beads/</code> (config, metadata, git hooks), <code>CLAUDE.md</code>, and <code>AGENTS.md</code>. The plugin's session-start hook automatically detects if <code>bd setup claude</code> hooks are present and skips its own <code>bd prime</code> call, so no manual cleanup is needed.</p>
-<h3 id="dolt-remote-optional">Dolt remote (optional)</h3>
-<p>For cross-session sync of your task history:</p>
+<p>这将创建 <code>.beads/</code>（配置、元数据、git 钩子）、<code>CLAUDE.md</code> 和 <code>AGENTS.md</code>。插件的 session-start 钩子会自动检测 <code>bd setup claude</code> 钩子是否已存在，并跳过自身的 <code>bd prime</code> 调用，因此无需手动清理。</p>
+<h3 id="dolt">Dolt 远端（可选）</h3>
+<p>用于跨会话同步任务历史记录：</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>bd<span class="w"> </span>dolt<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>origin<span class="w"> </span>https://doltremoteapi.dolthub.com/your-org/your-repo
 <a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>bd<span class="w"> </span>dolt<span class="w"> </span>push<span class="w">    </span><span class="c1"># test the connection</span>
 </code></pre></div>
-<h2 id="updating">Updating</h2>
-<p><strong>Claude Code:</strong></p>
+<h2 id="_6">更新</h2>
+<p><strong>Claude Code：</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>claude<span class="w"> </span>plugin<span class="w"> </span>marketplace<span class="w"> </span>update<span class="w"> </span>beads-superpowers-marketplace
 </code></pre></div>
-<p><strong>Codex CLI:</strong></p>
+<p><strong>Codex CLI：</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>codex<span class="w"> </span>plugin<span class="w"> </span>marketplace<span class="w"> </span>update<span class="w"> </span>beads-superpowers-marketplace
 </code></pre></div>
-<p><strong>Gemini CLI:</strong></p>
+<p><strong>Gemini CLI：</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>gemini<span class="w"> </span>extensions<span class="w"> </span>update<span class="w"> </span>beads-superpowers
 </code></pre></div>
-<p><strong>Copilot CLI:</strong></p>
+<p><strong>Copilot CLI：</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>copilot<span class="w"> </span>plugin<span class="w"> </span>update<span class="w"> </span>beads-superpowers
 </code></pre></div>
-<p><strong>OpenCode / scripted / npx:</strong></p>
+<p><strong>OpenCode / 脚本安装 / npx：</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
 <a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="c1"># or</span>
 <a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>npx<span class="w"> </span>skills<span class="w"> </span>add<span class="w"> </span>DollarDill/beads-superpowers<span class="w"> </span>-g<span class="w"> </span>--copy<span class="w"> </span>-y
 </code></pre></div>
-<p>Re-running the installer or <code>npx skills add</code> overwrites the existing installation. No <code>bd init</code> needed — your existing <code>.beads/</code> database is untouched.</p>
-<h2 id="verify-it-works">Verify it works</h2>
-<p>Start a fresh session in your CLI of choice, then:</p>
+<p>重新运行安装程序或 <code>npx skills add</code> 将覆盖现有安装。无需重新运行 <code>bd init</code>——您现有的 <code>.beads/</code> 数据库不受影响。</p>
+<h2 id="_7">验证是否正常工作</h2>
+<p>在您选择的 CLI 中启动一个新会话，然后：</p>
 <ol>
-<li><strong>Check skills loaded:</strong> Type <code>/skills</code> (Claude Code/Codex) or check the skill list in OpenCode — you should see 23 skills prefixed with <code>beads-superpowers:</code></li>
-<li><strong>Check beads works:</strong> Run <code>bd ready</code> and <code>bd stats</code> in the terminal</li>
+<li><strong>检查技能是否已加载：</strong> 输入 <code>/skills</code>（Claude Code/Codex）或查看 OpenCode 中的技能列表——您应该看到 23 个以 <code>beads-superpowers:</code> 为前缀的技能</li>
+<li><strong>检查 Beads 是否正常工作：</strong> 在终端中运行 <code>bd ready</code> 和 <code>bd stats</code></li>
 </ol>
-<p>If skills aren't showing, the plugin may not be installed for your CLI. If <code>bd ready</code> fails, beads isn't initialised in this project (<code>bd init</code>).</p>
-<h2 id="how-the-hooks-work">How the hooks work</h2>
-<p>The plugin registers two hooks via <code>hooks/hooks.json</code>:</p>
-<p><strong>SessionStart</strong> fires on every session start, clear, and compact. It reads the <code>using-superpowers</code> skill (which routes to all other skills), runs <code>bd prime</code> to capture beads state and persistent memories, and outputs the combined context (~2–3k tokens). If <code>bd prime</code> is already registered as a hook elsewhere, this step is skipped automatically.</p>
-<p><strong>UserPromptSubmit</strong> fires on every user message. It injects a reminder listing all 22 invocable skills with their trigger conditions — "bug → systematic-debugging", "new feature → brainstorming", etc. This keeps the agent from forgetting about skills mid-session.</p>
+<p>如果技能未显示，则该插件可能未为您的 CLI 安装。如果 <code>bd ready</code> 失败，则 Beads 尚未在此项目中初始化（运行 <code>bd init</code>）。</p>
+<h2 id="_8">钩子的工作原理</h2>
+<p>该插件通过 <code>hooks/hooks.json</code> 注册两个钩子：</p>
+<p><strong>SessionStart</strong> 在每次会话启动、清除和压缩时触发。它读取 <code>using-superpowers</code> 技能（该技能路由到所有其他技能），运行 <code>bd prime</code> 以捕获 Beads 状态和持久记忆，并输出合并后的上下文（约 2–3k tokens）。如果 <code>bd prime</code> 已在其他地方注册为钩子，则此步骤会自动跳过。</p>
+<p><strong>UserPromptSubmit</strong> 在每条用户消息时触发。它注入一条提醒，列出所有 22 个可调用技能及其触发条件——"bug → systematic-debugging"、"new feature → brainstorming"等。这可以防止智能体在会话中途忘记技能。</p>
 <div class="panzoom-box" data-key="alt" id="panzoom0" oncontextmenu="return false;">
     
     <nav class="panzoom-nav">
@@ -1002,28 +1008,28 @@
 Hold "Alt" / "Option" to enable pan &amp; zoom
 </div>
 </div>
-<h2 id="configuration">Configuration</h2>
-<p><strong>Instruction priority</strong> when things conflict:</p>
+<h2 id="_9">配置</h2>
+<p><strong>指令优先级</strong>（发生冲突时）：</p>
 <ol>
-<li>Your project's <code>CLAUDE.md</code> (highest)</li>
-<li>Plugin skills</li>
-<li>Default system prompt (lowest)</li>
+<li>您项目的 <code>CLAUDE.md</code>（最高）</li>
+<li>插件技能</li>
+<li>默认系统提示（最低）</li>
 </ol>
-<p>To override a skill's behaviour, add instructions to your project's <code>CLAUDE.md</code> — no need to fork the plugin.</p>
-<p><strong>Beads project config</strong> lives in <code>.beads/config.yaml</code>. The defaults work for most projects.</p>
-<h2 id="troubleshooting">Troubleshooting</h2>
-<p><strong>Skills not loading</strong> — Run <code>/plugins</code> to check the plugin is installed, then <code>/skills</code> to check skills are visible. If missing, reinstall: <code>claude plugin marketplace update beads-superpowers-marketplace</code>.</p>
-<p><strong><code>bd: command not found</code></strong> — Beads isn't installed or isn't on your PATH. Run <code>brew install beads</code> or <code>npm install -g @beads/bd</code>, then verify with <code>bd version</code>.</p>
-<p><strong>No <code>.beads</code> directory</strong> — Run <code>bd init</code> in your project directory. The plugin automatically handles duplicate hook detection.</p>
-<p><strong>Double context injection</strong> — The plugin detects <code>bd setup claude</code> hooks in project and global settings and automatically skips its own <code>bd prime</code> call. If you still see duplicates, run <code>bd setup claude --remove</code>.</p>
-<p><strong>Stale plugin cache</strong> — The cache doesn't update when you edit skill files locally. Either symlink the cache to your checkout:</p>
+<p>要覆盖某个技能的行为，请在您项目的 <code>CLAUDE.md</code> 中添加指令——无需 fork 插件。</p>
+<p><strong>Beads 项目配置</strong> 位于 <code>.beads/config.yaml</code>。默认值适用于大多数项目。</p>
+<h2 id="_10">故障排除</h2>
+<p><strong>技能未加载</strong> — 运行 <code>/plugins</code> 检查插件是否已安装，然后运行 <code>/skills</code> 检查技能是否可见。如果缺失，请重新安装：<code>claude plugin marketplace update beads-superpowers-marketplace</code>。</p>
+<p><strong><code>bd: command not found</code></strong> — Beads 未安装或不在您的 PATH 中。运行 <code>brew install beads</code> 或 <code>npm install -g @beads/bd</code>，然后使用 <code>bd version</code> 验证。</p>
+<p><strong>没有 <code>.beads</code> 目录</strong> — 在您的项目目录中运行 <code>bd init</code>。插件会自动处理重复钩子检测。</p>
+<p><strong>重复上下文注入</strong> — 插件会检测项目和全局设置中的 <code>bd setup claude</code> 钩子，并自动跳过自身的 <code>bd prime</code> 调用。如果您仍然看到重复内容，请运行 <code>bd setup claude --remove</code>。</p>
+<p><strong>插件缓存过期</strong> — 当您在本地编辑技能文件时，缓存不会自动更新。可以将缓存符号链接到您的代码检出目录：</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.0
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>ln<span class="w"> </span>-s<span class="w"> </span>~/workplace/beads-superpowers<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.0
 </code></pre></div>
-<p>Or reinstall. Note: <code>claude plugin update</code> has a known <a href="https://github.com/anthropics/claude-code/issues/14061">cache bug</a> — the symlink is more reliable.</p>
-<p><strong>Hook not firing</strong> — Check the hook is executable: <code>chmod +x hooks/session-start</code>.</p>
-<p><strong><code>bd dolt push</code> fails</strong> — You need a Dolt remote configured first (<code>bd dolt remote add origin &lt;url&gt;</code>). If you don't need remote sync, the failure is harmless — beads works fine locally.</p>
+<p>或者重新安装。注意：<code>claude plugin update</code> 存在已知的<a href="https://github.com/anthropics/claude-code/issues/14061">缓存错误</a>——符号链接方式更可靠。</p>
+<p><strong>钩子未触发</strong> — 检查钩子是否可执行：<code>chmod +x hooks/session-start</code>。</p>
+<p><strong><code>bd dolt push</code> 失败</strong> — 您需要先配置 Dolt 远端（<code>bd dolt remote add origin &lt;url&gt;</code>）。如果您不需要远程同步，此失败无害——Beads 在本地可以正常工作。</p>
 
 
 
@@ -1043,20 +1049,20 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     
       
   <span class="md-source-file__fact">
-    <span class="md-icon" title="Last update">
+    <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 27, 2026 14:12:37 UTC">June 27, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年6月27日 17:56:34 UTC">2026年6月27日</span>
   </span>
 
     
     
       
   <span class="md-source-file__fact">
-    <span class="md-icon" title="Created">
+    <span class="md-icon" title="创建日期">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="May 2, 2026 07:50:58 UTC">May 2, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年6月27日 17:56:34 UTC">2026年6月27日</span>
   </span>
 
     
@@ -1079,7 +1085,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
           <button type="button" class="md-top md-icon" data-md-component="top" hidden>
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
-  Back to top
+  回到页面顶部
 </button>
         
       </main>
@@ -1088,33 +1094,33 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
   
     
       
-      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
         
           
-          <a href=".." class="md-footer__link md-footer__link--prev" aria-label="Previous: Home">
+          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="上一页: 首页">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
             </div>
             <div class="md-footer__title">
               <span class="md-footer__direction">
-                Previous
+                上一页
               </span>
               <div class="md-ellipsis">
-                Home
+                首页
               </div>
             </div>
           </a>
         
         
           
-          <a href="../methodology/" class="md-footer__link md-footer__link--next" aria-label="Next: Methodology">
+          <a href="../methodology/" class="md-footer__link md-footer__link--next" aria-label="下一页: 方法论">
             <div class="md-footer__title">
               <span class="md-footer__direction">
-                Next
+                下一页
               </span>
               <div class="md-ellipsis">
-                Methodology
+                方法论
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -1166,14 +1172,18 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "toc.integrate", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
-        <script src="../assets/javascripts/panzoom.min.js"></script>
+        <script src="../../assets/javascripts/panzoom.min.js"></script>
       
-        <script src="../assets/javascripts/zoompan.js"></script>
+        <script src="../../assets/javascripts/zoompan.js"></script>
+      
+        <script src="../../assets/javascripts/panzoom.min.js"></script>
+      
+        <script src="../../assets/javascripts/zoompan.js"></script>
       
     
   </body>

@@ -22,6 +22,10 @@
       
       
         
+          <link rel="alternate" href="./" hreflang="en">
+        
+          <link rel="alternate" href="../zh/methodology/" hreflang="zh">
+        
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -79,7 +83,7 @@
 <meta property="twitter:description" content="Bright-line rules and anti-rationalization tables enforce agent discipline. Dolt-backed beads track every task across sessions through a 10-state lifecycle." />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/methodology.png" />
 <meta name="panzoom-theme" content="material">
-<meta name="panzoom-data" content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'> </head>
+<meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
   
   
     
@@ -170,6 +174,32 @@
     
       <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../zh/methodology/" hreflang="zh" class="md-select__link">
+              中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
     
     
       
@@ -704,7 +734,7 @@
 <h3 id="the-gap">The gap</h3>
 <p>Superpowers enforced good process but forgot everything between sessions. Beads remembered everything but imposed no process on how work should be done. beads-superpowers connects the two: every process step in every skill creates, updates, or closes a persistent bead, so following the right process and maintaining persistent memory are the same action.</p>
 <h2 id="how-it-works">How it works</h2>
-<p>The plugin installs 22 composable skills and a Dolt-backed task database. A <code>using-superpowers</code> bootstrap skill loads at session start and routes the agent to whichever skill fits the current task.</p>
+<p>The plugin installs 23 composable skills and a Dolt-backed task database. A <code>using-superpowers</code> bootstrap skill loads at session start and routes the agent to whichever skill fits the current task.</p>
 <div class="panzoom-box" data-key="alt" id="panzoom0" oncontextmenu="return false;">
     
     <nav class="panzoom-nav">
@@ -734,7 +764,7 @@ config:
 ---
 graph TB
   subgraph Superpowers ["Superpowers (Process Discipline)"]
-    S1["22 Composable Skills"]
+    S1["23 Composable Skills"]
     S2["Bright-line Rules"]
     S3["Anti-rationalization"]
     S4["Pressure-tested Enforcement"]
@@ -847,10 +877,10 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><strong>Step 7 — Implementation.</strong> Code runs in an isolated git worktree under TDD. The orchestrator creates an epic with task children and dependency chains, then dispatches implementer subagents. When multiple tasks are unblocked, parallel batch mode runs up to 5 concurrently, each in its own worktree. After each task, one read-only reviewer returns a spec-compliance verdict and a code-quality verdict in a single pass; the bead closes only after that review passes. Task briefs, implementer reports, and review diffs move between stages as files under a per-worktree <code>.superpowers/sdd/</code> directory, keeping the orchestrator's context lean.</p>
 <p><strong>Step 8 — Verification.</strong> The full test suite runs fresh — not relying on the last run during development. "Tests pass" means a test command was just executed and its output is attached.</p>
 <p><strong>Step 9 — Documentation.</strong> <code>document-release</code> scans the diff against existing docs for stale references, missing entries, and outdated examples. When the audit flags sections needing major prose rewrites, <code>write-documentation</code> fires for those sections.</p>
-<p><strong>Step 10 — Close branch.</strong> <code>finishing-a-development-branch</code> detects the current environment — normal repository, named-branch worktree, or detached HEAD — and presents context-aware options: 4 choices for normal and worktree contexts, 3 for detached HEAD where merge is unavailable. Provenance-based cleanup only removes worktrees inside <code>.worktrees/</code>, leaving externally created worktrees alone. The skill ends with the Land the Plane protocol: <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code> → <code>git status</code>. Branch paths terminate here — work is not done until both task state and code reach the remote.</p>
-<p><strong>Step 11 — Session close.</strong> Fires only on non-branch paths (research queries, quick tasks that didn't create a branch). Runs the same close ritual as Step 10's Land the Plane: close beads, push to remotes, verify clean state. The next session runs <code>bd prime</code> to restore the full picture.</p>
+<p><strong>Step 10 — Close branch.</strong> <code>finishing-a-development-branch</code> detects the current environment — normal repository, named-branch worktree, or detached HEAD — and presents context-aware options: 4 choices for normal and worktree contexts, 3 for detached HEAD where merge is unavailable. Provenance-based cleanup only removes worktrees inside <code>.worktrees/</code>, leaving externally created worktrees alone. The skill ends with the Land the Plane protocol: if the session produced several new memories, offer a <code>memory-curator</code> pass before <code>bd dolt push</code>; then <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code> → <code>git status</code>. Branch paths terminate here — work is not done until both task state and code reach the remote.</p>
+<p><strong>Step 11 — Session close.</strong> Fires only on non-branch paths (research queries, quick tasks that didn't create a branch). Runs the same close ritual as Step 10's Land the Plane: close beads, offer a <code>memory-curator</code> pass if the session produced several new memories, push to remotes, verify clean state. The next session runs <code>bd prime</code> to restore the full picture.</p>
 <h2 id="agent-memory">Agent memory</h2>
-<p>Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow. 21 of the 22 skills now prompt for <code>bd remember</code> at their natural completion points — root causes after debugging, design decisions after brainstorming, review insights after code review — so memory capture happens within the skill workflow, not as a separate step.</p>
+<p>Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow. 21 of the 23 skills now prompt for <code>bd remember</code> at their natural completion points — root causes after debugging, design decisions after brainstorming, review insights after code review — so memory capture happens within the skill workflow, not as a separate step.</p>
 <table>
 <thead>
 <tr>
@@ -897,6 +927,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 </tr>
 </tbody>
 </table>
+<p>The <code>memory-curator</code> skill consolidates, deduplicates, and prunes the memory store that <code>bd remember</code> builds up — offered at session-close when several new memories were captured, or on-demand anytime (ADR-0034).</p>
 <h2 id="research-basis">Research basis</h2>
 <h3 id="cialdini-2021-influence-principles">Cialdini (2021) — Influence principles</h3>
 <p>Three principles from <em>Influence: The Psychology of Persuasion</em> shape how skills are written. Authority: Iron Laws use absolute phrasing because agents treat authoritative instructions as harder to override. Consistency: once an agent begins a skill's process, consistency pressure keeps it on track through the remaining steps. Scarcity: phrasing like "you cannot rationalize your way out of this" removes the sense that alternatives exist.</p>
@@ -971,7 +1002,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 27, 2026 16:06:45 UTC">June 27, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 27, 2026 18:51:36 UTC">June 27, 2026</span>
   </span>
 
     

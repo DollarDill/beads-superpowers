@@ -1,18 +1,18 @@
 
 <!doctype html>
-<html lang="en" class="no-js">
+<html lang="zh" class="no-js">
   <head>
     
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Complete reference for 23 composable skills with trigger map, category breakdown, bd command usage, and chaining diagrams showing how skills invoke each other.">
+        <meta name="description" content="23 composable skills for AI coding agents — TDD, systematic debugging, code review, and persistent task memory via Beads. Verified on Claude Code, Codex, and OpenCode; best-effort on Cursor, Gemini CLI, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi.">
       
       
         <meta name="author" content="Dillon Frawley">
       
       
-        <link rel="canonical" href="https://dollardill.github.io/beads-superpowers/skills/">
+        <link rel="canonical" href="https://dollardill.github.io/beads-superpowers/zh/skills/">
       
       
         <link rel="prev" href="../methodology/">
@@ -22,25 +22,25 @@
       
       
         
-          <link rel="alternate" href="./" hreflang="en">
+          <link rel="alternate" href="../../skills/" hreflang="en">
         
-          <link rel="alternate" href="../zh/skills/" hreflang="zh">
+          <link rel="alternate" href="./" hreflang="zh">
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Skills Reference - beads-superpowers</title>
+        <title>技能参考 - beads-superpowers</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -59,11 +59,13 @@
       
     
     
-      <link rel="stylesheet" href="../assets/extra.css">
+      <link rel="stylesheet" href="../../assets/extra.css">
     
-      <link rel="stylesheet" href="../assets/stylesheets/panzoom.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/panzoom.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+      <link rel="stylesheet" href="../../assets/stylesheets/panzoom.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -71,17 +73,17 @@
     
   
 <meta property="og:type" content="website" />
-<meta property="og:title" content="Skills Reference - beads-superpowers" />
-<meta property="og:description" content="Complete reference for 23 composable skills with trigger map, category breakdown, bd command usage, and chaining diagrams showing how skills invoke each other." />
-<meta property="og:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/skills.png" />
+<meta property="og:title" content="技能参考 - beads-superpowers" />
+<meta property="og:description" content="23 composable skills for AI coding agents — TDD, systematic debugging, code review, and persistent task memory via Beads. Verified on Claude Code, Codex, and OpenCode; best-effort on Cursor, Gemini CLI, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi." />
+<meta property="og:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/zh/skills.png" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:url" content="https://dollardill.github.io/beads-superpowers/skills/" />
+<meta property="og:url" content="https://dollardill.github.io/beads-superpowers/zh/skills/" />
 <meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:title" content="Skills Reference - beads-superpowers" />
-<meta property="twitter:description" content="Complete reference for 23 composable skills with trigger map, category breakdown, bd command usage, and chaining diagrams showing how skills invoke each other." />
-<meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/skills.png" />
+<meta property="twitter:title" content="技能参考 - beads-superpowers" />
+<meta property="twitter:description" content="23 composable skills for AI coding agents — TDD, systematic debugging, code review, and persistent task memory via Beads. Verified on Claude Code, Codex, and OpenCode; best-effort on Cursor, Gemini CLI, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi." />
+<meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/zh/skills.png" />
 <meta name="panzoom-theme" content="material">
 <meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
   
@@ -102,8 +104,8 @@
     <div data-md-component="skip">
       
         
-        <a href="#skills-reference" class="md-skip">
-          Skip to content
+        <a href="#_1" class="md-skip">
+          跳转至
         </a>
       
     </div>
@@ -117,8 +119,8 @@
   
 
 <header class="md-header md-header--shadow" data-md-component="header">
-  <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="beads-superpowers" class="md-header__button md-logo" aria-label="beads-superpowers" data-md-component="logo">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../" title="beads-superpowers" class="md-header__button md-logo" aria-label="beads-superpowers" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -138,7 +140,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Skills Reference
+              技能参考
             
           </span>
         </div>
@@ -178,20 +180,20 @@
       <div class="md-header__option">
   <div class="md-select">
     
-    <button class="md-header__button md-icon" aria-label="Select language">
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
     </button>
     <div class="md-select__inner">
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="./" hreflang="en" class="md-select__link">
+            <a href="../../skills/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
         
           <li class="md-select__item">
-            <a href="../zh/skills/" hreflang="zh" class="md-select__link">
+            <a href="./" hreflang="zh" class="md-select__link">
               中文
             </a>
           </li>
@@ -212,16 +214,16 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
         
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
         
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
       </label>
-      <nav class="md-search__options" aria-label="Search">
+      <nav class="md-search__options" aria-label="查找">
         
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         </button>
@@ -232,7 +234,7 @@
       <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
         <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
-            Initializing search
+            正在初始化搜索引擎
           </div>
           <ol class="md-search-result__list" role="presentation"></ol>
         </div>
@@ -244,7 +246,7 @@
     
     
       <div class="md-header__source">
-        <a href="https://github.com/DollarDill/beads-superpowers" title="Go to repository" class="md-source" data-md-component="source">
+        <a href="https://github.com/DollarDill/beads-superpowers" title="前往仓库" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
@@ -280,9 +282,9 @@
 
   
 
-<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="导航栏" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="beads-superpowers" class="md-nav__button md-logo" aria-label="beads-superpowers" data-md-component="logo">
+    <a href="../" title="beads-superpowers" class="md-nav__button md-logo" aria-label="beads-superpowers" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -292,7 +294,7 @@
   </label>
   
     <div class="md-nav__source">
-      <a href="https://github.com/DollarDill/beads-superpowers" title="Go to repository" class="md-source" data-md-component="source">
+      <a href="https://github.com/DollarDill/beads-superpowers" title="前往仓库" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
@@ -312,14 +314,14 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Home
+    首页
   
 
     
@@ -346,7 +348,7 @@
   <span class="md-ellipsis">
     
   
-    Getting Started
+    快速开始
   
 
     
@@ -373,7 +375,7 @@
   <span class="md-ellipsis">
     
   
-    Methodology
+    方法论
   
 
     
@@ -409,7 +411,7 @@
   <span class="md-ellipsis">
     
   
-    Skills Reference
+    技能参考
   
 
     
@@ -427,7 +429,7 @@
   <span class="md-ellipsis">
     
   
-    Skills Reference
+    技能参考
   
 
     
@@ -439,7 +441,7 @@
       
         
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+<nav class="md-nav md-nav--secondary" aria-label="目录">
   
   
   
@@ -448,15 +450,15 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      目录
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#trigger-map" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Trigger map
+        触发映射
       
     </span>
   </a>
@@ -464,10 +466,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#by-category" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        By category
+        按类别
       
     </span>
   </a>
@@ -475,15 +477,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#all-skills" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        All skills
+        所有技能
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="All skills">
+    <nav class="md-nav" aria-label="所有技能">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -745,10 +747,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#beads-commands" class="md-nav__link">
+  <a href="#beads" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Beads commands
+        Beads 命令
       
     </span>
   </a>
@@ -756,10 +758,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-skills-chain" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How skills chain
+        技能链式调用
       
     </span>
   </a>
@@ -788,7 +790,7 @@
   <span class="md-ellipsis">
     
   
-    Example Workflow
+    工作流示例
   
 
     
@@ -815,7 +817,7 @@
   <span class="md-ellipsis">
     
   
-    Tips & Tricks
+    技巧与窍门
   
 
     
@@ -871,124 +873,132 @@
   
 
 
-<h1 id="skills-reference">Skills Reference</h1>
-<p>beads-superpowers ships 23 composable skills loaded on demand via the <code>Skill</code> tool. The bootstrap skill <code>using-superpowers</code> loads at every session start and routes to the right skill for the current task. Skills are mandatory — when one applies, the agent must invoke it.</p>
-<h2 id="trigger-map">Trigger map</h2>
-<p>The UserPromptSubmit hook reminds the agent on every message which skill applies to which task:</p>
+<hr />
+<p>machine_translated: true
+description: 23 个可组合技能的完整参考，包含触发映射、分类说明、bd 命令用法，以及展示技能相互调用关系的链式图。</p>
+<hr />
+<div class="admonition warning">
+<p class="admonition-title">机器翻译</p>
+<p>本页面由 AI 自动翻译，可能存在术语或语义偏差。如有疑问，请以<a href="./">英文原文</a>为准。</p>
+</div>
+<h1 id="_1">技能参考</h1>
+<p>beads-superpowers 附带 23 个可组合技能，通过 <code>Skill</code> 工具按需加载。引导技能 <code>using-superpowers</code> 在每次会话开始时加载，并将请求路由至适合当前任务的技能。技能为强制性要求——当某个技能适用时，智能体必须调用它。</p>
+<h2 id="_2">触发映射</h2>
+<p>UserPromptSubmit 钩子在每条消息时提醒智能体哪个技能适用于哪个任务：</p>
 <table>
 <thead>
 <tr>
-<th>Task</th>
-<th>Skill</th>
+<th>任务</th>
+<th>技能</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Bug or test failure</td>
+<td>Bug 或测试失败</td>
 <td><code>systematic-debugging</code></td>
 </tr>
 <tr>
-<td>Writing code</td>
+<td>编写代码</td>
 <td><code>test-driven-development</code></td>
 </tr>
 <tr>
-<td>New feature or design</td>
+<td>新功能或设计</td>
 <td><code>brainstorming</code></td>
 </tr>
 <tr>
-<td>Stress-test a design</td>
+<td>对设计进行压力测试</td>
 <td><code>stress-test</code></td>
 </tr>
 <tr>
-<td>Writing a plan</td>
+<td>编写计划</td>
 <td><code>writing-plans</code></td>
 </tr>
 <tr>
-<td>Executing a plan</td>
+<td>执行计划</td>
 <td><code>subagent-driven-development</code> / <code>executing-plans</code></td>
 </tr>
 <tr>
-<td>Research question</td>
+<td>研究性问题</td>
 <td><code>research-driven-development</code></td>
 </tr>
 <tr>
-<td>Complex task (6+ files)</td>
+<td>复杂任务（6+ 个文件）</td>
 <td><code>using-git-worktrees</code></td>
 </tr>
 <tr>
-<td>About to claim done</td>
+<td>即将声明完成</td>
 <td><code>verification-before-completion</code></td>
 </tr>
 <tr>
-<td>Code review needed</td>
+<td>需要代码审查</td>
 <td><code>requesting-code-review</code></td>
 </tr>
 <tr>
-<td>Received review feedback</td>
+<td>收到审查反馈</td>
 <td><code>receiving-code-review</code></td>
 </tr>
 <tr>
-<td>Writing human-facing prose</td>
+<td>编写面向用户的文本</td>
 <td><code>write-documentation</code></td>
 </tr>
 <tr>
-<td>Branch complete</td>
+<td>分支完成</td>
 <td><code>finishing-a-development-branch</code></td>
 </tr>
 <tr>
-<td>Consolidate or dedup memories</td>
+<td>整合或去重记忆</td>
 <td><code>memory-curator</code></td>
 </tr>
 </tbody>
 </table>
-<p>Also available: <code>document-release</code>, <code>getting-up-to-speed</code>, <code>dispatching-parallel-agents</code>, <code>project-init</code>, <code>setup</code>, <code>writing-skills</code>, <code>auditing-upstream-drift</code></p>
-<h2 id="by-category">By category</h2>
+<p>其他可用技能：<code>document-release</code>、<code>getting-up-to-speed</code>、<code>dispatching-parallel-agents</code>、<code>project-init</code>、<code>setup</code>、<code>writing-skills</code>、<code>auditing-upstream-drift</code></p>
+<h2 id="_3">按类别</h2>
 <table>
 <thead>
 <tr>
-<th>Category</th>
-<th>Skills</th>
+<th>类别</th>
+<th>技能</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Meta</strong></td>
+<td><strong>元</strong></td>
 <td><a href="#using-superpowers">using-superpowers</a>, <a href="#writing-skills">writing-skills</a></td>
 </tr>
 <tr>
-<td><strong>Design</strong></td>
+<td><strong>设计</strong></td>
 <td><a href="#brainstorming">brainstorming</a>, <a href="#writing-plans">writing-plans</a>, <a href="#stress-test">stress-test</a></td>
 </tr>
 <tr>
-<td><strong>Execution</strong></td>
+<td><strong>执行</strong></td>
 <td><a href="#subagent-driven-development">subagent-driven-development</a>, <a href="#executing-plans">executing-plans</a>, <a href="#dispatching-parallel-agents">dispatching-parallel-agents</a></td>
 </tr>
 <tr>
-<td><strong>Quality</strong></td>
+<td><strong>质量</strong></td>
 <td><a href="#test-driven-development">test-driven-development</a>, <a href="#systematic-debugging">systematic-debugging</a>, <a href="#verification-before-completion">verification-before-completion</a></td>
 </tr>
 <tr>
-<td><strong>Review</strong></td>
+<td><strong>审查</strong></td>
 <td><a href="#requesting-code-review">requesting-code-review</a>, <a href="#receiving-code-review">receiving-code-review</a></td>
 </tr>
 <tr>
-<td><strong>Infrastructure</strong></td>
+<td><strong>基础设施</strong></td>
 <td><a href="#using-git-worktrees">using-git-worktrees</a>, <a href="#finishing-a-development-branch">finishing-a-development-branch</a></td>
 </tr>
 <tr>
-<td><strong>Lifecycle</strong></td>
+<td><strong>生命周期</strong></td>
 <td><a href="#document-release">document-release</a>, <a href="#getting-up-to-speed">getting-up-to-speed</a>, <a href="#auditing-upstream-drift">auditing-upstream-drift</a>, <a href="#memory-curator">memory-curator</a></td>
 </tr>
 <tr>
-<td><strong>Setup</strong></td>
+<td><strong>设置</strong></td>
 <td><a href="#setup">setup</a>, <a href="#project-init">project-init</a></td>
 </tr>
 <tr>
-<td><strong>Research</strong></td>
+<td><strong>研究</strong></td>
 <td><a href="#research-driven-development">research-driven-development</a></td>
 </tr>
 <tr>
-<td><strong>Writing</strong></td>
+<td><strong>写作</strong></td>
 <td><a href="#write-documentation">write-documentation</a></td>
 </tr>
 </tbody>
@@ -1085,188 +1095,183 @@ graph TD
 Hold "Alt" / "Option" to enable pan &amp; zoom
 </div>
 </div>
-<h2 id="all-skills">All skills</h2>
+<h2 id="_4">所有技能</h2>
 <h3 id="using-superpowers">using-superpowers</h3>
-<p>Bootstrap skill injected at every session start. Routes the agent to the correct skill for the current task, and carries the production-grade doctrine that holds every session to a no-shortcuts, no-silent-descope, never-a-security-regression standard. It also carries the decision-capture convention: when a choice is hard to reverse, surprising, and a genuine trade-off, the agent offers to record an ADR in <code>decisions/</code>. All other skills depend on this one having loaded first.</p>
+<p>在每次会话开始时注入的引导技能。将智能体路由至当前任务对应的正确技能，并承载生产级行为规范，确保每个会话遵循无捷径、无静默缩减范围、永不引入安全回归的标准。它还承载决策捕获约定：当某个选择难以撤销、出乎意料且存在真实权衡时，智能体会提议在 <code>decisions/</code> 中记录一条 ADR。其他所有技能都依赖于此技能先行加载。</p>
 <h3 id="writing-skills">writing-skills</h3>
-<p>Meta-skill for creating and modifying skills. Enforces TDD-for-process-docs: new skills need a failing test before the SKILL.md is written. Frontmatter descriptions must be trigger conditions, not workflow summaries (see SDO in <a href="../methodology/">Methodology</a>).</p>
+<p>用于创建和修改技能的元技能。强制执行面向过程文档的 TDD：新技能在编写 SKILL.md 之前需要一个失败的测试。Frontmatter 描述必须是触发条件，而非工作流摘要（参见 <a href="../methodology/">方法论</a> 中的 SDO）。</p>
 <h3 id="brainstorming">brainstorming</h3>
-<p><strong>Trigger:</strong> Before any creative work — features, components, or behavior changes.</p>
-<p>Socratic design exploration. Asks structured questions to surface requirements, constraints, and design alternatives. Produces a committed design spec. Ends by invoking <code>writing-plans</code>, not by jumping to code.</p>
+<p><strong>触发条件：</strong> 任何创意性工作之前——功能、组件或行为变更。</p>
+<p>苏格拉底式设计探索。通过结构化提问来挖掘需求、约束条件和设计备选方案。产出已提交的设计规格说明。以调用 <code>writing-plans</code> 结束，而非直接跳转到代码。</p>
 <h3 id="writing-plans">writing-plans</h3>
-<p><strong>Trigger:</strong> When you have a spec or requirements for a multi-step task.</p>
-<p>Breaks a design into bite-sized tasks (2–5 minutes each) with exact file paths, code, and verification steps. Every task becomes a bead with dependency ordering.</p>
+<p><strong>触发条件：</strong> 当你拥有多步骤任务的规格说明或需求时。</p>
+<p>将设计分解为小粒度任务（每个 2–5 分钟），附带精确的文件路径、代码和验证步骤。每个任务都会成为一个带有依赖排序的 bead。</p>
 <h3 id="stress-test">stress-test</h3>
-<p><strong>Trigger:</strong> When a design or plan needs adversarial scrutiny. Also triggers on "grill me", "poke holes", "challenge this design".</p>
-<p>Interrogates every branch of the decision tree with recommended answers and structured <code>AskUserQuestion</code> responses (Agree / Disagree / Discuss further). Tracks branch resolution progress, writes findings inline (Mode A) or to a standalone report (Mode B), and runs a reflexion self-review before closing. Typically runs between brainstorming and writing-plans.</p>
+<p><strong>触发条件：</strong> 当设计或计划需要对抗性审视时。也可通过"grill me"、"poke holes"、"challenge this design"触发。</p>
+<p>针对决策树的每个分支进行审问，提供推荐答案和结构化的 <code>AskUserQuestion</code> 响应（同意 / 不同意 / 进一步讨论）。跟踪分支解决进度，将发现结果内联写入（模式 A）或写入独立报告（模式 B），并在关闭前执行反思式自我审查。通常在 brainstorming 和 writing-plans 之间运行。</p>
 <h3 id="subagent-driven-development">subagent-driven-development</h3>
-<p><strong>Trigger:</strong> When executing a plan with independent tasks.</p>
-<p>Dispatches a fresh subagent per task with a single read-only task review between tasks — one reviewer returns a spec-compliance verdict and a code-quality verdict in one pass. The orchestrator tracks beads; subagents don't touch them. When multiple tasks are unblocked, <strong>parallel batch mode</strong> runs up to 5 concurrently, each in its own worktree.</p>
+<p><strong>触发条件：</strong> 当执行包含独立任务的计划时。</p>
+<p>为每个任务派发一个新的子智能体，任务之间进行单次只读任务审查——一个审查者在一轮中返回规格说明合规判定和代码质量判定。编排者跟踪 bead；子智能体不接触它们。当多个任务解除阻塞时，<strong>并行批处理模式</strong>最多并发运行 5 个，每个在各自的 worktree 中运行。</p>
 <h3 id="executing-plans">executing-plans</h3>
-<p><strong>Trigger:</strong> When executing a plan in a single session with review checkpoints.</p>
-<p>Runs a multi-phase plan sequentially: claim, implement, verify against acceptance criteria, close, next phase. Designed to complement <code>writing-plans</code> output directly.</p>
+<p><strong>触发条件：</strong> 当在单个会话中执行带有审查检查点的计划时。</p>
+<p>按顺序运行多阶段计划：认领、实现、根据验收标准进行验证、关闭、下一阶段。专为直接配合 <code>writing-plans</code> 输出而设计。</p>
 <h3 id="dispatching-parallel-agents">dispatching-parallel-agents</h3>
-<p><strong>Trigger:</strong> When facing 2+ independent tasks without shared state.</p>
-<p>Coordinates concurrent subagents for independent work — plan tasks, subsystem changes, anything without shared mutable state. Used by SDD's parallel batch mode for the dispatch pattern.</p>
+<p><strong>触发条件：</strong> 当面临 2 个或更多无共享状态的独立任务时。</p>
+<p>协调并发子智能体执行独立工作——计划任务、子系统变更，以及任何无共享可变状态的工作。被 SDD 的并行批处理模式用于分发模式。</p>
 <h3 id="test-driven-development">test-driven-development</h3>
-<p><strong>Trigger:</strong> Before writing any implementation code.</p>
-<p>Iron Law: no production code without a failing test first — explicit failing-test output required before touching any implementation. RED-GREEN-REFACTOR, no shortcuts.</p>
+<p><strong>触发条件：</strong> 在编写任何实现代码之前。</p>
+<p>铁律：没有失败的测试就不能编写生产代码——在接触任何实现之前，必须提供明确的失败测试输出。RED-GREEN-REFACTOR，无捷径。</p>
 <h3 id="systematic-debugging">systematic-debugging</h3>
-<p><strong>Trigger:</strong> Any bug, test failure, or unexpected behavior — before proposing fixes.</p>
-<p>Four-phase root cause analysis: observe, hypothesize, isolate, fix. Requires a confirmed root cause before any code change. Blocks "just try this and see."</p>
+<p><strong>触发条件：</strong> 任何 bug、测试失败或意外行为——在提出修复方案之前。</p>
+<p>四阶段根本原因分析：观察、假设、隔离、修复。在进行任何代码变更之前，需要确认根本原因。杜绝"试一试看看"的做法。</p>
 <h3 id="verification-before-completion">verification-before-completion</h3>
-<p><strong>Trigger:</strong> Before claiming work is done, fixed, or passing.</p>
-<p>The agent must run verification commands and show actual output — not assert from memory — before closing a bead or creating a PR. Evidence before assertions.</p>
+<p><strong>触发条件：</strong> 在声明工作已完成、已修复或已通过之前。</p>
+<p>智能体在关闭 bead 或创建 PR 之前，必须运行验证命令并展示实际输出——而非凭记忆断言。断言之前先出示证据。</p>
 <h3 id="requesting-code-review">requesting-code-review</h3>
-<p><strong>Trigger:</strong> After completing tasks, major features, or before merging.</p>
-<p>Dispatches a code reviewer subagent that checks the diff against the original requirements, reporting strengths, issues grouped by severity, and an overall assessment. The reviewer gets the original requirements alongside the diff.</p>
+<p><strong>触发条件：</strong> 完成任务、主要功能之后，或合并之前。</p>
+<p>派发代码审查子智能体，对照原始需求检查差异，报告优点、按严重程度分组的问题和总体评估。审查者在获得差异的同时也收到原始需求。</p>
 <h3 id="receiving-code-review">receiving-code-review</h3>
-<p><strong>Trigger:</strong> When review feedback arrives, especially if unclear or questionable.</p>
-<p>Anti-sycophancy protocol: requires technical evaluation of each suggestion rather than blind acceptance, with disagreements escalated explicitly.</p>
+<p><strong>触发条件：</strong> 当审查反馈到达时，尤其是在反馈不清晰或存疑时。</p>
+<p>反谄媚协议：要求对每条建议进行技术评估，而非盲目接受，并明确升级处理分歧。</p>
 <h3 id="using-git-worktrees">using-git-worktrees</h3>
-<p><strong>Trigger:</strong> Feature work needing isolation, or before executing plans.</p>
-<p>Creates and manages isolated git worktrees via <code>bd worktree</code>. Pre-flight checks detect existing worktree isolation, submodule contexts, and prompt for consent (skipped when SDD-dispatched). Supports multiple concurrent worktrees for parallel subagent work — one per task, max 5. Use <code>bd -C .worktrees/&lt;name&gt;</code> for cross-worktree commands.</p>
+<p><strong>触发条件：</strong> 需要隔离的功能工作，或在执行计划之前。</p>
+<p>通过 <code>bd worktree</code> 创建和管理隔离的 git worktree。预检查检测现有的 worktree 隔离、子模块上下文，并提示征得同意（当由 SDD 派发时跳过）。支持用于并行子智能体工作的多个并发 worktree——每个任务一个，最多 5 个。使用 <code>bd -C .worktrees/&lt;name&gt;</code> 执行跨 worktree 命令。</p>
 <h3 id="finishing-a-development-branch">finishing-a-development-branch</h3>
-<p><strong>Trigger:</strong> Implementation complete, tests pass, ready to integrate.</p>
-<p>Detects environment (normal repo, named-branch worktree, or detached HEAD) and adapts options — 4 choices for normal/worktree, 3 for detached HEAD (no merge). Provenance-based cleanup only removes <code>.worktrees/</code> paths. Ends with the mandatory Land the Plane sequence: <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code>.</p>
+<p><strong>触发条件：</strong> 实现完成、测试通过、准备集成。</p>
+<p>检测环境（普通仓库、命名分支 worktree 或游离 HEAD），并调整选项——普通/worktree 模式 4 个选项，游离 HEAD 模式 3 个选项（无合并）。基于来源的清理仅移除 <code>.worktrees/</code> 路径。以强制性的 Land the Plane 序列结束：<code>bd close</code> → <code>bd dolt push</code> → <code>git push</code>。</p>
 <h3 id="document-release">document-release</h3>
-<p><strong>Trigger:</strong> After code changes are committed, before PR merge.</p>
-<p>Walks through README, CHANGELOG, CLAUDE.md, CONTRIBUTING, and other docs to find and fix drift against shipped code. A coverage map catches docs that are missing entirely — a new flag or command with no reference page — not only stale ones, and each CHANGELOG entry is scored against a what-changed, why-care, how-to-use test.</p>
+<p><strong>触发条件：</strong> 代码变更提交后、PR 合并前。</p>
+<p>遍历 README、CHANGELOG、CLAUDE.md、CONTRIBUTING 及其他文档，查找并修复与已发布代码之间的偏差。覆盖率地图不仅能捕获过时的文档，还能发现完全缺失的文档——例如没有参考页面的新标志或命令——并对每条 CHANGELOG 条目按"变更了什么、为何值得关注、如何使用"进行评分。</p>
 <h3 id="getting-up-to-speed">getting-up-to-speed</h3>
-<p><strong>Trigger:</strong> Session start, after compaction, or "catch me up" / "where are we".</p>
-<p>Runs <code>bd prime</code>, deep-dives the codebase (adaptive to repo size), and produces a structured current-state summary. A pre-emit verification gate holds every claim in that summary to a command actually run in the session, and a beads-versus-git check flags work that shipped but was left open.</p>
+<p><strong>触发条件：</strong> 会话开始、压缩后，或"catch me up"/"where are we"。</p>
+<p>运行 <code>bd prime</code>，深入研究代码库（自适应仓库大小），并生成结构化的当前状态摘要。预发布验证门将摘要中的每个声明都与会话中实际运行的命令相对应，beads 与 git 的对比检查会标记已发布但仍处于开放状态的工作。</p>
 <h3 id="auditing-upstream-drift">auditing-upstream-drift</h3>
-<p><strong>Trigger:</strong> Before a plugin release, or when checking for staleness.</p>
-<p>Audits against <a href="https://github.com/obra/superpowers">obra/superpowers</a> and <a href="https://github.com/gastownhall/beads">gastownhall/beads</a> for new skills, changed commands, and documentation improvements to port.</p>
+<p><strong>触发条件：</strong> 插件发布前，或检查过时情况时。</p>
+<p>对照 <a href="https://github.com/obra/superpowers">obra/superpowers</a> 和 <a href="https://github.com/gastownhall/beads">gastownhall/beads</a> 进行审计，检查需要移植的新技能、已变更的命令和文档改进。</p>
 <h3 id="memory-curator">memory-curator</h3>
-<p><strong>Trigger:</strong> At session-close when several new memories were captured, or on-demand for a full sweep.</p>
-<p>Turns a session's raw <code>bd remember</code> notes into well-structured, deduplicated, consolidated memories using the in-session agent — no runtime, key, or embeddings. The scope is deliberately evidence-led (ADR-0034): quality-gated capture, reflection-consolidation, and pruning, not structural richness. It never mutates the store silently — it proposes a reviewed command list, and you approve before anything is written.</p>
+<p><strong>触发时机：</strong> 会话结束时已捕获多条新记忆，或按需进行全量整理。</p>
+<p>将会话中原始的 <code>bd remember</code> 笔记，通过会话内智能体转化为结构良好、去重整合后的记忆——无需运行时环境、密钥或嵌入向量。其范围刻意以证据为导向（ADR-0034）：质量把关的捕获、反思式整合与修剪，而非追求结构丰富性。它绝不会静默修改记忆库——它会提出一份经过审查的命令列表，由你确认后才写入。</p>
 <h3 id="setup">setup</h3>
-<p><strong>Trigger:</strong> After npx install, or when skills aren't activating.</p>
-<p>Registers the SessionStart hook in <code>.claude/settings.json</code> so skills activate automatically. The plugin's session-start hook automatically detects <code>bd setup claude</code> hooks and skips duplicate <code>bd prime</code> calls.</p>
+<p><strong>触发条件：</strong> npx 安装后，或技能未激活时。</p>
+<p>在 <code>.claude/settings.json</code> 中注册 SessionStart 钩子，使技能自动激活。插件的 session-start 钩子自动检测 <code>bd setup claude</code> 钩子，并跳过重复的 <code>bd prime</code> 调用。</p>
 <h3 id="project-init">project-init</h3>
-<p><strong>Trigger:</strong> When <code>bd</code> commands fail, setting up beads in a new project, or recovering from diverged Dolt history.</p>
-<p>Three paths: fresh init, bootstrap from remote, or recovery when Dolt history has diverged.</p>
+<p><strong>触发条件：</strong> 当 <code>bd</code> 命令失败、在新项目中设置 Beads，或从分叉的 Dolt 历史中恢复时。</p>
+<p>三条路径：全新初始化、从远端引导，或在 Dolt 历史分叉时进行恢复。</p>
 <h3 id="research-driven-development">research-driven-development</h3>
-<p><strong>Trigger:</strong> Research questions, "what is X", "how does Y work", "compare A vs B".</p>
-<p>Decomposes the topic into sub-questions, dispatches one researcher per sub-question in parallel (plus <code>@explore</code> for codebase-relevant topics), verifies each load-bearing claim against a verbatim source quote, and synthesizes findings into a persistent document with per-finding confidence. Iron Law: no research without a document — verbal answers without persistent artifacts are prohibited.</p>
+<p><strong>触发条件：</strong> 研究性问题、"what is X"、"how does Y work"、"compare A vs B"。</p>
+<p>将主题分解为子问题，并行为每个子问题派发一名研究者（以及针对代码库相关主题的 <code>@explore</code>），对照逐字来源引用验证每个关键性声明，并将发现综合到带有每条发现置信度的持久性文档中。铁律：没有文档就没有研究——禁止给出没有持久性制品的口头答案。</p>
 <h3 id="write-documentation">write-documentation</h3>
-<p><strong>Trigger:</strong> Writing or rewriting human-facing prose — docs, guides, emails, PR descriptions, release notes.</p>
-<p>14-rule writing system adapted from <a href="https://github.com/Anbeeld/WRITING.md">WRITING.md</a>. Context-first drafting, required checks as revision pass, targets the patterns that make LLM prose recognizable (regularity, catalog prose, false crispness). Pairs with <code>document-release</code> (which handles <em>when</em> to update, not <em>how</em> to write).</p>
-<h2 id="beads-commands">Beads commands</h2>
-<p>Skills use <code>bd</code> commands to track work. Only the orchestrating agent manages beads — subagents don't touch them.</p>
+<p><strong>触发条件：</strong> 编写或改写面向用户的文本——文档、指南、电子邮件、PR 描述、发布说明。</p>
+<p>改编自 <a href="https://github.com/Anbeeld/WRITING.md">WRITING.md</a> 的 14 条写作规则体系。以上下文优先起草，将必要检查作为修订轮次，针对使 LLM 文本易于识别的模式（规律性、目录式文本、虚假简洁）。与 <code>document-release</code> 配合使用（后者处理<em>何时</em>更新，而非<em>如何</em>写作）。</p>
+<h2 id="beads">Beads 命令</h2>
+<p>技能使用 <code>bd</code> 命令跟踪工作。只有编排智能体管理 bead——子智能体不接触它们。</p>
 <table>
 <thead>
 <tr>
-<th>Action</th>
-<th>Command</th>
-<th>Used in</th>
+<th>操作</th>
+<th>命令</th>
+<th>使用于</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Create epic</td>
+<td>创建史诗</td>
 <td><code>bd create "Epic: name" -t epic</code></td>
 <td>SDD, executing-plans</td>
 </tr>
 <tr>
-<td>Create task</td>
+<td>创建任务</td>
 <td><code>bd create "Task: name" -t task --parent &lt;epic&gt;</code></td>
 <td>SDD, executing-plans</td>
 </tr>
 <tr>
-<td>Atomic plan creation</td>
-<td><code>bd create --graph plan.json [--dry-run]</code></td>
-<td>writing-plans, SDD</td>
-</tr>
-<tr>
-<td>Quick capture</td>
+<td>快速捕获</td>
 <td><code>bd q "title"</code></td>
-<td>any skill</td>
+<td>任意技能</td>
 </tr>
 <tr>
-<td>Claim work</td>
+<td>认领工作</td>
 <td><code>bd update &lt;id&gt; --claim</code></td>
 <td>executing-plans</td>
 </tr>
 <tr>
-<td>Complete work</td>
+<td>完成工作</td>
 <td><code>bd close &lt;id&gt; --reason "why"</code></td>
-<td>all execution skills</td>
+<td>所有执行类技能</td>
 </tr>
 <tr>
-<td>Check remaining</td>
+<td>检查剩余</td>
 <td><code>bd ready --parent &lt;epic&gt;</code></td>
 <td>SDD, executing-plans</td>
 </tr>
 <tr>
-<td>Compound query</td>
+<td>复合查询</td>
 <td><code>bd query "status=open AND priority&lt;=1"</code></td>
-<td>getting-up-to-speed (replaces <code>bd list</code> + jq)</td>
+<td>getting-up-to-speed（替代 <code>bd list</code> + jq）</td>
 </tr>
 <tr>
-<td>Grouped counts</td>
+<td>分组计数</td>
 <td><code>bd count --by-status</code></td>
-<td>getting-up-to-speed (also <code>--by-priority</code>/<code>--by-type</code>)</td>
+<td>getting-up-to-speed（也可用 <code>--by-priority</code>/<code>--by-type</code>）</td>
 </tr>
 <tr>
-<td>Add dependency</td>
+<td>添加依赖</td>
 <td><code>bd dep add &lt;child&gt; &lt;parent&gt;</code></td>
 <td>SDD, writing-plans</td>
 </tr>
 <tr>
-<td>Store learning</td>
+<td>存储学习</td>
 <td><code>bd remember "insight"</code></td>
-<td>21 of 23 skills prompt for this</td>
+<td>23 个技能中的 21 个会提示执行此操作</td>
 </tr>
 <tr>
-<td>Attach evidence</td>
+<td>附加证据</td>
 <td><code>bd note &lt;id&gt; "context"</code></td>
 <td>verification</td>
 </tr>
 <tr>
-<td>Explain dependencies</td>
+<td>解释依赖</td>
 <td><code>bd ready --explain</code></td>
 <td>systematic-debugging, executing-plans</td>
 </tr>
 <tr>
-<td>Atomic batch ops</td>
+<td>原子批量操作</td>
 <td><code>bd batch</code> (stdin)</td>
 <td>SDD, executing-plans, finishing-branch</td>
 </tr>
 <tr>
-<td>Cross-worktree ops</td>
+<td>跨 worktree 操作</td>
 <td><code>bd -C &lt;path&gt; &lt;cmd&gt;</code></td>
 <td>using-git-worktrees, SDD</td>
 </tr>
 <tr>
-<td>Lint issue sections</td>
+<td>检查问题章节</td>
 <td><code>bd lint [id...]</code></td>
-<td>writing-plans (self-review)</td>
+<td>writing-plans（自我审查）</td>
 </tr>
 <tr>
-<td>Defer work</td>
+<td>推迟工作</td>
 <td><code>bd defer &lt;id&gt; --until="&lt;date&gt;"</code></td>
 <td>executing-plans</td>
 </tr>
 <tr>
-<td>Flag for human decision</td>
+<td>标记人工决策</td>
 <td><code>bd human &lt;id&gt;</code></td>
 <td>executing-plans</td>
 </tr>
 <tr>
-<td>Validate parallel readiness</td>
+<td>验证并行就绪状态</td>
 <td><code>bd swarm validate &lt;epic&gt;</code></td>
-<td>SDD (parallel batch)</td>
+<td>SDD（并行批处理）</td>
 </tr>
 <tr>
-<td>Sync to remote</td>
+<td>同步到远端</td>
 <td><code>bd dolt push</code></td>
 <td>finishing-a-development-branch</td>
 </tr>
 </tbody>
 </table>
-<h2 id="how-skills-chain">How skills chain</h2>
+<h2 id="_5">技能链式调用</h2>
 <div class="panzoom-box" data-key="alt" id="panzoom0" oncontextmenu="return false;">
     
     <nav class="panzoom-nav">
@@ -1318,7 +1323,7 @@ graph TD
 Hold "Alt" / "Option" to enable pan &amp; zoom
 </div>
 </div>
-<p>Edges show direct skill-to-skill invocations only — transitions managed by the orchestrator (e.g., verification → document-release → finishing) are omitted. Dashed edges are optional. Skills like <code>systematic-debugging</code>, <code>verification-before-completion</code>, and <code>receiving-code-review</code> fire whenever their trigger is met, regardless of workflow position.</p>
+<p>边仅显示技能对技能的直接调用——由编排者管理的过渡（例如，verification → document-release → finishing）已省略。虚线边为可选调用。<code>systematic-debugging</code>、<code>verification-before-completion</code> 和 <code>receiving-code-review</code> 等技能，只要满足其触发条件，无论处于工作流的哪个位置都会触发。</p>
 
 
 
@@ -1338,20 +1343,20 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     
       
   <span class="md-source-file__fact">
-    <span class="md-icon" title="Last update">
+    <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 27, 2026 18:51:36 UTC">June 27, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年6月27日 18:51:36 UTC">2026年6月27日</span>
   </span>
 
     
     
       
   <span class="md-source-file__fact">
-    <span class="md-icon" title="Created">
+    <span class="md-icon" title="创建日期">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="May 2, 2026 07:50:58 UTC">May 2, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年6月27日 18:00:57 UTC">2026年6月27日</span>
   </span>
 
     
@@ -1374,7 +1379,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
           <button type="button" class="md-top md-icon" data-md-component="top" hidden>
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
-  Back to top
+  回到页面顶部
 </button>
         
       </main>
@@ -1383,33 +1388,33 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
   
     
       
-      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
         
           
-          <a href="../methodology/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Methodology">
+          <a href="../methodology/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 方法论">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
             </div>
             <div class="md-footer__title">
               <span class="md-footer__direction">
-                Previous
+                上一页
               </span>
               <div class="md-ellipsis">
-                Methodology
+                方法论
               </div>
             </div>
           </a>
         
         
           
-          <a href="../workflow/" class="md-footer__link md-footer__link--next" aria-label="Next: Example Workflow">
+          <a href="../workflow/" class="md-footer__link md-footer__link--next" aria-label="下一页: 工作流示例">
             <div class="md-footer__title">
               <span class="md-footer__direction">
-                Next
+                下一页
               </span>
               <div class="md-ellipsis">
-                Example Workflow
+                工作流示例
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -1461,14 +1466,18 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "toc.integrate", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
-        <script src="../assets/javascripts/panzoom.min.js"></script>
+        <script src="../../assets/javascripts/panzoom.min.js"></script>
       
-        <script src="../assets/javascripts/zoompan.js"></script>
+        <script src="../../assets/javascripts/zoompan.js"></script>
+      
+        <script src="../../assets/javascripts/panzoom.min.js"></script>
+      
+        <script src="../../assets/javascripts/zoompan.js"></script>
       
     
   </body>
