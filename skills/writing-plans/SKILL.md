@@ -224,6 +224,8 @@ bd remember "pattern: <planning insight for future tasks>"
 
 > When filing a bead for discovered/follow-up work, stamp it per **Agent-Filed Bead Discipline** (`verification-before-completion`).
 
+**Capturing decisions:** if planning locked an architecturally-significant choice not already recorded, offer an ADR per **Capturing Decisions** (`using-superpowers`) — only when the 3-gate holds.
+
 ## Execution Handoff
 
 After the plan is approved, **use the `AskUserQuestion` tool** to offer the execution choice:
