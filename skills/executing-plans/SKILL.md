@@ -21,17 +21,37 @@ Load plan, review critically, execute all tasks, report when complete.
 3. If concerns: Raise them with your human partner before starting
 4. If no concerns: Create epic bead and child beads for each task, then proceed
 
-   ```bash
-   # Create epic — use --acceptance for success criteria
-   bd create "Epic: <plan-name>" -t epic --acceptance "All tasks pass, tests green"
+   Build a JSON plan file (`plan.json`) with the graph schema:
 
-   # Create tasks — use --body-file for long descriptions, --acceptance for done criteria
-   # Use --silent to capture the ID for dependency wiring
-   TASK_ID=$(bd create "Task N: <title>" -t task --parent <epic-id> \
-     --body-file <step-details-file> \
-     --acceptance "<done criteria>" \
-     --silent)
+   ```json
+   {
+     "nodes": [
+       {"key": "epic1", "title": "Epic: <plan-name>", "type": "epic", "priority": 2},
+       {"key": "t1", "title": "Task 1: <title>", "type": "task", "priority": 2, "parent_key": "epic1"},
+       {"key": "t2", "title": "Task 2: <title>", "type": "task", "priority": 2, "parent_key": "epic1"}
+     ],
+     "edges": [
+       {"from_key": "t2", "to_key": "t1"}
+     ]
+   }
    ```
+
+   Edge direction: `from_key` = dependent task (needs `to_key` done first).
+
+   ```bash
+   # Validate structure without writing:
+   bd create --graph plan.json --dry-run
+
+   # Create all nodes and edges atomically:
+   bd create --graph plan.json
+   ```
+
+   > **Fallback** (if `--graph` is unavailable — older bd or schema skew): fall back to the sequential `bd create`/`bd dep add` loop:
+   > ```bash
+   > bd create "Epic: <plan-name>" -t epic --acceptance "All tasks pass, tests green"
+   > bd create "Task 1: <title>" -t task --parent <epic-id>
+   > bd dep add <task-2-id> <task-1-id>
+   > ```
 
    > **Tip — rich bead fields:**
    > - `--body-file <file>` — avoids shell escaping issues with multi-line descriptions
