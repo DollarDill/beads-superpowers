@@ -1,113 +1,106 @@
 ---
 name: memory-curator
-description: Use at session-close (when the session produced several new memories) or on-demand to consolidate, deduplicate, and structure the beads memory store
+description: Use at session-close when a session captured several new memories, or on-demand, to consolidate, deduplicate, prune, and structure the beads memory store. Triggers on "curate memories", "clean up memories", "memory sweep".
 ---
 
 # Memory Curator
 
-## Overview
-
-Turn a session's raw `bd remember` notes into well-structured, deduplicated, consolidated memories — and prune the growing pile — using the in-session agent. No runtime, no API key, no embeddings: just `bd` primitives over text the agent already has in context.
+Turn a session's raw `bd remember` notes into deduplicated, consolidated, well-structured
+memories — and prune the pile — using `bd` over text already in context. No runtime, no embeddings.
 
 **Announce at start:** "I'm using the memory-curator skill to consolidate and structure the memory store."
 
-**Scope is deliberate (ADR-0034, evidence-led split).** The proven levers are quality-gating, consolidation, and pruning — NOT structural richness. This skill does those. It does NOT build a graph, self-evolving links, a bi-temporal DB, or embeddings; richer-but-unproven structure is explicitly out of scope (the independent evidence shows naive memory growth hurts).
-
 ## When to Use
-
-- **Offered at session-close** when the session produced curation-worthy volume (roughly 3+ new `bd remember` calls). Confirm-never-auto.
-- **On-demand** for a heavier consolidation/prune sweep across the whole memory store: invoke `Skill(memory-curator)`.
+- **Session-close** — when the session produced ~3+ new `bd remember` calls. Offered, never automatic.
+- **On-demand** — a full-store sweep: `Skill(memory-curator)`.
 
 ## When NOT to Use
+- Sessions with 0–2 new memories — not worth a pass.
+- Mid-task — run at a clean stopping point, not while work is in flight.
 
-- Trivial sessions that captured 0–2 memories — not worth a pass.
-- Mid-task — this runs at a clean stopping point, not while work is in flight.
+## Memory taxonomy
+Two classes; **procedural** memory (how-to / workflow) lives in the **skills**, never the memory store.
 
-## The Memory Schema (moderate, backward-compatible)
+- **semantic** — durable facts that stay true. Subtypes: `design`, `lesson`, `pattern`, `decision`,
+  `root-cause`, `research`, `correction`. The durable keep.
+- **episodic** — time-bound records of what happened. Subtypes: `done`, `continuation`, `cleanup`,
+  `review`. Consolidate and retire as they age; a cluster often distills into one semantic fact.
 
-Keep existing key slugs and the established prefixes (`design:`, `root cause:`, `lesson:`, `research:`, …) — they already are a type system. Add one optional, greppable header line to the body:
+Map a non-canonical prefix to the nearest canonical subtype — e.g. `stress-test`/`plan-stress-test`→`design`,
+`bug`→`root-cause`, `sdd`→`lesson`, `upstream`→`research`, `docs`→`pattern`. If none fits, ask — don't
+invent. If an extracted "memory" is really procedural, flag it for a skill — don't store it.
+
+## Memory header
+Every memory keeps its existing key and carries one greppable header line:
 
 ```
-@type=design @created=2026-06-28 @salience=4 @refs=rki7,2rbo @tags=memory,adr
-<the existing self-contained fact body>
+@type=semantic:lesson @created=2026-06-28 @salience=4 @refs=<bead-id>,<memory-key> @tags=memory,curation
+<self-contained fact body>
 ```
 
-- `@type` — the existing prefix vocabulary (do NOT rename to CoALA types; that churns memories for no proven gain).
-- `@created` — ISO date (recency signal).
-- `@salience` — 1–5, best-effort (least-reliable field; don't over-invest).
-- `@refs` — related bead IDs / memory keys (in-text link signal).
-- `@tags` — lexical-filter signal.
+- `@type` — `<class>:<subtype>` from the taxonomy. `@created` — ISO date. `@salience` — 1–5, best-effort.
+  `@refs` — related bead IDs / memory keys. `@tags` — lexical filter.
 
-These fields pay off **today**: the agent reading the `bd prime` dump can self-rank on them, and `bd memories <kw>` + `grep '^@type='` / `@salience=[45]` gives filtered recall now — independent of any upstream change. Keep the header to ONE compact line.
+One line. The class makes the prune signal greppable (`bd memories | grep '@type=episodic:'`);
+`@salience`/`@tags` filter recall.
 
-## The Algorithm (single pass)
+## The sweep
+One pass. Input: the session (in context) + `bd memories --json`. Output: a **reviewed** list of
+`bd remember` / `bd forget` commands. Propose least-destructive changes first (enrich + exact-duplicate
+dedup); cross-cluster consolidation and pruning come after, and only where clearly safe.
 
-Input: the session transcript (already in context) + `bd memories --json` (the full store). Output: a **reviewed** list of `bd remember` / `bd forget` commands.
+1. **Gather** — `bd memories --json` for the full store; `bd dolt status` to record the pre-sweep
+   state for rollback.
+2. **Extract** — pull salient, self-contained, date-grounded facts; classify each by the taxonomy and
+   normalize its `@type` to `class:subtype` (fixing stray `type-*` keys and any leaked `class:subtype`
+   placeholder on contact). Store a fact ONLY if it carries checkable evidence (cited `file:line`,
+   passing test, command output, closed bead) — the same bar as Agent-Filed Bead Discipline in
+   `verification-before-completion`. No evidence → drop, or store at low `@salience`. Procedural how-to
+   → flag for a skill, don't store. **Never persist secrets, tokens, or PII** — `bd prime` injects every
+   memory into future sessions and Dolt history outlives `bd forget`.
+3. **Reconcile** — ADD new facts; UPDATE a same-topic memory in place with `bd remember --key <existing>`,
+   merging so the result keeps the MOST information (never silently shrink); skip what's already present.
+4. **Consolidate** — collapse a themed cluster of **episodic** memories into one timeless **semantic**
+   fact with `@refs` to its sources, then retire the cluster. The only step that shrinks the pile.
+   Extract a record's durable content into a semantic memory BEFORE retiring it — never drop an episodic
+   record that still holds an un-consolidated fact.
+5. **Forget** — soft-tombstone a superseded memory (`[superseded YYYY-MM-DD by <key>]`) rather than
+   delete — Dolt keeps history either way, and a tombstone is reversible if the supersede was wrong.
+   Episodic records are the prune-first *candidates*, but never retire the most-recent `continuation` /
+   active handoff. Reserve hard `bd forget` for exact duplicates or true noise, with a cited reason.
 
-**Phase 0 — Gather (no LLM).** Run `bd memories --json` for the full store. Record the pre-sweep Dolt state for rollback: `bd dolt status` (note the current state so a bad run can be reverted).
+## Iron rule: propose, then apply
+This mutates the store `bd prime` injects into every future session — a bad run corrupts the context
+layer invisibly. So:
 
-**Phase 1 — Extract (quality-gated + secrets-screened).** From the session, pull salient, self-contained, **date-grounded** facts; classify each by `@type`.
-
-- **Evidence-bar gate (load-bearing):** store a fact as a durable memory ONLY if it carries checkable evidence per `verification-before-completion`'s Agent-Filed Bead Discipline (cited `file:line` / passing test / command output / closed bead). No evidence → drop it, or store as a low-`@salience` item the sweep prunes first. This is the same evidence test the project enforces on filed beads — not a self-graded "verified" (which would inherit the over-trust bias it is meant to filter).
-- **Secrets rule (security, mandatory):** NEVER persist secrets, credentials, tokens, keys, or PII. Redact or skip — don't store it in the first place, because `bd prime` dumps memories into every future session and Dolt history outlives `bd forget`.
-- Return nothing for unverified speculation or chatter.
-
-**Phase 2 — Reconcile in-place** against the full store (no vector retrieval needed at this scale):
-
-- **ADD** — new info absent from the store → `bd remember "<header line>\n<body>"`.
-- **UPDATE** — same topic, more/merged info → `bd remember --key <existing-key>` (keep the key; merge so the result keeps the fact with the MOST information — never silently shrink a memory).
-- **NONE** — already present → no command.
-
-**Phase 3 — Consolidate (the only volume-reducer).** When a themed cluster of dated episodic memories can become one timeless semantic/procedural fact, synthesize it with in-text source citations (`@refs=`) and retire the cluster. This is what shrinks the pile.
-
-**Phase 4 — Forget (invalidate-over-delete).** For a contradicted/superseded memory, prefer a soft tombstone — rewrite its body with a `[superseded YYYY-MM-DD by <key>]` prefix — over hard deletion (Dolt preserves history either way). Reserve hard `bd forget` for exact duplicates or true noise, and only with a cited reason.
-
-## Safety: Propose-Then-Apply (HARD requirement)
-
-This skill mutates the store that `bd prime` injects into EVERY future session, non-deterministically. A bad run corrupts the context layer invisibly. Therefore:
-
-1. **Never mutate silently.** First emit the full planned command list — each ADD/UPDATE/FORGET/consolidate with a one-line reason — and get the user's confirmation before running ANY of it. The on-demand sweep is dry-run-first, always.
-2. **Dolt-revert backstop.** You recorded the pre-sweep Dolt state in Phase 0; surface it so a bad run can be rolled back wholesale.
-3. **Bounded destructive ops.** No hard `bd forget` without an exact-duplicate match or a cited supersede reason; default to soft-invalidate; UPDATE must preserve nuance.
-
-## Phased Rollout (prove-it-first)
-
-v1 leads with the **least-destructive** jobs — capture-enrichment + exact-duplicate dedup. Aggressive cross-cluster consolidation and pruning is a second gear: use it sparingly until the conservative pass has proven trustworthy on this repo (the dry-run review IS the validation loop). Watch the memory-count trend and spot-check that no true fact was lost. Do not chase memory benchmarks — they are gamed.
-
-## Beads Integration
-
-```bash
-# At skill start
-bd create "Memory curation: <session/sweep>" -t chore
-
-# At completion (after the user approved + you applied the command list)
-bd close <id> --reason "Curated: <N added, M updated, K consolidated, J forgotten>; pre-sweep Dolt state <ref>"
-```
-
-Only the orchestrating agent runs this skill (subagents skip `using-superpowers` via SUBAGENT-STOP). Coordinates with `getting-up-to-speed`, whose session-start `bd forget` is a lightweight orientation cleanup — this skill owns substantive curation.
+- Emit the full planned command list — every ADD / UPDATE / CONSOLIDATE / FORGET with a one-line reason —
+  and get the user's approval before running ANY of it. The on-demand sweep is dry-run-first, always.
+- Surface the pre-sweep Dolt state (step 1) as the rollback path.
+- No hard `bd forget` without an exact-duplicate match or a cited supersede reason.
 
 ## Red Flags
-
 | Thought | Reality |
 |---------|---------|
-| "I'll just apply the merges directly" | Never mutate silently. Propose the command list; the user confirms first. |
-| "This memory is probably fine to store" | No cited evidence → it doesn't meet the bar. Drop or mark low-salience. |
-| "I'll keep the shorter version on UPDATE" | UPDATE keeps the fact with the MOST information. Never silently shrink. |
-| "A graph/links would be richer" | Out of scope (ADR-0034). Unproven + over-build risk. |
-| "There might be a token in this fact, but it's internal" | Never persist secrets/PII. Redact or skip. |
-| "Consolidating aggressively will shrink the pile fast" | Phased: enrich+dedup first; aggressive consolidation only once proven. |
+| "I'll just apply the merges" | Never mutate silently. Propose the list; the user approves first. |
+| "This memory is probably fine to store" | No cited evidence → it doesn't meet the bar. Drop or low-salience. |
+| "I'll keep the shorter version on UPDATE" | UPDATE keeps the MOST information. Never silently shrink. |
+| "Consolidate hard to shrink fast" | Lose no distinct fact; extract durable content to semantic first, then retire. |
+| "Episodic, so safe to drop" | Never retire the latest continuation/handoff; soft-tombstone, never hard-delete. |
+| "There might be a token in here, but it's internal" | Never persist secrets/PII. Redact or skip. |
+
+## Beads Integration
+```bash
+bd create "Memory curation: <session/sweep>" -t chore
+# after the user approved + you applied:
+bd close <id> --reason "Curated: <N added, M updated, K consolidated, J forgotten>; pre-sweep Dolt <ref>"
+```
+Only the orchestrating agent runs this (subagents skip `using-superpowers`).
 
 ## Integration
+**Invoked by:** the orchestrator at session-close (offered when a session produced ~3+ new memories —
+see `finishing-a-development-branch` Step 7) and the user on-demand.
+**Pairs with:** `verification-before-completion` (supplies the evidence bar) and `getting-up-to-speed`
+(its session-start `bd forget` is lightweight cleanup; this skill owns curation).
 
-**Invoked by:**
-
-- The orchestrator at session-close (offered when the session produced ≥~3 new memories) — see `finishing-a-development-branch` Step 7 and the Session Close Protocol.
-- The user on-demand via `Skill(memory-curator)` for a full sweep.
-
-**Pairs with:**
-
-- **verification-before-completion** — supplies the evidence-bar the quality gate reuses.
-- **getting-up-to-speed** — its session-start `bd forget` is lightweight cleanup; this skill owns curation.
-- **finishing-a-development-branch** — hosts the conditional session-close offer.
-
-> **Upstream dependency note (multiplier, not prerequisite):** ranked/selective surfacing (`bd prime` top-N) is owned by upstream beads. This skill delivers value with zero upstream changes (dedup/consolidate shrinks the dump by count); the `@type/@salience/@created` fields are also exactly what a future ranked `bd prime` would consume. Tracking: see the upstream feature-request bead.
+Memories arrive header-less from other skills; the curator assigns `@type` on contact. Do not add
+`@type` emission to other skills — header-less-until-curated is the intended state.
