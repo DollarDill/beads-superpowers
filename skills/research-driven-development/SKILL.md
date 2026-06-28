@@ -129,7 +129,7 @@ Dispatch **exactly one** `@explore` agent (`subagent_type: "Explore"`) **only wh
 
 ## Step 4: Synthesize + Verify Findings
 
-After the agents return, the **orchestrator** (you) synthesizes. The three review touches operate at distinct granularities — claim-level here, coverage-level in Step 4.5, document-level in the Step 5 checklist — and are not redundant.
+After the agents return, you synthesize. The three review touches operate at distinct granularities — claim-level here, coverage-level in Step 4.5, document-level in the Step 5 checklist — and are not redundant.
 
 1. **Merge findings** — combine the sub-question results + codebase findings; merge semantic duplicates.
 2. **Verify soundness (the one claim-verification pass)** — for each **load-bearing** claim, check it against the **verbatim quote** the agent returned and confirm the source *actually supports* it (entailment, not topical proximity). Drop or downgrade unsupported claims. Tag each load-bearing claim inline with its source (`[S1]`).
@@ -208,7 +208,7 @@ Filename: `YYYY-MM-DD-<topic-slug>.md`
 
 [If research reveals follow-up work, list as bd create commands]
 
-- `bd create "Title" -t <type> -p <priority>` — [Why]
+- `bd create "Title" -t <type> -p <priority> --notes "Severity:/Confidence:/Evidence:"` — [Why]
 
 ## Open Questions
 
@@ -246,21 +246,22 @@ Before writing, verify your document passes these checks:
 
 ## Step 6: Close the Bead
 
-If you discovered something reusable, capture it before closing:
+**Capture what you learned.** At close, record every durable, evidence-backed insight from this work — anything still true next month, tied to a file, test, or command. Don't skip because it feels minor: if it would save a future session time or stop a repeated mistake, record it. Never record guesses, one-offs, or secrets (tokens, keys, PII — every memory is injected into all future sessions). Update an existing memory in place (`bd remember --key <key>`) rather than adding a near-duplicate.
 
 ```bash
-# Only if worth preserving for future sessions:
-bd remember "research: <key finding from research>"
+bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / pattern / design / root-cause / research
 ```
 
 ```bash
 bd close <id> --reason "Research complete: <1-line summary of finding>"
 ```
 
-If research revealed follow-up work, create the recommended beads:
+If research revealed follow-up work, create the recommended beads — stamp each per **Agent-Filed Bead Discipline** (`beads-superpowers:verification-before-completion`):
 
 ```bash
-bd create "Follow-up: <title>" -t task -p <priority>
+bd create "Follow-up: <title>" -t task -p <priority> --notes "Severity: <Critical|Important|Minor>
+Confidence: <Confirmed|Speculative>
+Evidence: <file:line / source / repro | none>"
 ```
 
 ## Red Flags / Anti-Rationalization
