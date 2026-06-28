@@ -49,7 +49,7 @@ Identify every decision branch in the target:
 - Scale (does this work at 10x? 100x?)
 - Failure modes (what's the worst case?)
 - Alternatives not considered (what about approach W?)
-- **Security & risk (mandatory branch):** does any branch take a shortcut, descope a requirement, or accept material risk? Does anything weaken or bypass a security control, or introduce a vulnerability? Per the Production-Grade Doctrine (see using-superpowers), a design that does fails the stress test by default. (If the design has no security surface, resolve this branch as "no security surface — N/A" — do not fabricate a finding.)
+- **Security & risk (mandatory branch):** does any branch take a shortcut, descope a requirement, or accept material risk? Does anything weaken or bypass a security control, or introduce a vulnerability? Per the Production-Grade Doctrine, a design that does fails the stress test by default. (If the design has no security surface, resolve this branch as "no security surface — N/A" — do not fabricate a finding.)
 
 ### Phase 3: Interrogate One Branch at a Time
 
@@ -198,14 +198,25 @@ After documenting findings, run a single self-critique pass. This is internal re
 bd close <id> --reason "Stress-test complete: N branches resolved, M changes made, confidence: <level>"
 ```
 
-If you discovered something reusable, capture it before closing:
+After the work is settled, present the Capture gate (you MUST present it; the user picks Skip if nothing is worth keeping):
 
-```bash
-# Only if worth preserving for future sessions:
-bd remember "design: <gap or insight revealed by stress testing>"
+```json
+{
+  "questions": [{
+    "question": "This produced something worth preserving — what should I capture?",
+    "header": "Capture",
+    "options": [
+      {"label": "ADR + memory", "description": "Record an ADR for the decision AND a durable bd-remember memory"},
+      {"label": "ADR only", "description": "Record an ADR for the architecturally-significant decision"},
+      {"label": "Memory only", "description": "Capture a durable lesson/insight via bd remember"},
+      {"label": "Skip", "description": "Nothing here is durable enough to preserve"}
+    ],
+    "multiSelect": false
+  }]
+}
 ```
 
-**Capturing decisions:** if a resolved branch settled an architecturally-significant choice, offer an ADR per **Capturing Decisions** (`using-superpowers`) — only when the 3-gate holds.
+Route: **ADR / ADR+memory** → write the ADR per the 3-mark gate (`decisions/ADR-NNNN-<kebab>.md`, sections Context/Decision/Rationale/Consequences, update `decisions/INDEX.md`). **Memory / ADR+memory** → `bd remember "<kind>: <durable, evidence-backed insight>"`. **Skip** → nothing.
 
 ## Anti-Rationalization
 
