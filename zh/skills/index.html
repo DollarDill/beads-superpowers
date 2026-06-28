@@ -1150,7 +1150,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p>对照 <a href="https://github.com/obra/superpowers">obra/superpowers</a> 和 <a href="https://github.com/gastownhall/beads">gastownhall/beads</a> 进行审计，检查需要移植的新技能、已变更的命令和文档改进。</p>
 <h3 id="memory-curator">memory-curator</h3>
 <p><strong>触发时机：</strong> 会话结束时已捕获多条新记忆，或按需进行全量整理。</p>
-<p>将会话中原始的 <code>bd remember</code> 笔记，通过会话内智能体转化为结构良好、去重整合后的记忆——无需运行时环境、密钥或嵌入向量。其范围刻意以证据为导向（ADR-0034）：质量把关的捕获、反思式整合与修剪，而非追求结构丰富性。它绝不会静默修改记忆库——它会提出一份经过审查的命令列表，由你确认后才写入。</p>
+<p>将会话中原始的 <code>bd remember</code> 笔记，通过会话内智能体转化为结构良好、去重整合后的记忆——无需运行时环境、密钥或嵌入向量。其范围刻意以证据为导向：质量把关的捕获、反思式整合与修剪，而非追求结构丰富性。它绝不会静默修改记忆库——它会提出一份经过审查的命令列表，由你确认后才写入。</p>
 <h3 id="setup">setup</h3>
 <p><strong>触发条件：</strong> npx 安装后，或技能未激活时。</p>
 <p>在 <code>.claude/settings.json</code> 中注册 SessionStart 钩子，使技能自动激活。插件的 session-start 钩子自动检测 <code>bd setup claude</code> 钩子，并跳过重复的 <code>bd prime</code> 调用。</p>
@@ -1346,7 +1346,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年6月27日 18:51:36 UTC">2026年6月27日</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年6月28日 02:23:16 UTC">2026年6月28日</span>
   </span>
 
     
