@@ -1,6 +1,6 @@
 {
   "name": "beads-superpowers",
-  "description": "Superpowers skills + Beads issue tracking for Gemini CLI. 22 skills + persistent task memory.",
+  "description": "Superpowers skills + Beads issue tracking for Gemini CLI. 23 skills + persistent task memory.",
   "version": "0.8.0",
   "contextFileName": "GEMINI.md"
 }

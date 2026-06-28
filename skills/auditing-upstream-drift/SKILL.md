@@ -107,8 +107,8 @@ cat .claude/settings.json | grep -q '"bd prime"' && echo "WARNING: bd setup clau
 **Check 1.7 — Skills count:**
 ```bash
 count=$(ls -d skills/*/ | wc -l)
-echo "Skills: $count (expected: 22)"
-[ "$count" -eq 22 ] && echo "PASS" || echo "FAIL: expected 22 skills"
+echo "Skills: $count (expected: 23)"
+[ "$count" -eq 23 ] && echo "PASS" || echo "FAIL: expected 23 skills"
 # Drift-proof alternative (source of truth): ./scripts/sync-skill-count.sh --check
 ```
 

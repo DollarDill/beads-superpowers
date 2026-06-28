@@ -1,7 +1,7 @@
 {
   "name": "beads-superpowers",
   "version": "0.8.0",
-  "description": "Superpowers skills + Beads issue tracking for Kimi Code. 22 skills + persistent task memory.",
+  "description": "Superpowers skills + Beads issue tracking for Kimi Code. 23 skills + persistent task memory.",
   "author": {
     "name": "Dillon Frawley"
   },
@@ -23,7 +23,7 @@
   "interface": {
     "displayName": "Beads Superpowers",
     "shortDescription": "Process-discipline skills + persistent beads memory.",
-    "longDescription": "22 composable skills (TDD, brainstorming, systematic debugging, code review, verification) plus persistent cross-session task memory via the beads (bd) CLI.",
+    "longDescription": "23 composable skills (TDD, brainstorming, systematic debugging, code review, verification) plus persistent cross-session task memory via the beads (bd) CLI.",
     "developerName": "Dillon Frawley",
     "capabilities": [
       "Interactive",

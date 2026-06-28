@@ -327,7 +327,7 @@ print_consent() {
   echo
   printf "${BOLD}beads-superpowers v%s — scripted / advanced installer${NC}\n" "$VERSION"
   echo
-  echo "This script installs 22 skills via the best available fallback method."
+  echo "This script installs 23 skills via the best available fallback method."
   echo "(For Claude Code / Codex / OpenCode, native plugin install is preferred.)"
   if [ "$HAS_CLAUDE" = 1 ] || [ "$HAS_CODEX" = 1 ]; then
     echo "  1. Plugin system (Claude Code / Codex) — used when CLI detected"
@@ -906,7 +906,7 @@ print_dry_run() {
   echo
   printf "${BOLD}beads-superpowers v%s installer (dry run)${NC}\n" "$VERSION"
   echo
-  echo "Would install 22 skills using the best available method:"
+  echo "Would install 23 skills using the best available method:"
   if [ "$HAS_CLAUDE" = 1 ] || [ "$HAS_CODEX" = 1 ]; then
     echo "  1. Plugin system (Claude Code / Codex)"
   fi
