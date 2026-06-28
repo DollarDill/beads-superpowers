@@ -85,7 +85,7 @@
 <meta property="twitter:description" content="通过原生插件系统、curl 或 npx 为 Claude Code、Codex 和 OpenCode 安装 beads-superpowers。在 5 分钟内使用 bd init 设置您的第一个项目。" />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/zh/getting-started.png" />
 <meta name="panzoom-theme" content="material">
-<meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
+<meta name="panzoom-data" content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'> </head>
   
   
     
@@ -1023,9 +1023,9 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><strong>没有 <code>.beads</code> 目录</strong> — 在您的项目目录中运行 <code>bd init</code>。插件会自动处理重复钩子检测。</p>
 <p><strong>重复上下文注入</strong> — 插件会检测项目和全局设置中的 <code>bd setup claude</code> 钩子，并自动跳过自身的 <code>bd prime</code> 调用。如果您仍然看到重复内容，请运行 <code>bd setup claude --remove</code>。</p>
 <p><strong>插件缓存过期</strong> — 当您在本地编辑技能文件时，缓存不会自动更新。可以将缓存符号链接到您的代码检出目录：</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.0
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.1
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>ln<span class="w"> </span>-s<span class="w"> </span>~/workplace/beads-superpowers<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.0
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.1
 </code></pre></div>
 <p>或者重新安装。注意：<code>claude plugin update</code> 存在已知的<a href="https://github.com/anthropics/claude-code/issues/14061">缓存错误</a>——符号链接方式更可靠。</p>
 <p><strong>钩子未触发</strong> — 检查钩子是否可执行：<code>chmod +x hooks/session-start</code>。</p>
