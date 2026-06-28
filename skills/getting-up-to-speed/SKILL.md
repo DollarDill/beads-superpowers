@@ -123,7 +123,7 @@ Produce **exactly this Markdown structure**. Heading levels are H2; tables and l
 - **Inferred/synthesized claims** ("What it is", "Architecture Highlights", "Known operational quirks") each carry `[<glyph> source: <file/cmd>]` — glyph is ✅ high / ⚠️ medium / ❓ low — plus `verify: <what>` when below high.
 - **Deterministically-verified sections** (Repo Layout from `find`, Git from git, Beads ledger from `bd count`) are ground truth — labeled `(verified)` at the heading, no per-line tags. Tag where trust varies, never as filler.
 
-**Cross-checks to compute (orchestrator-run, all paths — never delegated to sub-agents):**
+**Cross-checks to compute (compute these yourself, all paths — never delegated to sub-agents):**
 
 - **Working tree:** from `git status --porcelain` (full list incl. untracked, status codes `M`/`A`/`D`/`R`/`??`) + `git diff --numstat` (added/deleted per tracked file; binary shows `-`). Rank tracked changes by added+deleted; show top-N with `+X/-Y` counts; render binary as `(binary)`; list the untracked count separately. Never dump the diff.
 - **Continuity check (in-progress beads only):** resolve the base branch as `git symbolic-ref refs/remotes/origin/HEAD` (strip to branch name), falling back to `main` then `master`; if none resolves, mark the check "unavailable". For each in-progress bead, run `git log --grep="<bead-id>" --oneline <base>`. If the bead ID appears in a commit reachable from the base branch, flag it advisory: `⚠️ <bead> appears in <sha> on <base> — verify it shouldn't be closed`. A multi-commit epic legitimately keeps shipping while open, so judge — do not auto-conclude. A bead whose ID is in no commit is NOT flagged. Skip the check when beads are absent. Deeper hygiene (stale branches, orphans, lint) → point to `bd doctor` / `bd stale` / `bd orphans`; do not reimplement it here.
@@ -182,12 +182,13 @@ Validate each line; fix or mark degraded, then re-check. Only emit once all pass
 
 The trailing "I'm ready" line is the **terminal contract**: the skill stops here. Do NOT auto-claim the next bead. Do NOT start working on anything. The user drives the next move.
 
-If any memories from Phase 1 are stale or incorrect, clean them up:
+**Capture what you learned.** At close, record every durable, evidence-backed insight from this work — anything still true next month, tied to a file, test, or command. Don't skip because it feels minor: if it would save a future session time or stop a repeated mistake, record it. Never record guesses, one-offs, or secrets (tokens, keys, PII — every memory is injected into all future sessions). Update an existing memory in place (`bd remember --key <key>`) rather than adding a near-duplicate.
 
 ```bash
-bd forget <id>              # Remove outdated memory
-bd remember "corrected: <updated insight>"  # Replace if needed
+bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / pattern / design / root-cause / research
 ```
+
+If orientation surfaced a Phase-1 memory that is now stale or wrong, remove it: `bd forget <id>`.
 
 ## Edge Cases
 
