@@ -71,7 +71,7 @@ digraph process {
     "Read plan, extract all tasks, create epic bead + child beads (bd create)" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
-    "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
+    "Use beads-superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, extract all tasks, create epic bead + child beads (bd create)" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
@@ -86,7 +86,7 @@ digraph process {
     "bd close <task-id> --reason 'Completed'" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
-    "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
+    "Dispatch final code reviewer subagent for entire implementation" -> "Use beads-superpowers:finishing-a-development-branch";
 }
 ```
 
@@ -271,11 +271,10 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
 
-If you discovered something reusable, capture it before closing:
+**Capture what you learned.** At close, record every durable, evidence-backed insight from this work — anything still true next month, tied to a file, test, or command. Don't skip because it feels minor: if it would save a future session time or stop a repeated mistake, record it. Never record guesses, one-offs, or secrets (tokens, keys, PII — every memory is injected into all future sessions). Update an existing memory in place (`bd remember --key <key>`) rather than adding a near-duplicate.
 
 ```bash
-# Only if worth preserving for future sessions:
-bd remember "sdd: <pattern about subagent delegation>"
+bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / pattern / design / root-cause / research
 ```
 
 ## Handling Reviewer ⚠️ Items
@@ -310,7 +309,7 @@ You: I'm using Subagent-Driven Development to execute this plan.
 
 [Read plan file once: .internal/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]
-[Create epic + tasks + deps atomically via bd create --graph (ADR-0030):]
+[Create epic + tasks + deps atomically via bd create --graph:]
 [  Build plan.json: {nodes:[{key,title,type,priority,parent_key}],]
 [                   edges:[{from_key:<dependent>,to_key:<dependency>,type:"blocks"}]}]
 [  bd create --graph plan.json --dry-run   <- dry-run first]
@@ -457,19 +456,19 @@ Conversation memory does not survive compaction, and a controller that loses its
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
-- **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:requesting-code-review** - Code review template for reviewer subagents
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
-- **superpowers:dispatching-parallel-agents** - SDD's parallel batch mode uses this skill's dispatch pattern: when `bd ready --parent` returns multiple unblocked tasks, up to 5 are dispatched concurrently, each in its own worktree
-- **superpowers:receiving-code-review** - When the task review produces feedback, this skill's anti-sycophancy protocol ensures technical evaluation rather than blind acceptance
+- **beads-superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
+- **beads-superpowers:writing-plans** - Creates the plan this skill executes
+- **beads-superpowers:requesting-code-review** - Code review template for reviewer subagents
+- **beads-superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **beads-superpowers:dispatching-parallel-agents** - SDD's parallel batch mode uses this skill's dispatch pattern: when `bd ready --parent` returns multiple unblocked tasks, up to 5 are dispatched concurrently, each in its own worktree
+- **beads-superpowers:receiving-code-review** - When the task review produces feedback, this skill's anti-sycophancy protocol ensures technical evaluation rather than blind acceptance
 
 **Subagents should use:**
-- **superpowers:test-driven-development** - Subagents follow TDD for each task
+- **beads-superpowers:test-driven-development** - Subagents follow TDD for each task
 
 **Parallel mode uses:**
-- **superpowers:using-git-worktrees** - Multiple worktrees for parallel task isolation
-- **superpowers:systematic-debugging** - Integration test failures after batch merge
+- **beads-superpowers:using-git-worktrees** - Multiple worktrees for parallel task isolation
+- **beads-superpowers:systematic-debugging** - Integration test failures after batch merge
 
 **Alternative workflow:**
-- **superpowers:executing-plans** - Use for parallel session instead of same-session execution
+- **beads-superpowers:executing-plans** - Use for parallel session instead of same-session execution
