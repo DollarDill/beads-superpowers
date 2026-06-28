@@ -64,7 +64,7 @@
 | `getting-up-to-speed` | 会话定向——加载 `bd` 上下文并生成当前状态摘要 |
 | `research-driven-development` | 并行研究智能体 → 综合知识库文档 |
 | `write-documentation` | 人类品质的文档——14 条规则写作体系，以上下文优先起草 |
-| `memory-curator` | 会话结束/按需的记忆整合——对 `bd` 记忆库去重并清理过时记忆（ADR-0034） |
+| `memory-curator` | 会话结束/按需的记忆整合——对 `bd` 记忆库去重并清理过时记忆 |
 
 ### 元技能
 

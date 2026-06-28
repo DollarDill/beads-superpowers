@@ -142,7 +142,7 @@ Because beads tracks every process step, the memory types agents need are popula
 | Semantic | `bd search`, `bd query` | Where's the related work? |
 | Prospective | `bd ready` | What should I do next? |
 
-The `memory-curator` skill consolidates, deduplicates, and prunes the memory store that `bd remember` builds up — offered at session-close when several new memories were captured, or on-demand anytime (ADR-0034).
+The `memory-curator` skill consolidates, deduplicates, and prunes the memory store that `bd remember` builds up — offered at session-close when several new memories were captured, or on-demand anytime.
 
 ## Research basis
 

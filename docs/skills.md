@@ -224,7 +224,7 @@ Audits against [obra/superpowers](https://github.com/obra/superpowers) and [gast
 
 **Trigger:** At session-close when several new memories were captured, or on-demand for a full sweep.
 
-Turns a session's raw `bd remember` notes into well-structured, deduplicated, consolidated memories using the in-session agent — no runtime, key, or embeddings. The scope is deliberately evidence-led (ADR-0034): quality-gated capture, reflection-consolidation, and pruning, not structural richness. It never mutates the store silently — it proposes a reviewed command list, and you approve before anything is written.
+Turns a session's raw `bd remember` notes into well-structured, deduplicated, consolidated memories using the in-session agent — no runtime, key, or embeddings. The scope is deliberately evidence-led: quality-gated capture, reflection-consolidation, and pruning, not structural richness. It never mutates the store silently — it proposes a reviewed command list, and you approve before anything is written.
 
 ### setup
 

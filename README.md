@@ -58,7 +58,7 @@ Underneath all of it is a production-grade standard: the agent treats every task
 | `document-release` | Post-ship doc audit — keeps README, CHANGELOG, and ARCHITECTURE in sync |
 | `project-init` | Beads/Dolt DB setup, bootstrap, and recovery |
 | `getting-up-to-speed` | Session orientation — loads `bd` context and produces a current-state summary |
-| `memory-curator` | Session-close/on-demand memory consolidation — deduplicates and prunes the `bd` memory store (ADR-0034) |
+| `memory-curator` | Session-close/on-demand memory consolidation — deduplicates and prunes the `bd` memory store |
 | `research-driven-development` | Parallel research agents → synthesized knowledge-base document |
 | `write-documentation` | Human-quality prose — 14-rule writing system with context-first drafting |
 
