@@ -94,7 +94,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 7 best-effort harn
 - `decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs.
 - `tests/` — 6 test suites: brainstorm-server (Node.js), claude-code skill tests, explicit-skill-requests, installer (Docker E2E), skill-triggering, subagent-driven-dev.
-- `scripts/` — `bump-version.sh` (sync version across 9 files), `sync-skill-count.sh` (sync skill counts across all files), `build-docs.sh`, `check-agent-bead-stamp.sh`, `check-zh-docs.sh`.
+- `scripts/` — `bump-version.sh` (sync version across 9 files), `sync-skill-count.sh` (sync skill counts across all files), `build-docs.sh`, `check-agent-bead-stamp.sh`, `check-zh-docs.sh`, `check-convention-sync.sh` (verify shared convention blocks are byte-identical across skills).
 - `install.sh` — curl installer with 3-tier fallback chain (plugin system → npx → tarball/git clone). SHA-256 checksum validation, atomic rollback via staging directory, lazy prerequisites. Auto-detects Claude Code, Codex, OpenCode, and 7 more CLIs (Cursor, Gemini, Copilot, Droid, Antigravity, Kimi, Pi).
 - `mkdocs.yml` + `main.py` + `mkdocs_hooks.py` — MkDocs Material site config, macros plugin, and i18n language-switcher hook.
 
@@ -174,6 +174,7 @@ scripts/
   build-docs.sh            # Build MkDocs site
   check-agent-bead-stamp.sh  # Verify agent-filed bead discipline convention
   check-zh-docs.sh           # Verify zh docs structure/term parity
+  check-convention-sync.sh   # Verify shared convention blocks are byte-identical across skills
 skills/                    # 23 beads-native skills (auto-discovered, each has SKILL.md)
 tests/                     # Test infrastructure (6 suites)
 install.sh                 # curl installer — 3-tier fallback (plugin → npx → tarball/git), checksums, atomic rollback
@@ -326,6 +327,9 @@ bash scripts/check-agent-bead-stamp.sh
 
 # Verify zh docs structure/term parity
 bash scripts/check-zh-docs.sh
+
+# Verify shared convention blocks are byte-identical across skills
+bash scripts/check-convention-sync.sh
 
 # Verify beads integration (should be 30+)
 grep -r "bd create\|bd close\|bd ready" skills/ | wc -l
