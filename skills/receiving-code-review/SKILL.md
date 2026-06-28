@@ -130,7 +130,7 @@ Push back when:
 
 **Signal if uncomfortable pushing back out loud:** "Strange things are afoot at the Circle K"
 
-**Never** push back on, YAGNI-delete, or select "Proceed anyway" past a **security or material-risk** finding. Security/risk feedback is acted on or escalated — never dismissed. (Production-Grade Doctrine — and because this skill runs in the main session, it is also stated in full in `using-superpowers`.)
+**Never** push back on, YAGNI-delete, or select "Proceed anyway" past a **security or material-risk** finding. Security/risk feedback is acted on or escalated — never dismissed. (Production-Grade Doctrine)
 
 ## Acknowledging Correct Feedback
 
@@ -165,10 +165,10 @@ If you pushed back and were wrong:
 
 State the correction factually and move on.
 
-**Capture what you learned** before closing:
+**Capture what you learned.** At close, record every durable, evidence-backed insight from this work — anything still true next month, tied to a file, test, or command. Don't skip because it feels minor: if it would save a future session time or stop a repeated mistake, record it. Never record guesses, one-offs, or secrets (tokens, keys, PII — every memory is injected into all future sessions). Update an existing memory in place (`bd remember --key <key>`) rather than adding a near-duplicate.
 
 ```bash
-bd remember "review: <insight from code review>"
+bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / pattern / design / root-cause / research
 ```
 
 If a previous memory is now wrong, `bd forget <id>` first.
