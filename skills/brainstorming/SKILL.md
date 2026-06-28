@@ -13,7 +13,7 @@ Start by understanding the current project context, then ask questions one at a 
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
 </HARD-GATE>
 
-**Production-Grade Doctrine (see using-superpowers):** treat this as a production system with real users. Never silently descope a required behavior, take a shortcut, accept material risk, or regress security to simplify a design. If a cut is genuinely warranted, surface it and let the user decide; a security regression is never acceptable.
+**Production-Grade Doctrine:** Treat this as a production system with real users — no matter how small or internal it looks. You MUST NOT silently take a shortcut, descope a required behavior/edge-case, or accept a material-risk trade-off; if one is genuinely warranted you MUST surface it and let the user decide. You MUST NOT weaken, bypass, or remove a security control or add a vulnerability — a security regression is never acceptable, even for a deadline or "minimal changes." In brainstorming these choices are first made — never simplify a design by quietly cutting a required behavior.
 
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
 
@@ -126,20 +126,29 @@ digraph brainstorming {
 
 - Write the validated design (spec) to `.internal/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
-- Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
-
-**Capture what you learned** before closing:
-
-```bash
-bd remember "design: <key design decision and rationale>"
-```
-
-If a previous memory is now wrong, `bd forget <id>` first.
 
 > When filing a bead for discovered/follow-up work, stamp it per **Agent-Filed Bead Discipline** (`verification-before-completion`).
 
-**Capturing decisions:** if the approved design settles an architecturally-significant choice, offer to record it as an ADR per **Capturing Decisions** (`using-superpowers`) — only when the 3-gate holds. The orchestrator writes it.
+After the work is settled, present the Capture gate (you MUST present it; the user picks Skip if nothing is worth keeping):
+
+```json
+{
+  "questions": [{
+    "question": "This produced something worth preserving — what should I capture?",
+    "header": "Capture",
+    "options": [
+      {"label": "ADR + memory", "description": "Record an ADR for the decision AND a durable bd-remember memory"},
+      {"label": "ADR only", "description": "Record an ADR for the architecturally-significant decision"},
+      {"label": "Memory only", "description": "Capture a durable lesson/insight via bd remember"},
+      {"label": "Skip", "description": "Nothing here is durable enough to preserve"}
+    ],
+    "multiSelect": false
+  }]
+}
+```
+
+Route: **ADR / ADR+memory** → write the ADR per the 3-mark gate (`decisions/ADR-NNNN-<kebab>.md`, sections Context/Decision/Rationale/Consequences, update `decisions/INDEX.md`). **Memory / ADR+memory** → `bd remember "<kind>: <durable, evidence-backed insight>"`. **Skip** → nothing.
 
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:
@@ -174,7 +183,7 @@ fi
 
 Then immediately use the `AskUserQuestion` tool:
 
-<!-- Canonical 3-option stress-test gate — keep identical to writing-plans/SKILL.md (ADR-0020) -->
+<!-- Canonical 3-option stress-test gate — keep identical to writing-plans/SKILL.md -->
 
 ```json
 {
