@@ -13,7 +13,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Production-Grade Doctrine (see using-superpowers):** every spec requirement MUST map to a task. Never silently descope — a deliberate cut is surfaced to the user as a tracked decision, never an omission. Never plan a shortcut or a security regression.
+**Production-Grade Doctrine:** Treat this as a production system with real users — no matter how small or internal it looks. You MUST NOT silently take a shortcut, descope a required behavior/edge-case, or accept a material-risk trade-off; if one is genuinely warranted you MUST surface it and let the user decide. You MUST NOT weaken, bypass, or remove a security control or add a vulnerability — a security regression is never acceptable, even for a deadline or "minimal changes." In a plan this means every spec requirement MUST map to a task — a deliberate cut is surfaced as a tracked decision, never a silent omission.
 
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
@@ -62,7 +62,7 @@ In beads terms, a right-sized task is one bead (`bd create -t task --parent <epi
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Each Task becomes a bead (`bd create -t task --parent <epic-id>`). Steps within tasks use checkbox (`- [ ]`) syntax for human readability.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use beads-superpowers:subagent-driven-development (recommended) or beads-superpowers:executing-plans to implement this plan task-by-task. Each Task becomes a bead (`bd create -t task --parent <epic-id>`). Steps within tasks use checkbox (`- [ ]`) syntax for human readability.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -131,7 +131,7 @@ git commit -m "feat: add specific feature"
 
 **Beads integration:** When executing this plan, the executing skill creates an epic bead for the plan and a child task bead for each Task N. The `- [ ]` checkboxes remain in the markdown for human readability, but task-level tracking uses beads (`bd create`, `bd update --claim`, `bd close --reason`). Dependencies between tasks should be declared with `bd dep add`.
 
-**Atomic creation:** the executing skill SHOULD create the epic + tasks + dependencies atomically via `bd create --graph` (one JSON plan, `--dry-run` first), not a sequential loop — this avoids orphaned beads on mid-sequence failure (ADR-0030). Falls back to sequential `bd create`/`bd dep add` if unavailable.
+**Atomic creation:** the executing skill SHOULD create the epic + tasks + dependencies atomically via `bd create --graph` (one JSON plan, `--dry-run` first), not a sequential loop — this avoids orphaned beads on mid-sequence failure. Falls back to sequential `bd create`/`bd dep add` if unavailable.
 
 ## No Placeholders
 
@@ -193,7 +193,7 @@ fi
 
 Then immediately use the `AskUserQuestion` tool:
 
-<!-- Canonical 3-option stress-test gate — keep identical to brainstorming/SKILL.md (ADR-0020) -->
+<!-- Canonical 3-option stress-test gate — keep identical to brainstorming/SKILL.md -->
 
 ```json
 {
@@ -215,16 +215,27 @@ Route on the answer:
 - **Approved** → proceed to **Execution Handoff** directly.
 - **Needs changes** → make the requested changes and re-run the self-review. Only proceed once approved.
 
-If you discovered something reusable, capture it before closing:
-
-```bash
-# Only if worth preserving for future sessions:
-bd remember "pattern: <planning insight for future tasks>"
-```
-
 > When filing a bead for discovered/follow-up work, stamp it per **Agent-Filed Bead Discipline** (`verification-before-completion`).
 
-**Capturing decisions:** if planning locked an architecturally-significant choice not already recorded, offer an ADR per **Capturing Decisions** (`using-superpowers`) — only when the 3-gate holds.
+After the work is settled, present the Capture gate (you MUST present it; the user picks Skip if nothing is worth keeping):
+
+```json
+{
+  "questions": [{
+    "question": "This produced something worth preserving — what should I capture?",
+    "header": "Capture",
+    "options": [
+      {"label": "ADR + memory", "description": "Record an ADR for the decision AND a durable bd-remember memory"},
+      {"label": "ADR only", "description": "Record an ADR for the architecturally-significant decision"},
+      {"label": "Memory only", "description": "Capture a durable lesson/insight via bd remember"},
+      {"label": "Skip", "description": "Nothing here is durable enough to preserve"}
+    ],
+    "multiSelect": false
+  }]
+}
+```
+
+Route: **ADR / ADR+memory** → write the ADR per the 3-mark gate (`decisions/ADR-NNNN-<kebab>.md`, sections Context/Decision/Rationale/Consequences, update `decisions/INDEX.md`). **Memory / ADR+memory** → `bd remember "<kind>: <durable, evidence-backed insight>"`. **Skip** → nothing.
 
 ## Execution Handoff
 
@@ -251,11 +262,11 @@ After the plan is approved, **use the `AskUserQuestion` tool** to offer the exec
 ```
 
 **If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
+- **REQUIRED SUB-SKILL:** Use beads-superpowers:subagent-driven-development
 - Fresh subagent per task + single task review (spec + quality verdicts)
 
 **If Inline Execution chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
+- **REQUIRED SUB-SKILL:** Use beads-superpowers:executing-plans
 - Batch execution with checkpoints for review
 
 ## Integration
