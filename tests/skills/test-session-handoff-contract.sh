@@ -34,6 +34,9 @@ check_loose "Reference, don't duplicate" "$SKILL"
 
 # --- Standalone integration ---
 check_loose "intentionally NOT referenced" "$SKILL"   # guards the Integration sentence
+# Consume-on-read consistency with getting-up-to-speed (mu0s)
+check_loose "archive" "$SKILL"
+check_loose "unread inbox" "$SKILL"
 
 # --- Budget + ships-clean (H1) ---
 lines=$(grep -c '' "$SKILL")

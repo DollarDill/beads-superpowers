@@ -34,7 +34,9 @@ tailor Work In Progress / Loose Threads / Suggested Skills.
    artifacts by path — never paste their bodies** (commits, ADRs, specs, plans, diffs).
    Duplicating bloats the doc and goes stale.
 3. **Write the doc** — Default: `.internal/handoff/YYYY-MM-DD[-HHMMSS]-<topic>-handoff.md`
-   (`-HHMMSS` only if a same-day handoff exists). If the human names another location,
+   (`-HHMMSS` only if a same-day handoff exists).
+   (The same-day check globs the inbox `.internal/handoff/*.md` only; archived docs under `archive/` are out of scope and do not affect same-day naming.)
+   If the human names another location,
    write there. `mkdir -p` the target first.
 4. **Write the continuation memory** —
    `bd remember "continuation-<date>-<topic>: <one-line pointer to doc path + headline state>"`
@@ -76,4 +78,6 @@ tailor Work In Progress / Loose Threads / Suggested Skills.
 skill or hook, and does not appear in any agent routing or trigger surface. Its read-side
 counterpart is `getting-up-to-speed`, which **reads this skill's output artifact** (the
 latest `.internal/handoff/` doc) but does not invoke it — there is no skill-to-skill call
-in either direction.
+in either direction. On read it **consumes** the doc: it moves the doc it read to
+`.internal/handoff/archive/` at close, so `.internal/handoff/` is an *unread inbox* and a
+stale handoff is not re-read as the last session.
