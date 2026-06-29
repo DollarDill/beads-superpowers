@@ -13,6 +13,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **`session-handoff` skill (human-invoked).** A new skill that writes a grounded handoff document — current state, work in progress, what shipped, decisions, loose threads, and how to resume — plus a one-line continuation memory, so a fresh session can pick up in-progress work after a context reset or a teammate handoff. It is deliberately human-only: never auto-invoked, and absent from every agent trigger surface. Output defaults to a gitignored local path, with a `git check-ignore` safety check and secret redaction so a handoff can't leak secrets to a tracked file.
 
+### Changed
+
+- **The skill count is no longer hardcoded, so it can't silently go stale.** The advertised number of skills used to be duplicated across roughly seventeen places — plugin manifests, the README, `CLAUDE.md`, the installer, the docs site — and every new skill left some of them wrong. The exact count now lives in exactly one computed place (the docs site's build-time macro); everywhere else simply reads "composable skills" with no number to drift. A new `scripts/check-skill-count.sh` pre-commit hook fails the commit if a hardcoded skill count reappears anywhere, and also verifies every skill directory has exactly one `SKILL.md`. The old `scripts/sync-skill-count.sh` count-syncer is removed.
+
 ## [0.8.1] - 2026-06-28
 
 ### Changed
