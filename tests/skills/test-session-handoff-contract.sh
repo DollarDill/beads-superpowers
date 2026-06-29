@@ -3,7 +3,6 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SKILL="$ROOT/skills/session-handoff/SKILL.md"
-# shellcheck disable=SC2034  # TMPL used by Task 2 template checks (not yet added)
 TMPL="$ROOT/skills/session-handoff/handoff-template.md"
 fail=0
 
@@ -42,5 +41,17 @@ if [ "$lines" -lt 500 ]; then echo "PASS: <500 lines ($lines)"; else echo "FAIL:
 grep -nE 'ADR-[0-9]|\bbd-[a-z0-9]{4}\b|beads-superpowers-[a-z0-9]+|decisions/' "$SKILL" && { echo "FAIL: unshipped refs"; fail=1; } || echo "PASS: ships clean"
 # Only .internal/handoff/ (the write-target default) is an allowed .internal/ ref
 grep -nE '\.internal/' "$SKILL" | grep -v '\.internal/handoff/' && { echo "FAIL: non-handoff .internal/ ref"; fail=1; } || echo "PASS: .internal/ clean"
+
+# --- Bundled template sections (10) ---
+check_loose "Current State" "$TMPL"
+check_loose "Work In Progress" "$TMPL"
+check_loose "What Shipped" "$TMPL"
+check_loose "Architectural Decisions" "$TMPL"
+check_loose "Key File Paths" "$TMPL"
+check_loose "Loose Threads" "$TMPL"
+check_loose "How to Resume" "$TMPL"
+check_loose "Suggested Skills" "$TMPL"
+check_loose "Continuation" "$TMPL"
+check_loose "bd prime" "$TMPL"
 
 [ "$fail" -eq 0 ] && echo "PASS: session-handoff contract" || exit 1
