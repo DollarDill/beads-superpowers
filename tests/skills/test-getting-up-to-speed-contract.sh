@@ -21,5 +21,8 @@ check_loose "Current State"
 check_loose "Recent Activity"
 check_loose "Verification Gate"
 check_loose "Output Contract"
+# Band rescale (Change 2) — new Heavy threshold present, old > 500 gone
+check_loose "> 150"
+if grep -Fq -- "> 500" "$SKILL"; then echo "FAIL: stale > 500 band threshold present"; fail=1; else echo "PASS: no stale > 500 threshold"; fi
 
 [ "$fail" -eq 0 ] && echo "PASS: getting-up-to-speed contract" || exit 1

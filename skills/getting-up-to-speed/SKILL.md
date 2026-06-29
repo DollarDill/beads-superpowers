@@ -57,9 +57,9 @@ echo "tracked=$TRACKED beads=$HAS_BEADS git=$HAS_GIT"
 
 | Tracked files | Path | Behavior |
 |---|---|---|
-| `< 50` or no `.git` | **Light** | bd commands + read README + git log; skip Phase 2 medium drilldown. |
-| `50 – 500` | **Medium** *(default)* | Parallel bd + parallel codebase reads + key-file drilldown + open-bead details. |
-| `> 500` | **Heavy** | Dispatch `@researcher` + `@explore` in parallel via the `Agent` tool (use `dispatching-parallel-agents`). |
+| `< 40` or no `.git` | **Light** | bd commands + read README + git log; skip Phase 2 medium drilldown. |
+| `40 – 150` | **Medium** *(default)* | Parallel bd + parallel codebase reads + key-file drilldown + open-bead details. |
+| `> 150` | **Heavy** | Dispatch `@researcher` + `@explore` in parallel via the `Agent` tool (use `dispatching-parallel-agents`). |
 
 ## Phase 1 — Beads context (single parallel batch)
 
@@ -232,6 +232,6 @@ The skill is complete when you have produced the structured summary, **the Verif
 
 **Invoked by:** User on-demand or at session start. No other skill invokes this directly.
 
-**Uses:** **dispatching-parallel-agents** — heavy path (500+ tracked files) dispatches @researcher + @explore in parallel.
+**Uses:** **dispatching-parallel-agents** — heavy path (150+ tracked files) dispatches @researcher + @explore in parallel.
 
 **Pairs with:** **project-init** — for fresh/empty repos with nothing to orient on, use project-init instead.
