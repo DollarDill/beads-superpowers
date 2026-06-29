@@ -15,7 +15,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Precise total-count regex: a number + optional count-qualifier adjective + "skills", or "Skills (N Total)".
 # Intentionally does NOT match "7 fork-unique skills", "(9 subtests)", or "7 more agents. ... skills".
-COUNT_RE='[0-9]+[[:space:]]+(composable[[:space:]]+|beads-native[[:space:]]+|process-discipline[[:space:]]+)?skills\b|Skills[[:space:]]*\([0-9]+[[:space:]]*Total\)'
+COUNT_RE='[0-9]+\+?[[:space:]]+(composable[[:space:]]+|beads-native[[:space:]]+|process-discipline[[:space:]]+)*skills\b|Skills[[:space:]]*\([0-9]+[[:space:]]*Total\)'
 
 # Files excluded from the drift scan (each with a reason):
 #   docs/**              macro-driven ({{ skill_count }})
@@ -73,9 +73,13 @@ self_test() {
   # (a) clean fixture passes both checks
   if structural_check "$tmp" >/dev/null && drift_check "$tmp" >/dev/null; then :; else
     echo "SELF-TEST FAIL: clean fixture should pass"; rc=1; fi
-  # (b) injected total-count literal is caught
-  printf 'This repo has 25 skills now.\n' >> "$tmp/README.md"; git -C "$tmp" add -A
-  if drift_check "$tmp" >/dev/null 2>&1; then echo "SELF-TEST FAIL: injected '25 skills' not caught"; rc=1; fi
+  # (b) injected total-count literals are caught — covers the bare, multi-adjective, and N+ forms
+  local form
+  for form in 'This repo has 25 skills now.' '25 composable process-discipline skills' 'Run /skills — 25+ skills available'; do
+    printf '%s\n' "$form" > "$tmp/README.md"; git -C "$tmp" add -A
+    if drift_check "$tmp" >/dev/null 2>&1; then echo "SELF-TEST FAIL: injected literal not caught: $form"; rc=1; fi
+  done
+  printf 'Composable skills here.\n21 of the skills are great.\n' > "$tmp/README.md"; git -C "$tmp" add -A
   # (c) missing SKILL.md is caught by the structural check
   rm -f "$tmp/skills/beta/SKILL.md"; git -C "$tmp" add -A
   if structural_check "$tmp" >/dev/null 2>&1; then echo "SELF-TEST FAIL: missing SKILL.md not caught"; rc=1; fi
