@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Complete reference for 23 composable skills with trigger map, category breakdown, bd command usage, and chaining diagrams showing how skills invoke each other.">
+        <meta name="description" content="Complete reference for the composable skills with trigger map, category breakdown, bd command usage, and chaining diagrams showing how skills invoke each other.">
       
       
         <meta name="author" content="Dillon Frawley">
@@ -72,7 +72,7 @@
   
 <meta property="og:type" content="website" />
 <meta property="og:title" content="Skills Reference - beads-superpowers" />
-<meta property="og:description" content="Complete reference for 23 composable skills with trigger map, category breakdown, bd command usage, and chaining diagrams showing how skills invoke each other." />
+<meta property="og:description" content="Complete reference for the composable skills with trigger map, category breakdown, bd command usage, and chaining diagrams showing how skills invoke each other." />
 <meta property="og:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/skills.png" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="1200" />
@@ -80,10 +80,10 @@
 <meta property="og:url" content="https://dollardill.github.io/beads-superpowers/skills/" />
 <meta property="twitter:card" content="summary_large_image" />
 <meta property="twitter:title" content="Skills Reference - beads-superpowers" />
-<meta property="twitter:description" content="Complete reference for 23 composable skills with trigger map, category breakdown, bd command usage, and chaining diagrams showing how skills invoke each other." />
+<meta property="twitter:description" content="Complete reference for the composable skills with trigger map, category breakdown, bd command usage, and chaining diagrams showing how skills invoke each other." />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/skills.png" />
 <meta name="panzoom-theme" content="material">
-<meta name="panzoom-data" content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'> </head>
+<meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
   
   
     
@@ -739,6 +739,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#session-handoff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session-handoff
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -872,7 +883,7 @@
 
 
 <h1 id="skills-reference">Skills Reference</h1>
-<p>beads-superpowers ships 23 composable skills loaded on demand via the <code>Skill</code> tool. The bootstrap skill <code>using-superpowers</code> loads at every session start and routes to the right skill for the current task. Skills are mandatory — when one applies, the agent must invoke it.</p>
+<p>beads-superpowers ships 24 composable skills loaded on demand via the <code>Skill</code> tool. The bootstrap skill <code>using-superpowers</code> loads at every session start and routes to the right skill for the current task. Skills are mandatory — when one applies, the agent must invoke it.</p>
 <h2 id="trigger-map">Trigger map</h2>
 <p>The UserPromptSubmit hook reminds the agent on every message which skill applies to which task:</p>
 <table>
@@ -939,6 +950,10 @@
 <td>Consolidate or dedup memories</td>
 <td><code>memory-curator</code></td>
 </tr>
+<tr>
+<td>Hand work to the next session</td>
+<td><code>session-handoff</code> (human-invoked)</td>
+</tr>
 </tbody>
 </table>
 <p>Also available: <code>document-release</code>, <code>getting-up-to-speed</code>, <code>dispatching-parallel-agents</code>, <code>project-init</code>, <code>setup</code>, <code>writing-skills</code>, <code>auditing-upstream-drift</code></p>
@@ -977,7 +992,7 @@
 </tr>
 <tr>
 <td><strong>Lifecycle</strong></td>
-<td><a href="#document-release">document-release</a>, <a href="#getting-up-to-speed">getting-up-to-speed</a>, <a href="#auditing-upstream-drift">auditing-upstream-drift</a>, <a href="#memory-curator">memory-curator</a></td>
+<td><a href="#document-release">document-release</a>, <a href="#getting-up-to-speed">getting-up-to-speed</a>, <a href="#auditing-upstream-drift">auditing-upstream-drift</a>, <a href="#memory-curator">memory-curator</a>, <a href="#session-handoff">session-handoff</a></td>
 </tr>
 <tr>
 <td><strong>Setup</strong></td>
@@ -1053,6 +1068,7 @@ graph TD
     GUS["getting-up-to-speed"]
     AUD["auditing-drift"]
     MC["memory-curator"]
+    SH["session-handoff"]
   end
   subgraph Setup
     SET["setup"]
@@ -1134,7 +1150,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p>Walks through README, CHANGELOG, CLAUDE.md, CONTRIBUTING, and other docs to find and fix drift against shipped code. A coverage map catches docs that are missing entirely — a new flag or command with no reference page — not only stale ones, and each CHANGELOG entry is scored against a what-changed, why-care, how-to-use test.</p>
 <h3 id="getting-up-to-speed">getting-up-to-speed</h3>
 <p><strong>Trigger:</strong> Session start, after compaction, or "catch me up" / "where are we".</p>
-<p>Runs <code>bd prime</code>, deep-dives the codebase (adaptive to repo size), and produces a structured current-state summary. A pre-emit verification gate holds every claim in that summary to a command actually run in the session, and a beads-versus-git check flags work that shipped but was left open.</p>
+<p>Runs <code>bd prime</code>, deep-dives the codebase (sub-agent fan-out scales to repo size across <code>&lt;40</code> / <code>40–150</code> / <code>&gt;150</code> tracked-file bands), and produces a structured current-state summary. It reads the newest <code>.internal/handoff/</code> doc — written by its counterpart <code>session-handoff</code> — as an unread inbox, folding it into the summary and then archiving it at close so a later session doesn't re-read it; a HEAD-recency backstop flags a handoff as stale when <code>HEAD</code> has moved past the commit it recorded. A pre-emit verification gate holds every claim in the summary to a command actually run in the session, a beads-versus-git check flags work that shipped but was left open, and superseded <code>continuation-*</code> memories are pruned at close.</p>
 <h3 id="auditing-upstream-drift">auditing-upstream-drift</h3>
 <p><strong>Trigger:</strong> Before a plugin release, or when checking for staleness.</p>
 <p>Audits against <a href="https://github.com/obra/superpowers">obra/superpowers</a> and <a href="https://github.com/gastownhall/beads">gastownhall/beads</a> for new skills, changed commands, and documentation improvements to port.</p>
@@ -1153,6 +1169,8 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <h3 id="write-documentation">write-documentation</h3>
 <p><strong>Trigger:</strong> Writing or rewriting human-facing prose — docs, guides, emails, PR descriptions, release notes.</p>
 <p>14-rule writing system adapted from <a href="https://github.com/Anbeeld/WRITING.md">WRITING.md</a>. Context-first drafting, required checks as revision pass, targets the patterns that make LLM prose recognizable (regularity, catalog prose, false crispness). Pairs with <code>document-release</code> (which handles <em>when</em> to update, not <em>how</em> to write).</p>
+<h3 id="session-handoff">session-handoff</h3>
+<p><strong>Human-invoked only.</strong> Writes a grounded session-handoff document and stores a <code>bd remember</code> continuation note so the next session can pick up in-progress work without relying on chat history. Its counterpart <code>getting-up-to-speed</code> consumes that document on the next session's orientation, then archives it.</p>
 <h2 id="beads-commands">Beads commands</h2>
 <p>Skills use <code>bd</code> commands to track work. Only the orchestrating agent manages beads — subagents don't touch them.</p>
 <table>
@@ -1217,7 +1235,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <tr>
 <td>Store learning</td>
 <td><code>bd remember "insight"</code></td>
-<td>21 of 23 skills prompt for this</td>
+<td>most of the 24 skills prompt for this</td>
 </tr>
 <tr>
 <td>Attach evidence</td>
@@ -1341,7 +1359,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 28, 2026 02:23:16 UTC">June 28, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 29, 2026 15:33:09 UTC">June 29, 2026</span>
   </span>
 
     

@@ -83,7 +83,7 @@
 <meta property="twitter:description" content="Install beads-superpowers via the native plugin system, curl, or npx for Claude Code, Codex, and OpenCode. Set up your first project with bd init in under 5 minutes." />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/getting-started.png" />
 <meta name="panzoom-theme" content="material">
-<meta name="panzoom-data" content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'> </head>
+<meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
   
   
     
@@ -954,14 +954,14 @@
 <h2 id="verify-it-works">Verify it works</h2>
 <p>Start a fresh session in your CLI of choice, then:</p>
 <ol>
-<li><strong>Check skills loaded:</strong> Type <code>/skills</code> (Claude Code/Codex) or check the skill list in OpenCode — you should see 23 skills prefixed with <code>beads-superpowers:</code></li>
+<li><strong>Check skills loaded:</strong> Type <code>/skills</code> (Claude Code/Codex) or check the skill list in OpenCode — you should see 24 skills prefixed with <code>beads-superpowers:</code></li>
 <li><strong>Check beads works:</strong> Run <code>bd ready</code> and <code>bd stats</code> in the terminal</li>
 </ol>
 <p>If skills aren't showing, the plugin may not be installed for your CLI. If <code>bd ready</code> fails, beads isn't initialised in this project (<code>bd init</code>).</p>
 <h2 id="how-the-hooks-work">How the hooks work</h2>
 <p>The plugin registers two hooks via <code>hooks/hooks.json</code>:</p>
 <p><strong>SessionStart</strong> fires on every session start, clear, and compact. It reads the <code>using-superpowers</code> skill (which routes to all other skills), runs <code>bd prime</code> to capture beads state and persistent memories, and outputs the combined context (~2–3k tokens). If <code>bd prime</code> is already registered as a hook elsewhere, this step is skipped automatically.</p>
-<p><strong>UserPromptSubmit</strong> fires on every user message. It injects a reminder listing all 22 invocable skills with their trigger conditions — "bug → systematic-debugging", "new feature → brainstorming", etc. This keeps the agent from forgetting about skills mid-session.</p>
+<p><strong>UserPromptSubmit</strong> fires on every user message. It injects a reminder listing all 23 invocable skills with their trigger conditions — "bug → systematic-debugging", "new feature → brainstorming", etc. This keeps the agent from forgetting about skills mid-session.</p>
 <div class="panzoom-box" data-key="alt" id="panzoom0" oncontextmenu="return false;">
     
     <nav class="panzoom-nav">
@@ -1017,9 +1017,9 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><strong>No <code>.beads</code> directory</strong> — Run <code>bd init</code> in your project directory. The plugin automatically handles duplicate hook detection.</p>
 <p><strong>Double context injection</strong> — The plugin detects <code>bd setup claude</code> hooks in project and global settings and automatically skips its own <code>bd prime</code> call. If you still see duplicates, run <code>bd setup claude --remove</code>.</p>
 <p><strong>Stale plugin cache</strong> — The cache doesn't update when you edit skill files locally. Either symlink the cache to your checkout:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.1
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.2
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>ln<span class="w"> </span>-s<span class="w"> </span>~/workplace/beads-superpowers<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.1
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.2
 </code></pre></div>
 <p>Or reinstall. Note: <code>claude plugin update</code> has a known <a href="https://github.com/anthropics/claude-code/issues/14061">cache bug</a> — the symlink is more reliable.</p>
 <p><strong>Hook not firing</strong> — Check the hook is executable: <code>chmod +x hooks/session-start</code>.</p>

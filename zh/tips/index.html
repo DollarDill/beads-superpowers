@@ -83,7 +83,7 @@
 <meta property="twitter:description" content="快速参考 bd 命令速查表、技能路由表、常见问题故障排查指南以及 superpowers 和 beads 的上游版本跟踪。" />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/zh/tips.png" />
 <meta name="panzoom-theme" content="material">
-<meta name="panzoom-data" content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'> </head>
+<meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
   
   
     
@@ -975,7 +975,7 @@
 <p><code>using-superpowers</code> 引导技能（会话开始时自动加载）包含完整的路由逻辑；如有疑问，请让 Claude Code 读取它。</p>
 <h2 id="_9">常见问题</h2>
 <p>安装和配置问题，请参阅<a href="../getting-started/">入门指南——故障排查</a>。以下是最常见问题的快速解决方法：</p>
-<p><strong>技能未加载</strong> — <code>/plugins</code> 应列出 beads-superpowers，<code>/skills</code> 应显示 23 个技能。若未显示，请重新安装。</p>
+<p><strong>技能未加载</strong> — <code>/plugins</code> 应列出 beads-superpowers，<code>/skills</code> 应显示 24 个技能。若未显示，请重新安装。</p>
 <p><strong><code>bd: command not found</code></strong> — 运行 <code>brew install beads</code> 或 <code>npm install -g @beads/bd</code>。</p>
 <p><strong>双重 <code>bd prime</code></strong> — 插件会自动检测 <code>bd setup claude</code> hooks，并跳过自身的 <code>bd prime</code> 调用。若仍出现重复，请运行 <code>bd setup claude --remove</code>。</p>
 <p><strong><code>bd dolt push</code> 失败</strong> — 未配置 Dolt 远程。如果不需要远程同步，此错误无害。</p>

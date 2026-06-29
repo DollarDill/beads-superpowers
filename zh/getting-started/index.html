@@ -85,7 +85,7 @@
 <meta property="twitter:description" content="通过原生插件系统、curl 或 npx 为 Claude Code、Codex 和 OpenCode 安装 beads-superpowers。在 5 分钟内使用 bd init 设置您的第一个项目。" />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/zh/getting-started.png" />
 <meta name="panzoom-theme" content="material">
-<meta name="panzoom-data" content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'> </head>
+<meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
   
   
     
@@ -960,14 +960,14 @@
 <h2 id="_7">验证是否正常工作</h2>
 <p>在您选择的 CLI 中启动一个新会话，然后：</p>
 <ol>
-<li><strong>检查技能是否已加载：</strong> 输入 <code>/skills</code>（Claude Code/Codex）或查看 OpenCode 中的技能列表——您应该看到 23 个以 <code>beads-superpowers:</code> 为前缀的技能</li>
+<li><strong>检查技能是否已加载：</strong> 输入 <code>/skills</code>（Claude Code/Codex）或查看 OpenCode 中的技能列表——您应该看到 24 个以 <code>beads-superpowers:</code> 为前缀的技能</li>
 <li><strong>检查 Beads 是否正常工作：</strong> 在终端中运行 <code>bd ready</code> 和 <code>bd stats</code></li>
 </ol>
 <p>如果技能未显示，则该插件可能未为您的 CLI 安装。如果 <code>bd ready</code> 失败，则 Beads 尚未在此项目中初始化（运行 <code>bd init</code>）。</p>
 <h2 id="_8">钩子的工作原理</h2>
 <p>该插件通过 <code>hooks/hooks.json</code> 注册两个钩子：</p>
 <p><strong>SessionStart</strong> 在每次会话启动、清除和压缩时触发。它读取 <code>using-superpowers</code> 技能（该技能路由到所有其他技能），运行 <code>bd prime</code> 以捕获 Beads 状态和持久记忆，并输出合并后的上下文（约 2–3k tokens）。如果 <code>bd prime</code> 已在其他地方注册为钩子，则此步骤会自动跳过。</p>
-<p><strong>UserPromptSubmit</strong> 在每条用户消息时触发。它注入一条提醒，列出所有 22 个可调用技能及其触发条件——"bug → systematic-debugging"、"new feature → brainstorming"等。这可以防止智能体在会话中途忘记技能。</p>
+<p><strong>UserPromptSubmit</strong> 在每条用户消息时触发。它注入一条提醒，列出所有 23 个可调用技能及其触发条件——"bug → systematic-debugging"、"new feature → brainstorming"等。这可以防止智能体在会话中途忘记技能。</p>
 <div class="panzoom-box" data-key="alt" id="panzoom0" oncontextmenu="return false;">
     
     <nav class="panzoom-nav">
@@ -1023,9 +1023,9 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><strong>没有 <code>.beads</code> 目录</strong> — 在您的项目目录中运行 <code>bd init</code>。插件会自动处理重复钩子检测。</p>
 <p><strong>重复上下文注入</strong> — 插件会检测项目和全局设置中的 <code>bd setup claude</code> 钩子，并自动跳过自身的 <code>bd prime</code> 调用。如果您仍然看到重复内容，请运行 <code>bd setup claude --remove</code>。</p>
 <p><strong>插件缓存过期</strong> — 当您在本地编辑技能文件时，缓存不会自动更新。可以将缓存符号链接到您的代码检出目录：</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.1
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.2
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>ln<span class="w"> </span>-s<span class="w"> </span>~/workplace/beads-superpowers<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.1
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.2
 </code></pre></div>
 <p>或者重新安装。注意：<code>claude plugin update</code> 存在已知的<a href="https://github.com/anthropics/claude-code/issues/14061">缓存错误</a>——符号链接方式更可靠。</p>
 <p><strong>钩子未触发</strong> — 检查钩子是否可执行：<code>chmod +x hooks/session-start</code>。</p>

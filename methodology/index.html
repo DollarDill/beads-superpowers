@@ -83,7 +83,7 @@
 <meta property="twitter:description" content="Bright-line rules and anti-rationalization tables enforce agent discipline. Dolt-backed beads track every task across sessions through a 10-state lifecycle." />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/methodology.png" />
 <meta name="panzoom-theme" content="material">
-<meta name="panzoom-data" content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'> </head>
+<meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
   
   
     
@@ -728,13 +728,13 @@
 <p>Ask an AI coding agent to build a feature and watch what happens. It skips straight to code, writes implementation before tests, claims the work is "done" without running verification, and if you point out a problem it agrees instantly rather than pushing back. Start a new session the next day and every task it was tracking has vanished.</p>
 <p>Two projects attacked each half of this.</p>
 <h3 id="process-discipline">Process discipline</h3>
-<p><a href="https://github.com/obra/superpowers">Superpowers</a> (Jesse Vincent) shipped 14 composable skills that force agents to brainstorm before coding, write tests before implementation, investigate root causes before proposing fixes, and verify before claiming completion. The skills use bright-line rules — "NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST" — rather than hedged guidance like "consider writing tests", because compliance doubles from 33% to 72% when instructions are absolute rather than suggested (Meincke et al. 2025). Each skill includes an anti-rationalization table that preempts the excuses agents use to skip steps.</p>
+<p><a href="https://github.com/obra/superpowers">Superpowers</a> (Jesse Vincent) shipped 14 skills that force agents to brainstorm before coding, write tests before implementation, investigate root causes before proposing fixes, and verify before claiming completion. The skills use bright-line rules — "NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST" — rather than hedged guidance like "consider writing tests", because compliance doubles from 33% to 72% when instructions are absolute rather than suggested (Meincke et al. 2025). Each skill includes an anti-rationalization table that preempts the excuses agents use to skip steps.</p>
 <h3 id="persistent-memory">Persistent memory</h3>
 <p>Superpowers tracked tasks with <code>TodoWrite</code>, which vanishes when a session ends. <a href="https://github.com/gastownhall/beads">Beads</a> (Steve Yegge) replaced that with a Dolt-backed issue tracker where every task is a bead with a hash-based ID that survives session boundaries. Beads handles dependency tracking, cell-level merges for conflict-free multi-agent work, a full audit trail via the events table, and <code>bd remember</code> for persistent learnings. At every session start, <code>bd prime</code> injects the current task state so the agent picks up where it left off.</p>
 <h3 id="the-gap">The gap</h3>
 <p>Superpowers enforced good process but forgot everything between sessions. Beads remembered everything but imposed no process on how work should be done. beads-superpowers connects the two: every process step in every skill creates, updates, or closes a persistent bead, so following the right process and maintaining persistent memory are the same action.</p>
 <h2 id="how-it-works">How it works</h2>
-<p>The plugin installs 23 composable skills and a Dolt-backed task database. A <code>using-superpowers</code> bootstrap skill loads at session start and routes the agent to whichever skill fits the current task.</p>
+<p>The plugin installs 24 composable skills and a Dolt-backed task database. A <code>using-superpowers</code> bootstrap skill loads at session start and routes the agent to whichever skill fits the current task.</p>
 <div class="panzoom-box" data-key="alt" id="panzoom0" oncontextmenu="return false;">
     
     <nav class="panzoom-nav">
@@ -764,7 +764,7 @@ config:
 ---
 graph TB
   subgraph Superpowers ["Superpowers (Process Discipline)"]
-    S1["23 Composable Skills"]
+    S1["24 Composable Skills"]
     S2["Bright-line Rules"]
     S3["Anti-rationalization"]
     S4["Pressure-tested Enforcement"]
@@ -880,7 +880,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><strong>Step 10 — Close branch.</strong> <code>finishing-a-development-branch</code> detects the current environment — normal repository, named-branch worktree, or detached HEAD — and presents context-aware options: 4 choices for normal and worktree contexts, 3 for detached HEAD where merge is unavailable. Provenance-based cleanup only removes worktrees inside <code>.worktrees/</code>, leaving externally created worktrees alone. The skill ends with the Land the Plane protocol: if the session produced several new memories, offer a <code>memory-curator</code> pass before <code>bd dolt push</code>; then <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code> → <code>git status</code>. Branch paths terminate here — work is not done until both task state and code reach the remote.</p>
 <p><strong>Step 11 — Session close.</strong> Fires only on non-branch paths (research queries, quick tasks that didn't create a branch). Runs the same close ritual as Step 10's Land the Plane: close beads, offer a <code>memory-curator</code> pass if the session produced several new memories, push to remotes, verify clean state. The next session runs <code>bd prime</code> to restore the full picture.</p>
 <h2 id="agent-memory">Agent memory</h2>
-<p>Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow. 21 of the 23 skills now prompt for <code>bd remember</code> at their natural completion points — root causes after debugging, design decisions after brainstorming, review insights after code review — so memory capture happens within the skill workflow, not as a separate step.</p>
+<p>Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow. Most of the 24 skills now prompt for <code>bd remember</code> at their natural completion points — root causes after debugging, design decisions after brainstorming, review insights after code review — so memory capture happens within the skill workflow, not as a separate step.</p>
 <table>
 <thead>
 <tr>
@@ -975,7 +975,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><strong>Skills are Markdown, not code.</strong> Following Superpowers' zero-dependency philosophy, all skills are plain Markdown with YAML frontmatter. No build step. The only runtime dependency is <code>bd</code>, which is optional — skills still work without it, they just lose persistence.</p>
 <h2 id="sources">Sources</h2>
 <ul>
-<li><a href="https://github.com/obra/superpowers">obra/superpowers</a> v6.0.3 — 14 composable skills for AI agents (MIT)</li>
+<li><a href="https://github.com/obra/superpowers">obra/superpowers</a> v6.0.3 — 14 skills for AI agents (MIT)</li>
 <li><a href="https://github.com/gastownhall/beads">gastownhall/beads</a> v1.0.5 — Persistent issue tracker for AI agents (MIT)</li>
 <li>Cialdini, R. B. (2021). <em>Influence: The Psychology of Persuasion</em> (New and Expanded Edition). Harper Business.</li>
 <li>Meincke, L., et al. (2025). AI agent compliance with explicit vs hedged instructions. Referenced in <code>skills/writing-skills/persuasion-principles.md</code>.</li>
@@ -1002,7 +1002,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 28, 2026 09:02:31 UTC">June 28, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 29, 2026 15:33:09 UTC">June 29, 2026</span>
   </span>
 
     
