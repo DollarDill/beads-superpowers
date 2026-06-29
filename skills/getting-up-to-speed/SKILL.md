@@ -141,7 +141,28 @@ Produce **exactly this Markdown structure**. Heading levels are H2; tables and l
 
 - **Working tree:** from `git status --porcelain` (full list incl. untracked, status codes `M`/`A`/`D`/`R`/`??`) + `git diff --numstat` (added/deleted per tracked file; binary shows `-`). Rank tracked changes by added+deleted; show top-N with `+X/-Y` counts; render binary as `(binary)`; list the untracked count separately. Never dump the diff.
 - **Continuity check (in-progress beads only):** resolve the base branch as `git symbolic-ref refs/remotes/origin/HEAD` (strip to branch name), falling back to `main` then `master`; if none resolves, mark the check "unavailable". For each in-progress bead, run `git log --grep="<bead-id>" --oneline <base>`. If the bead ID appears in a commit reachable from the base branch, flag it advisory: `⚠️ <bead> appears in <sha> on <base> — verify it shouldn't be closed`. A multi-commit epic legitimately keeps shipping while open, so judge — do not auto-conclude. A bead whose ID is in no commit is NOT flagged. Skip the check when beads are absent. Deeper hygiene (stale branches, orphans, lint) → point to `bd doctor` / `bd stale` / `bd orphans`; do not reimplement it here.
-- **Handoff freshness check (if a doc was read):** compare the handoff's stated branch / sha / in-progress claims against live `git` + `bd` state. Flag divergence **advisory** (e.g. doc says "in progress X" but X is closed/shipped) — do not trust the doc over live state. If no doc was found, the check is "none found".
+- **Handoff freshness + recency check (if a doc was read):** two parts.
+  1. *Claims cross-check* (existing): compare the handoff's stated branch / sha / in-progress claims against live `git` + `bd` state; flag divergence **advisory** (e.g. doc says "in progress X" but X is closed/shipped) — never trust the doc over live state.
+  2. *HEAD-recency* — does the doc describe the last session, or an older one HEAD has moved past? Parse the recorded sha from the **first line containing `@`** (the "Current State (TL;DR)" branch line) **only** — not the whole doc, whose "What Shipped" section lists other commit shas:
+
+     ```bash
+     DOC="<path>"; HEAD=$(git rev-parse HEAD)
+     DOC_SHA=$(grep -m1 -F '@' "$DOC" | grep -oE '[0-9a-f]{7,40}' | head -1)
+     if [ -n "$DOC_SHA" ] && [ "$DOC_SHA" = "$HEAD" ]; then
+       echo fresh
+     elif [ -n "$DOC_SHA" ] && git merge-base --is-ancestor "$DOC_SHA" HEAD 2>/dev/null; then
+       echo possibly-stale            # HEAD has moved past the handoff's sha
+     else                              # sha absent / not an ancestor / 0-or-many → mtime fallback
+       DOC_MTIME=$(stat -c %Y "$DOC" 2>/dev/null || stat -f %m "$DOC")
+       if [ -n "$DOC_MTIME" ] && [ "$DOC_MTIME" -lt "$(git log -1 --format=%ct)" ]; then
+         echo possibly-stale           # doc older than the latest commit
+       else
+         echo fresh-or-unavailable
+       fi
+     fi
+     ```
+
+     The verdict is **advisory-only** — a soft label, never a destructive action — so the mtime fallback's imprecision (a `touch`/`checkout` can perturb mtime) is acceptable; it errs toward "possibly stale", the safe direction. No git / no commits → **freshness unavailable**. If no doc was found, the whole check is "none found".
 
 ```markdown
 ## What `<project>` Is
@@ -165,7 +186,7 @@ Produce **exactly this Markdown structure**. Heading levels are H2; tables and l
 **Last release:** <if version detectable> shipped: <CHANGELOG bullet summary>. `[Unreleased]` <empty | has N entries>.
 **Beads ledger:** <total> total · <closed> · <open> · <in-progress> · <blocked>. (verified, from `bd count --by-status`; <blocked> from `bd blocked`)
 **Continuity check:** <✓ ledger consistent with git | ⚠️ <bead> appears in <sha> on <base> — verify it shouldn't be closed | skipped (no beads) | unavailable>.
-**Last handoff:** <path> (<date>) — <one-line headline>. Freshness: <✓ matches live | ⚠️ doc says X, live is Y | none found>.
+**Last handoff:** <path> (<date>) — <one-line headline>. Freshness: <✓ fresh — sha == HEAD & matches live | ⚠️ possibly stale — HEAD is ahead of the handoff's recorded sha <DOC_SHA>; treated as background context, not the last session's outcome | ⚠️ doc says X, live is Y | unavailable | none found>.<append ` (+N older unread handoff(s) in inbox — not consumed this run)` when the inbox holds more than one `*.md`; N = count of `.internal/handoff/*.md` minus the one read>
 
 | Bead | Pri | Title |
 |---|---|---|
@@ -181,7 +202,7 @@ Produce **exactly this Markdown structure**. Heading levels are H2; tables and l
 **Other captured memories:** <one line per memory not surfaced above>
 
 ---
-<after-compaction only: "Welcome back — last thread was <X>.">
+<after-compaction only AND only when the handoff verdict is **fresh**: "Welcome back — last thread was <X>." If the verdict is **possibly stale / unavailable**, do NOT assert it is the last session — instead: "Note: the newest handoff on disk (<date>, sha <DOC_SHA>) predates HEAD — treating it as background context, not necessarily the last session.">
 I'm ready for your next instruction. Highest-priority unblocked work: **`<bead-id>`** (<priority> — <title>).
 If you want to start it, the fitting skill is **<skill>** — but I'll wait for your call; I won't claim or begin anything.
 ```
@@ -194,7 +215,7 @@ Validate each line; fix or mark degraded, then re-check. Only emit once all pass
 2. Every inferred claim has a confidence glyph + source tag.
 3. Any section you could not fill from a command → degraded-state language from the Edge Cases table. NEVER invent.
 4. The continuity check ran (or is marked skipped/unavailable).
-5. The latest handoff doc was read and freshness-checked (or marked "none found").
+5. The latest handoff doc was read and freshness+recency-checked — classified **fresh / possibly-stale / unavailable** — and the terminal "Welcome back" line is suppressed when not fresh (or marked "none found" if the inbox was empty).
 6. The Progress Checklist is fully ticked (or items marked skipped with reason).
 
 The trailing "I'm ready" line is the **terminal contract**: the skill stops here. Do NOT auto-claim the next bead. Do NOT start working on anything. The user drives the next move.
@@ -233,6 +254,8 @@ If orientation surfaced a Phase-1 memory that is now stale or wrong, remove it: 
 | `git log --grep` errors or base branch undetectable | Mark continuity check "unavailable"; do not block the summary |
 | `.internal/handoff/` absent or empty | Skip the handoff read; emit "no handoff doc found" in the Last-handoff line |
 | Handoff written to a non-default path | Not auto-detected; orientation only checks the default `.internal/handoff/` |
+| Newest handoff predates latest commit / last session wrote no handoff | HEAD-recency check marks it **possibly stale**; narration suppresses "last session" — flag, don't mis-attribute (the `mu0s` case) |
+| Inbox holds multiple unread handoffs | Read only the newest; append `+N older unread` to the Last-handoff line; older docs drain over later sessions |
 
 ## Red Flags / Anti-Rationalization
 

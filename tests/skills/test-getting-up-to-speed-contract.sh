@@ -37,4 +37,11 @@ check_loose "key prefix"
 check_loose "memory-curator"
 check_loose "never guess-delete"
 
+# Recency backstop (mu0s fix — Task 1)
+check_loose "possibly stale"
+check_loose "is-ancestor"
+check_loose "older unread handoff"
+check_loose "recency"
+check_loose "predates HEAD"   # locks the terminal-line suppression narration
+
 [ "$fail" -eq 0 ] && echo "PASS: getting-up-to-speed contract" || exit 1
