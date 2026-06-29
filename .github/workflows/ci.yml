@@ -55,6 +55,12 @@ jobs:
       - name: TodoWrite gate self-test
         run: bash tests/skills/test-todowrite-gate.sh
 
+      - name: session-handoff contract test
+        run: bash tests/skills/test-session-handoff-contract.sh
+
+      - name: session-handoff no-agent-refs guard
+        run: bash tests/skills/test-session-handoff-no-agent-refs.sh
+
       - name: Verify beads integration density
         run: |
           count=$(grep -r "bd create\|bd close\|bd ready" skills/ | wc -l)

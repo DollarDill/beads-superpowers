@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **`session-handoff` skill (human-invoked).** A new skill that writes a grounded handoff document — current state, work in progress, what shipped, decisions, loose threads, and how to resume — plus a one-line continuation memory, so a fresh session can pick up in-progress work after a context reset or a teammate handoff. It is deliberately human-only: never auto-invoked, and absent from every agent trigger surface. Output defaults to a gitignored local path, with a `git check-ignore` safety check and secret redaction so a handoff can't leak secrets to a tracked file.
+
 ## [0.8.1] - 2026-06-28
 
 ### Changed
