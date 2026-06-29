@@ -23,7 +23,7 @@
 ## Validation (run before submitting)
 
 ```bash
-ls -d skills/*/ | wc -l                                                    # Should be 23
+ls -d skills/*/ | wc -l                                                    # Should be 24
 bash scripts/check-todowrite.sh                                            # "No active TodoWrite references"
 bash scripts/check-agent-bead-stamp.sh                                     # "present at all 7 required sites"
 grep -r "bd create\|bd close\|bd ready" skills/ | wc -l                    # Should be 30+

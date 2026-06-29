@@ -11,6 +11,10 @@ SURFACES=(
   "hooks/superpowers-reminder.sh"
   "hooks/session-start"
   "example-workflow/agents/yegge.md"
+  "hooks/hooks.json"
+  "hooks/codex-hooks.json"
+  "opencode/beads-superpowers-plugin.ts"
+  ".kimi-plugin/plugin.json"
 )
 for f in "${SURFACES[@]}"; do
   if grep -q "session-handoff" "$f" 2>/dev/null; then
