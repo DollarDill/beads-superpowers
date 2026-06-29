@@ -34,12 +34,13 @@ check_loose "Secret-scan" "$SKILL"
 check_loose "Reference, don't duplicate" "$SKILL"
 
 # --- Standalone integration ---
-check_loose "intentionally" "$SKILL"   # "intentionally NOT referenced by any agent surface"
+check_loose "intentionally NOT referenced" "$SKILL"   # guards the Integration sentence
 
 # --- Budget + ships-clean (H1) ---
 lines=$(grep -c '' "$SKILL")
-# shellcheck disable=SC2015  # A&&B||C is intentional: fail=1 side-effect after echo
-[ "$lines" -lt 500 ] && echo "PASS: <500 lines ($lines)" || { echo "FAIL: >=500 lines"; fail=1; }
+if [ "$lines" -lt 500 ]; then echo "PASS: <500 lines ($lines)"; else echo "FAIL: >=500 lines"; fail=1; fi
 grep -nE 'ADR-[0-9]|\bbd-[a-z0-9]{4}\b|beads-superpowers-[a-z0-9]+|decisions/' "$SKILL" && { echo "FAIL: unshipped refs"; fail=1; } || echo "PASS: ships clean"
+# Only .internal/handoff/ (the write-target default) is an allowed .internal/ ref
+grep -nE '\.internal/' "$SKILL" | grep -v '\.internal/handoff/' && { echo "FAIL: non-handoff .internal/ ref"; fail=1; } || echo "PASS: .internal/ clean"
 
 [ "$fail" -eq 0 ] && echo "PASS: session-handoff contract" || exit 1

@@ -28,8 +28,8 @@ tailor Work In Progress / Loose Threads / Suggested Skills.
 
 1. **Gather (read-only, run the commands — do not recall):**
    `git status -sb`, `git log --oneline -15`, `git diff --stat`, branch + ahead/behind;
-   `bd ready`, `bd blocked`, `bd count --by-status`, in-progress beads; list
-   `.internal/specs|plans` files and architecture decision records touched this session.
+   `bd ready`, `bd blocked`, `bd count --by-status`, in-progress beads; list the
+   spec, plan, and architecture-decision-record files touched this session.
 2. **Synthesize** into the bundled template (`handoff-template.md`). **Reference
    artifacts by path — never paste their bodies** (commits, ADRs, specs, plans, diffs).
    Duplicating bloats the doc and goes stale.
