@@ -205,7 +205,7 @@ already_exists = any(
 
 if not already_exists:
     session_hooks.append({
-        "matcher": "startup|clear|compact",
+        "matcher": "startup|resume|clear|compact",
         "hooks": [{
             "type": "command",
             "command": hook_cmd
