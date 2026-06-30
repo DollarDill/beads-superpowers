@@ -1,100 +1,84 @@
 import type { Plugin } from "@opencode-ai/plugin"
 import { readFileSync } from "fs"
-import { join } from "path"
+import { join, dirname } from "path"
 import { execSync } from "child_process"
 
 export const BeadsSuperpowers: Plugin = async () => {
   // Resolve skill content from installed locations (NOT cwd — plugin runs in user's project dir)
   const home = process.env.HOME || ""
-  const skillPaths = [
+  const skillCandidates = [
     join(home, ".config/opencode/skills/using-superpowers/SKILL.md"),
     join(home, ".claude/skills/using-superpowers/SKILL.md"),
     join(home, ".agents/skills/using-superpowers/SKILL.md"),
   ]
 
-  let usingSuperpowersContent = ""
-  for (const p of skillPaths) {
+  let skillPath = ""
+  let skillContent = ""
+  for (const p of skillCandidates) {
     try {
-      usingSuperpowersContent = readFileSync(p, "utf-8")
+      skillContent = readFileSync(p, "utf-8")
+      skillPath = p
       break
     } catch {
-      // Try next path
+      // try next
     }
   }
 
-  // Build reminder text (same content as superpowers-reminder.sh)
-  const reminderText = [
-    "SUPERPOWERS REMINDER: Before responding, check if any beads-superpowers skill applies.",
-    "Key triggers:",
-    "- Bug/test failure → systematic-debugging",
-    "- Writing code → test-driven-development",
-    "- New feature/design → brainstorming",
-    "- Challenge/stress-test → stress-test",
-    "- Writing a plan → writing-plans",
-    "- Executing a plan → subagent-driven-development or executing-plans",
-    "- Research question → research-driven-development",
-    "- Complex task (6+ files) → using-git-worktrees",
-    "- About to claim done → verification-before-completion",
-    "- Code review needed → requesting-code-review",
-    "- Received review feedback → receiving-code-review",
-    "- Writing prose → write-documentation",
-    "- Branch complete → finishing-a-development-branch",
-    "Also available: document-release, getting-up-to-speed, dispatching-parallel-agents, project-init, setup",
-    "If even 1% chance a skill applies, you MUST invoke it.",
-  ].join("\n")
+  // Read reminder-content.txt co-located with SKILL.md; strip full-line # comments
+  // (equivalent to bash: sed '/^[[:space:]]*#/d')
+  let reminder = ""
+  if (skillPath) {
+    try {
+      const raw = readFileSync(join(dirname(skillPath), "reminder-content.txt"), "utf-8")
+      reminder = raw.split("\n").filter(line => !/^\s*#/.test(line)).join("\n")
+    } catch {
+      // reminder-content.txt not found — per-turn reminder skipped
+    }
+  }
+
+  const notFoundHint =
+    "beads-superpowers: using-superpowers skill not found — run: npm exec --yes -- skills@latest add DollarDill/beads-superpowers -a opencode -g --copy -y"
+
+  // once-per-session guard — closure-scoped (OpenCode instantiates the plugin once per process)
+  const seen = new Set<string>()
+
+  const bdPrime = (): string => {
+    try {
+      return execSync("bd prime 2>/dev/null", { encoding: "utf-8", timeout: 10000 })
+    } catch {
+      return ""
+    }
+  }
 
   return {
-    // Hook 1: SessionStart equivalent — inject using-superpowers + bd prime
-    event: async (event: { type: string }) => {
-      if (event.type !== "session.created") return
-
-      let bdPrime = ""
-      try {
-        bdPrime = execSync("bd prime 2>/dev/null", {
-          encoding: "utf-8",
-          timeout: 10000,
-        })
-      } catch {
-        // bd not installed or not in a beads workspace — skip
+    // Hook 1: first chat.message of a session → bootstrap (using-superpowers + bd prime), once only.
+    // Subsequent messages → per-turn reminder from reminder-content.txt.
+    // Injection is via output.parts mutation (returning objects is a no-op in @opencode-ai/plugin).
+    "chat.message": async (input: { sessionID: string }, output: { message: unknown; parts: any[] }) => {
+      if (!seen.has(input.sessionID)) {
+        seen.add(input.sessionID)
+        const bootstrap = skillContent
+          ? `<EXTREMELY_IMPORTANT>\nYou have beads-superpowers.\n\n${skillContent}\n</EXTREMELY_IMPORTANT>`
+          : notFoundHint
+        const prime = bdPrime()
+        const text = prime ? `${bootstrap}\n\n<beads-context>\n${prime}\n</beads-context>` : bootstrap
+        output.parts.unshift({ type: "text", text })
+      } else if (reminder) {
+        output.parts.unshift({ type: "text", text: reminder })
       }
-
-      const context = [
-        "<EXTREMELY_IMPORTANT>",
-        "You have beads-superpowers.",
-        "",
-        "**Below is your 'using-superpowers' skill:**",
-        "",
-        usingSuperpowersContent,
-        "</EXTREMELY_IMPORTANT>",
-        bdPrime
-          ? `\n<beads-context>\n${bdPrime}\n</beads-context>`
-          : "",
-      ].join("\n")
-
-      return { additionalContext: context }
     },
 
-    // Hook 2: UserPromptSubmit equivalent — skill trigger reminders
-    "chat.message": async () => {
-      return { additionalContext: reminderText }
-    },
-
-    // Hook 3: Compaction resilience — re-inject beads context after compaction
-    "experimental.session.compacting": async () => {
-      let bdPrime = ""
-      try {
-        bdPrime = execSync("bd prime 2>/dev/null", {
-          encoding: "utf-8",
-          timeout: 10000,
-        })
-      } catch {
-        // bd not installed — skip
-      }
-      return {
-        context: bdPrime
-          ? `beads-superpowers is installed. Run skills via the skill tool.\n\n${bdPrime}`
-          : "beads-superpowers is installed. Run skills via the skill tool.",
-      }
+    // Hook 2: compaction resilience — re-inject beads context after context window compaction.
+    "experimental.session.compacting": async (
+      _input: { sessionID: string },
+      output: { context: string[]; prompt?: string }
+    ) => {
+      const prime = bdPrime()
+      output.context.push(
+        prime
+          ? `beads-superpowers is installed. Run skills via the skill tool.\n\n${prime}`
+          : "beads-superpowers is installed. Run skills via the skill tool."
+      )
     },
   }
 }
