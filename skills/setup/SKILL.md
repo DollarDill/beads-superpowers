@@ -76,64 +76,22 @@ Adjust all paths in Steps 1-4 based on the user's choice.
 
 ### Step 1: Create the hook script
 
-Create `~/.claude/hooks/beads-superpowers-session-start.sh`:
+Create `~/.claude/hooks/beads-superpowers-session-start.sh` by copying the source of truth from `hooks/session-start`:
 
 ```bash
-cat > ~/.claude/hooks/beads-superpowers-session-start.sh << 'HOOKSCRIPT'
-#!/usr/bin/env bash
-# SessionStart hook for beads-superpowers (npx install path)
-# Injects using-superpowers skill content + bd prime context at session start.
-set -euo pipefail
+# The hook script content is loaded dynamically via DCI from hooks/session-start
+# This ensures setup always installs the canonical hook — no manual sync needed.
+```
 
-# Find using-superpowers SKILL.md (check multiple locations)
-SKILL_FILE=""
-for path in \
-  "${HOME}/.claude/skills/using-superpowers/SKILL.md" \
-  "${HOME}/.agents/skills/using-superpowers/SKILL.md" \
-  "${HOME}/.config/superpowers/skills/using-superpowers/SKILL.md"; do
-    if [ -f "$path" ]; then
-        SKILL_FILE="$path"
-        break
-    fi
-done
+Write the following content to `~/.claude/hooks/beads-superpowers-session-start.sh`:
 
-if [ -z "$SKILL_FILE" ]; then
-    printf '{"additionalContext": "beads-superpowers skills not found. Run: npm exec --yes -- skills@latest add DollarDill/beads-superpowers -a claude-code -g --copy -y"}\n'
-    exit 0
-fi
+```
+!`bash ${CLAUDE_SKILL_DIR}/get-session-start-hook.sh`
+```
 
-skill_content=$(cat "$SKILL_FILE" 2>/dev/null || echo "Error reading skill")
+Then make it executable:
 
-# Run bd prime if available
-beads_context=""
-if command -v bd &>/dev/null; then
-    beads_context=$(bd prime 2>/dev/null || true)
-fi
-
-# Escape for JSON
-escape_for_json() {
-    local s="$1"
-    s="${s//\\/\\\\}"
-    s="${s//\"/\\\"}"
-    s="${s//$'\n'/\\n}"
-    s="${s//$'\r'/\\r}"
-    s="${s//$'\t'/\\t}"
-    printf '%s' "$s"
-}
-
-skill_escaped=$(escape_for_json "$skill_content")
-beads_escaped=$(escape_for_json "$beads_context")
-
-ctx="<EXTREMELY_IMPORTANT>\nYou have beads-superpowers.\n\n**Below is the full content of your 'beads-superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${skill_escaped}\n</EXTREMELY_IMPORTANT>"
-
-if [ -n "$beads_context" ]; then
-    ctx="${ctx}\n\n<beads-context>\n${beads_escaped}\n</beads-context>"
-fi
-
-printf '{"additionalContext": "%s"}\n' "$ctx"
-exit 0
-HOOKSCRIPT
-
+```bash
 chmod +x ~/.claude/hooks/beads-superpowers-session-start.sh
 ```
 
