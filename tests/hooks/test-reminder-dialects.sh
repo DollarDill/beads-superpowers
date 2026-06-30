@@ -23,6 +23,14 @@ check "Generic → additionalContext contains memory-curator" \
   "" \
   '.additionalContext | contains("memory-curator")'
 
+# Injected content must NOT leak the maintainer-only "# ..." comment line.
+check "Generic → injected content excludes session-handoff" \
+  "" \
+  '.additionalContext | contains("session-handoff") | not'
+check "Generic → injected content has no full-line # comment" \
+  "" \
+  '.additionalContext | split("\n") | (map(test("^\\s*#")) | any) | not'
+
 # Cursor dialect: additional_context (snake_case)
 check "Cursor → .additional_context present" \
   "CURSOR_PLUGIN_ROOT=/x" \

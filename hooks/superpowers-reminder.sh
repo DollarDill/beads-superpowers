@@ -4,9 +4,9 @@
 # Matcher: "" (fires on every prompt submission)
 set -euo pipefail
 
-# Read reminder content from canonical shared file
+# Read reminder content from canonical shared file (strip full-line # comments — maintainer-only)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"; PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-REMINDER="$(cat "${PLUGIN_ROOT}/skills/using-superpowers/reminder-content.txt" 2>/dev/null || printf 'SUPERPOWERS REMINDER: check if a beads-superpowers skill applies.')"
+REMINDER="$(sed '/^[[:space:]]*#/d' "${PLUGIN_ROOT}/skills/using-superpowers/reminder-content.txt" 2>/dev/null || printf 'SUPERPOWERS REMINDER: check if a beads-superpowers skill applies.')"
 
 # Escape string for JSON embedding using bash parameter substitution.
 escape_for_json() {
