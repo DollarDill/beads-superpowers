@@ -51,4 +51,36 @@ else
   echo "SKIP (c): skipping nested-form check (earlier assertions failed)"
 fi
 
+# (d) Skills-only layout (npx --copy): get-*-hook.sh must resolve the CO-LOCATED copy with
+# NO hooks/ sibling present. Nest under install/ so BOTH repo-relative fallbacks
+# ($SCRIPT_DIR/../../hooks and ../../../hooks) resolve to absent dirs inside the temp tree —
+# guaranteeing a pre-fix run genuinely emits "# ERROR" rather than finding a real hooks/.
+tmpd=$(mktemp -d)
+mkdir -p "$tmpd/install/skills"
+cp -rf "$ROOT/skills/setup" "$tmpd/install/skills/setup"
+rm -rf "$tmpd/install/hooks" "$tmpd/hooks"   # ensure no fallback target exists
+setup_dir="$tmpd/install/skills/setup"
+
+d_session=$(bash "$setup_dir/get-session-start-hook.sh" 2>/dev/null)
+d_reminder=$(bash "$setup_dir/get-reminder-hook.sh" 2>/dev/null)
+
+if echo "$d_session" | grep -q '# ERROR' || ! echo "$d_session" | grep -q 'SessionStart hook for beads-superpowers'; then
+  echo "FAIL (d1): skills-only get-session-start-hook.sh did not resolve co-located copy (# ERROR or missing marker)"; fail=1
+elif echo "$d_reminder" | grep -q '# ERROR' || ! echo "$d_reminder" | grep -q 'SUPERPOWERS REMINDER'; then
+  echo "FAIL (d2): skills-only get-reminder-hook.sh did not resolve co-located copy (# ERROR or missing marker)"; fail=1
+else
+  # Canonical content from the skills-only layout must still produce the nested Claude form.
+  mkdir -p "$tmpd/inst/hooks" "$tmpd/inst/skills/using-superpowers"
+  cp -f "$ROOT/skills/using-superpowers/SKILL.md" "$tmpd/inst/skills/using-superpowers/SKILL.md"
+  printf '%s\n' "$d_session" > "$tmpd/inst/hooks/session-start"
+  chmod +x "$tmpd/inst/hooks/session-start"
+  d_hookout=$(CLAUDE_PLUGIN_ROOT=/x bash "$tmpd/inst/hooks/session-start" 2>/dev/null)
+  if echo "$d_hookout" | jq -e '.hookSpecificOutput.additionalContext' >/dev/null 2>&1; then
+    echo "PASS (d): skills-only layout resolves co-located copies + emits nested form"
+  else
+    echo "FAIL (d3): skills-only installed hook not nested; got: $d_hookout"; fail=1
+  fi
+fi
+rm -rf "$tmpd"
+
 exit $fail
