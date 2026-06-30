@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# SessionStart hook for beads-superpowers plugin
+# This hook subsumes both superpowers skill injection AND beads context (bd prime).
+# If bd prime is already registered as a hook elsewhere (e.g. bd setup claude),
+# we skip our bd prime call to avoid duplicate context injection.
+
+set -euo pipefail
+
+# Determine plugin root directory
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Check if legacy skills directory exists and build warning
+warning_message=""
+legacy_skills_dir="${HOME}/.config/superpowers/skills"
+if [ -d "$legacy_skills_dir" ]; then
+    warning_message="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **WARNING:** Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead. To make this message go away, remove ~/.config/superpowers/skills</important-reminder>"
+fi
+
+# Detect if bd prime is already registered as a hook elsewhere (e.g. bd setup claude).
+# Check project and global settings files — if found, skip our bd prime call.
+bd_prime_already_hooked=0
+for settings_file in \
+    ".claude/settings.json" \
+    ".claude/settings.local.json" \
+    "${HOME}/.claude/settings.json" \
+    "${HOME}/.claude/settings.local.json"; do
+    if [ -f "$settings_file" ] 2>/dev/null && grep -q '"bd prime"' "$settings_file" 2>/dev/null; then
+        bd_prime_already_hooked=1
+        break
+    fi
+done
+
+# Read using-superpowers content
+using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>/dev/null) || using_superpowers_content="beads-superpowers: using-superpowers skill unreadable"
+
+# Run bd prime if available AND not already hooked elsewhere
+beads_context=""
+if [ "$bd_prime_already_hooked" -eq 0 ] && command -v bd &>/dev/null; then
+    beads_context=$(bd prime 2>/dev/null || true)
+fi
+
+# Escape string for JSON embedding using bash parameter substitution.
+escape_for_json() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\r'/\\r}"
+    s="${s//$'\t'/\\t}"
+    printf '%s' "$s"
+}
+
+using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
+beads_escaped=$(escape_for_json "$beads_context")
+warning_escaped=$(escape_for_json "$warning_message")
+
+# Build combined session context: skills + beads workflow
+session_context="<EXTREMELY_IMPORTANT>\nYou have beads-superpowers.\n\n**Below is the full content of your 'beads-superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
+
+# Append beads context if available
+if [ -n "$beads_context" ]; then
+    session_context="${session_context}\n\n<beads-context>\n${beads_escaped}\n</beads-context>"
+fi
+
+# Output context injection as JSON.
+# Cursor hooks expect additional_context (snake_case).
+# Claude Code hooks expect hookSpecificOutput.additionalContext (nested).
+# Copilot CLI (v1.0.11+) and others expect additionalContext (top-level, SDK standard).
+if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+  printf '{\n  "additional_context": "%s"\n}\n' "$session_context"
+elif { [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] || [ -n "${CODEX_PLUGIN_ROOT:-}" ]; } && [ -z "${COPILOT_CLI:-}" ]; then
+  printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context"
+else
+  printf '{\n  "additionalContext": "%s"\n}\n' "$session_context"
+fi
+
+# bd-absent hint (non-fatal, one line to stderr)
+if ! command -v bd >/dev/null 2>&1; then
+  printf '%s\n' "beads not found — install bd to enable persistent task memory: https://github.com/DollarDill/beads-superpowers#prerequisites" >&2
+fi
+
+# upstream-superpowers coexistence collision warning (best-effort, non-fatal)
+_bsp_plugins="$HOME/.claude/plugins/installed_plugins.json"
+if grep -Eq '"superpowers@(claude-plugins-official|superpowers-marketplace)"' "$_bsp_plugins" 2>/dev/null; then
+  printf '%s\n' "warning: obra/superpowers appears installed alongside beads-superpowers — skill names collide; use one or the other" >&2
+fi
+
+exit 0

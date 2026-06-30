@@ -2,11 +2,14 @@
 # Output the UserPromptSubmit hook script content.
 # Used by DCI in SKILL.md to avoid hardcoding the reminder content.
 # Source of truth: hooks/superpowers-reminder.sh
-# Searches candidate relative paths to handle both source-repo and installed layouts.
+# Search order: the CO-LOCATED copy (superpowers-reminder.sh) FIRST — it is the only candidate
+# that ships in the skills-only `npx skills add --copy` layout (no hooks/ sibling). It is kept
+# byte-identical to hooks/superpowers-reminder.sh by scripts/check-convention-sync.sh.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 for cand in \
+  "$SCRIPT_DIR/superpowers-reminder.sh" \
   "$SCRIPT_DIR/../../hooks/superpowers-reminder.sh" \
   "$SCRIPT_DIR/../../../hooks/superpowers-reminder.sh"; do
   [ -f "$cand" ] && { cat "$cand"; exit 0; }
