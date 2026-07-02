@@ -42,6 +42,8 @@ These shared skills intentionally differ from upstream superpowers. When Phase 5
 | **All shared skills (namespace)** | cross-skill references use `beads-superpowers:<skill>` | bare `superpowers:<skill>` | upstream's bare namespace points at the upstream plugin; in our fork it must carry our plugin name or it resolves to the wrong plugin (intended; mark SKIP, not Conflict) |
 | **brainstorming** | brainstorm session dir + auth-token files live under `.internal/brainstorm/` (self-ignored) | upstream uses `.superpowers/brainstorm/` | one canonical `.internal/` scratch root (spec 2026-06-30); `server.cjs` unchanged — do not revert the path on re-sync |
 | **subagent-driven-development** (workspace paths) | SDD workspace, task briefs, and review packages live under `.internal/sdd/` (self-ignored) | upstream uses `.superpowers/sdd/` | one canonical `.internal/` scratch root (spec 2026-06-30); do not revert the path on re-sync |
+| **Codex SessionStart hook** | keep it — still fires `using-superpowers` bootstrap + `bd prime` | v6.1.0 removed theirs ("Codex reliably triggers skills on its own, and the bootstrap hook made the UX worse rather than better") | ours also carries `bd prime` injection (beads context), not just the skill bootstrap upstream deemed redundant (ADR-0039, 2026-07-02) |
+| **SessionStart matcher** | `startup|resume|clear|compact` | `startup|clear|compact` | added in bd-3ogl.2 to cover session resumption |
 
 When a CHANGED skill from Phase 5 matches a row here, mark it **SKIP (deliberate divergence)** in the report — not drift.
 
