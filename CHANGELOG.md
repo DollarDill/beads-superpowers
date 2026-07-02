@@ -21,14 +21,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-- **`npx --copy` setup no longer installs a no-op session-start hook.** On a skills-only
-  `npx skills add … --copy` install there is no `hooks/` directory, so the setup skill's hook-content
-  resolver found nothing and installed an empty hook — silently disabling skill auto-activation for
-  those users. The two canonical hooks now ship as byte-identical copies inside the setup skill
-  (`skills/setup/session-start.sh`, `skills/setup/superpowers-reminder.sh`), the resolver prefers
-  them, and a `cmp` guard (now enforced in pre-commit, alongside a skills-only-layout test) keeps the
-  copies from drifting. Marketplace-plugin and native installs were unaffected. Existing `--copy`
-  users who installed the broken hook should **re-run `install.sh`** to refresh their hooks.
+- **`npx --copy` setup no longer installed a no-op session-start hook.** On a skills-only
+  `npx skills add … --copy` install there was no `hooks/` directory, so the (since-removed) setup
+  skill's hook-content resolver found nothing and installed an empty hook — silently disabling skill
+  auto-activation for those users. Marketplace-plugin and native installs were unaffected; skills-only
+  installs now get hooks from `install.sh` instead. Existing `--copy` users who installed the broken
+  hook should **re-run `install.sh`** to refresh their hooks.
 - `install.sh` now removes stale UserPromptSubmit registrations on update/uninstall (python3, timestamped backup, foreign hooks preserved). Manual one-liner in the README npx section for users updating from ≤0.8.2.
 
 ## [0.8.2] - 2026-06-30
