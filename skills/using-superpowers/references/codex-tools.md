@@ -40,4 +40,6 @@ names, commit messages, and PR descriptions for the user to copy.
 
 ## Beads
 
+| Action | Codex equivalent |
+|---|---|
 | `bd` CLI (task tracking via beads) | Use native shell tools with `bd` commands |
