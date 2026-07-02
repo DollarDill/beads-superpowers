@@ -21,7 +21,7 @@ This is not negotiable. You cannot rationalize your way out of this.
 
 **Before entering plan mode:** if you haven't already brainstormed, invoke the brainstorming skill first.
 
-Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it has a checklist, track it with beads (see Beads below) — never TodoWrite.
+Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it has a checklist, track it with beads (see Beads below) — TodoWrite is forbidden.
 
 ## Skill Priority
 
@@ -59,7 +59,7 @@ When a decision is hard to reverse, surprising without context, and a genuine tr
 
 ## Beads
 
-`bd` (beads) is the task tracker for ALL work — TodoWrite, TaskCreate, and markdown TODOs are forbidden. `bd prime` injects the live workflow context and command reference at session start; rerun it after compaction if beads context is missing. Only the orchestrating agent manages beads — subagents never touch them. Include bead IDs in commit messages. Session close = land the plane: `bd close` → `bd dolt push` → `git push`.
+`bd` (beads) is the task tracker for ALL work — TodoWrite is forbidden, as are TaskCreate and markdown TODOs. `bd prime` injects the live workflow context and command reference at session start; rerun it after compaction if beads context is missing. Only the orchestrating agent manages beads — subagents never touch them. Include bead IDs in commit messages. Session close = land the plane: `bd close` → `bd dolt push` → `git push`.
 
 ## Platform Adaptation
 
