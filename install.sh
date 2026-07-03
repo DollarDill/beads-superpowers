@@ -179,7 +179,9 @@ promote_staging() {
     install_codex_from "$SKILLS_DIR" || warn "Codex skill install failed — Claude Code install succeeded"
   fi
   if [ "$HAS_OPENCODE" = 1 ]; then
-    install_opencode_from "$SKILLS_DIR" "$source_skills" || warn "OpenCode install failed — Claude Code install succeeded"
+    local extract_root
+    extract_root="$(dirname "$source_skills")"
+    install_opencode_from "$SKILLS_DIR" "$extract_root" || warn "OpenCode install failed — Claude Code install succeeded"
   fi
 
   success "Installed $count skills"
@@ -376,7 +378,9 @@ uninstall_codex_support() {
       removed=$((removed + 1))
     fi
   done
-  [ $removed -gt 0 ] && success "Codex: removed $removed skills from $codex_skills/"
+  if [ $removed -gt 0 ]; then
+    success "Codex: removed $removed skills from $codex_skills/"
+  fi
 }
 
 uninstall_opencode_support() {
@@ -388,7 +392,9 @@ uninstall_opencode_support() {
       removed=$((removed + 1))
     fi
   done
-  [ $removed -gt 0 ] && success "OpenCode: removed $removed skills from $oc_skills/"
+  if [ $removed -gt 0 ]; then
+    success "OpenCode: removed $removed skills from $oc_skills/"
+  fi
 
   local oc_plugin="$HOME/.config/opencode/plugins/beads-superpowers-plugin.ts"
   if [ -f "$oc_plugin" ]; then
@@ -660,7 +666,7 @@ do_auto_uninstall_previous() {
       claude plugin uninstall beads-superpowers@beads-superpowers-marketplace 2>/dev/null || true
       codex plugin uninstall beads-superpowers@beads-superpowers-marketplace 2>/dev/null || true
       ;;
-    npx|tarball|git)
+    npx|tarball|git|local)
       for skill in "${KNOWN_SKILLS[@]}"; do
         rm -rf "${SKILLS_DIR:?}/$skill" 2>/dev/null
       done
@@ -914,7 +920,7 @@ do_uninstall() {
       claude plugin uninstall beads-superpowers@beads-superpowers-marketplace 2>/dev/null || true
       codex plugin uninstall beads-superpowers@beads-superpowers-marketplace 2>/dev/null || true
       ;;
-    npx|tarball|git)
+    npx|tarball|git|local)
       local removed=0
       for skill in "${KNOWN_SKILLS[@]}"; do
         if [ -d "$SKILLS_DIR/$skill" ]; then
