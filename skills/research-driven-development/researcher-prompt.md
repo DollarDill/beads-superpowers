@@ -36,12 +36,10 @@ Agent tool (subagent_type: "general-purpose"):
     1. **Search the knowledge base first** — Use `bd memories <keyword>` for workflow
        context. Then search for existing research documents:
        ```bash
-       # Search project research directory
-       find docs/research/ -name "*.md" -exec grep -li "<keyword>" {} \; 2>/dev/null
-       # Search global knowledge base if configured
-       find "${RESEARCH_OUTPUT_DIR:-./docs/research}" -name "*.md" -exec grep -li "<keyword>" {} \; 2>/dev/null
+       # Search the project research directory
+       find .internal/research -name "*.md" -exec grep -li "<keyword>" {} \; 2>/dev/null
        ```
-       Check both before researching from scratch. If comprehensive coverage already
+       Check it before researching from scratch. If comprehensive coverage already
        exists, reference it — do not duplicate.
     2. **LSP-first code navigation** — Use LSP as your DEFAULT code navigation tool.
        Prefer LSP over grep/find for code understanding:

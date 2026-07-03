@@ -30,17 +30,7 @@ Dispatch parallel research agents, synthesize their findings, and write a persis
 
 ## Output Path
 
-Research documents are written to: **!`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`**
-
-This path is resolved dynamically when the skill loads. Priority chain:
-
-| Priority | Scope | How to set |
-|----------|-------|------------|
-| 1 | Per-project | `bd config set custom.research-output-dir "/absolute/path"` |
-| 2 | Global | `export RESEARCH_OUTPUT_DIR="/absolute/path"` in shell profile |
-| 3 | Default | `./.internal/research` |
-
-**Important:** Always use absolute paths. Tilde (`~`) does not expand in `bd config` values.
+Research documents are written to **`.internal/research/`** — the project-local, gitignored knowledge base. Not configurable.
 
 ## Pipeline
 
@@ -87,7 +77,7 @@ Before launching new research, search for existing coverage:
 bd memories <keyword>
 
 # Search project research directory
-find "!`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`" -name "*.md" -exec grep -l "<keyword>" {} \; 2>/dev/null
+find .internal/research -name "*.md" -exec grep -l "<keyword>" {} \; 2>/dev/null
 ```
 
 **If comprehensive coverage already exists:** Reference it, add any new findings as updates, and close the bead. Do not duplicate existing research.
@@ -144,15 +134,17 @@ If Step 4 surfaced load-bearing claims resting on a single source or unresolved,
 
 ## Step 5: Write the Document
 
-Research output directory and categories:
+List existing category subdirectories and pick the one that best matches the research topic:
 
-**!`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`**
+```bash
+find .internal/research -maxdepth 1 -mindepth 1 -type d 2>/dev/null
+```
 
-If categories are listed above (after `---categories---`), pick the subdirectory that best matches the research topic. If no category fits, write to the base directory. If no categories exist, write to the base directory.
+If a category fits, write inside it; if none fits (or none exist), write to `.internal/research/` directly.
 
 ```bash
 # Example: research about CI/CD → engineering-and-technology subdirectory
-mkdir -p "<base-dir>/<category>"
+mkdir -p .internal/research/<category>
 ```
 
 Filename: `YYYY-MM-DD-<topic-slug>.md`
@@ -290,7 +282,7 @@ User asks: "How does Dolt handle merge conflicts?"
 3. Dispatch researcher (via ./researcher-prompt.md): "Research Dolt merge conflict resolution..."
    Dispatch @explore: "Search codebase for Dolt merge, conflict..."
 4. Synthesize: researcher found cell-level merge docs, explore found bd dolt pull usage
-5. Write to !`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`/2026-05-01-dolt-merge-conflict-handling.md
+5. Write to .internal/research/2026-05-01-dolt-merge-conflict-handling.md
 6. bd close <id> --reason "Research complete: Dolt uses cell-level merge on SQL tables"
 ```
 

@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The `setup` skill. The npx path is now skills-only; hooks come from the plugin installs or `install.sh`. Run `bd setup claude` for `bd prime` on npx installs.
 - **BREAKING:** The dormant GitHub Actions workflows `ci.yml` and `release.yml` (both manual-dispatch-only and stale). Checks live in the local `just` surface; releases are `bump-version.sh` → tag → push. `deploy-docs.yml` (docs publishing) survives.
+- DCI output-path resolution in `research-driven-development` — `resolve-output-dir.sh` and its `bd config custom.research-output-dir` / `RESEARCH_OUTPUT_DIR` priority chain deleted; the knowledge base is hardcoded to `.internal/research/`. The `!` backtick (DCI) syntax only works on Claude Code — a portability liability on every other harness — and the configurability was speculative. Also fixes the researcher prompt's stale `docs/research` default.
 
 ### Fixed
 
