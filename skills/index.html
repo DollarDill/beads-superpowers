@@ -696,17 +696,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#setup" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        setup
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#project-init" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -883,9 +872,9 @@
 
 
 <h1 id="skills-reference">Skills Reference</h1>
-<p>beads-superpowers ships 24 composable skills loaded on demand via the <code>Skill</code> tool. The bootstrap skill <code>using-superpowers</code> loads at every session start and routes to the right skill for the current task. Skills are mandatory — when one applies, the agent must invoke it.</p>
+<p>beads-superpowers ships 23 composable skills loaded on demand via the <code>Skill</code> tool. The bootstrap skill <code>using-superpowers</code> loads at every session start and routes to the right skill for the current task. Skills are mandatory — when one applies, the agent must invoke it.</p>
 <h2 id="trigger-map">Trigger map</h2>
-<p>The UserPromptSubmit hook reminds the agent on every message which skill applies to which task:</p>
+<p>The <code>using-superpowers</code> bootstrap, injected at session start, tells the agent which skill applies to which task:</p>
 <table>
 <thead>
 <tr>
@@ -956,7 +945,7 @@
 </tr>
 </tbody>
 </table>
-<p>Also available: <code>document-release</code>, <code>getting-up-to-speed</code>, <code>dispatching-parallel-agents</code>, <code>project-init</code>, <code>setup</code>, <code>writing-skills</code>, <code>auditing-upstream-drift</code></p>
+<p>Also available: <code>document-release</code>, <code>getting-up-to-speed</code>, <code>dispatching-parallel-agents</code>, <code>project-init</code>, <code>writing-skills</code>, <code>auditing-upstream-drift</code></p>
 <h2 id="by-category">By category</h2>
 <table>
 <thead>
@@ -996,7 +985,7 @@
 </tr>
 <tr>
 <td><strong>Setup</strong></td>
-<td><a href="#setup">setup</a>, <a href="#project-init">project-init</a></td>
+<td><a href="#project-init">project-init</a></td>
 </tr>
 <tr>
 <td><strong>Research</strong></td>
@@ -1071,7 +1060,6 @@ graph TD
     SH["session-handoff"]
   end
   subgraph Setup
-    SET["setup"]
     PI["project-init"]
   end
   subgraph Research
@@ -1157,9 +1145,6 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <h3 id="memory-curator">memory-curator</h3>
 <p><strong>Trigger:</strong> At session-close when several new memories were captured, or on-demand for a full sweep.</p>
 <p>Turns a session's raw <code>bd remember</code> notes into well-structured, deduplicated, consolidated memories using the in-session agent — no runtime, key, or embeddings. The scope is deliberately evidence-led: quality-gated capture, reflection-consolidation, and pruning, not structural richness. It never mutates the store silently — it proposes a reviewed command list, and you approve before anything is written.</p>
-<h3 id="setup">setup</h3>
-<p><strong>Trigger:</strong> After npx install, or when skills aren't activating.</p>
-<p>Registers the SessionStart hook in <code>.claude/settings.json</code> so skills activate automatically. The plugin's session-start hook automatically detects <code>bd setup claude</code> hooks and skips duplicate <code>bd prime</code> calls.</p>
 <h3 id="project-init">project-init</h3>
 <p><strong>Trigger:</strong> When <code>bd</code> commands fail, setting up beads in a new project, or recovering from diverged Dolt history.</p>
 <p>Three paths: fresh init, bootstrap from remote, or recovery when Dolt history has diverged.</p>
@@ -1235,7 +1220,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <tr>
 <td>Store learning</td>
 <td><code>bd remember "insight"</code></td>
-<td>most of the 24 skills prompt for this</td>
+<td>most of the 23 skills prompt for this</td>
 </tr>
 <tr>
 <td>Attach evidence</td>
@@ -1359,7 +1344,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 29, 2026 15:33:09 UTC">June 29, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 2, 2026 15:59:06 UTC">July 2, 2026</span>
   </span>
 
     

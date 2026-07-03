@@ -734,7 +734,7 @@
 <h3 id="the-gap">The gap</h3>
 <p>Superpowers enforced good process but forgot everything between sessions. Beads remembered everything but imposed no process on how work should be done. beads-superpowers connects the two: every process step in every skill creates, updates, or closes a persistent bead, so following the right process and maintaining persistent memory are the same action.</p>
 <h2 id="how-it-works">How it works</h2>
-<p>The plugin installs 24 composable skills and a Dolt-backed task database. A <code>using-superpowers</code> bootstrap skill loads at session start and routes the agent to whichever skill fits the current task.</p>
+<p>The plugin installs 23 composable skills and a Dolt-backed task database. A <code>using-superpowers</code> bootstrap skill loads at session start and routes the agent to whichever skill fits the current task.</p>
 <div class="panzoom-box" data-key="alt" id="panzoom0" oncontextmenu="return false;">
     
     <nav class="panzoom-nav">
@@ -764,7 +764,7 @@ config:
 ---
 graph TB
   subgraph Superpowers ["Superpowers (Process Discipline)"]
-    S1["24 Composable Skills"]
+    S1["23 Composable Skills"]
     S2["Bright-line Rules"]
     S3["Anti-rationalization"]
     S4["Pressure-tested Enforcement"]
@@ -817,7 +817,6 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><strong>Production-grade doctrine.</strong> Every session now carries a standing instruction to treat the work as production-facing with real users, no matter how small the task looks — the rationalization that ships the worst defects is "it's just a script." On its own initiative the agent does not take shortcuts, quietly drop a requirement, or accept a consequential trade-off, and it never weakens or removes a security control. A warranted exception is surfaced for the user to decide; a security regression is refused outright. The rule lives once in <code>using-superpowers</code>, which the session-start hook injects in full every session, and the gate skills — brainstorming, stress-test, code review, and the completion check — reference it where those decisions actually get made.</p>
 <p><strong>Prompt template pattern.</strong> Subagent definitions moved from standalone agent files into prompt templates owned by the skills that dispatch them (<code>implementer-prompt.md</code>, <code>researcher-prompt.md</code>). One source of truth per subagent role — no drift between the skill's expectations and the subagent's instructions.</p>
 <p><strong>Parallel batch mode.</strong> When <code>bd ready --parent</code> returns multiple unblocked tasks, <code>subagent-driven-development</code> executes them concurrently (max 5 per batch), each in its own <code>bd worktree</code>.</p>
-<p><strong>Mid-session enforcement.</strong> A <code>UserPromptSubmit</code> hook fires on every user message, injecting skill trigger reminders that prevent the agent from forgetting to invoke skills as the session progresses.</p>
 <p><strong>Orchestrator-only design.</strong> Only the orchestrating agent creates, claims, and closes beads. Subagents focus on their job. The one exception is <code>implementer-prompt.md</code>, which is beads-aware by design — it includes bead lifecycle commands, mandatory skill invocations, and LSP-first code navigation.</p>
 <h2 id="the-lifecycle">The lifecycle</h2>
 <p>A non-trivial feature request moves through up to 10 states. Simple tasks skip research and planning (S2–S6) but still pass through the quality pipeline (S7–S10). S11 (Session Close) fires only on non-branch paths like research queries.</p>
@@ -874,13 +873,13 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><strong>Step 4 — Brainstorming.</strong> The <code>brainstorming</code> skill walks through context, clarifying questions, 2–3 approaches with trade-offs, and a design spec committed to git. It ends by invoking <code>writing-plans</code> — not by jumping to code. The spec-review gate offers a <code>stress-test</code> every time, to interrogate the design adversarially before planning.</p>
 <p><strong>Step 5 — Decision capture.</strong> When a choice is hard to reverse, surprising without its context, and the result of a real trade-off, the agent offers to record it as an Architecture Decision Record in <code>decisions/</code> — a timestamped note of the context, decision, rationale, and consequences. These are recognition marks, not a checklist to slip past: when a decision plausibly fits, the agent leans toward offering rather than skipping, and only routine clarifications and scope calls stay out. The rule lives once in <code>using-superpowers</code> and is echoed where decisions actually get made: brainstorming, planning, stress-testing, and the pivot in a debugging session.</p>
 <p><strong>Step 6 — Planning.</strong> <code>writing-plans</code> breaks the design into bite-sized tasks (2–5 minutes each) with exact file paths, code, and verification steps. Every task becomes a bead.</p>
-<p><strong>Step 7 — Implementation.</strong> Code runs in an isolated git worktree under TDD. The orchestrator creates an epic with task children and dependency chains, then dispatches implementer subagents. When multiple tasks are unblocked, parallel batch mode runs up to 5 concurrently, each in its own worktree. After each task, one read-only reviewer returns a spec-compliance verdict and a code-quality verdict in a single pass; the bead closes only after that review passes. Task briefs, implementer reports, and review diffs move between stages as files under a per-worktree <code>.superpowers/sdd/</code> directory, keeping the orchestrator's context lean.</p>
+<p><strong>Step 7 — Implementation.</strong> Code runs in an isolated git worktree under TDD. The orchestrator creates an epic with task children and dependency chains, then dispatches implementer subagents. When multiple tasks are unblocked, parallel batch mode runs up to 5 concurrently, each in its own worktree. After each task, one read-only reviewer returns a spec-compliance verdict and a code-quality verdict in a single pass; the bead closes only after that review passes. Task briefs, implementer reports, and review diffs move between stages as files under a per-worktree <code>.internal/sdd/</code> directory, keeping the orchestrator's context lean.</p>
 <p><strong>Step 8 — Verification.</strong> The full test suite runs fresh — not relying on the last run during development. "Tests pass" means a test command was just executed and its output is attached.</p>
 <p><strong>Step 9 — Documentation.</strong> <code>document-release</code> scans the diff against existing docs for stale references, missing entries, and outdated examples. When the audit flags sections needing major prose rewrites, <code>write-documentation</code> fires for those sections.</p>
 <p><strong>Step 10 — Close branch.</strong> <code>finishing-a-development-branch</code> detects the current environment — normal repository, named-branch worktree, or detached HEAD — and presents context-aware options: 4 choices for normal and worktree contexts, 3 for detached HEAD where merge is unavailable. Provenance-based cleanup only removes worktrees inside <code>.worktrees/</code>, leaving externally created worktrees alone. The skill ends with the Land the Plane protocol: if the session produced several new memories, offer a <code>memory-curator</code> pass before <code>bd dolt push</code>; then <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code> → <code>git status</code>. Branch paths terminate here — work is not done until both task state and code reach the remote.</p>
 <p><strong>Step 11 — Session close.</strong> Fires only on non-branch paths (research queries, quick tasks that didn't create a branch). Runs the same close ritual as Step 10's Land the Plane: close beads, offer a <code>memory-curator</code> pass if the session produced several new memories, push to remotes, verify clean state. The next session runs <code>bd prime</code> to restore the full picture.</p>
 <h2 id="agent-memory">Agent memory</h2>
-<p>Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow. Most of the 24 skills now prompt for <code>bd remember</code> at their natural completion points — root causes after debugging, design decisions after brainstorming, review insights after code review — so memory capture happens within the skill workflow, not as a separate step.</p>
+<p>Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow. Most of the 23 skills now prompt for <code>bd remember</code> at their natural completion points — root causes after debugging, design decisions after brainstorming, review insights after code review — so memory capture happens within the skill workflow, not as a separate step.</p>
 <table>
 <thead>
 <tr>
@@ -1002,7 +1001,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 29, 2026 15:33:09 UTC">June 29, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 2, 2026 15:59:06 UTC">July 2, 2026</span>
   </span>
 
     
