@@ -1001,7 +1001,11 @@ do_test() {
 
   # Re-run ourselves with overridden HOME, --yes, and --version to force Tier 3 (tarball).
   # --version skips Tiers 1-2, which don't install to $SKILLS_DIR (plugin goes to cache).
-  BEADS_SUPERPOWERS_SKILLS_DIR="$test_home/skills" HOME="$test_home" bash "$0" --yes --version "$FALLBACK_VERSION"
+  # --with-yegge (when given) is forwarded so --test verifies whichever mode was requested.
+  local extra_flags=""
+  if [ "$FLAG_WITH_YEGGE" = true ]; then extra_flags="--with-yegge"; fi
+  # shellcheck disable=SC2086  # word splitting intentional: optional flag
+  BEADS_SUPERPOWERS_SKILLS_DIR="$test_home/skills" HOME="$test_home" bash "$0" --yes --version "$FALLBACK_VERSION" $extra_flags
 
   echo
   info "Running verification checks..."
@@ -1042,18 +1046,29 @@ assert 'UserPromptSubmit' not in d.get('hooks', {})
     error "settings.json: SessionStart missing or UserPromptSubmit present"; fail=$((fail + 1))
   fi
 
-  # Check agents
+  # Check agents — default: NOT installed; --with-yegge: installed (opt-in)
   local agents_ok=true
   for agent in "${KNOWN_AGENTS[@]}"; do
-    if [ ! -f "$test_home/.claude/agents/$agent.md" ]; then
-      agents_ok=false
-      break
+    if [ "$FLAG_WITH_YEGGE" = true ]; then
+      if [ ! -f "$test_home/.claude/agents/$agent.md" ]; then agents_ok=false; break; fi
+    else
+      if [ -e "$test_home/.claude/agents/$agent.md" ]; then agents_ok=false; break; fi
     fi
   done
   if [ "$agents_ok" = true ]; then
-    success "Agents installed: yegge"; pass=$((pass + 1))
+    if [ "$FLAG_WITH_YEGGE" = true ]; then
+      success "Agents installed (--with-yegge): yegge"
+    else
+      success "Agents not installed by default"
+    fi
+    pass=$((pass + 1))
   else
-    error "Agents missing"; fail=$((fail + 1))
+    if [ "$FLAG_WITH_YEGGE" = true ]; then
+      error "Agents missing despite --with-yegge"
+    else
+      error "Agents installed without --with-yegge"
+    fi
+    fail=$((fail + 1))
   fi
 
   # cleanup_stale_reminder: stale "ours" entry removed, foreign hook preserved, backup written
