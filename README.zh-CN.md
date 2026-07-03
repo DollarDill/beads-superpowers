@@ -230,11 +230,11 @@ curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/i
 
 - **Beads/Dolt 初始化** — 自动检测 `bd` 是否已安装并引导设置
 - **钩子注册** — 将 SessionStart 条目写入 settings.json（使用脚本安装路径时必需）
-- **`yegge.md` 编排器** — 可选地全局安装编排器智能体
+- **`yegge.md` 编排器** — 可选附加组件：仅在传入 `--with-yegge` 时安装
 - **版本锁定** — `--version X.Y.Z` 用于可重现的 CI 安装
 - **CI 环境** — 使用 `--yes --skip-checksum` 进行无人值守运行
 
-支持：`--yes`（跳过提示）、`--version X.Y.Z`、`--dry-run`、`--skip-checksum`、`--uninstall`。
+支持：`--yes`（跳过提示）、`--version X.Y.Z`、`--with-yegge`、`--dry-run`、`--skip-checksum`、`--uninstall`。
 
 ## 基于
 

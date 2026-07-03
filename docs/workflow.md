@@ -6,7 +6,7 @@ description: A lean orchestrator triages each request and routes it to the skill
 
 How beads-superpowers skills orchestrate a development lifecycle. The `yegge` orchestrator triages each request and routes it to the skills that own each step; for non-trivial work it runs the full flow below and lets each skill enforce its own gates. It is a router, not a state machine — nothing is gated by an unenforceable "no step may be skipped" rule.
 
-Want to use this workflow? Grab the [example-workflow/](https://github.com/DollarDill/beads-superpowers/tree/main/example-workflow) directory — it has a ready-to-use CLAUDE.md and the [yegge.md](https://github.com/DollarDill/beads-superpowers/blob/main/example-workflow/agents/yegge.md) orchestrator agent.
+Want to use this workflow? Grab the [example-workflow/](https://github.com/DollarDill/beads-superpowers/tree/main/example-workflow) directory — it has a ready-to-use CLAUDE.md and the [yegge.md](https://github.com/DollarDill/beads-superpowers/blob/main/example-workflow/agents/yegge.md) orchestrator agent. The orchestrator is an optional add-on — install it globally with `install.sh --with-yegge` (it is not installed by default), or copy `agents/yegge.md` into your project manually.
 
 ## The flow
 

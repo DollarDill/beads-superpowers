@@ -17,7 +17,7 @@ Subagents (researcher, implementer, code-reviewer) are dispatched via **prompt t
 
 ## Quick Setup
 
-The yegge agent is installed globally by `install.sh`. To add the CLAUDE.md template to your project:
+The yegge agent is an optional add-on — install it globally with `install.sh --with-yegge` (not installed by default). To add the CLAUDE.md template to your project:
 
 ```bash
 # Copy the Karpathy + beads CLAUDE.md template

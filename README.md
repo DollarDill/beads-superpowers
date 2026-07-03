@@ -224,11 +224,11 @@ The script's role is broader than just copying files. Use it when you need any o
 
 - **Beads/Dolt bootstrap** — auto-detects whether `bd` is installed and guides setup
 - **Hook registration** — writes the SessionStart entry to settings.json (required when using the install-script path)
-- **`yegge.md` orchestrator** — optionally installs the orchestrator agent globally
+- **`yegge.md` orchestrator** — optional add-on: installed only when you pass `--with-yegge`
 - **Version pinning** — `--version X.Y.Z` for reproducible CI installs
 - **CI environments** — use `--yes --skip-checksum` for unattended runs
 
-Supports: `--yes` (skip prompts), `--version X.Y.Z`, `--dry-run`, `--skip-checksum`, `--uninstall`.
+Supports: `--yes` (skip prompts), `--version X.Y.Z`, `--with-yegge`, `--dry-run`, `--skip-checksum`, `--uninstall`.
 
 ## Built on
 

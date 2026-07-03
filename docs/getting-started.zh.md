@@ -103,11 +103,11 @@ curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/i
 
 - **Beads/Dolt 引导** — 自动检测 `bd` 是否已安装并引导配置
 - **钩子注册** — 将 SessionStart 条目写入 `settings.json`（使用 npx 或手动安装路径时必需）
-- **`yegge.md` 协调器** — 可选择在全局安装协调器智能体
+- **`yegge.md` 协调器** — 可选附加组件：仅在传入 `--with-yegge` 时安装
 - **版本固定** — 使用 `--version X.Y.Z` 实现可重现的 CI 安装
 - **CI 环境** — 使用 `--yes --skip-checksum` 进行无人值守运行
 
-支持 `--yes`（跳过提示）、`--version X.Y.Z`、`--dry-run`、`--skip-checksum` 和 `--uninstall`。
+支持 `--yes`（跳过提示）、`--version X.Y.Z`、`--with-yegge`、`--dry-run`、`--skip-checksum` 和 `--uninstall`。
 
 ### npx（Vercel Skills CLI）
 
