@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **OpenCode TS plugin was never installed by `install.sh` in any tier** — the extract dir passed to `install_opencode_from` pointed inside the skills staging dir. Found by the new install-shape suite.
 - **Uninstall was broken in two ways** (also found by the suite): `--source`/local-tier installs skipped all uninstall cleanup (missing case arm), and a trailing `[ cond ] && …` in the Codex/OpenCode uninstall helpers aborted `do_uninstall` under `set -e` whenever those harnesses were never installed.
+- **`getting-up-to-speed` no longer under-reports open work or mislabels fresh handoffs.** Its Phase-1 status query is split into two per-status calls (bd v1.0.5 silently drops rows when `OR` spans status clauses), and the handoff freshness check matches the doc's recorded short sha against HEAD prefix-aware instead of by full-string equality.
 
 ### Changed
 
