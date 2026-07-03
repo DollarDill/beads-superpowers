@@ -3,7 +3,7 @@ site_url: https://dollardill.github.io/beads-superpowers/
 site_description: >-
   Composable skills for AI coding agents — TDD, systematic debugging,
   code review, and persistent task memory via Beads. Verified on Claude Code, Codex, and OpenCode;
-  best-effort on Cursor, Gemini CLI, GitHub Copilot CLI, Kimi Code,
+  best-effort on Cursor, GitHub Copilot CLI, Kimi Code,
   Antigravity, Factory Droid, and Pi.
 site_author: Dillon Frawley
 site_dir: site
