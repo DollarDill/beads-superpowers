@@ -31,10 +31,10 @@ shape_sandbox_setup() {
 
 shape_sandbox_teardown() { rm -rf "$SANDBOX"; }
 
-# shape_install — run the local-source install inside the sandbox.
+# shape_install [extra-flags...] — run the local-source install inside the sandbox.
 shape_install() {
   HOME="$SANDBOX" BEADS_SUPERPOWERS_SKILLS_DIR="$SANDBOX/skills" PATH="$SANDBOX_PATH" \
-    bash "$REPO_ROOT/install.sh" --yes --source "$REPO_ROOT" > "$SANDBOX/install.log" 2>&1
+    bash "$REPO_ROOT/install.sh" --yes --source "$REPO_ROOT" "$@" > "$SANDBOX/install.log" 2>&1
   INSTALL_RC=$?
   [ "$INSTALL_RC" -eq 0 ] || { _fail "install.sh exited $INSTALL_RC"; sed -n '1,25p' "$SANDBOX/install.log"; }
 }

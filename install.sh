@@ -5,7 +5,7 @@
 # Preferred install for Claude Code / Codex: use the native plugin system.
 # For OpenCode: use this script (it deploys the TypeScript plugin natively).
 # Use this script for: beads/Dolt bootstrap, npx/scripted hook registration,
-# optional yegge.md agent install, version pinning (--version), or CI automation.
+# optional yegge.md agent install (--with-yegge), version pinning (--version), or CI automation.
 #
 # Scripted usage:
 #   curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
@@ -46,6 +46,7 @@ FLAG_YES=false
 FLAG_DRY_RUN=false
 FLAG_UNINSTALL=false
 FLAG_TEST=false
+FLAG_WITH_YEGGE=false
 FLAG_VERSION=""
 FLAG_SOURCE=""
 # shellcheck disable=SC2034  # FLAG_SKIP_CHECKSUM used in later install tiers
@@ -200,7 +201,7 @@ Preferred install for Tier-1 CLIs:
 Use this script when you need:
   - beads/Dolt bootstrap and hook registration outside the plugin system
   - npx/scripted install path with SessionStart hook wiring
-  - optional yegge.md orchestrator agent install
+  - optional yegge.md orchestrator agent install (opt-in via --with-yegge)
   - version pinning (--version) or CI automation
 
 Usage:
@@ -211,6 +212,7 @@ Flags:
   --yes, -y       Skip consent prompt (CI mode)
   --dry-run       Print what would happen without doing it
   --test          Install to /tmp/beads-superpowers-test/ (verifies then cleans up)
+  --with-yegge    Also install the yegge.md orchestrator agent (default: not installed)
   --uninstall     Remove beads-superpowers skills, hook, and settings entry
   --version X.Y.Z Pin to a specific version (default: latest GitHub release)
   --source DIR    Install from a local checkout (dev/test; bypasses download tiers, no network)
@@ -228,6 +230,7 @@ parse_flags() {
       --yes|-y)          FLAG_YES=true ;;
       --dry-run)         FLAG_DRY_RUN=true ;;
       --test)            FLAG_TEST=true ;;
+      --with-yegge)      FLAG_WITH_YEGGE=true ;;
       --uninstall)       FLAG_UNINSTALL=true ;;
       --version)         shift; FLAG_VERSION="${1:-}"; [ -z "$FLAG_VERSION" ] && { error "--version requires a value"; exit 1; } ;;
       --source)          shift; FLAG_SOURCE="${1:-}"; [ -z "$FLAG_SOURCE" ] && { error "--source requires a directory"; exit 1; } ;;
@@ -442,6 +445,18 @@ install_opencode_from() {
   fi
 }
 
+# Optional agent install — opt-in via --with-yegge (default: not installed).
+install_agents_from() {
+  local source_root="$1" agent
+  [ "$FLAG_WITH_YEGGE" = true ] || return 0
+  mkdir -p "$AGENTS_DIR"
+  for agent in "${KNOWN_AGENTS[@]}"; do
+    if [ -f "$source_root/example-workflow/agents/$agent.md" ]; then
+      cp -f "$source_root/example-workflow/agents/$agent.md" "$AGENTS_DIR/$agent.md"
+    fi
+  done
+}
+
 setup_hooks() {
   if [ "$HAS_PYTHON3" = 0 ]; then
     warn "python3 not found — cannot register hooks in settings.json"
@@ -486,13 +501,7 @@ try_local_install() {
     return 1
   fi
 
-  # Optional: install agent (same block as try_git_install)
-  mkdir -p "$AGENTS_DIR"
-  for agent in "${KNOWN_AGENTS[@]}"; do
-    if [ -f "$STAGING_DIR/repo/example-workflow/agents/$agent.md" ]; then
-      cp -f "$STAGING_DIR/repo/example-workflow/agents/$agent.md" "$AGENTS_DIR/$agent.md"
-    fi
-  done
+  install_agents_from "$STAGING_DIR/repo"
 
   setup_hooks "$STAGING_DIR/repo" || warn "Hook setup failed — re-run install.sh once python3 is available"
 
@@ -503,6 +512,8 @@ try_local_install() {
 try_plugin_install() {
   # Skip if --version was specified (can't pin versions via plugin system)
   [ -n "$FLAG_VERSION" ] && return 1
+  # Skip if --with-yegge: plugin tier has no checkout to copy the agent from
+  [ "$FLAG_WITH_YEGGE" = true ] && return 1
 
   local installed=false
 
@@ -539,6 +550,8 @@ try_npx_install() {
   [ "$HAS_NPX" = 0 ] && return 1
   # Skip if --version was specified (can't pin versions via npx)
   [ -n "$FLAG_VERSION" ] && return 1
+  # Skip if --with-yegge: npx tier has no checkout to copy the agent from
+  [ "$FLAG_WITH_YEGGE" = true ] && return 1
 
   info "Tier 2: Trying npx skills install..."
 
@@ -591,13 +604,7 @@ try_tarball_install() {
     return 1
   fi
 
-  # Optional: install agent
-  mkdir -p "$AGENTS_DIR"
-  for agent in "${KNOWN_AGENTS[@]}"; do
-    if [ -f "$STAGING_DIR/extracted/example-workflow/agents/$agent.md" ]; then
-      cp -f "$STAGING_DIR/extracted/example-workflow/agents/$agent.md" "$AGENTS_DIR/$agent.md"
-    fi
-  done
+  install_agents_from "$STAGING_DIR/extracted"
 
   setup_hooks "$STAGING_DIR/extracted" || warn "Hook setup failed — re-run install.sh once python3 is available"
 
@@ -621,13 +628,7 @@ try_git_install() {
     return 1
   fi
 
-  # Optional: install agent
-  mkdir -p "$AGENTS_DIR"
-  for agent in "${KNOWN_AGENTS[@]}"; do
-    if [ -f "$STAGING_DIR/repo/example-workflow/agents/$agent.md" ]; then
-      cp -f "$STAGING_DIR/repo/example-workflow/agents/$agent.md" "$AGENTS_DIR/$agent.md"
-    fi
-  done
+  install_agents_from "$STAGING_DIR/repo"
 
   setup_hooks "$STAGING_DIR/repo" || warn "Hook setup failed — re-run install.sh once python3 is available"
 
