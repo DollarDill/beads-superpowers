@@ -307,7 +307,12 @@ Skill *behavior* testing (the 4 LLM suites under tests/) is deprecated in place 
 successor: the external eval-harness project. See tests/*/DEPRECATED.md.
 
 **Release process (no GHA):** `./scripts/bump-version.sh <ver>` → update CHANGELOG →
-tag `v<ver>` → `git push --tags`. Docs deploy stays manual via `.github/workflows/deploy-docs.yml` (workflow_dispatch).
+tag `v<ver>` → `git push --tags` → **publish the GitHub Release**:
+`gh release create v<ver> --title "v<ver>" --latest --notes-file <changelog-section> checksums.txt`.
+The last step is NOT optional — `install.sh` resolves its default version from `releases/latest`,
+so a pushed tag without a published Release leaves installers on the previous version. Attach
+`checksums.txt` (`sha256sum` of the tag tarball `archive/refs/tags/v<ver>.tar.gz`) or
+`verify_checksum` silently skips. Docs deploy stays manual via `.github/workflows/deploy-docs.yml` (workflow_dispatch).
 
 ### Running Skill Tests
 
