@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Production-Grade Doctrine consolidated: the 3 byte-identical CB-1 paragraph sites (brainstorming, writing-plans, executing-plans) are now self-contained woven floor lines (incl. an explicit security clause); CB-1 retired from `check-convention-sync.sh`; `auditing-upstream-drift` now protects the doctrine as a divergence *class* (canonical block + woven lines) on re-sync. Doctrine content and all security-gate rules unchanged. (ADR-0040)
 - **BREAKING: the `yegge.md` orchestrator agent is now opt-in.** `install.sh` no longer copies `yegge.md` to `~/.claude/agents/` by default — pass `--with-yegge` to install it. When the flag is set, the plugin and npx tiers are skipped (they have no checkout to copy the agent from; same precedent as `--version`), so install lands on the tarball/git/local tier. `--test` verifies whichever mode it is invoked with, and uninstall removes the agent in both modes. Upgrades never delete an existing `yegge.md`, but it is only refreshed when you upgrade with `--with-yegge`; `--uninstall` still removes it. README and docs (EN+ZH) now present yegge/example-workflow as a suggested-workflow optional add-on. (beads-superpowers-3krn)
 
 ### Removed
