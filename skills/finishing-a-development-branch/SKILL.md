@@ -74,7 +74,7 @@ Or ask: "This branch split from main - is that correct?"
 
 ### Step 4: Present Options
 
-**Use the `AskUserQuestion` tool** to present options. Do NOT output them as text — invoke the tool for structured input.
+**Use your structured question tool** to present options. Do NOT present choices as plain prose when your harness has a question tool; without one, numbered list + STOP. A skipped, dismissed, or auto-resolved answer is not consent — stop and ask in plain text.
 
 **For normal repo or named-branch worktree** (`IS_DETACHED=no`), present all 4 options:
 
@@ -286,7 +286,7 @@ Evidence: <file:line / failing test / repro | none>"
 
 Drop the `[spec]` prefix when the item is Confirmed (evidence cited).
 
-**3.5. Offer memory curation (conditional) — before the push.** If this session produced curation-worthy volume — roughly **3+ new `bd remember` calls** — OFFER (do not auto-run) a capture-enrichment pass now, so curated memories are included in the `bd dolt push` below. Use `AskUserQuestion`:
+**3.5. Offer memory curation (conditional) — before the push.** If this session produced curation-worthy volume — roughly **3+ new `bd remember` calls** — OFFER (do not auto-run) a capture-enrichment pass now, so curated memories are included in the `bd dolt push` below. Ask via your structured question tool:
 
 ```json
 {
@@ -336,7 +336,7 @@ git status    # MUST show "up to date with origin"
 
 **Open-ended questions**
 - **Problem:** "What should I do next?" → ambiguous
-- **Fix:** Use `AskUserQuestion` tool with structured options (4 for normal/worktree context, 3 for detached HEAD)
+- **Fix:** Use your structured question tool (4 options for normal/worktree context, 3 for detached HEAD)
 
 **Automatic worktree cleanup**
 - **Problem:** Remove worktree when might need it (Option 2, 3)
@@ -358,7 +358,7 @@ git status    # MUST show "up to date with origin"
 **Always:**
 - Verify tests before offering options
 - Detect environment before presenting options (Step 2)
-- Present 4 options for normal/worktree context, 3 for detached HEAD, via `AskUserQuestion` tool
+- Present 4 options for normal/worktree context, 3 for detached HEAD, via your structured question tool
 - Get typed confirmation for discard option
 - Clean up worktree for merge/PR/discard options only (not keep-as-is)
 - Check worktree provenance before automatic removal
