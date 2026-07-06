@@ -177,7 +177,7 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 ## User Review Gate
 
-After self-review passes, **open the plan file in the user's editor** so they can review it, then gate progression with `AskUserQuestion`:
+After self-review passes, **open the plan file in the user's editor** so they can review it, then gate progression with your structured question tool (content below; shape shown in Claude Code schema — adapt to your tool):
 
 **User's preferred editor:** !`echo ${VISUAL:-${EDITOR:-not-configured}}`
 
@@ -197,7 +197,7 @@ fi
 # If none available: just report the path
 ```
 
-Then immediately use the `AskUserQuestion` tool:
+Then immediately ask via your structured question tool (content below; shape shown in Claude Code schema — adapt to your tool):
 
 <!-- Canonical 3-option stress-test gate — keep identical to brainstorming/SKILL.md -->
 
@@ -245,7 +245,7 @@ Route: **ADR / ADR+memory** → write the ADR per the 3-mark gate (`decisions/AD
 
 ## Execution Handoff
 
-After the plan is approved, **use the `AskUserQuestion` tool** to offer the execution choice:
+After the plan is approved, **use your structured question tool** to offer the execution choice:
 
 ```json
 {
