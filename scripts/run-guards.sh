@@ -14,4 +14,5 @@ run "skill count guard"     bash scripts/check-skill-count.sh
 run "version sync"          bash scripts/bump-version.sh --check
 run "skill frontmatter"     python3 scripts/check-skill-frontmatter.py
 run "shell lint"            bash scripts/lint-shell.sh
+run "askuser genericization" bash scripts/check-askuser-genericization.sh
 exit "$rc"
