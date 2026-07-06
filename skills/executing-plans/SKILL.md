@@ -26,9 +26,12 @@ Load plan, review critically, execute all tasks, report when complete.
    ```json
    {
      "nodes": [
-       {"key": "epic1", "title": "Epic: <plan-name>", "type": "epic", "priority": 2},
-       {"key": "t1", "title": "Task 1: <title>", "type": "task", "priority": 2, "parent_key": "epic1"},
-       {"key": "t2", "title": "Task 2: <title>", "type": "task", "priority": 2, "parent_key": "epic1"}
+       {"key": "epic1", "title": "Epic: <plan-name>", "type": "epic", "priority": 2,
+        "description": "<goal>\n\n## Success Criteria\n- <measurable outcome from the plan's Goal>"},
+       {"key": "t1", "title": "Task 1: <title>", "type": "task", "priority": 2, "parent_key": "epic1",
+        "description": "<summary>\n\n## Acceptance Criteria\n- <outcome from the task's Acceptance Criteria block>"},
+       {"key": "t2", "title": "Task 2: <title>", "type": "task", "priority": 2, "parent_key": "epic1",
+        "description": "<summary>\n\n## Acceptance Criteria\n- <outcome from the task's Acceptance Criteria block>"}
      ],
      "edges": [
        {"from_key": "t2", "to_key": "t1", "type": "blocks"}
@@ -37,6 +40,8 @@ Load plan, review critically, execute all tasks, report when complete.
    ```
 
    Edge direction: `from_key` = dependent task (needs `to_key` done first). `type` is the dependency kind (`blocks`); it is optional and defaults to a blocking dependency.
+
+   Required sections: `bd lint` requires `## Success Criteria` in the epic's description and `## Acceptance Criteria` in each task's description — embed them in the `description` strings as above (the graph schema has no separate criteria field).
 
    ```bash
    # Validate structure without writing:
@@ -49,7 +54,7 @@ Load plan, review critically, execute all tasks, report when complete.
    > **Fallback** (if `--graph` is unavailable — older bd or schema skew): fall back to the sequential `bd create`/`bd dep add` loop:
    > ```bash
    > bd create "Epic: <plan-name>" -t epic --acceptance "All tasks pass, tests green"
-   > bd create "Task 1: <title>" -t task --parent <epic-id>
+   > bd create "Task 1: <title>" -t task --parent <epic-id> --acceptance "<task's Acceptance Criteria>"
    > bd dep add <task-2-id> <task-1-id>
    > ```
 

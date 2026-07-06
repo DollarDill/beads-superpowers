@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Plan-to-bead creation now passes `bd lint` on first create: writing-plans' Task Structure gains an **Acceptance Criteria** block and all three creation sites (writing-plans, executing-plans, subagent-driven-development) instruct embedding the lint-required sections — `## Success Criteria` in epic descriptions, `## Acceptance Criteria` in task descriptions (or `--acceptance` in the sequential fallback). Previously an agent following the skills verbatim produced beads that failed the skills' own lint step.
+
 ## [0.10.0] - 2026-07-06
 
 ### Added
