@@ -143,7 +143,7 @@ graph TD
 
 **触发条件：** 当设计或计划需要对抗性审视时。也可通过"grill me"、"poke holes"、"challenge this design"触发。
 
-针对决策树的每个分支进行审问，提供推荐答案和结构化的 `AskUserQuestion` 响应（同意 / 不同意 / 进一步讨论）。跟踪分支解决进度，将发现结果内联写入（模式 A）或写入独立报告（模式 B），并在关闭前执行反思式自我审查。通常在 brainstorming 和 writing-plans 之间运行。
+针对决策树的每个分支进行审问，提供推荐答案和结构化的多选响应（同意 / 不同意 / 进一步讨论）。跟踪分支解决进度，将发现结果内联写入（模式 A）或写入独立报告（模式 B），并在关闭前执行反思式自我审查。通常在 brainstorming 和 writing-plans 之间运行。
 
 ### subagent-driven-development
 

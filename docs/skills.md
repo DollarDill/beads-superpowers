@@ -141,7 +141,7 @@ Breaks a design into bite-sized tasks (2–5 minutes each) with exact file paths
 
 **Trigger:** When a design or plan needs adversarial scrutiny. Also triggers on "grill me", "poke holes", "challenge this design".
 
-Interrogates every branch of the decision tree with recommended answers and structured `AskUserQuestion` responses (Agree / Disagree / Discuss further). Tracks branch resolution progress, writes findings inline (Mode A) or to a standalone report (Mode B), and runs a reflexion self-review before closing. Typically runs between brainstorming and writing-plans.
+Interrogates every branch of the decision tree with recommended answers and structured multiple-choice responses (Agree / Disagree / Discuss further). Tracks branch resolution progress, writes findings inline (Mode A) or to a standalone report (Mode B), and runs a reflexion self-review before closing. Typically runs between brainstorming and writing-plans.
 
 ### subagent-driven-development
 
