@@ -23,6 +23,9 @@ npm install -g @beads/bd    # any platform
 
 **可选：** 如果您需要通过 `bd dolt push/pull` 实现跨会话同步，则需要一个 [DoltHub](https://dolthub.com) 账户。没有它，Beads 仍然可以在本地正常工作。
 
+!!! info "深入了解 — 上游 Beads 文档"
+    - [安装指南](https://gastownhall.github.io/beads/getting-started/installation) — `bd` 的所有安装渠道（brew、npm、curl、go）、平台说明与升级
+
 ## 支持的平台
 
 ### 第 1 层 — 已验证
@@ -137,6 +140,10 @@ bd init
 bd dolt remote add origin https://doltremoteapi.dolthub.com/your-org/your-repo
 bd dolt push    # test the connection
 ```
+
+!!! info "深入了解 — 上游 Beads 文档"
+    - [核心概念](https://gastownhall.github.io/beads/core-concepts) — Dolt 数据库与同步模型的工作原理
+    - [恢复指南](https://gastownhall.github.io/beads/recovery) — 同步失败或历史分叉时如何处理
 
 ## 更新
 

@@ -20,6 +20,9 @@ Verify with `bd version`. Then install the plugin (see below), then run `bd init
 
 **Optional:** A [DoltHub](https://dolthub.com) account if you want cross-session sync via `bd dolt push/pull`. Without it, beads still works locally.
 
+!!! info "Go deeper — upstream Beads docs"
+    - [Installation](https://gastownhall.github.io/beads/getting-started/installation) — every `bd` install channel (brew, npm, curl, go), platform notes, upgrades
+
 ## Supported Platforms
 
 ### Tier 1 — Verified
@@ -136,6 +139,10 @@ For cross-session sync of your task history:
 bd dolt remote add origin https://doltremoteapi.dolthub.com/your-org/your-repo
 bd dolt push    # test the connection
 ```
+
+!!! info "Go deeper — upstream Beads docs"
+    - [Core concepts](https://gastownhall.github.io/beads/core-concepts) — how the Dolt-backed database and sync model work
+    - [Recovery guides](https://gastownhall.github.io/beads/recovery) — when a sync fails or history diverges
 
 ## Updating
 
