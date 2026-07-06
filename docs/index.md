@@ -11,6 +11,9 @@ The skills come from [Superpowers](https://github.com/obra/superpowers) by Jesse
 
 **Verified** on Claude Code, Codex CLI, and OpenCode. **Best-effort** native support for Cursor, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi. See [Getting Started](getting-started.md#supported-platforms) for install paths by platform.
 
+!!! info "New to Beads itself?"
+    The upstream [Beads documentation](https://gastownhall.github.io/beads/) covers the tool in depth — concepts, CLI reference, recovery. This site documents the merged workflow built on top of it.
+
 **Current version:** v{{ version }} · {{ skill_count }} skills
 
 ## Where to start

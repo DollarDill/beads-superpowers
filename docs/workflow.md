@@ -95,6 +95,9 @@ Before creating the worktree, the skill runs pre-flight checks: it confirms the 
 
 When several tasks are unblocked, **parallel batch mode** runs up to five concurrently, each in its own worktree; sequential mode runs one at a time when tasks depend on each other. Every subagent result passes through the [review gate](#review-gate) before it's accepted, and the initial epic, tasks, and dependency graph are created atomically with `bd create --graph`; `bd batch` handles subsequent close, dep-add, and update operations.
 
+!!! info "Go deeper — upstream Beads docs"
+    - [Multi-agent coordination](https://gastownhall.github.io/beads/multi-agent) — the tool-level primitives beneath parallel batch mode
+
 ### Verify
 
 `verification-before-completion` runs the full test suite fresh, rather than trusting the last run during development. "Tests pass" means a test command was just executed and its output is attached. This holds on every path, the light one included.

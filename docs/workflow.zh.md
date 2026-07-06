@@ -98,6 +98,9 @@ graph TD
 
 当多个任务处于未阻塞状态时，**并行批处理模式**最多并发运行五个任务，每个任务在自己的 worktree 中；当任务之间存在依赖时，顺序模式每次运行一个任务。每个子智能体的结果在被接受前都必须经过[审查门控](#review-gate)；初始的 epic、任务和依赖图通过 `bd create --graph` 原子性地创建，`bd batch` 处理后续的关闭、添加依赖和更新操作。
 
+!!! info "深入了解 — 上游 Beads 文档"
+    - [多智能体协调](https://gastownhall.github.io/beads/multi-agent) — 并行批处理模式之下的工具级原语
+
 ### 验证（Verify）
 
 `verification-before-completion` 重新运行完整测试套件，而不是信任开发过程中的上次运行。"测试通过"意味着刚刚执行了测试命令并附有其输出。这适用于每条路径，包括最轻量的那条。
