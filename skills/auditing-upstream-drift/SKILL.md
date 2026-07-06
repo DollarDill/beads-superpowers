@@ -426,6 +426,21 @@ for f in .internal/testing.md .internal/windows/polyglot-hooks.md; do
 done
 ```
 
+**Check 7.7 — Upstream Beads docs links in docs/ resolve (visible SKIP offline; ADR-0041-era descope net):**
+```bash
+if ! command -v curl >/dev/null 2>&1 || ! curl -sf -o /dev/null --max-time 10 "https://gastownhall.github.io/beads/"; then
+  echo "SKIP (no curl or no network): upstream docs link-check not run"
+else
+  grep -rhoE 'https://gastownhall\.github\.io/beads[^") ]*' docs/*.md | sort -u | while read -r url; do
+    code=$(curl -s -o /dev/null -w "%{http_code}" -L --max-time 10 "$url")
+    if [ "${code#2}" = "$code" ]; then  # not 2xx — retry once
+      code=$(curl -s -o /dev/null -w "%{http_code}" -L --max-time 10 "$url")
+    fi
+    case "$code" in 2*) echo "PASS: $url" ;; *) echo "FAIL ($code): $url" ;; esac
+  done
+fi
+```
+
 ---
 
 ### Phase 8: Generate Audit Report
