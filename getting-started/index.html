@@ -83,7 +83,7 @@
 <meta property="twitter:description" content="Install beads-superpowers via the native plugin system, curl, or npx for Claude Code, Codex, and OpenCode. Set up your first project with bd init in under 5 minutes." />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/getting-started.png" />
 <meta name="panzoom-theme" content="material">
-<meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
+<meta name="panzoom-data" content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'> </head>
   
   
     
@@ -864,6 +864,7 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">[features]</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">codex_hooks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 </code></pre></div>
+<p>To get the SessionStart hook under Codex, use the scripted installer (<code>install.sh</code>) rather than the plugin channel — the plugin channel installs the skills but does not wire the hook.</p>
 <h3 id="opencode">OpenCode</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
 </code></pre></div>
@@ -903,11 +904,11 @@
 <ul>
 <li><strong>Beads/Dolt bootstrap</strong> — auto-detects whether <code>bd</code> is installed and guides setup</li>
 <li><strong>Hook registration</strong> — writes the SessionStart entry to <code>settings.json</code> (required when using npx or manual install paths)</li>
-<li><strong><code>yegge.md</code> orchestrator</strong> — optionally installs the orchestrator agent globally</li>
+<li><strong><code>yegge.md</code> orchestrator</strong> — optional add-on: installed only when you pass <code>--with-yegge</code>. The flag forces the scripted tarball/git install tier (the plugin and npx tiers are skipped for that run), so it can't be combined with a plugin-managed install in one command</li>
 <li><strong>Version pinning</strong> — <code>--version X.Y.Z</code> for reproducible CI installs</li>
 <li><strong>CI environments</strong> — use <code>--yes --skip-checksum</code> for unattended runs</li>
 </ul>
-<p>Supports <code>--yes</code> (skip prompts), <code>--version X.Y.Z</code>, <code>--dry-run</code>, <code>--skip-checksum</code>, and <code>--uninstall</code>.</p>
+<p>Supports <code>--yes</code> (skip prompts), <code>--version X.Y.Z</code>, <code>--with-yegge</code>, <code>--dry-run</code>, <code>--skip-checksum</code>, and <code>--uninstall</code>.</p>
 <h3 id="npx-vercel-skills-cli">npx (Vercel Skills CLI)</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>npx<span class="w"> </span>skills<span class="w"> </span>add<span class="w"> </span>DollarDill/beads-superpowers<span class="w"> </span>-a<span class="w"> </span>claude-code<span class="w"> </span>-g<span class="w"> </span>--copy<span class="w"> </span>-y
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># Use -a codex to also install for Codex CLI.</span>
@@ -948,7 +949,7 @@
 </ol>
 <p>If skills aren't showing, the plugin may not be installed for your CLI. If <code>bd ready</code> fails, beads isn't initialised in this project (<code>bd init</code>).</p>
 <h2 id="how-the-hooks-work">How the hooks work</h2>
-<p>Claude Code and Codex share one hook, registered via <code>hooks/hooks.json</code>: <strong>SessionStart</strong>. It fires on every session start, clear, and compact. It reads the <code>using-superpowers</code> skill (which routes to all other skills), runs <code>bd prime</code> to capture beads state and persistent memories, and outputs the combined context (~2–3k tokens). If <code>bd prime</code> is already registered as a hook elsewhere, this step is skipped automatically.</p>
+<p>Claude Code and Codex share one hook script — <strong>SessionStart</strong> — registered via <code>hooks/hooks.json</code> for Claude Code and wired by <code>install.sh</code> for Codex. It fires on every session start, clear, and compact. It reads the <code>using-superpowers</code> skill (which routes to all other skills), runs <code>bd prime</code> to capture beads state and persistent memories, and outputs the combined context (~2–3k tokens). If <code>bd prime</code> is already registered as a hook elsewhere, this step is skipped automatically.</p>
 <div class="panzoom-box" data-key="alt" id="panzoom0" oncontextmenu="return false;">
     
     <nav class="panzoom-nav">
@@ -1000,9 +1001,9 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><strong>No <code>.beads</code> directory</strong> — Run <code>bd init</code> in your project directory. The plugin automatically handles duplicate hook detection.</p>
 <p><strong>Double context injection</strong> — The plugin detects <code>bd setup claude</code> hooks in project and global settings and automatically skips its own <code>bd prime</code> call. If you still see duplicates, run <code>bd setup claude --remove</code>.</p>
 <p><strong>Stale plugin cache</strong> — The cache doesn't update when you edit skill files locally. Either symlink the cache to your checkout:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.9.0
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.10.0
 <a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>ln<span class="w"> </span>-s<span class="w"> </span>~/workplace/beads-superpowers<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.9.0
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.10.0
 </code></pre></div>
 <p>Or reinstall. Note: <code>claude plugin update</code> has a known <a href="https://github.com/anthropics/claude-code/issues/14061">cache bug</a> — the symlink is more reliable.</p>
 <p><strong>Hook not firing</strong> — Check the hook is executable: <code>chmod +x hooks/session-start</code>.</p>
@@ -1030,7 +1031,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 2, 2026 16:05:06 UTC">July 2, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 6, 2026 06:49:01 UTC">July 6, 2026</span>
   </span>
 
     
