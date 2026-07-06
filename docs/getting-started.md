@@ -72,6 +72,8 @@ After installing, enable hooks in `~/.codex/config.toml`:
 codex_hooks = true
 ```
 
+Codex plugin-channel installs do not register the SessionStart hook — use the scripted installer (`install.sh`), which wires it explicitly.
+
 ### OpenCode
 
 ```bash
