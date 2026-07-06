@@ -58,6 +58,9 @@ bd dolt remote list 2>/dev/null
 
 # 8. Run automated diagnostics
 bd doctor --fix --yes 2>/dev/null
+
+# 9. Migration-content skew vs remote (bd v1.1.0+): bd doctor flags clones that applied
+#    different content for the same migration version — surface it before any sync work.
 ```
 
 ## Decision Matrix
@@ -102,6 +105,9 @@ bd bootstrap
 # 2. Verify
 bd list                    # Should show existing issues
 bd vc log | head -5        # Should show commit history
+
+# After any pull: repair denormalized blocked flags (bd v1.1.0+)
+bd recompute-blocked
 ```
 
 **If `bd bootstrap` fails**, use the manual fallback:
@@ -121,6 +127,24 @@ bd list                                    # Verify
 ```
 
 ## Path C: Fix Diverged History
+
+### The v1.1.0 remote-migrate gate (read this first)
+
+Since beads v1.1.0, `bd` refuses to silently apply pending schema migrations to a remote-backed
+database (per upstream changelog v1.1.0: the provably-safe same-version case auto-migrates; anything
+else stops). When the gate blocks you, pick ONE:
+
+- **You are the designated migrator** (one machine per team, by agreement): back up first —
+  `bd export --all -o backup.jsonl` — then `BD_ALLOW_REMOTE_MIGRATE=1 bd migrate`, then `bd dolt push`.
+- **Any other machine:** do NOT migrate. Adopt the already-migrated database: `bd bootstrap`.
+
+Never set `BD_ALLOW_REMOTE_MIGRATE=1` outside the designated-migrator role — independently migrated
+clones fork the schema and break `bd dolt pull`. `BD_SMART_GATE=0` disables the smart gate entirely;
+discouraged for the same reason.
+
+If a pull/push fails with Dolt's "cannot merge because table X has different primary keys" refusal,
+bd prints the bootstrap-from-canonical recovery recipe — follow it (upstream playbook:
+docs/RECOVERY.md#pk-fork-refused in gastownhall/beads). Do not improvise a manual merge.
 
 **Symptom:** `bd dolt push` fails with "no common ancestor"
 
@@ -243,6 +267,7 @@ bd config drift 2>/dev/null
 - Use `bd dolt ...` commands instead of raw `dolt` commands
 - Distinguish "database missing" from "server can't connect" (check `bd dolt status`)
 - Commit before pulling: `bd dolt commit` before `bd dolt pull`
+- After any pull: repair denormalized blocked flags — `bd recompute-blocked` (bd v1.1.0+)
 
 ## Lessons Learnt (Field-Validated)
 
