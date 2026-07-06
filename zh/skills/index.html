@@ -1107,7 +1107,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p>将设计分解为小粒度任务（每个 2–5 分钟），附带精确的文件路径、代码和验证步骤。每个任务都会成为一个带有依赖排序的 bead。</p>
 <h3 id="stress-test">stress-test</h3>
 <p><strong>触发条件：</strong> 当设计或计划需要对抗性审视时。也可通过"grill me"、"poke holes"、"challenge this design"触发。</p>
-<p>针对决策树的每个分支进行审问，提供推荐答案和结构化的 <code>AskUserQuestion</code> 响应（同意 / 不同意 / 进一步讨论）。跟踪分支解决进度，将发现结果内联写入（模式 A）或写入独立报告（模式 B），并在关闭前执行反思式自我审查。通常在 brainstorming 和 writing-plans 之间运行。</p>
+<p>针对决策树的每个分支进行审问，提供推荐答案和结构化的多选响应（同意 / 不同意 / 进一步讨论）。跟踪分支解决进度，将发现结果内联写入（模式 A）或写入独立报告（模式 B），并在关闭前执行反思式自我审查。通常在 brainstorming 和 writing-plans 之间运行。</p>
 <h3 id="subagent-driven-development">subagent-driven-development</h3>
 <p><strong>触发条件：</strong> 当执行包含独立任务的计划时。</p>
 <p>为每个任务派发一个新的子智能体，任务之间进行单次只读任务审查——一个审查者在一轮中返回规格说明合规判定和代码质量判定。编排者跟踪 bead；子智能体不接触它们。当多个任务解除阻塞时，<strong>并行批处理模式</strong>最多并发运行 5 个，每个在各自的 worktree 中运行。</p>
@@ -1238,42 +1238,18 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <td>systematic-debugging, executing-plans</td>
 </tr>
 <tr>
-<td>原子批量操作</td>
-<td><code>bd batch</code> (stdin)</td>
-<td>SDD, executing-plans, finishing-branch</td>
-</tr>
-<tr>
-<td>跨 worktree 操作</td>
-<td><code>bd -C &lt;path&gt; &lt;cmd&gt;</code></td>
-<td>using-git-worktrees, SDD</td>
-</tr>
-<tr>
-<td>检查问题章节</td>
-<td><code>bd lint [id...]</code></td>
-<td>writing-plans（自我审查）</td>
-</tr>
-<tr>
-<td>推迟工作</td>
-<td><code>bd defer &lt;id&gt; --until="&lt;date&gt;"</code></td>
-<td>executing-plans</td>
-</tr>
-<tr>
-<td>标记人工决策</td>
-<td><code>bd human &lt;id&gt;</code></td>
-<td>executing-plans</td>
-</tr>
-<tr>
-<td>验证并行就绪状态</td>
-<td><code>bd swarm validate &lt;epic&gt;</code></td>
-<td>SDD（并行批处理）</td>
-</tr>
-<tr>
 <td>同步到远端</td>
 <td><code>bd dolt push</code></td>
 <td>finishing-a-development-branch</td>
 </tr>
 </tbody>
 </table>
+<div class="admonition info">
+<p class="admonition-title">深入了解 — 上游 Beads 文档</p>
+<ul>
+<li><a href="https://gastownhall.github.io/beads/cli-reference">CLI 参考</a> — 超出上表工作流核心集的完整 <code>bd</code> 命令（<code>batch</code>、<code>lint</code>、<code>defer</code>、<code>human</code>、<code>swarm</code>、<code>-C</code> 等）</li>
+</ul>
+</div>
 <h2 id="_5">技能链式调用</h2>
 <div class="panzoom-box" data-key="alt" id="panzoom0" oncontextmenu="return false;">
     
@@ -1349,7 +1325,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年7月2日 15:59:06 UTC">2026年7月2日</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年7月6日 13:54:25 UTC">2026年7月6日</span>
   </span>
 
     

@@ -737,6 +737,13 @@
 <p><a href="https://github.com/obra/superpowers">Superpowers</a>（Jesse Vincent）发布了14个可组合技能，强制智能体在编码前进行 brainstorming、在实现前编写测试、在提出修复建议前调查根本原因、在声称完成前进行验证。这些技能使用严格规则——"在没有失败测试的情况下，绝不编写生产代码"——而非模糊的建议如"考虑编写测试"，因为当指令是绝对的而非建议性的时，合规率从33%翻倍提升到72%（Meincke et al. 2025）。每个技能都包含一个反合理化表格，预先消除智能体用来跳过步骤的借口。</p>
 <h3 id="_4">持久记忆</h3>
 <p>Superpowers 使用 <code>TodoWrite</code> 追踪任务，但会话结束后这些记录就会消失。<a href="https://github.com/gastownhall/beads">Beads</a>（Steve Yegge）将其替换为 Dolt 支持的问题追踪器，每个任务都是一个具有基于哈希 ID 的 bead，能够跨越会话边界持久存在。Beads 处理依赖追踪、无冲突多智能体工作的单元级合并、通过 events 表实现的完整审计追踪，以及通过 <code>bd remember</code> 持久化学习成果。在每次会话开始时，<code>bd prime</code> 注入当前任务状态，使智能体从上次中断的地方继续。</p>
+<div class="admonition info">
+<p class="admonition-title">深入了解 — 上游 Beads 文档</p>
+<ul>
+<li><a href="https://gastownhall.github.io/beads/core-concepts">核心概念</a> — issues、依赖关系、哈希 ID 与记忆模型</li>
+<li><a href="https://gastownhall.github.io/beads/architecture">架构</a> — 底层的 Dolt 引擎与 events 表</li>
+</ul>
+</div>
 <h3 id="_5">差距</h3>
 <p>Superpowers 强制执行良好流程，但会话之间会遗忘所有内容。Beads 记住所有内容，但对工作方式没有强制流程。beads-superpowers 将两者连接起来：每个技能中的每个流程步骤都会创建、更新或关闭一个持久 bead，因此遵循正确流程和维护持久记忆是同一个动作。</p>
 <h2 id="_6">工作原理</h2>
@@ -1007,7 +1014,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年7月6日 06:49:01 UTC">2026年7月6日</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年7月6日 13:54:28 UTC">2026年7月6日</span>
   </span>
 
     

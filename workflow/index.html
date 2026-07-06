@@ -886,6 +886,12 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p>Code runs in an isolated worktree under TDD (red-green-refactor). The orchestrator creates an epic bead with task children and dependency chains, then dispatches implementer subagents.</p>
 <p>Before creating the worktree, the skill runs pre-flight checks: it confirms the agent isn't already inside a worktree or a submodule, and asks for consent when a human, rather than the SDD automation, kicked it off.</p>
 <p>When several tasks are unblocked, <strong>parallel batch mode</strong> runs up to five concurrently, each in its own worktree; sequential mode runs one at a time when tasks depend on each other. Every subagent result passes through the <a href="#review-gate">review gate</a> before it's accepted, and the initial epic, tasks, and dependency graph are created atomically with <code>bd create --graph</code>; <code>bd batch</code> handles subsequent close, dep-add, and update operations.</p>
+<div class="admonition info">
+<p class="admonition-title">Go deeper — upstream Beads docs</p>
+<ul>
+<li><a href="https://gastownhall.github.io/beads/multi-agent">Multi-agent coordination</a> — the tool-level primitives beneath parallel batch mode</li>
+</ul>
+</div>
 <h3 id="verify">Verify</h3>
 <p><code>verification-before-completion</code> runs the full test suite fresh, rather than trusting the last run during development. "Tests pass" means a test command was just executed and its output is attached. This holds on every path, the light one included.</p>
 <h3 id="document">Document</h3>
@@ -976,7 +982,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 3, 2026 16:17:09 UTC">July 3, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 6, 2026 13:54:28 UTC">July 6, 2026</span>
   </span>
 
     

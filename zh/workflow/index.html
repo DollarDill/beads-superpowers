@@ -892,6 +892,12 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p>代码在隔离的 worktree 中以 TDD（red-green-refactor）模式运行。编排器创建一个带有子任务和依赖链的 epic bead，然后派发实现者子智能体。</p>
 <p>在创建 worktree 之前，技能会运行预检：确认智能体未处于 worktree 或子模块内部，并在由人工而非 SDD 自动化启动时请求确认。</p>
 <p>当多个任务处于未阻塞状态时，<strong>并行批处理模式</strong>最多并发运行五个任务，每个任务在自己的 worktree 中；当任务之间存在依赖时，顺序模式每次运行一个任务。每个子智能体的结果在被接受前都必须经过<a href="#review-gate">审查门控</a>；初始的 epic、任务和依赖图通过 <code>bd create --graph</code> 原子性地创建，<code>bd batch</code> 处理后续的关闭、添加依赖和更新操作。</p>
+<div class="admonition info">
+<p class="admonition-title">深入了解 — 上游 Beads 文档</p>
+<ul>
+<li><a href="https://gastownhall.github.io/beads/multi-agent">多智能体协调</a> — 并行批处理模式之下的工具级原语</li>
+</ul>
+</div>
 <h3 id="verify">验证（Verify）</h3>
 <p><code>verification-before-completion</code> 重新运行完整测试套件，而不是信任开发过程中的上次运行。"测试通过"意味着刚刚执行了测试命令并附有其输出。这适用于每条路径，包括最轻量的那条。</p>
 <h3 id="document">文档（Document）</h3>
@@ -982,7 +988,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年7月3日 16:20:47 UTC">2026年7月3日</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年7月6日 13:54:28 UTC">2026年7月6日</span>
   </span>
 
     

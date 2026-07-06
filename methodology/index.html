@@ -731,6 +731,13 @@
 <p><a href="https://github.com/obra/superpowers">Superpowers</a> (Jesse Vincent) shipped 14 skills that force agents to brainstorm before coding, write tests before implementation, investigate root causes before proposing fixes, and verify before claiming completion. The skills use bright-line rules — "NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST" — rather than hedged guidance like "consider writing tests", because compliance doubles from 33% to 72% when instructions are absolute rather than suggested (Meincke et al. 2025). Each skill includes an anti-rationalization table that preempts the excuses agents use to skip steps.</p>
 <h3 id="persistent-memory">Persistent memory</h3>
 <p>Superpowers tracked tasks with <code>TodoWrite</code>, which vanishes when a session ends. <a href="https://github.com/gastownhall/beads">Beads</a> (Steve Yegge) replaced that with a Dolt-backed issue tracker where every task is a bead with a hash-based ID that survives session boundaries. Beads handles dependency tracking, cell-level merges for conflict-free multi-agent work, a full audit trail via the events table, and <code>bd remember</code> for persistent learnings. At every session start, <code>bd prime</code> injects the current task state so the agent picks up where it left off.</p>
+<div class="admonition info">
+<p class="admonition-title">Go deeper — upstream Beads docs</p>
+<ul>
+<li><a href="https://gastownhall.github.io/beads/core-concepts">Core concepts</a> — issues, dependencies, hash IDs, and the memory model</li>
+<li><a href="https://gastownhall.github.io/beads/architecture">Architecture</a> — the Dolt engine and events table under the hood</li>
+</ul>
+</div>
 <h3 id="the-gap">The gap</h3>
 <p>Superpowers enforced good process but forgot everything between sessions. Beads remembered everything but imposed no process on how work should be done. beads-superpowers connects the two: every process step in every skill creates, updates, or closes a persistent bead, so following the right process and maintaining persistent memory are the same action.</p>
 <h2 id="how-it-works">How it works</h2>
@@ -1001,7 +1008,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 6, 2026 06:49:01 UTC">July 6, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 6, 2026 13:54:28 UTC">July 6, 2026</span>
   </span>
 
     

@@ -778,6 +778,12 @@
 <p>使用 <code>bd version</code> 验证安装。然后安装插件（见下文），再在每个项目中运行 <code>bd init</code>。</p>
 <p><strong>注意：</strong> 原生插件安装（第 1 层）会自动安装技能和钩子。它不会运行 <code>bd init</code>——您必须在每个项目中自行完成。</p>
 <p><strong>可选：</strong> 如果您需要通过 <code>bd dolt push/pull</code> 实现跨会话同步，则需要一个 <a href="https://dolthub.com">DoltHub</a> 账户。没有它，Beads 仍然可以在本地正常工作。</p>
+<div class="admonition info">
+<p class="admonition-title">深入了解 — 上游 Beads 文档</p>
+<ul>
+<li><a href="https://gastownhall.github.io/beads/getting-started/installation">安装指南</a> — <code>bd</code> 的所有安装渠道（brew、npm、curl、go）、平台说明与升级</li>
+</ul>
+</div>
 <h2 id="_3">支持的平台</h2>
 <h3 id="1">第 1 层 — 已验证</h3>
 <p>这些路径经过端到端测试，推荐优先使用。</p>
@@ -930,6 +936,13 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>bd<span class="w"> </span>dolt<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>origin<span class="w"> </span>https://doltremoteapi.dolthub.com/your-org/your-repo
 <a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>bd<span class="w"> </span>dolt<span class="w"> </span>push<span class="w">    </span><span class="c1"># test the connection</span>
 </code></pre></div>
+<div class="admonition info">
+<p class="admonition-title">深入了解 — 上游 Beads 文档</p>
+<ul>
+<li><a href="https://gastownhall.github.io/beads/core-concepts">核心概念</a> — Dolt 数据库与同步模型的工作原理</li>
+<li><a href="https://gastownhall.github.io/beads/recovery">恢复指南</a> — 同步失败或历史分叉时如何处理</li>
+</ul>
+</div>
 <h2 id="_6">更新</h2>
 <p><strong>Claude Code：</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>claude<span class="w"> </span>plugin<span class="w"> </span>marketplace<span class="w"> </span>update<span class="w"> </span>beads-superpowers-marketplace
@@ -1036,7 +1049,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年7月6日 06:49:01 UTC">2026年7月6日</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年7月6日 13:54:23 UTC">2026年7月6日</span>
   </span>
 
     
