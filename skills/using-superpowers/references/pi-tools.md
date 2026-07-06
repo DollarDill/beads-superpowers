@@ -13,6 +13,4 @@ Pi core does not ship a standard subagent tool. The `pi-subagents` package is a 
 
 This plugin tracks ALL tasks with the `bd` (beads) CLI run via the shell — Do NOT use TodoWrite. Use `bd create`, `bd update`, and `bd close` commands via `bash`. Run `bd prime` at the start of each session to load persistent project memory.
 
-## Structured questions
-
 - Structured questions: pi has **no built-in question tool** (unless a question extension is installed) — always present numbered plain-text options + STOP for the user's reply.

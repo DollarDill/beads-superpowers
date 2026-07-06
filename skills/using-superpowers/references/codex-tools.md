@@ -44,6 +44,4 @@ names, commit messages, and PR descriptions for the user to copy.
 |---|---|
 | `bd` CLI (task tracking via beads) | Use native shell tools with `bd` commands |
 
-## Structured questions
-
 - Structured questions: `request_user_input` is **plan-mode-gated** by default — outside Plan mode the call errors. Fall back to numbered plain-text options + STOP (config escape: `default_mode_request_user_input`).
