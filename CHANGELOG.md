@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-07-06
+
 ### Added
 
 - **Shell-lint gate.** `just lint` (also wired into `just guards`/`just check`) runs shellcheck over every git-tracked shell script and fails only on findings not in the committed baseline — which shipped **empty**: all 56 tracked scripts are already warning-clean. Skips visibly when shellcheck isn't installed, so fresh clones aren't blocked.
