@@ -38,7 +38,7 @@ These shared skills intentionally differ from upstream superpowers. When Phase 5
 | **using-superpowers, writing-skills** | Claude Code tool names + per-CLI `references/` maps | fully vendor-neutral tool vocabulary | we ship multi-CLI adapters, not one neutral vocabulary (ADR-0006) |
 | **Beads integration** | CLI-only: call `bd` directly in skills + one SessionStart `bd prime` hook; no beads Claude plugin or beads-mcp server | Claude plugin + MCP server | Lowest overhead; full `bd` command coverage; matches beads' own "CLI + hooks when shell is available" guidance (ADR-0017) |
 | **brainstorming, writing-plans** | stress-test (a fork-only skill) is offered at the approval gate via a 3-option "Approved + stress-test" gate folded into the upstream Approved/Needs-changes review gate | 2-option review gate; no stress-test (stress-test does not exist upstream) | stress-test is one of our 7 fork-unique skills; offering it at every spec/plan gate is intended fork behavior (ADR-0020) |
-| **using-superpowers** | carries a fork-only `## Production-Grade Doctrine` block (treat every project as production-facing; no shortcuts/descope/material-risk; never a security regression) | no such doctrine (obra/superpowers has none) | intended fork behavior (ADR-0023); a future audit marks it SKIP, not Conflict |
+| **using-superpowers + judgment/gate skills (doctrine class)** | fork-only Production-Grade Doctrine: canonical `## Production-Grade Doctrine` block in `using-superpowers` PLUS self-contained woven doctrine-floor lines (incl. the security floor) in judgment/gate skills | no such doctrine (obra/superpowers has none) | intended fork behavior (ADR-0023/0036/0040); on re-sync PRESERVE every woven doctrine-floor line; mark SKIP, not Conflict |
 | **All shared skills (namespace)** | cross-skill references use `beads-superpowers:<skill>` | bare `superpowers:<skill>` | upstream's bare namespace points at the upstream plugin; in our fork it must carry our plugin name or it resolves to the wrong plugin (intended; mark SKIP, not Conflict) |
 | **brainstorming** | brainstorm session dir + auth-token files live under `.internal/brainstorm/` (self-ignored) | upstream uses `.superpowers/brainstorm/` | one canonical `.internal/` scratch root (spec 2026-06-30); `server.cjs` unchanged — do not revert the path on re-sync |
 | **subagent-driven-development** (workspace paths) | SDD workspace, task briefs, and review packages live under `.internal/sdd/` (self-ignored) | upstream uses `.superpowers/sdd/` | one canonical `.internal/` scratch root (spec 2026-06-30); do not revert the path on re-sync |
@@ -246,7 +246,7 @@ done
 bash scripts/check-convention-sync.sh
 ```
 
-The cross-cutting convention blocks (doctrine floor, Capture gate, memory convention) are duplicated across skills by design and MUST be byte-identical at every site. Any divergent or missing copy fails this check.
+The cross-cutting convention blocks (Capture gate, memory convention) are duplicated across skills by design and MUST be byte-identical at every site. Any divergent or missing copy fails this check. (The doctrine floor is NOT byte-duplicated: it is a canonical block in `using-superpowers` plus per-skill woven floor lines — see the Known Deliberate Divergences table.)
 
 ---
 
