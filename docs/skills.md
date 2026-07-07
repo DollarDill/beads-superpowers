@@ -28,7 +28,7 @@ The `using-superpowers` bootstrap, injected at session start, tells the agent wh
 | Consolidate or dedup memories | `memory-curator` |
 | Hand work to the next session | `session-handoff` (human-invoked) |
 
-Also available: `document-release`, `getting-up-to-speed`, `dispatching-parallel-agents`, `project-init`, `writing-skills`, `auditing-upstream-drift`
+Also available: `document-release`, `getting-up-to-speed`, `dispatching-parallel-agents`, `project-init`, `writing-skills`
 
 ## By category
 
@@ -40,7 +40,7 @@ Also available: `document-release`, `getting-up-to-speed`, `dispatching-parallel
 | **Quality** | [test-driven-development](#test-driven-development), [systematic-debugging](#systematic-debugging), [verification-before-completion](#verification-before-completion) |
 | **Review** | [requesting-code-review](#requesting-code-review), [receiving-code-review](#receiving-code-review) |
 | **Infrastructure** | [using-git-worktrees](#using-git-worktrees), [finishing-a-development-branch](#finishing-a-development-branch) |
-| **Lifecycle** | [document-release](#document-release), [getting-up-to-speed](#getting-up-to-speed), [auditing-upstream-drift](#auditing-upstream-drift), [memory-curator](#memory-curator), [session-handoff](#session-handoff) |
+| **Lifecycle** | [document-release](#document-release), [getting-up-to-speed](#getting-up-to-speed), [memory-curator](#memory-curator), [session-handoff](#session-handoff) |
 | **Setup** | [project-init](#project-init) |
 | **Research** | [research-driven-development](#research-driven-development) |
 | **Writing** | [write-documentation](#write-documentation) |
@@ -214,12 +214,6 @@ Walks through README, CHANGELOG, CLAUDE.md, CONTRIBUTING, and other docs to find
 **Trigger:** Session start, after compaction, or "catch me up" / "where are we".
 
 Gathers beads state and the newest handoff in one `orient.sh` call, deep-dives the codebase (sub-agent fan-out scales to repo size across `<40` / `40–150` / `>150` tracked-file bands), and produces a structured current-state summary. It reads the newest `.internal/handoff/` doc — written by its counterpart `session-handoff` — as an unread inbox, folding it into the summary and then archiving it at close so a later session doesn't re-read it; a HEAD-recency backstop flags a handoff as stale when `HEAD` has moved past the commit it recorded. A pre-emit verification gate holds every claim in the summary to a command actually run in the session, a beads-versus-git check flags work that shipped but was left open, and superseded `continuation-*` memories are pruned at close.
-
-### auditing-upstream-drift
-
-**Trigger:** Before a plugin release, or when checking for staleness.
-
-Audits against [obra/superpowers](https://github.com/obra/superpowers) and [gastownhall/beads](https://github.com/gastownhall/beads) for new skills, changed commands, and documentation improvements to port.
 
 ### memory-curator
 

@@ -68,7 +68,6 @@ Underneath all of it is a production-grade standard: the agent treats every task
 |-------|-------------|
 | `using-superpowers` | Bootstrap — injected at session start, routes to the right skill |
 | `writing-skills` | Meta-skill for creating or modifying skills in this plugin |
-| `auditing-upstream-drift` | Detects staleness vs upstream superpowers and beads releases |
 
 ## Docs
 

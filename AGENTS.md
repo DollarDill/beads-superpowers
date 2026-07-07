@@ -103,7 +103,7 @@ When modifying skills in this repo:
 - The SessionStart hook at `hooks/session-start` injects `using-superpowers` + a composed beads context (a `bd` pointer + curated core memories)
 - The single task review prompt (`task-reviewer-prompt.md`) is NOT beads-aware — orchestrator only. Exception: `implementer-prompt.md` and `researcher-prompt.md` ARE beads-aware (include skill invocations, bead lifecycle, LSP instructions).
 - Subagent prompt templates live inside their respective skills: `skills/subagent-driven-development/implementer-prompt.md`, `skills/research-driven-development/researcher-prompt.md`. Skills own their dispatch prompts — no standalone agent files for subagents.
-- Run the Quick Audit before releasing: see `skills/auditing-upstream-drift/SKILL.md`
+- Run the Quick Audit before releasing: see `.claude/skills/auditing-upstream-drift/SKILL.md` (maintainer-only skill — tracked in git, not distributed; ADR-0044)
 
 ## Common Gotchas
 

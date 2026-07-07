@@ -74,7 +74,6 @@
 |------|---------|
 | `using-superpowers` | 引导程序——在会话开始时注入，路由到正确的技能 |
 | `writing-skills` | 用于创建或修改本插件技能的元技能 |
-| `auditing-upstream-drift` | 检测相对于上游 superpowers 和 beads 版本的过时情况 |
 
 ## 文档
 

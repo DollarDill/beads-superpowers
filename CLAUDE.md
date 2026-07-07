@@ -181,6 +181,7 @@ scripts/
   lint-shell-baseline.txt    # Committed lint baseline (empty at adoption — repo is clean)
   check-askuser-genericization.sh  # Guard: literal AskUserQuestion only under using-superpowers/references/ (ADR-0041)
 skills/                    # beads-native skills (auto-discovered, each has SKILL.md)
+.claude/skills/            # maintainer-only skills (git-tracked, NOT distributed — ADR-0044)
 tests/                     # Test infrastructure (deterministic suites via `just`; 4 LLM suites deprecated in place)
 install.sh                 # curl installer — 3-tier fallback (plugin → npx → tarball/git), checksums, atomic rollback
 mkdocs.yml                 # MkDocs Material site config
@@ -251,7 +252,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 | project-init                   | Beads/Dolt DB setup, bootstrap, and recovery                                                                                |
 | dispatching-parallel-agents    | 2+ independent tasks without shared state                                                                                   |
 | writing-skills                 | Meta-skill for creating/modifying skills                                                                                    |
-| auditing-upstream-drift        | Detect staleness vs upstream superpowers/beads                                                                              |
+| auditing-upstream-drift (maintainer-only — `.claude/skills/`, not distributed) | Detect staleness vs upstream superpowers/beads                             |
 | getting-up-to-speed            | Session orientation — reads latest session-handoff doc + bd context + adaptive codebase deep-dive + structured current-state summary |
 | research-driven-development    | Parallel research agents → synthesized knowledge base document. Triggers on "research this", "what is X", "how does Y work" |
 | write-documentation            | Human-quality prose for all human-facing text — 14-rule writing system with context-first drafting and required checks      |

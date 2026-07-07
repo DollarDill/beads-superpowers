@@ -20,6 +20,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **SessionStart could double-inject under multi-scope hook registration.** An event-scoped self-dedup marker (keyed on `(session_id, source)`, 60s TTL, per-user `0700` directory, symlink-refusing, fail-open) now suppresses the sibling firing instead of injecting the beads context twice; post-compaction re-injection is unaffected.
 - Plan-to-bead creation now passes `bd lint` on first create: writing-plans' Task Structure gains an **Acceptance Criteria** block and all three creation sites (writing-plans, executing-plans, subagent-driven-development) instruct embedding the lint-required sections — `## Success Criteria` in epic descriptions, `## Acceptance Criteria` in task descriptions (or `--acceptance` in the sequential fallback). Previously an agent following the skills verbatim produced beads that failed the skills' own lint step.
 
+### Removed
+
+- **BREAKING: `auditing-upstream-drift` is no longer distributed.** It is a maintainer-only skill (it audits this fork against upstream superpowers/beads) and now lives at `.claude/skills/auditing-upstream-drift/` — git-tracked and discovered as a project skill for maintainers, excluded from the plugin, install.sh, and Pi channels. install.sh upgrades and uninstalls remove previously installed copies (evidence-gated: fresh installs never touch the path). npx installs may still surface it (that CLI scans `.claude/skills/`; accepted — npx is the declared degraded tier) but the skill now self-guards and refuses to run outside its home repo. (ADR-0044)
+
 ## [0.10.0] - 2026-07-06
 
 ### Added
