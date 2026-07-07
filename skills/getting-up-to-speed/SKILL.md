@@ -132,7 +132,7 @@ After both return, optionally `Read` 1–3 files the agents flagged as critical.
 - This is the agent's drilldown — used to feed the "Known operational quirks" line in the Phase 4 summary.
 - The output table in Phase 4 lists **up to 10 open ready beads** (not just the 3 drilled), so the user sees the whole queue.
 
-If Phase 1 was skipped (no beads), skip Phase 3.
+If Phase 1's beads sections came back `SKIP` (no beads), skip Phase 3.
 
 ## Phase 4 — Synthesize the structured summary
 
@@ -265,7 +265,7 @@ If orientation surfaced a Phase-1 memory that is now stale or wrong, remove it: 
 | Condition | Behavior |
 |---|---|
 | No `.git` directory | Skip the git phase entirely; emit "**Git:** not a git repo" in the summary |
-| `bd` not installed | Skip Phase 1; emit "**Beads:** not installed — skipped" |
+| `bd` not installed | `orient.sh` still runs (scale + handoff); its beads sections read `SKIP` — skip Phase 3 and the beads lines of Phase 4; emit "**Beads:** not installed — skipped" |
 | `.beads/` missing but `bd` installed | Run `bd ready` (will return empty); note "no beads workspace" |
 | Embedded Dolt mode | Do NOT call `bd dolt status/show/push` — only the safe read commands listed in Phase 1 |
 | Dirty working tree | Show `git status -sb` count in the Current State line |
