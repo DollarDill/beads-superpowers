@@ -95,12 +95,24 @@ for arg in "$@"; do
 done
 
 # --- event-scoped dedup (same event, multiple registrations; jb3u) ---
-# Read hook stdin JSON if present (never block on a TTY).
+# Read hook stdin JSON if present. Bounded on both axes — 2s per read, 64KB total —
+# so a TTY, a never-closing pipe, or a firehose can never hang or bloat the hook
+# (bash builtin read only; no coreutils-timeout dependency).
 bsp_stdin=""
-if [ ! -t 0 ]; then bsp_stdin=$(cat 2>/dev/null || true); fi
+if [ ! -t 0 ]; then
+    bsp_line=""
+    while IFS= read -r -t 2 bsp_line; do
+        bsp_stdin="${bsp_stdin}${bsp_line}"
+        [ "${#bsp_stdin}" -ge 65536 ] && break
+    done
+    bsp_stdin="${bsp_stdin}${bsp_line}"   # capture final unterminated line (read rc=1 leaves partial content)
+fi
 bsp_sid=$(printf '%s' "$bsp_stdin" | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | tr -cd 'a-zA-Z0-9_-' | cut -c1-64)
 bsp_src=$(printf '%s' "$bsp_stdin" | sed -n 's/.*"source"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'     | tr -cd 'a-zA-Z0-9_-' | cut -c1-32)
-[ -z "$bsp_sid" ] && bsp_sid="nosid"
+# PPID-keyed fallback: duplicate registrations for the SAME event share a parent
+# (the harness process) → still dedup; different sessions = different harness
+# processes (different PPIDs) → never collide on one global "nosid" bucket.
+[ -z "$bsp_sid" ] && bsp_sid="nosid-$PPID"
 [ -z "$bsp_src" ] && bsp_src="unknown"
 
 bsp_marker_dir="${XDG_RUNTIME_DIR:-/tmp}/beads-superpowers-$(id -u)"
