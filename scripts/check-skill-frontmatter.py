@@ -13,7 +13,9 @@ from pathlib import Path
 
 REQUIRED = ("name", "description")
 errors = []
-skills = sorted(Path("skills").glob("*/SKILL.md"))
+skills = sorted(Path("skills").glob("*/SKILL.md")) + sorted(
+    Path(".claude/skills").glob("*/SKILL.md")  # maintainer-only skills (ADR-0044)
+)
 
 for f in skills:
     text = f.read_text()

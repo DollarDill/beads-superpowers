@@ -7,6 +7,7 @@ rc=0
 run() { echo "── $1"; shift; if "$@"; then echo "   PASS"; else echo "   FAIL"; rc=1; fi; }
 
 run "todowrite gate"        bash scripts/check-todowrite.sh
+run "todowrite gate (.claude)" bash scripts/check-todowrite.sh .claude/skills
 run "agent bead stamp"      bash scripts/check-agent-bead-stamp.sh
 run "zh docs parity"        bash scripts/check-zh-docs.sh
 run "convention sync"       bash scripts/check-convention-sync.sh
@@ -15,6 +16,8 @@ run "version sync"          bash scripts/bump-version.sh --check
 run "skill frontmatter"     python3 scripts/check-skill-frontmatter.py
 run "shell lint"            bash scripts/lint-shell.sh
 run "askuser genericization" bash scripts/check-askuser-genericization.sh
+run "askuser genericization (.claude)" bash scripts/check-askuser-genericization.sh .claude/skills
 run "skill ref namespacing"  bash scripts/check-skill-ref-namespace.sh
+run "skill ref namespacing (.claude)" bash scripts/check-skill-ref-namespace.sh .claude/skills
 run "install hook no-fork"  bash scripts/check-install-hook-fork.sh
 exit "$rc"
