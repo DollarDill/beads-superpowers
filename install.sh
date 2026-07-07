@@ -39,6 +39,11 @@ KNOWN_SKILLS=(
   writing-plans writing-skills
 )
 
+# Skills shipped by past releases but no longer distributed (ADR-0044).
+# Removed on upgrade/uninstall ONLY — never on fresh install (evidence gate:
+# we only delete from roots a prior beads-superpowers install owned).
+LEGACY_SKILLS=(auditing-upstream-drift)
+
 KNOWN_AGENTS=(yegge)
 
 # --- Flags ---
@@ -371,6 +376,22 @@ wait_for_consent() {
   read -r
 }
 
+
+# ADR-0044: purge previously shipped, no-longer-distributed skills from all
+# three skill roots. Callers enforce the evidence gate (upgrade or uninstall).
+cleanup_legacy_skills() {
+  local removed=0 skill dir
+  for skill in "${LEGACY_SKILLS[@]}"; do
+    for dir in "$SKILLS_DIR" "$HOME/.codex/skills" "$HOME/.config/opencode/skills"; do
+      if [ -d "$dir/$skill" ]; then
+        rm -rf "${dir:?}/${skill:?}"
+        removed=$((removed + 1))
+      fi
+    done
+  done
+  [ "$removed" -gt 0 ] && success "Removed $removed legacy skill dir(s) (no longer distributed)"
+  return 0
+}
 
 uninstall_codex_support() {
   local codex_skills="$HOME/.codex/skills"
@@ -728,6 +749,11 @@ do_install() {
     all_methods_failed
   fi
 
+  # ADR-0044: evidence-gated — only an upgrade over a prior install may purge.
+  if [ "$UPGRADING" = true ]; then
+    cleanup_legacy_skills
+  fi
+
   # Write version file with tier info
   mkdir -p "$(dirname "$VERSION_FILE")"
   echo "${VERSION}:${INSTALL_TIER}" > "$VERSION_FILE"
@@ -1036,6 +1062,7 @@ PYEOF
 
   uninstall_codex_support
   uninstall_opencode_support
+  cleanup_legacy_skills
 
   rm -f "$VERSION_FILE"
   success "beads-superpowers uninstalled"
