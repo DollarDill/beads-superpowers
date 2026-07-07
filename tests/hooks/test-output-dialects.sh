@@ -4,11 +4,20 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 HOOK="$ROOT/hooks/session-start"
 fail=0
+# Isolated runtime dir + distinct session_id per check(): Task 3's event-scoped dedup
+# marker suppresses a second same-(session_id,source) event within 60s. These 5 calls
+# are ambient (no stdin, unisolated XDG_RUNTIME_DIR) and would otherwise collide on the
+# same "nosid/unknown" marker key -- both with each other and with other test files that
+# use the same real-/tmp fallback key (see tests/hooks/test-dedup-marker.sh).
+RUNDIR=$(mktemp -d); trap 'rm -rf "$RUNDIR"' EXIT
+n=0
 check() { # desc | env-assignment | jq-filter that must be non-empty
   local desc="$1" envset="$2" filter="$3"
   local out
+  n=$((n + 1))
   # shellcheck disable=SC2086  # $envset is intentionally word-split (space-separated KEY=VALUE pairs)
-  out=$(env -i HOME="$HOME" PATH="$PATH" $envset bash "$HOOK" 2>/dev/null)
+  out=$(printf '{"session_id":"dialect-%s","source":"startup"}' "$n" \
+    | env -i HOME="$HOME" PATH="$PATH" XDG_RUNTIME_DIR="$RUNDIR" $envset bash "$HOOK" 2>/dev/null)
   if echo "$out" | jq -e "$filter" >/dev/null 2>&1; then
     echo "PASS: $desc"
   else

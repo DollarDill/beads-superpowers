@@ -94,6 +94,34 @@ for arg in "$@"; do
     [ "$arg" = "--emit-plain" ] && BSP_EMIT_PLAIN=1
 done
 
+# --- event-scoped dedup (same event, multiple registrations; jb3u) ---
+# Read hook stdin JSON if present (never block on a TTY).
+bsp_stdin=""
+if [ ! -t 0 ]; then bsp_stdin=$(cat 2>/dev/null || true); fi
+bsp_sid=$(printf '%s' "$bsp_stdin" | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | tr -cd 'a-zA-Z0-9_-' | cut -c1-64)
+bsp_src=$(printf '%s' "$bsp_stdin" | sed -n 's/.*"source"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'     | tr -cd 'a-zA-Z0-9_-' | cut -c1-32)
+[ -z "$bsp_sid" ] && bsp_sid="nosid"
+[ -z "$bsp_src" ] && bsp_src="unknown"
+
+bsp_marker_dir="${XDG_RUNTIME_DIR:-/tmp}/beads-superpowers-$(id -u)"
+bsp_marker="$bsp_marker_dir/m-${bsp_sid}-${bsp_src}"
+bsp_suppress=0
+if mkdir -p "$bsp_marker_dir" 2>/dev/null && chmod 700 "$bsp_marker_dir" 2>/dev/null; then
+    if [ -L "$bsp_marker" ]; then
+        : # symlink planted — refuse to touch it, fail open (inject)
+    elif ( set -C; : > "$bsp_marker" ) 2>/dev/null; then
+        : # we own this event — inject
+    elif [ -n "$(find "$bsp_marker" -mmin -1 2>/dev/null)" ]; then
+        bsp_suppress=1   # sibling registration beat us within the 60s TTL
+    else
+        touch "$bsp_marker" 2>/dev/null || true   # stale marker — refresh, inject
+    fi
+fi
+if [ "$bsp_suppress" = "1" ]; then
+    if [ "$BSP_EMIT_PLAIN" = "1" ]; then exit 0; fi
+    printf '{}\n'; exit 0
+fi
+
 # Check if legacy skills directory exists and build warning
 warning_message_raw=""
 legacy_skills_dir="${HOME}/.config/superpowers/skills"
