@@ -109,6 +109,59 @@ const p3 = { message: {}, parts: [] }
 await hooks2["chat.message"]({ sessionID: "s2" }, p3)
 assert.ok(p3.parts[0].text.includes("not found"), "notFoundHint injected when skill missing")
 
+// Test 5: primary path — HOME with an executable canonical-hook stub → the plugin injects
+// the stub's --emit-plain output AS-IS. The composer output already contains the bootstrap
+// AND the <beads-context> envelope, so the plugin must not prepend its own bootstrap or
+// re-wrap (double-bootstrap / nested-tags bug, beads-superpowers-7bod).
+const hookHome = mkdtempSync(join(tmpdir(), "bsp-oc-hook-"))
+const ocRoot = join(hookHome, ".config/opencode")
+mkdirSync(join(ocRoot, "skills/using-superpowers"), { recursive: true })
+writeFileSync(join(ocRoot, "skills/using-superpowers/SKILL.md"), "# fixture skill\nEXTREMELY_IMPORTANT fixture body\n")
+mkdirSync(join(ocRoot, "hooks"), { recursive: true })
+const stubPayload = [
+  "<EXTREMELY_IMPORTANT>",
+  "stub bootstrap body",
+  "</EXTREMELY_IMPORTANT>",
+  "",
+  "<beads-context>",
+  "stub beads body",
+  "</beads-context>",
+].join("\n")
+// /bin/sh + echo builtins only: the test PATH is /nonexistent, so the stub must not
+// need any external binaries.
+writeFileSync(
+  join(ocRoot, "hooks/session-start"),
+  "#!/bin/sh\n" + stubPayload.split("\n").map((l) => `echo '${l}'`).join("\n") + "\n",
+  { mode: 0o755 }
+)
+process.env.HOME = hookHome
+const hooks3 = await BeadsSuperpowers()
+const p4 = { message: {}, parts: [] }
+await hooks3["chat.message"]({ sessionID: "s3" }, p4)
+assert.strictEqual(p4.parts.length, 1, "primary path injects exactly one part")
+assert.strictEqual(
+  p4.parts[0].text,
+  stubPayload,
+  "primary path injects composer output as-is (no prepended bootstrap, no re-wrap)"
+)
+assert.strictEqual(
+  (p4.parts[0].text.match(/<EXTREMELY_IMPORTANT>/g) || []).length,
+  1,
+  "exactly one bootstrap marker (no double-bootstrap)"
+)
+assert.strictEqual(
+  (p4.parts[0].text.match(/<beads-context>/g) || []).length,
+  1,
+  "exactly one beads-context open tag (no nesting)"
+)
+
+// Test 5b: compaction on the primary path also pushes composer output as-is.
+const c2 = { context: [] }
+await hooks3["experimental.session.compacting"]({ sessionID: "s3" }, c2)
+assert.strictEqual(c2.context.length, 1, "compaction pushes one context entry (primary)")
+assert.strictEqual(c2.context[0], stubPayload, "compaction primary path pushes composer output as-is")
+
 rmSync(fixtureHome, { recursive: true, force: true })
 rmSync(emptyHome, { recursive: true, force: true })
-console.log("PASS: opencode plugin — bootstrap once, no per-turn, compaction OK, not-found hint OK")
+rmSync(hookHome, { recursive: true, force: true })
+console.log("PASS: opencode plugin — bootstrap once, no per-turn, compaction OK, not-found hint OK, primary as-is OK")

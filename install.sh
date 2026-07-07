@@ -404,6 +404,12 @@ uninstall_opencode_support() {
     rm -f "$oc_plugin"
     success "OpenCode: removed plugin"
   fi
+
+  local oc_hook="$HOME/.config/opencode/hooks/session-start"
+  if [ -f "$oc_hook" ]; then
+    rm -f "$oc_hook"
+    success "OpenCode: removed canonical hook"
+  fi
 }
 
 install_codex_from() {
@@ -441,6 +447,17 @@ install_opencode_from() {
     if [ -f "$extract_dir/opencode/beads-superpowers-plugin.ts" ]; then
       cp -f "$extract_dir/opencode/beads-superpowers-plugin.ts" "$oc_plugins/"
       success "OpenCode: installed plugin to $oc_plugins/"
+    fi
+
+    # Canonical composer hook: the TS plugin execs <opencode-root>/hooks/session-start
+    # --emit-plain (bead 7bod). The hook resolves PLUGIN_ROOT as its parent dir, so
+    # <opencode-root>/skills/using-superpowers/SKILL.md (installed above) resolves.
+    if [ -f "$extract_dir/hooks/session-start" ]; then
+      local oc_hooks="$HOME/.config/opencode/hooks"
+      mkdir -p "$oc_hooks"
+      cp -f "$extract_dir/hooks/session-start" "$oc_hooks/session-start"
+      chmod +x "$oc_hooks/session-start"  # direct exec relies on the bash shebang
+      success "OpenCode: installed canonical hook to $oc_hooks/"
     fi
   fi
 }

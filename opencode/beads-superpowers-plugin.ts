@@ -40,16 +40,19 @@ export const BeadsSuperpowers: Plugin = async () => {
   const seen = new Set<string>()
 
   // One source of truth: all selection/degradation policy lives in hooks/session-start.
-  // This execs the canonical composer with --emit-plain (raw text, no JSON envelope). On ANY
-  // throw (hook missing, non-bash environment, timeout) it falls back to a minimal, policy-free
-  // pointer — NEVER the 168KB bd prime dump. See tests/hooks/test-opencode-injection.mjs for the
-  // anti-fork guard that keeps this function free of memory-selection policy.
-  const composerContext = (root: string): string => {
+  // This execs the canonical composer with --emit-plain (raw text, no JSON envelope).
+  // primary=true means text is the COMPLETE session context (bootstrap + <beads-context>
+  // envelope) and must be injected as-is. On ANY throw (hook missing, non-bash environment,
+  // timeout) it falls back (primary=false) to a minimal, policy-free pointer — NEVER the
+  // 168KB bd prime dump. See tests/hooks/test-opencode-injection.mjs for the anti-fork
+  // guard that keeps this function free of memory-selection policy.
+  const composerContext = (root: string): { text: string; primary: boolean } => {
     try {
-      return execSync(`"${join(root, "hooks/session-start")}" --emit-plain 2>/dev/null`, {
+      const text = execSync(`"${join(root, "hooks/session-start")}" --emit-plain 2>/dev/null`, {
         encoding: "utf-8",
         timeout: 10000,
       }).trim()
+      return { text, primary: true }
     } catch {
       let memLine = ""
       try {
@@ -57,13 +60,14 @@ export const BeadsSuperpowers: Plugin = async () => {
       } catch {
         // bd absent
       }
-      return [
+      const text = [
         "beads-superpowers: session hook unavailable in this environment.",
         "Load skills via the Skill tool (start: using-superpowers).",
         memLine ? `${memLine} — search: bd memories <keyword>, fetch: bd recall <key>` : "",
       ]
         .filter(Boolean)
         .join("\n")
+      return { text, primary: false }
     }
   }
 
@@ -74,11 +78,16 @@ export const BeadsSuperpowers: Plugin = async () => {
     "chat.message": async (input: { sessionID: string }, output: { message: unknown; parts: any[] }) => {
       if (!seen.has(input.sessionID)) {
         seen.add(input.sessionID)
+        const ctx = composerContext(pluginRoot)
+        // Primary output already IS the complete session context — inject as-is; adding the
+        // plugin-side bootstrap would double it and re-wrapping would nest the tags. Only
+        // the fallback needs the bootstrap + <beads-context> envelope built here.
         const bootstrap = skillContent
           ? `<EXTREMELY_IMPORTANT>\nYou have beads-superpowers.\n\n${skillContent}\n</EXTREMELY_IMPORTANT>`
           : notFoundHint
-        const context = composerContext(pluginRoot)
-        const text = context ? `${bootstrap}\n\n<beads-context>\n${context}\n</beads-context>` : bootstrap
+        const text = ctx.primary
+          ? ctx.text || bootstrap
+          : `${bootstrap}\n\n<beads-context>\n${ctx.text}\n</beads-context>`
         output.parts.unshift({ type: "text", text })
       }
     },
@@ -88,12 +97,10 @@ export const BeadsSuperpowers: Plugin = async () => {
       _input: { sessionID: string },
       output: { context: string[]; prompt?: string }
     ) => {
-      const context = composerContext(pluginRoot)
-      output.context.push(
-        context
-          ? `beads-superpowers is installed. Run skills via the skill tool.\n\n${context}`
-          : "beads-superpowers is installed. Run skills via the skill tool."
-      )
+      const ctx = composerContext(pluginRoot)
+      const pointer = "beads-superpowers is installed. Run skills via the skill tool."
+      // Same rule as bootstrap: primary composer output is complete — push as-is.
+      output.context.push(ctx.primary && ctx.text ? ctx.text : ctx.text ? `${pointer}\n\n${ctx.text}` : pointer)
     },
   }
 }
