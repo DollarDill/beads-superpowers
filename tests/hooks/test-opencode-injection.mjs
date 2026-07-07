@@ -13,11 +13,30 @@
 import assert from "node:assert"
 import { fileURLToPath } from "node:url"
 import { dirname, join } from "node:path"
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs"
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const pluginPath = join(__dirname, "../../opencode/beads-superpowers-plugin.ts")
+const pluginSrc = readFileSync(pluginPath, "utf-8")
+
+// Test 0a: exec-target — composerContext execs the canonical composer, not a reimplementation.
+// Exactly one execSync call targets hooks/session-start with --emit-plain (one source of truth;
+// bd prime's 168KB dump and bdPrime() must be gone).
+const execTargetRe = /execSync\(`[^`]*hooks\/session-start[^`]*--emit-plain[^`]*`/g
+const execTargetMatches = pluginSrc.match(execTargetRe) || []
+assert.strictEqual(execTargetMatches.length, 1, "exactly one execSync call targets hooks/session-start --emit-plain")
+assert.ok(!pluginSrc.includes("bdPrime"), "bdPrime() must be deleted — composerContext replaces it")
+console.log("PASS: exec-target — single execSync call to canonical hook with --emit-plain")
+
+// Test 0b: anti-fork guard — the plugin must contain ZERO selection policy. Composer/selection
+// logic (salience parsing, recall loops, ceiling logic) lives ONLY in hooks/session-start.
+assert.ok(
+  !/salience|@type=|BSP_MEM_CEILING/i.test(pluginSrc),
+  "plugin source must not reimplement selection policy (salience / @type= / BSP_MEM_CEILING)"
+)
+assert.ok(!pluginSrc.includes("bd memories --json"), "plugin source must not reimplement memory selection (bd memories --json)")
+console.log("PASS: anti-fork guard — no selection policy in plugin source")
 
 const fixtureHome = mkdtempSync(join(tmpdir(), "bsp-oc-test-"))
 const skillDir = join(fixtureHome, ".claude/skills/using-superpowers")
@@ -29,7 +48,7 @@ writeFileSync(join(skillDir, "SKILL.md"), "# fixture skill\nEXTREMELY_IMPORTANT 
 // systematic-debugging before writing this fixture line).
 writeFileSync(join(skillDir, "reminder-content.txt"), "SUPERPOWERS REMINDER: fixture reminder body\n")
 process.env.HOME = fixtureHome
-process.env.PATH = "/nonexistent" // bd absent → bdPrime() returns ""
+process.env.PATH = "/nonexistent" // bd absent + no hooks/session-start in fixture → composerContext() falls back
 
 let BeadsSuperpowers
 try {
@@ -62,6 +81,12 @@ const p1 = { message: {}, parts: [] }
 await hooks["chat.message"]({ sessionID: "s1" }, p1)
 assert.strictEqual(p1.parts.length, 1, "first message injects exactly one part")
 assert.ok(p1.parts[0].text.includes("EXTREMELY_IMPORTANT"), "bootstrap contains skill body")
+
+// Test 1b: degradation ladder — fixture HOME has no hooks/session-start, so composerContext()
+// must throw on the primary exec and fall back to the minimal, policy-free pointer (never the
+// 168KB bd prime dump).
+assert.ok(p1.parts[0].text.includes("session hook unavailable"), "fallback pointer present when canonical hook is unreachable")
+assert.ok(p1.parts[0].text.includes("Skill tool"), "fallback still points at the Skill tool")
 
 // Test 2: second message injects NOTHING (per-turn reminder removed, ADR-0039)
 const p2 = { message: {}, parts: [] }

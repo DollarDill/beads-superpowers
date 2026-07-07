@@ -1,5 +1,5 @@
 import type { Plugin } from "@opencode-ai/plugin"
-import { readFileSync } from "fs"
+import { existsSync, readFileSync } from "fs"
 import { join } from "path"
 import { execSync } from "child_process"
 
@@ -25,19 +25,50 @@ export const BeadsSuperpowers: Plugin = async () => {
   const notFoundHint =
     "beads-superpowers: using-superpowers skill not found — run: npm exec --yes -- skills@latest add DollarDill/beads-superpowers -a opencode -g --copy -y"
 
+  // Resolve the plugin root (dir containing hooks/session-start) using the same
+  // home-relative candidate search as skillCandidates above.
+  const pluginRootCandidates = [join(home, ".config/opencode"), join(home, ".claude"), join(home, ".agents")]
+  let pluginRoot = pluginRootCandidates[0]
+  for (const root of pluginRootCandidates) {
+    if (existsSync(join(root, "hooks/session-start"))) {
+      pluginRoot = root
+      break
+    }
+  }
+
   // once-per-session guard — closure-scoped (OpenCode instantiates the plugin once per process)
   const seen = new Set<string>()
 
-  const bdPrime = (): string => {
+  // One source of truth: all selection/degradation policy lives in hooks/session-start.
+  // This execs the canonical composer with --emit-plain (raw text, no JSON envelope). On ANY
+  // throw (hook missing, non-bash environment, timeout) it falls back to a minimal, policy-free
+  // pointer — NEVER the 168KB bd prime dump. See tests/hooks/test-opencode-injection.mjs for the
+  // anti-fork guard that keeps this function free of memory-selection policy.
+  const composerContext = (root: string): string => {
     try {
-      return execSync("bd prime 2>/dev/null", { encoding: "utf-8", timeout: 10000 })
+      return execSync(`"${join(root, "hooks/session-start")}" --emit-plain 2>/dev/null`, {
+        encoding: "utf-8",
+        timeout: 10000,
+      }).trim()
     } catch {
-      return ""
+      let memLine = ""
+      try {
+        memLine = execSync("bd memories 2>/dev/null", { encoding: "utf-8", timeout: 5000 }).split("\n")[0] ?? ""
+      } catch {
+        // bd absent
+      }
+      return [
+        "beads-superpowers: session hook unavailable in this environment.",
+        "Load skills via the Skill tool (start: using-superpowers).",
+        memLine ? `${memLine} — search: bd memories <keyword>, fetch: bd recall <key>` : "",
+      ]
+        .filter(Boolean)
+        .join("\n")
     }
   }
 
   return {
-    // Hook 1: first chat.message of a session → bootstrap (using-superpowers + bd prime), once only.
+    // Hook 1: first chat.message of a session → bootstrap (using-superpowers + composer context), once only.
     // No per-turn injection (ADR-0039).
     // Injection is via output.parts mutation (returning objects is a no-op in @opencode-ai/plugin).
     "chat.message": async (input: { sessionID: string }, output: { message: unknown; parts: any[] }) => {
@@ -46,8 +77,8 @@ export const BeadsSuperpowers: Plugin = async () => {
         const bootstrap = skillContent
           ? `<EXTREMELY_IMPORTANT>\nYou have beads-superpowers.\n\n${skillContent}\n</EXTREMELY_IMPORTANT>`
           : notFoundHint
-        const prime = bdPrime()
-        const text = prime ? `${bootstrap}\n\n<beads-context>\n${prime}\n</beads-context>` : bootstrap
+        const context = composerContext(pluginRoot)
+        const text = context ? `${bootstrap}\n\n<beads-context>\n${context}\n</beads-context>` : bootstrap
         output.parts.unshift({ type: "text", text })
       }
     },
@@ -57,10 +88,10 @@ export const BeadsSuperpowers: Plugin = async () => {
       _input: { sessionID: string },
       output: { context: string[]; prompt?: string }
     ) => {
-      const prime = bdPrime()
+      const context = composerContext(pluginRoot)
       output.context.push(
-        prime
-          ? `beads-superpowers is installed. Run skills via the skill tool.\n\n${prime}`
+        context
+          ? `beads-superpowers is installed. Run skills via the skill tool.\n\n${context}`
           : "beads-superpowers is installed. Run skills via the skill tool."
       )
     },
