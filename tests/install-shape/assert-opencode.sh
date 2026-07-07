@@ -10,6 +10,8 @@ trap 'shape_sandbox_teardown' EXIT
 shape_install
 
 assert_all_skills "$SANDBOX/.config/opencode/skills"
+# ADR-0044: maintainer-only skill must never be installed
+assert_no_file "$SANDBOX/.config/opencode/skills/auditing-upstream-drift/SKILL.md"
 assert_file "$SANDBOX/.config/opencode/plugins/beads-superpowers-plugin.ts"
 # Canonical hook must be reachable by the TS plugin's exec target (bead 7bod):
 # present at the OpenCode root, executable, bash shebang intact.

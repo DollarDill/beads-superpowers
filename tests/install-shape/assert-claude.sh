@@ -9,6 +9,8 @@ trap 'shape_sandbox_teardown' EXIT
 shape_install
 
 assert_all_skills "$SANDBOX/skills"
+# ADR-0044: maintainer-only skill must never be installed
+assert_no_file "$SANDBOX/skills/auditing-upstream-drift/SKILL.md"
 assert_file "$SANDBOX/.claude/hooks/beads-superpowers-session-start.sh"
 # Written hook must be a thin exec shim of the canonical composer (bead bb6x),
 # and the canonical copy must land where the shim points.
