@@ -10,6 +10,71 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
+# shellcheck disable=SC2034  # consumed by Task 2's composer wiring (this task adds it inert)
+BSP_MEM_CEILING=8192
+
+# Selection input is `bd memories --json`: one `"key": "body"` entry per line
+# (verified shape, bd v1.1.0) with the FULL body inline — immune to the plain
+# listing's preview truncation, which can hide a late @salience token.
+# Emits "<salience>\t<key>" for @salience=4|5 entries.
+bsp_select_memory_keys() {
+    sed -n 's/^[[:space:]]*"\([^"]*\)":[[:space:]]*".*@salience=\([45]\).*/\2\t\1/p'
+}
+
+# Lexically-latest continuation-* key from the same JSON listing (dates sort lexically).
+bsp_latest_continuation() {
+    sed -n 's/^[[:space:]]*"\(continuation-[^"]*\)":.*/\1/p' | sort | tail -1
+}
+
+# Compose the memories section under a byte ceiling.
+# $1 = ceiling bytes. Uses `bd memories --json` (selection) + `bd recall` (bodies).
+bsp_compose_memories() {
+    local ceiling="$1" listing total_count selected cont section="" used=0 skipped=0 injected=0
+    listing=$(bd memories --json 2>/dev/null) || listing=""
+    [ -z "$listing" ] && return 0
+    total_count=$(printf '%s\n' "$listing" | grep -cE '^[[:space:]]*"[^"]+":' || true)
+
+    if ! printf '%s\n' "$listing" | grep -q '@salience='; then
+        printf '## Persistent Memories\n\n%s memories stored, none curated yet — ' "$total_count"
+        printf 'run the memory-curator curation sweep to choose what is ambient. '
+        # shellcheck disable=SC2016  # backticks are literal markdown code-format markers, not expansions
+        printf 'Search: `bd memories <keyword>` · fetch: `bd recall <key>`\n'
+        return 0
+    fi
+
+    cont=$(printf '%s\n' "$listing" | bsp_latest_continuation)
+    selected=$(printf '%s\n' "$listing" | bsp_select_memory_keys)
+    [ -n "$cont" ] && selected=$(printf '9\t%s\n%s' "$cont" "$selected" | awk '!seen[$2]++')
+
+    local sal key body len
+    while IFS=$'\t' read -r sal key; do
+        [ -z "$key" ] && continue
+        body=$(bd recall "$key" 2>/dev/null) || continue
+        len=${#body}
+        if [ "$sal" != "9" ] && [ $((used + len)) -gt "$ceiling" ]; then
+            skipped=$((skipped + 1)); continue
+        fi
+        section="${section}### ${key}
+${body}
+
+"
+        used=$((used + len)); injected=$((injected + 1))
+    done <<<"$(printf '%s\n' "$selected" | sort -t$'\t' -k1,1nr)"
+
+    printf '## Persistent Memories (core)\n\n%s' "$section"
+    # shellcheck disable=SC2016  # backticks are literal markdown code-format markers, not expansions
+    [ "$skipped" -gt 0 ] && printf '+%s more core memories over budget — `bd memories <kw>`\n' "$skipped"
+    # shellcheck disable=SC2016  # backticks are literal markdown code-format markers, not expansions
+    printf 'core memories: %s of %s injected (salience>=4 + latest continuation, %s-byte budget) — search the rest: `bd memories <keyword>` · fetch: `bd recall <key>`\n' \
+        "$injected" "$total_count" "$ceiling"
+}
+
+# Test seam: when sourced with BSP_SOURCED=1, expose functions and stop.
+if [ "${BSP_SOURCED:-0}" = "1" ]; then
+    # shellcheck disable=SC2317  # exit 0 is the non-sourced fallback; unreachable when `.`-sourced
+    return 0 2>/dev/null || exit 0
+fi
+
 # Check if legacy skills directory exists and build warning
 warning_message=""
 legacy_skills_dir="${HOME}/.config/superpowers/skills"
