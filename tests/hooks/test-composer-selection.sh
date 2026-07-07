@@ -70,4 +70,21 @@ FIX
 out=$(bsp_compose_memories 8192)
 echo "$out" | grep -q "curation sweep" || { echo "FAIL: pre-sweep notice absent"; exit 1; }
 
+# 5. ceiling counts BYTES, not chars: em-dash body is 30 chars but 90 bytes.
+# Ceiling 60: continuation (20B, exempt) + 90B = 110 > 60 -> must be clipped
+# with the +N tail (1 of 2 injected). Char-counting (20+30=50 <= 60) would
+# wrongly keep it and emit no tail.
+cat > "$TMP/fixtures/memories.json" <<'FIX'
+{
+  "utf8-lesson": "@type=semantic:lesson @created=2026-07-07 @salience=5 multi-byte body",
+  "continuation-2026-07-07-x": "continuation x body"
+}
+FIX
+{ printf '—%.0s' {1..30}; echo; } > "$TMP/fixtures/recall-utf8-lesson.txt"
+printf 'SHORT CONT BODY XXXX\n' > "$TMP/fixtures/recall-continuation-2026-07-07-x.txt"
+out=$(bsp_compose_memories 60)
+echo "$out" | grep -q "SHORT CONT BODY" || { echo "FAIL: continuation clipped in byte-ceiling test"; exit 1; }
+echo "$out" | grep -q "more core memories over budget" || { echo "FAIL: multi-byte body not clipped — ceiling counted chars, not bytes"; exit 1; }
+echo "$out" | grep -q "core memories: 1 of 2 injected" || { echo "FAIL: byte-test disclosure wrong"; exit 1; }
+
 echo "PASS: composer selection/ceiling"
