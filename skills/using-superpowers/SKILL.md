@@ -61,6 +61,15 @@ When a decision is hard to reverse, surprising without context, and a genuine tr
 
 `bd` (beads) is the task tracker for ALL work — TodoWrite is forbidden, as are TaskCreate and markdown TODOs. The session hook injects composed beads context (curated memories + workflow pointer) at session start; if none was injected this session, run `bd prime`. Only the orchestrating agent manages beads — subagents never touch them. Include bead IDs in commit messages. Session close = land the plane: `bd close` → `bd dolt push` → `git push`.
 
+## Skill Name Resolution
+
+Skill references in these skills use the canonical namespaced form
+`beads-superpowers:<skill>`. Depending on install channel, your skill list may
+show them bare (`brainstorming`) or namespaced (`beads-superpowers:brainstorming`)
+— they are the same skills. Invoke whichever form your skill list shows; if a
+reference errors as unknown, match it to the closest name in your list and
+retry with that.
+
 ## Platform Adaptation
 
 If your harness appears here, read its reference file for special instructions:

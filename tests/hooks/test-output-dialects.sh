@@ -29,4 +29,5 @@ check "Claude → nested additionalContext"            "CLAUDE_PLUGIN_ROOT=/x" '
 check "Codex → nested additionalContext"             "CODEX_PLUGIN_ROOT=/x" '.hookSpecificOutput.additionalContext'
 check "Copilot (with CLAUDE root) → top-level"       "CLAUDE_PLUGIN_ROOT=/x COPILOT_CLI=1" '.additionalContext'
 check "Generic fallback → top-level additionalContext" "" '.additionalContext'
+check "Rule section present in injected context"       "" '.additionalContext | contains("Skill Name Resolution")'
 exit $fail
