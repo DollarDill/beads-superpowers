@@ -358,4 +358,4 @@ The `example-workflow/` directory provides a ready-to-use development workflow:
 | [obra/superpowers](https://github.com/obra/superpowers)   | v6.1.1 (baseline) | Skill content, new skills, hook changes     |
 | [gastownhall/beads](https://github.com/gastownhall/beads) | v1.1.0 (baseline) | CLI commands, new features, bd prime format |
 
-Use the `auditing-upstream-drift` skill to check for staleness.
+Use the `auditing-upstream-drift` skill (maintainer-only — `.claude/skills/auditing-upstream-drift/SKILL.md`, not distributed) to check for staleness.
