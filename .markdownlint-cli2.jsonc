@@ -9,6 +9,8 @@
   "ignores": [
     // Upstream-derived skill content — not in scope for this repo's lint
     "skills/**",
+    // Relocated maintainer-only skill (ADR-0044) — same skill-content lint exemption as skills/**
+    ".claude/skills/auditing-upstream-drift/**",
     // Reference docs imported from upstream
     "docs/upstream-reference/**",
     // Test fixtures and test infrastructure

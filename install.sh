@@ -29,7 +29,7 @@ AGENTS_DIR="$HOME/.claude/agents"
 VERSION_FILE="$SKILLS_DIR/.beads-superpowers-version"
 
 KNOWN_SKILLS=(
-  auditing-upstream-drift brainstorming dispatching-parallel-agents
+  brainstorming dispatching-parallel-agents
   document-release executing-plans finishing-a-development-branch
   getting-up-to-speed memory-curator project-init
   receiving-code-review requesting-code-review research-driven-development

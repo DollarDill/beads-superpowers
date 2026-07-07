@@ -28,7 +28,7 @@ CB3_SITES=(
 CB4_SITES=(
   skills/executing-plans/SKILL.md
   skills/test-driven-development/SKILL.md
-  skills/auditing-upstream-drift/SKILL.md
+  .claude/skills/auditing-upstream-drift/SKILL.md
   skills/project-init/SKILL.md
   skills/writing-skills/SKILL.md
   skills/subagent-driven-development/SKILL.md

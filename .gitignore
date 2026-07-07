@@ -31,7 +31,9 @@ node_modules/
 
 # npx skills install artifacts (symlinks created by Vercel Skills CLI)
 .agents/
-.claude/skills/
+.claude/skills/*
+# …except the tracked maintainer-only skill (ADR-0044): linted by content guards, NOT distributed
+!.claude/skills/auditing-upstream-drift/
 skills-lock.json
 
 # Agent-specific directories created by npx skills (28+ dotdirs)
