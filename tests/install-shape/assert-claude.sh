@@ -10,6 +10,15 @@ shape_install
 
 assert_all_skills "$SANDBOX/skills"
 assert_file "$SANDBOX/.claude/hooks/beads-superpowers-session-start.sh"
+# Written hook must be a thin exec shim of the canonical composer (bead bb6x),
+# and the canonical copy must land where the shim points.
+assert_file "$SANDBOX/.claude/hooks/beads-superpowers/hooks/session-start"
+# shellcheck disable=SC2016  # the '$BSP_ROOT' exec line is matched literally, not expanded
+if grep -qF 'exec "$BSP_ROOT/hooks/session-start"' "$SANDBOX/.claude/hooks/beads-superpowers-session-start.sh" 2>/dev/null; then
+  _pass "written hook execs the canonical composer"
+else
+  _fail "written hook is not an exec shim of hooks/session-start"
+fi
 assert_file "$SANDBOX/.claude/settings.json"
 assert_json "$SANDBOX/.claude/settings.json" "'SessionStart' in d.get('hooks', {})"
 assert_json "$SANDBOX/.claude/settings.json" "'UserPromptSubmit' not in d.get('hooks', {})"
@@ -25,6 +34,7 @@ shape_uninstall
 assert_no_file "$SANDBOX/skills/using-superpowers/SKILL.md"
 assert_no_file "$SANDBOX/.claude/agents/yegge.md"
 assert_no_file "$SANDBOX/.claude/hooks/beads-superpowers-session-start.sh"
+assert_no_file "$SANDBOX/.claude/hooks/beads-superpowers"
 assert_no_file "$SANDBOX/skills/.beads-superpowers-version"
 if [ -f "$SANDBOX/.claude/settings.json" ]; then
   assert_json "$SANDBOX/.claude/settings.json" "'beads-superpowers' not in json.dumps(d)"

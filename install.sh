@@ -458,6 +458,7 @@ install_agents_from() {
 }
 
 setup_hooks() {
+  local source_root="${1:-}"
   if [ "$HAS_PYTHON3" = 0 ]; then
     warn "python3 not found — cannot register hooks in settings.json"
     warn "Re-run install.sh once python3 is available to configure hooks"
@@ -467,7 +468,7 @@ setup_hooks() {
   mkdir -p "$HOOKS_DIR"
 
   info "Creating SessionStart hook..."
-  write_hook_script
+  write_hook_script "$source_root"
 
   if [ -f "$SETTINGS_FILE" ]; then
     local backup
@@ -672,6 +673,7 @@ do_auto_uninstall_previous() {
         rm -rf "${SKILLS_DIR:?}/$skill" 2>/dev/null
       done
       rm -f "$HOOK_SCRIPT" "$HOOKS_DIR/beads-superpowers-reminder.sh" 2>/dev/null
+      rm -rf "$HOOKS_DIR/beads-superpowers" 2>/dev/null
       if [ -f "$SETTINGS_FILE" ] && [ "$HAS_PYTHON3" = 1 ]; then
         python3 -c "
 import json
@@ -714,10 +716,46 @@ do_install() {
   echo "${VERSION}:${INSTALL_TIER}" > "$VERSION_FILE"
 }
 
+# write_hook_script [source_root]
+# Checkout tiers (local/tarball/git) pass a repo root: the canonical composer
+# (hooks/session-start) is copied to a durable root and HOOK_SCRIPT becomes a
+# thin exec shim of it — one source of truth (bead bb6x).
+# The npx tier has no checkout to copy from: HOOK_SCRIPT becomes a policy-free
+# minimal fallback — skill injection plus static bd pointers only. All
+# composition policy (bd prime capture, memory selection) lives ONLY in
+# hooks/session-start.
 write_hook_script() {
-  cat > "$HOOK_SCRIPT" << 'HOOKEOF'
+  local source_root="${1:-}"
+
+  if [ -n "$source_root" ] && [ -f "$source_root/hooks/session-start" ]; then
+    local canon_root="$HOOKS_DIR/beads-superpowers"
+    mkdir -p "$canon_root/hooks"
+    cp -f "$source_root/hooks/session-start" "$canon_root/hooks/session-start"
+    chmod +x "$canon_root/hooks/session-start"  # direct exec relies on the bash shebang
+    # The canonical hook resolves skills relative to its own root
+    # (<root>/skills/using-superpowers/SKILL.md) — point <root>/skills at SKILLS_DIR.
+    rm -rf "$canon_root/skills"
+    ln -s "$SKILLS_DIR" "$canon_root/skills"
+
+    # Unquoted heredoc: $canon_root is substituted at install time (same
+    # mechanism as register_hook's PYEOF); runtime expansions are escaped.
+    cat > "$HOOK_SCRIPT" << HOOKEOF
 #!/usr/bin/env bash
-# beads-superpowers SessionStart hook (installed by install.sh)
+# beads-superpowers hook shim — canonical logic lives in hooks/session-start.
+# The CLAUDE_PLUGIN_ROOT default preserves the hookSpecificOutput envelope this
+# registration has always emitted (settings.json / codex_hooks consumers).
+BSP_ROOT="$canon_root"
+export CLAUDE_PLUGIN_ROOT="\${CLAUDE_PLUGIN_ROOT:-\$BSP_ROOT}"
+exec "\$BSP_ROOT/hooks/session-start" "\$@"
+HOOKEOF
+  else
+    cat > "$HOOK_SCRIPT" << 'HOOKEOF'
+#!/usr/bin/env bash
+# beads-superpowers SessionStart hook — minimal fallback (npx tier).
+# npx installs skills only (no repo checkout), so the canonical
+# hooks/session-start composer is not available to exec. This fallback is
+# policy-free by design: skill injection plus static bd pointers — no bd prime
+# capture, no memory selection. That logic lives in hooks/session-start.
 set -euo pipefail
 
 SKILL_CONTENT=""
@@ -735,7 +773,22 @@ fi
 
 BEADS_CONTEXT=""
 if command -v bd >/dev/null 2>&1; then
-  BEADS_CONTEXT=$(bd prime 2>/dev/null || true)
+  MEMORY_LINE=$({ bd memories 2>/dev/null || true; } | head -1)
+  BEADS_CONTEXT=$(cat <<'PTR'
+## Issue Tracking (bd)
+
+This workspace uses **bd (beads)**. Core commands:
+- `bd ready -n 10` — unblocked work · `bd show --short <id>` — skim an issue
+- `bd create "Title" -t task -p 2` — create · `bd close <id> --reason "..."` — complete
+- `bd query "status=open"` — search · `bd remember "insight"` — persist a memory
+Full reference: `bd human`. If beads context was not injected this session: `bd prime`.
+
+## Persistent Memories
+PTR
+)
+  BEADS_CONTEXT="${BEADS_CONTEXT}
+${MEMORY_LINE}
+"'Search: `bd memories <keyword>` · fetch: `bd recall <key>`'
 fi
 
 escape_json() {
@@ -758,6 +811,7 @@ fi
 
 printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' "$CONTEXT"
 HOOKEOF
+  fi
   chmod +x "$HOOK_SCRIPT"
 }
 
@@ -936,6 +990,7 @@ do_uninstall() {
       info "Removed agent definitions"
 
       rm -f "$HOOK_SCRIPT" "$HOOKS_DIR/beads-superpowers-reminder.sh"
+      rm -rf "$HOOKS_DIR/beads-superpowers"
       info "Removed hook scripts"
 
       if [ -f "$SETTINGS_FILE" ] && command -v python3 >/dev/null 2>&1; then
