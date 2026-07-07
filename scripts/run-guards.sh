@@ -15,5 +15,6 @@ run "version sync"          bash scripts/bump-version.sh --check
 run "skill frontmatter"     python3 scripts/check-skill-frontmatter.py
 run "shell lint"            bash scripts/lint-shell.sh
 run "askuser genericization" bash scripts/check-askuser-genericization.sh
+run "skill ref namespacing"  bash scripts/check-skill-ref-namespace.sh
 run "install hook no-fork"  bash scripts/check-install-hook-fork.sh
 exit "$rc"

@@ -12,7 +12,7 @@ memories — and prune the pile — using `bd` over text already in context. No 
 
 ## When to Use
 - **Session-close** — when the session produced ~3+ new `bd remember` calls. Offered, never automatic.
-- **On-demand** — a full-store sweep: `Skill(memory-curator)`.
+- **On-demand** — a full-store sweep: `Skill(beads-superpowers:memory-curator)`.
 
 ## When NOT to Use
 - Sessions with 0–2 new memories — not worth a pass.

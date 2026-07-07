@@ -302,7 +302,7 @@ Drop the `[spec]` prefix when the item is Confirmed (evidence cited).
 }
 ```
 
-If selected, invoke `Skill(memory-curator)` (it proposes a reviewed command list; you approve before any write). Below the ~3-memory threshold, stay silent — do NOT prompt every close (offer fatigue retired a similar over-firing hook). Applies to ALL session closes, branch and non-branch.
+If selected, invoke `Skill(beads-superpowers:memory-curator)` (it proposes a reviewed command list; you approve before any write). Below the ~3-memory threshold, stay silent — do NOT prompt every close (offer fatigue retired a similar over-firing hook). Applies to ALL session closes, branch and non-branch.
 
 ```bash
 # 4. Push beads to Dolt remote
