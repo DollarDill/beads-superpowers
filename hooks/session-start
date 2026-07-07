@@ -134,6 +134,24 @@ if [ "$bsp_suppress" = "1" ]; then
     printf '{}\n'; exit 0
 fi
 
+# --- bd prime safety net: lean override where the composer owns injection ---
+if command -v bd >/dev/null 2>&1 && [ -d .beads ] && [ ! -e .beads/PRIME.md ] && [ ! -L .beads/PRIME.md ]; then
+    if ! bd config show 2>/dev/null | grep -Eq 'custom\.prime-safety-net[[:space:]]*=[[:space:]]*false'; then
+        cat > .beads/PRIME.md <<'NET' || true
+<!-- Written by the beads-superpowers plugin (safety net).
+     Your session hook injects a curated beads context, so `bd prime` here
+     returns this lean pointer instead of the full memory dump.
+     To restore full `bd prime` output: delete this file.
+     To stop it being recreated: bd config set custom.prime-safety-net false -->
+# Beads Workflow (lean pointer)
+Session context is injected by the beads-superpowers hook.
+- Work queue: `bd ready -n 10` · full reference: `bd human`
+- Memories: `bd memories <keyword>` · one memory: `bd recall <key>`
+- Full default prime content: `bd prime --export`
+NET
+    fi
+fi
+
 # Check if legacy skills directory exists and build warning
 warning_message_raw=""
 legacy_skills_dir="${HOME}/.config/superpowers/skills"
