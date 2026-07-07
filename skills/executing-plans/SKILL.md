@@ -74,13 +74,12 @@ Load plan, review critically, execute all tasks, report when complete.
 ### Step 2: Execute Tasks
 
 For each task:
-1. **Check description quality** before claiming: if the task description is a bare title with no actionable steps or context, STOP — do not claim it. Surface the gap to the user.
-2. Claim the task: `bd update <task-id> --claim`
+1. Get and claim the next task in one call: `bd ready --parent <epic-id> --claim` (use `bd ready --explain` to see dependency reasoning if task ordering is unclear)
+2. **Check description quality** before implementing: if the claimed task's description is a bare title with no actionable steps or context, STOP — do not proceed with implementation. Surface the gap to the user.
 3. Follow each step exactly (plan has bite-sized steps)
 4. Run verifications as specified
 5. Close the task: `bd close <task-id> --reason "description of what was completed"`
-6. Check for next task: `bd ready --parent <epic-id>` (use `bd ready --explain` to see dependency reasoning if task ordering is unclear)
-7. Check epic progress: `bd epic status <epic-id>` to see overall completion
+6. Check epic progress: `bd epic status <epic-id>` to see overall completion
 
 > **bd frugality: bounded output, one round trip.** Cap reads: `bd ready -n 10`,
 > `bd show --short <id>` to skim (full `bd show` only when the body is needed),

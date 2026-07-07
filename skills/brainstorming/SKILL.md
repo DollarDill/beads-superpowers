@@ -21,7 +21,7 @@ Every project goes through this process. A todo list, a single-function utility,
 
 ## Checklist
 
-You MUST create a brainstorming session bead (`bd create "Brainstorming: <topic>" -t task`) and child beads for each checklist step below (`bd create "Step N: <title>" -t chore --parent <session-bead-id>`), then complete them in order:
+You MUST create the session bead + step children atomically via `bd create --graph` (one JSON: session node `-t task` titled "Brainstorming: <topic>", each checklist step a `-t chore` child node with `parent_key` pointing to the session; `--dry-run` first), then complete them in order. Fall back to sequential `bd create "Brainstorming: <topic>" -t task` + `bd create "Step N: <title>" -t chore --parent <session-bead-id>` only if `--graph` is unavailable:
 
 1. **Explore project context** — check files, docs, recent commits
 2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
