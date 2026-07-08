@@ -61,6 +61,25 @@ Every memory keeps its existing key and carries one greppable header line:
 One line. The class makes the prune signal greppable (`bd memories | grep '@type=episodic:'`);
 `@salience`/`@tags` filter recall.
 
+## kv knowledge base (`bsp.kb.`)
+
+Reference-class memories (`research`/`design`/`decision`) live in the beads **kv store**, not `memory.` — kv is never auto-injected, so pointers stay out of every session's context but keep persistence + Dolt sync.
+
+- **Key:** `bsp.kb.<subtype>.<memory-key>` — derived deterministically from the memory's existing key (collision-free, idempotent on re-run). Plugin-scoped `bsp.kb.` avoids any future beads-native namespace collision (beads reserves `memory.`).
+- **Value:** compact, single-line, properly-escaped JSON (emit with `jq -c` / a real serializer — never string concatenation):
+
+  ```json
+  {"type":"semantic:research","created":"2026-07-08","salience":3,"refs":["<doc-path>","<bead-id>"],"tags":["..."],"summary":"one-line breadcrumb; detail lives in refs"}
+  ```
+
+  Single-line is mandatory: `bd kv list` renders one `key = value` per line, so a multi-line value breaks `grep` retrieval.
+
+- **Retrieval (kv has no server-side search — client-side only):**
+  - Skim: `bd kv list | grep -i '^bsp.kb' | grep -i <keyword>`
+  - Structured: `bd kv list --json | jq -r 'to_entries | map(select(.key|startswith("bsp.kb."))) | map(select(.value|fromjson|.tags|index("<tag>"))) | .[].key'`
+
+- **Move-out invariant (curator route step):** write the `bsp.kb.` key → **verify** (`bd kv get` returns it) → **then** `bd forget` the memory. Never forget first. Existence-check the key before writing (idempotent re-run). Run the secret/PII scan on the body first — **flag for removal, never relocate** a secret into kv.
+
 ## The sweep
 One pass. Input: the session (in context) + `bd memories --json`. Output: a **reviewed** list of
 `bd remember` / `bd forget` commands. Propose least-destructive changes first (enrich + exact-duplicate
