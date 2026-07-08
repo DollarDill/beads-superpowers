@@ -31,6 +31,7 @@ bsp_latest_continuation() {
 # $1 = ceiling bytes. Uses `bd memories --json` (selection) + `bd recall` (bodies).
 bsp_compose_memories() {
     local ceiling="$1" listing total_count selected cont section="" used=0 skipped=0 injected=0
+    local nudge_at="${BSP_MEM_NUDGE_AT:-150}"
     listing=$(bd memories --json 2>/dev/null) || listing=""
     [ -z "$listing" ] && return 0
     total_count=$(printf '%s\n' "$listing" | grep -cE '^[[:space:]]*"[^"]+":' || true)
@@ -71,6 +72,11 @@ ${body}
     # shellcheck disable=SC2016  # backticks are literal markdown code-format markers, not expansions
     printf 'core memories: %s of %s injected (salience>=4 + latest continuation, %s-byte budget) — search the rest: `bd memories <keyword>` · fetch: `bd recall <key>`\n' \
         "$injected" "$total_count" "$ceiling"
+    if [ "$total_count" -ge "$nudge_at" ]; then
+        # shellcheck disable=SC2016
+        printf 'store at %s memories (>= %s) — run the memory-curator sweep to consolidate/route.\n' \
+            "$total_count" "$nudge_at"
+    fi
 }
 
 # Static bd workflow pointer (onboard-style; ~250 tok)

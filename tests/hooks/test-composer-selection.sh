@@ -120,4 +120,16 @@ sel=$(bd memories --json | bsp_select_memory_keys)
 echo "$sel" | grep -q "hdr3-body5" && { echo "FAIL: body @salience=5 false-selected a salience-3 header"; exit 1; }
 echo "$sel" | grep -q "4	hdr4-body2" || { echo "FAIL: salience-4 header not selected when body mentions salience=2"; exit 1; }
 
+# 8. graduated nudge: curated store above BSP_MEM_NUDGE_AT emits a curator nudge
+cat > "$TMP/fixtures/memories.json" <<'FIX'
+{
+  "keep-lesson": "@type=semantic:lesson @created=2026-07-08 @salience=5 body"
+}
+FIX
+printf 'KEEP\n' > "$TMP/fixtures/recall-keep-lesson.txt"
+out=$(BSP_MEM_NUDGE_AT=1 bsp_compose_memories 8192)   # total_count=1 >= 1 -> nudge
+echo "$out" | grep -qi "memory-curator" || { echo "FAIL: size-nudge absent above threshold"; exit 1; }
+out=$(BSP_MEM_NUDGE_AT=999 bsp_compose_memories 8192)  # below threshold -> no nudge
+echo "$out" | grep -qi "run the memory-curator" && { echo "FAIL: nudged below threshold"; exit 1; }
+
 echo "PASS: composer selection/ceiling"

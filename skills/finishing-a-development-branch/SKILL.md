@@ -286,7 +286,7 @@ Evidence: <file:line / failing test / repro | none>"
 
 Drop the `[spec]` prefix when the item is Confirmed (evidence cited).
 
-**3.5. Offer memory curation (conditional) — before the push.** If this session produced curation-worthy volume — roughly **3+ new `bd remember` calls** — OFFER (do not auto-run) a capture-enrichment pass now, so curated memories are included in the `bd dolt push` below. Ask via your structured question tool:
+**3.5. Offer memory curation (conditional) — before the push.** If this session produced curation-worthy volume — roughly **3+ new `bd remember` calls** — OFFER (do not auto-run) a capture-enrichment pass now, so curated memories are included in the `bd dolt push` below — or if the session-start composer showed a *store-size nudge* (store ≥ the nudge threshold), offer the pass regardless of this session's capture count. Ask via your structured question tool:
 
 ```json
 {
