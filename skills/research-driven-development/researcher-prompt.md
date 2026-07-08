@@ -39,6 +39,10 @@ Agent tool (subagent_type: "general-purpose"):
        # Search the project research directory
        find .internal/research -name "*.md" -exec grep -li "<keyword>" {} \; 2>/dev/null
        ```
+       Also search the kv knowledge base (reference-class notes live there):
+       ```bash
+       bd kv list | grep -i '^bsp.kb' | grep -i "<keyword>"
+       ```
        Check it before researching from scratch. If comprehensive coverage already
        exists, reference it — do not duplicate.
     2. **LSP-first code navigation** — Use LSP as your DEFAULT code navigation tool.
