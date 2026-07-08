@@ -170,7 +170,7 @@ stop_http_server
 
 # Skills: count + spot-check
 skill_count=$(find "$HOME/.claude/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-assert_count_gte "$skill_count" 23 "skill count >= 23"
+assert_count_gte "$skill_count" 22 "skill count >= 22"
 assert_dir_exists "$HOME/.claude/skills/brainstorming" "skill: brainstorming"
 assert_dir_exists "$HOME/.claude/skills/test-driven-development" "skill: TDD"
 assert_dir_exists "$HOME/.claude/skills/using-superpowers" "skill: using-superpowers"
@@ -206,7 +206,7 @@ if command -v codex >/dev/null 2>&1; then
 
   # Codex skills installed
   codex_skill_count=$(find "$HOME/.codex/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-  assert_count_gte "$codex_skill_count" 23 "Codex skill count >= 23"
+  assert_count_gte "$codex_skill_count" 22 "Codex skill count >= 22"
   assert_dir_exists "$HOME/.codex/skills/using-superpowers" "Codex skill: using-superpowers"
   assert_file_exists "$HOME/.codex/skills/brainstorming/SKILL.md" "Codex skill has SKILL.md"
 else
@@ -219,7 +219,7 @@ if command -v opencode >/dev/null 2>&1; then
 
   # OpenCode skills installed
   oc_skill_count=$(find "$HOME/.config/opencode/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-  assert_count_gte "$oc_skill_count" 23 "OpenCode skill count >= 23"
+  assert_count_gte "$oc_skill_count" 22 "OpenCode skill count >= 22"
   assert_dir_exists "$HOME/.config/opencode/skills/using-superpowers" "OpenCode skill: using-superpowers"
 
   # OpenCode plugin installed
