@@ -21,10 +21,27 @@ memories — and prune the pile — using `bd` over text already in context. No 
 ## Memory taxonomy
 Two classes; **procedural** memory (how-to / workflow) lives in the **skills**, never the memory store.
 
-- **semantic** — durable facts that stay true. Subtypes: `design`, `lesson`, `pattern`, `decision`,
-  `root-cause`, `research`, `correction`. The durable core of the store.
-- **episodic** — time-bound records of what happened. Subtypes: `done`, `continuation`, `cleanup`,
-  `review`. Consolidate and retire as they age; a cluster often distills into one semantic fact.
+- **semantic** — durable facts that stay true.
+- **episodic** — time-bound records of what happened.
+
+**The `@type` is the routing decision.** Classify once; the type deterministically sets store, injection, and lifecycle. There is no separate "memory or kv?" judgment — you choose a type, and the type carries the store.
+
+| `@type` | store | injected at session start? | lifecycle |
+|---|---|---|---|
+| `semantic:lesson` | memory | yes (salience≥4) | durable; consolidate near-dups |
+| `semantic:root-cause` | memory | yes (salience≥4) | durable; consolidate |
+| `semantic:pattern` | memory | yes (salience≥4) | durable; consolidate |
+| `semantic:correction` | memory | yes | durable (supersedes a wrong memory) |
+| `semantic:research` | **kv** (`bsp.kb.`) | **no** | durable-in-kv — pointer to a research doc |
+| `semantic:design` | **kv** (`bsp.kb.`) | **no** | durable-in-kv — pointer to an ADR/spec |
+| `semantic:decision` | **kv** (`bsp.kb.`) | **no** | durable-in-kv — pointer to an ADR |
+| `episodic:continuation` | memory | latest only | supersede on next |
+| `episodic:done` / `cleanup` / `review` | memory → retire | no | consolidate into a semantic fact, then drop; age-out (>30d) safety net |
+
+**Crisp routing definitions (the boundary that keeps determinism honest):**
+- `research` / `design` / `decision` = a **pointer** whose detail lives in a doc/ADR you would re-open when relevant. Injecting it every session wastes context — route to `bsp.kb.` (§ kv knowledge base).
+- `lesson` / `root-cause` / `pattern` / `correction` = a **standalone, actionable rule** you want surfaced *unprompted* so you don't repeat a mistake (e.g. "bd worktree default path is ./<name>, not .worktrees/"). Stays an injected memory.
+- **Escape hatch:** if a research/design item is genuinely a standalone reusable rule, classify it as a `lesson`/`pattern` — you change the *type*, never the store directly.
 
 Map a non-canonical prefix to the nearest canonical subtype — e.g. `stress-test`/`plan-stress-test`→`design`,
 `bug`→`root-cause`, `sdd`→`lesson`, `upstream`→`research`, `docs`→`pattern`. If none fits, ask — don't
@@ -38,7 +55,7 @@ Every memory keeps its existing key and carries one greppable header line:
 <self-contained fact body>
 ```
 
-- `@type` — `<class>:<subtype>` from the taxonomy. `@created` — ISO date. `@salience` — 1–5, best-effort.
+- `@type` — `<class>:<subtype>` from the taxonomy — the subtype sets store/injection/lifecycle per the taxonomy table above. `@created` — ISO date. `@salience` — 1–5, best-effort.
   `@refs` — related bead IDs / memory keys. `@tags` — lexical filter.
 
 One line. The class makes the prune signal greppable (`bd memories | grep '@type=episodic:'`);
