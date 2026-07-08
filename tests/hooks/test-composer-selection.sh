@@ -107,4 +107,17 @@ out=$(bsp_compose_memories 8192)
 echo "$out" | grep -q "curation sweep" && { echo "FAIL: pre-sweep misfired on large store (pipefail SIGPIPE)"; exit 1; }
 echo "$out" | grep -q "EARLY SALIENT FULL BODY" || { echo "FAIL: salient body absent from large-store composition"; exit 1; }
 
+# 7. false-match regression: a body mention of @salience must NOT drive selection —
+# only the @type=… header run counts. The `\n` in the fixture is the two-char escape
+# bd uses to encode the header/body newline.
+cat > "$TMP/fixtures/memories.json" <<'FIX'
+{
+  "hdr3-body5": "@type=semantic:design @created=2026-07-08 @salience=3 header\nthis body discusses @salience=5 in prose",
+  "hdr4-body2": "@type=semantic:lesson @created=2026-07-08 @salience=4 header\nbody mentions @salience=2 only"
+}
+FIX
+sel=$(bd memories --json | bsp_select_memory_keys)
+echo "$sel" | grep -q "hdr3-body5" && { echo "FAIL: body @salience=5 false-selected a salience-3 header"; exit 1; }
+echo "$sel" | grep -q "4	hdr4-body2" || { echo "FAIL: salience-4 header not selected when body mentions salience=2"; exit 1; }
+
 echo "PASS: composer selection/ceiling"

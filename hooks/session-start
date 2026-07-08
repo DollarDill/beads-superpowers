@@ -15,9 +15,11 @@ BSP_MEM_CEILING=8192
 # Selection input is `bd memories --json`: one `"key": "body"` entry per line
 # (verified shape, bd v1.1.0) with the FULL body inline — immune to the plain
 # listing's preview truncation, which can hide a late @salience token.
-# Emits "<salience>\t<key>" for @salience=4|5 entries.
+# Emits "<salience>\t<key>" for @salience=4|5 entries. Anchored to the
+# `@type=…` header run (before the first `\n`) so a body mention of
+# `@salience=` cannot false-select.
 bsp_select_memory_keys() {
-    sed -n 's/^[[:space:]]*"\([^"]*\)":[[:space:]]*".*@salience=\([45]\).*/\2\t\1/p'
+    sed -n 's/^[[:space:]]*"\([^"]*\)":[[:space:]]*"@type=[^\\]*@salience=\([45]\).*/\2\t\1/p'
 }
 
 # Lexically-latest continuation-* key from the same JSON listing (dates sort lexically).
