@@ -28,6 +28,13 @@ Dispatch parallel research agents, synthesize their findings, and write a persis
 > **NO RESEARCH WITHOUT A DOCUMENT.**
 > Every research task produces a written artifact. Verbal answers without persistent documents are prohibited. If you researched it, write it down.
 
+## Modes
+
+You are **top-level** unless the caller passed a `nested` marker — that's caller-declared, and the default is top-level (the no-signal case is a direct user research request).
+
+- **Top-level (default):** run the pipeline, then present the **end-gate** (Step 6).
+- **Nested:** run the pipeline, **return findings to the caller — no end-gate.**
+
 ## Output Path
 
 Research documents are written to **`.internal/research/`** — the project-local, gitignored knowledge base. Not configurable.
@@ -42,7 +49,7 @@ Step 3: Decompose + dispatch parallel research agents
 Step 4: Synthesize + verify findings
 Step 4.5: Gap-closing round (if needed)
 Step 5: Write document
-Step 6: Close bead
+Step 6: End-gate (top-level only) + close bead
 ```
 
 ## Step 0: Scope Check (conditional)
@@ -173,7 +180,15 @@ Before writing, verify your document passes these checks:
 - [ ] **Source quality** — ≥1 primary/official source for each load-bearing claim
 - [ ] **Effort efficiency** — agent count matched the query tier (no over-dispatch)
 
-## Step 6: Close the Bead
+## Step 6: End-Gate + Close the Bead
+
+**Nested mode:** skip the end-gate — return your findings to the caller.
+
+**Top-level mode:** present the end-gate using your structured question tool. Three options:
+
+1. **Start brainstorming** — invoke `Skill(beads-superpowers:brainstorming)`, passing the research document path as design input.
+2. **Do further research** — run another round (Step 3 fan-out or a Step 4.5 gap-closing round).
+3. **Accept & close the bead** — continue below.
 
 **Capture what you learned.** At close, record every durable, evidence-backed insight from this work — anything still true next month, tied to a file, test, or command. Don't skip because it feels minor: if it would save a future session time or stop a repeated mistake, record it. Never record guesses, one-offs, or secrets (tokens, keys, PII — every memory is injected into all future sessions). Update an existing memory in place (`bd remember --key <key>`) rather than adding a near-duplicate.
 
@@ -227,4 +242,4 @@ User asks: "How does Dolt handle merge conflicts?"
 
 **Invoked by:** User on-demand, or during the research phase before planning. No other skill invokes this directly.
 
-**Invokes:** None. Dispatches @researcher and @explore agents in parallel internally, but does not invoke other skills.
+**Invokes:** `brainstorming` (via the top-level end-gate). Also dispatches @researcher and @explore agents in parallel internally.
