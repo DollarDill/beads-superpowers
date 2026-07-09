@@ -28,6 +28,10 @@ Dispatch parallel research agents, synthesize their findings, and write a persis
 > **NO RESEARCH WITHOUT A DOCUMENT.**
 > Every research task produces a written artifact. Verbal answers without persistent documents are prohibited. If you researched it, write it down.
 
+## Grounding Rule
+
+> **Every load-bearing claim must be grounded by the verify stage (Step 4) before the document is written.**
+
 ## Modes
 
 You are **top-level** unless the caller passed a `nested` marker — that's caller-declared, and the default is top-level (the no-signal case is a direct user research request).
@@ -100,7 +104,7 @@ find .internal/research -name "*.md" -exec grep -l "<keyword>" {} \; 2>/dev/null
 Each agent's brief MUST state all four parts (Anthropic's delegation contract — vague briefs cause duplicated and missed work):
 
 1. **Objective** — the specific sub-question, not the whole topic.
-2. **Output format** — structured findings, and a **verbatim supporting quote for every load-bearing claim** (this is what lets Step 4 verify soundness without re-fetching).
+2. **Output format** — structured findings, and a **verbatim supporting quote for every load-bearing claim** (the grounding verifier re-fetches independently; this quote is only the fallback if that re-fetch is inconclusive).
 3. **Tools / sources** — which to prefer (official docs over blogs).
 4. **Boundaries** — what this agent owns vs. its neighbours, so sub-questions don't overlap.
 
@@ -131,15 +135,42 @@ Dispatch **exactly one** `@explore` agent (`subagent_type: "Explore"`) **only wh
 After the agents return, you synthesize. The three review touches operate at distinct granularities — claim-level here, coverage-level in Step 4.5, document-level in the Step 5 checklist — and are not redundant.
 
 1. **Merge findings** — combine the sub-question results + codebase findings; merge semantic duplicates.
-2. **Verify soundness (the one claim-verification pass)** — for each **load-bearing** claim, check it against the **verbatim quote** the agent returned and confirm the source *actually supports* it (entailment, not topical proximity). Drop or downgrade unsupported claims. Tag each load-bearing claim inline with its source (`[S1]`).
+2. **Verify grounding (dispatch the 3-layer stage below)** — every load-bearing claim must clear layer 1 + layer 2 (escalating to layer 3 on doubt) before being kept. Tag each surviving load-bearing claim inline with its verified source (`[S1]`).
 3. **Assign confidence per finding** — **high** (multiple primary sources agree) / **medium** (secondary or split) / **low** (single source / blog / contested), with a one-line rationale.
 4. **Resolve contradictions, keep the verdict** — when sources conflict, determine which is authoritative and recommend. When the conflict is load-bearing, also record both positions in an optional **Disagreements** note — but never silently average, and never abdicate the call.
 5. **Identify gaps** — list load-bearing claims that rest on a single source or are unresolved (feeds Step 4.5).
 6. **Extract actionable items** — note recommended beads.
 
+### Grounding Verify Stage
+
+The verifier's job is narrow — **citation grounding, not truth-judgment**: does the cited source actually contain a span that entails this claim? It never judges whether the claim is true in some absolute sense, only whether the cited source backs it up. This stage is **universal — every tier, including Simple** (one cheap verifier for a single-fact claim closes the grounding gap without a special case).
+
+**Load-bearing heuristic:** a claim is load-bearing if a recommendation, decision, or comparison in the document rests on it. Non-load-bearing color/context claims are not verified.
+
+Dedup semantically-equivalent claims first, then verify the **top-K** load-bearing claims; if more exist, **log which were not independently verified** — a visible note, never a silent truncation.
+
+**Layer 1 — deterministic pre-filter (no LLM, always runs, all tiers):**
+- Every load-bearing claim carries a source tag → else flag ungrounded.
+- The cited URL resolves (HTTP check, e.g. `WebFetch` or a HEAD request) → else flag as a possibly-fabricated source.
+
+**Layer 2 — blinded Haiku verifier (entailment only; default 1 verifier per claim):** for each load-bearing claim that passed layer 1, dispatch one fresh-context verifier:
+1. `Read` the prompt template at `./verifier-prompt.md`.
+2. Fill in only the claim text and the cited URL — no author, no framing that this is "our" research (the blinding kills self-preference bias).
+3. Dispatch via the `Agent` tool: `subagent_type: "general-purpose"`, `model: "haiku"`.
+4. Collect its three-way verdict: `{ verdict: SUPPORTED | UNSUPPORTED | INCONCLUSIVE, supporting_span, confidence, reason }`.
+
+**Layer 3 — escalate on doubt (not always-on):** a clean SUPPORTED verdict with a verbatim span is accepted immediately — no escalation. **Only** on UNSUPPORTED / INCONCLUSIVE / low-confidence, escalate that single claim: first to a **3-way Haiku ensemble** (majority verdict, same `./verifier-prompt.md` template); if still split, to **one fresh blinded Sonnet verifier** (`model: "sonnet"`, same template, same blinding/re-fetch contract) whose verdict is final — keeping the grounding chain independent of the author model end-to-end.
+
+**Verdict handling:**
+- **SUPPORTED** → keep the claim, tagged with its verified span/source.
+- **UNSUPPORTED** → the source doesn't actually support the claim → feeds Step 4.5.
+- **INCONCLUSIVE** → never drop the claim for a fetch failure. Retry once / follow one redirect / fall back to the researcher's original quote; if still unreadable, keep the claim but flag it "source unverifiable" with lowered confidence, and feed it to Step 4.5 for a better source.
+
+Verifiers and escalations are **excluded from the 10-cap** — their own budget, separate from the main research fan-out (~1 verifier per load-bearing claim; 3-way only when contested).
+
 ## Step 4.5: Gap-Closing Round (if needed)
 
-If Step 4 surfaced load-bearing claims resting on a single source or unresolved, **dispatch one narrow follow-up round of 1–2 targeted agents** aimed only at those gaps (not a second full fan-out), then re-synthesize. **Cap: 1–2 rounds total.** Record each: `bd note <id> "reflection round N: chasing <gaps>"`. If no gaps, skip.
+If Step 4 surfaced load-bearing claims resting on a single source, unresolved, or **UNSUPPORTED / unresolved-INCONCLUSIVE from the grounding verify stage**, **dispatch one narrow follow-up round of 1–2 targeted agents** aimed only at those gaps (not a second full fan-out) to find a legitimate supporting source, then re-synthesize and re-verify. **Cap: 1–2 rounds total.** Record each: `bd note <id> "reflection round N: chasing <gaps>"`. If a claim still can't be grounded after this round, **remove it from the findings and revise any recommendation resting on it** — never leave it dangling; record the drop in the document's Refuted / Discarded Claims section with the reason. If no gaps, skip.
 
 ## Step 5: Write the Document
 
