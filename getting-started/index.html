@@ -83,7 +83,7 @@
 <meta property="twitter:description" content="Install beads-superpowers via the native plugin system, curl, or npx for Claude Code, Codex, and OpenCode. Set up your first project with bd init in under 5 minutes." />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/getting-started.png" />
 <meta name="panzoom-theme" content="material">
-<meta name="panzoom-data" content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'> </head>
+<meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
   
   
     
@@ -919,13 +919,13 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>npx<span class="w"> </span>skills<span class="w"> </span>add<span class="w"> </span>DollarDill/beads-superpowers<span class="w"> </span>-a<span class="w"> </span>claude-code<span class="w"> </span>-g<span class="w"> </span>--copy<span class="w"> </span>-y
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># Use -a codex to also install for Codex CLI.</span>
 </code></pre></div>
-<p>Installs the skills only — no hooks. Skill activation relies on your harness's native skill discovery. For the full experience (session-start context injection + automatic <code>bd prime</code>), use the plugin install or the scripted install above. To get beads context on an npx install, run <code>bd setup claude</code> (beads' own hook installer).</p>
+<p>Installs the skills only — no hooks. Skill activation relies on your harness's native skill discovery. For the full experience (session-start injection of skill context + a composed beads context), use the plugin install or the scripted install above. To get beads context on an npx install, run <code>bd setup claude</code> (beads' own hook installer).</p>
 <h2 id="first-project-setup">First project setup</h2>
 <p>Initialise beads in your project:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nb">cd</span><span class="w"> </span>your-project
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>bd<span class="w"> </span>init
 </code></pre></div>
-<p>This creates <code>.beads/</code> (config, metadata, git hooks), <code>CLAUDE.md</code>, and <code>AGENTS.md</code>. The plugin's session-start hook automatically detects if <code>bd setup claude</code> hooks are present and skips its own <code>bd prime</code> call, so no manual cleanup is needed.</p>
+<p>This creates <code>.beads/</code> (config, metadata, git hooks), <code>CLAUDE.md</code>, and <code>AGENTS.md</code>. The plugin's session-start hook automatically detects if <code>bd setup claude</code> hooks are present and skips its own beads-context section, so no manual cleanup is needed.</p>
 <h3 id="dolt-remote-optional">Dolt remote (optional)</h3>
 <p>For cross-session sync of your task history:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>bd<span class="w"> </span>dolt<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>origin<span class="w"> </span>https://doltremoteapi.dolthub.com/your-org/your-repo
@@ -957,12 +957,12 @@
 <h2 id="verify-it-works">Verify it works</h2>
 <p>Start a fresh session in your CLI of choice, then:</p>
 <ol>
-<li><strong>Check skills loaded:</strong> Type <code>/skills</code> (Claude Code/Codex) or check the skill list in OpenCode — you should see 23 skills prefixed with <code>beads-superpowers:</code></li>
+<li><strong>Check skills loaded:</strong> Type <code>/skills</code> (Claude Code/Codex) or check the skill list in OpenCode — you should see 22 skills prefixed with <code>beads-superpowers:</code></li>
 <li><strong>Check beads works:</strong> Run <code>bd ready</code> and <code>bd stats</code> in the terminal</li>
 </ol>
 <p>If skills aren't showing, the plugin may not be installed for your CLI. If <code>bd ready</code> fails, beads isn't initialised in this project (<code>bd init</code>).</p>
 <h2 id="how-the-hooks-work">How the hooks work</h2>
-<p>Claude Code and Codex share one hook script — <strong>SessionStart</strong> — registered via <code>hooks/hooks.json</code> for Claude Code and wired by <code>install.sh</code> for Codex. It fires on every session start, clear, and compact. It reads the <code>using-superpowers</code> skill (which routes to all other skills), runs <code>bd prime</code> to capture beads state and persistent memories, and outputs the combined context (~2–3k tokens). If <code>bd prime</code> is already registered as a hook elsewhere, this step is skipped automatically.</p>
+<p>Claude Code and Codex share one hook script — <strong>SessionStart</strong> — registered via <code>hooks/hooks.json</code> for Claude Code and wired by <code>install.sh</code> for Codex. It fires on every session start, clear, and compact. It reads the <code>using-superpowers</code> skill (which routes to all other skills), then composes a lean beads context: a short <code>bd</code> command pointer plus curated core memories (salience ≥ 4 and the latest continuation, selected under a hard 8 KB byte ceiling), with a disclosure line stating how many of the store's memories made it in. The combined context is ~3–4k tokens — the hook no longer runs <code>bd prime</code>. If <code>bd prime</code> is already registered as a hook elsewhere, the beads section is skipped automatically.</p>
 <div class="panzoom-box" data-key="alt" id="panzoom0" oncontextmenu="return false;">
     
     <nav class="panzoom-nav">
@@ -991,7 +991,7 @@
 
   CC-&gt;&gt;SH: Session begins
   SH-&gt;&gt;SH: Read using-superpowers skill
-  SH-&gt;&gt;SH: Run bd prime
+  SH-&gt;&gt;SH: Compose beads context (bd pointer + core memories)
   SH--&gt;&gt;Agent: Inject skills context + beads state
   Note over Agent: Agent is now skill-aware</code></pre> 
     <div class="panzoom-info-box panzoom-info-box-bottom panzoom-hidden">
@@ -1012,11 +1012,12 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><strong>Skills not loading</strong> — Run <code>/plugins</code> to check the plugin is installed, then <code>/skills</code> to check skills are visible. If missing, reinstall: <code>claude plugin marketplace update beads-superpowers-marketplace</code>.</p>
 <p><strong><code>bd: command not found</code></strong> — Beads isn't installed or isn't on your PATH. Run <code>brew install beads</code> or <code>npm install -g @beads/bd</code>, then verify with <code>bd version</code>.</p>
 <p><strong>No <code>.beads</code> directory</strong> — Run <code>bd init</code> in your project directory. The plugin automatically handles duplicate hook detection.</p>
-<p><strong>Double context injection</strong> — The plugin detects <code>bd setup claude</code> hooks in project and global settings and automatically skips its own <code>bd prime</code> call. If you still see duplicates, run <code>bd setup claude --remove</code>.</p>
+<p><strong>Double context injection</strong> — The plugin detects <code>bd setup claude</code> hooks in project and global settings and automatically skips its own beads-context section; same-event double-firing under multi-scope hook registration is suppressed by a dedup marker. If you still see duplicates, run <code>bd setup claude --remove</code>.</p>
+<p><strong>A <code>.beads/PRIME.md</code> file appeared</strong> — that's the plugin's guarded safety net: it makes a stray <code>bd prime</code> call emit a lean pointer instead of the full memory dump. It is only written when <code>.beads/</code> exists and never overwrites an existing file. Disable with <code>bd config set custom.prime-safety-net false</code>.</p>
 <p><strong>Stale plugin cache</strong> — The cache doesn't update when you edit skill files locally. Either symlink the cache to your checkout:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.10.0
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.11.0
 <a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>ln<span class="w"> </span>-s<span class="w"> </span>~/workplace/beads-superpowers<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.10.0
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.11.0
 </code></pre></div>
 <p>Or reinstall. Note: <code>claude plugin update</code> has a known <a href="https://github.com/anthropics/claude-code/issues/14061">cache bug</a> — the symlink is more reliable.</p>
 <p><strong>Hook not firing</strong> — Check the hook is executable: <code>chmod +x hooks/session-start</code>.</p>
@@ -1044,7 +1045,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 6, 2026 13:54:23 UTC">July 6, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 05:49:24 UTC">July 7, 2026</span>
   </span>
 
     

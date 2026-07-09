@@ -85,7 +85,7 @@
 <meta property="twitter:description" content="通过严格规则和反合理化表格强制实施智能体纪律。Dolt 支持的 beads 跨会话跟踪每个任务，实现10个状态的完整生命周期。" />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/zh/methodology.png" />
 <meta name="panzoom-theme" content="material">
-<meta name="panzoom-data" content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'> </head>
+<meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
   
   
     
@@ -736,7 +736,7 @@
 <h3 id="_3">流程规范</h3>
 <p><a href="https://github.com/obra/superpowers">Superpowers</a>（Jesse Vincent）发布了14个可组合技能，强制智能体在编码前进行 brainstorming、在实现前编写测试、在提出修复建议前调查根本原因、在声称完成前进行验证。这些技能使用严格规则——"在没有失败测试的情况下，绝不编写生产代码"——而非模糊的建议如"考虑编写测试"，因为当指令是绝对的而非建议性的时，合规率从33%翻倍提升到72%（Meincke et al. 2025）。每个技能都包含一个反合理化表格，预先消除智能体用来跳过步骤的借口。</p>
 <h3 id="_4">持久记忆</h3>
-<p>Superpowers 使用 <code>TodoWrite</code> 追踪任务，但会话结束后这些记录就会消失。<a href="https://github.com/gastownhall/beads">Beads</a>（Steve Yegge）将其替换为 Dolt 支持的问题追踪器，每个任务都是一个具有基于哈希 ID 的 bead，能够跨越会话边界持久存在。Beads 处理依赖追踪、无冲突多智能体工作的单元级合并、通过 events 表实现的完整审计追踪，以及通过 <code>bd remember</code> 持久化学习成果。在每次会话开始时，<code>bd prime</code> 注入当前任务状态，使智能体从上次中断的地方继续。</p>
+<p>Superpowers 使用 <code>TodoWrite</code> 追踪任务，但会话结束后这些记录就会消失。<a href="https://github.com/gastownhall/beads">Beads</a>（Steve Yegge）将其替换为 Dolt 支持的问题追踪器，每个任务都是一个具有基于哈希 ID 的 bead，能够跨越会话边界持久存在。Beads 处理依赖追踪、无冲突多智能体工作的单元级合并、通过 events 表实现的完整审计追踪，以及通过 <code>bd remember</code> 持久化学习成果。在每次会话开始时，插件钩子注入一份组合式 beads 上下文——任务状态指引加上精选记忆——使智能体从上次中断的地方继续。</p>
 <div class="admonition info">
 <p class="admonition-title">深入了解 — 上游 Beads 文档</p>
 <ul>
@@ -747,7 +747,7 @@
 <h3 id="_5">差距</h3>
 <p>Superpowers 强制执行良好流程，但会话之间会遗忘所有内容。Beads 记住所有内容，但对工作方式没有强制流程。beads-superpowers 将两者连接起来：每个技能中的每个流程步骤都会创建、更新或关闭一个持久 bead，因此遵循正确流程和维护持久记忆是同一个动作。</p>
 <h2 id="_6">工作原理</h2>
-<p>该插件安装 23 个可组合技能和一个 Dolt 支持的任务数据库。<code>using-superpowers</code> 引导技能在会话开始时加载，并将智能体路由到适合当前任务的技能。</p>
+<p>该插件安装 22 个可组合技能和一个 Dolt 支持的任务数据库。<code>using-superpowers</code> 引导技能在会话开始时加载，并将智能体路由到适合当前任务的技能。</p>
 <div class="panzoom-box" data-key="alt" id="panzoom0" oncontextmenu="return false;">
     
     <nav class="panzoom-nav">
@@ -777,7 +777,7 @@ config:
 ---
 graph TB
   subgraph Superpowers ["Superpowers (Process Discipline)"]
-    S1["23 Composable Skills"]
+    S1["22 Composable Skills"]
     S2["Bright-line Rules"]
     S3["Anti-rationalization"]
     S4["Pressure-tested Enforcement"]
@@ -881,18 +881,18 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 </div>
 </div>
 <p><strong>步骤1——设置。</strong> 每个任务都从一个 bead 开始。在任何研究或代码之前，工作被捕获（<code>bd create</code>）、认领（<code>bd update --claim</code>）并同步。如果会话中断，bead 记录显示一个可以恢复的进行中项目。</p>
-<p><strong>步骤2——研究。</strong> <code>research-driven-development</code> 技能将主题分解为子问题，并为每个子问题并行调度一个研究员——另外还有一个 <code>@explore</code> 智能体，当主题涉及代码库时映射受影响的代码。并发运行这些智能体大幅缩短研究时间，每个智能体为每个关键主张返回逐字引用，以便结果可以与来源进行验证。</p>
+<p><strong>步骤2——研究。</strong> <code>research-driven-development</code> 技能将主题分解为子问题，并为每个子问题并行调度一个研究员——另外还有一个 <code>@explore</code> 智能体，当主题涉及代码库时映射受影响的代码。并发运行这些智能体大幅缩短研究时间，每个智能体为每个关键主张返回逐字引用，随后由一个独立的盲验证者重新抓取来源加以复核，使结论扎根于来源的实际表述，而非凭信任采纳。</p>
 <p><strong>步骤3——知识捕获。</strong> 发现被写入持久文档；关键学习成果存入 <code>bd remember</code>，以便在未来会话中浮现。</p>
 <p><strong>步骤4——Brainstorming。</strong> <code>brainstorming</code> 技能依次处理上下文、澄清问题、2–3个带有权衡的方法，以及提交到 git 的设计规格说明。它通过调用 <code>writing-plans</code> 结束——而不是直接跳到代码。规格说明审查门每次都提供 <code>stress-test</code>，在规划前对设计进行对抗性审查。</p>
-<p><strong>步骤5——决策捕获。</strong> 当一个选择难以撤销、脱离上下文令人意外且是真实权衡的结果时，智能体会提议将其记录为 <code>decisions/</code> 中的架构决策记录（Architecture Decision Record）——一个包含上下文、决策、理由和后果的带时间戳的说明。这些是识别标志，而非可借故跳过的清单：当某个决策大体符合时，智能体倾向于提议记录而非略过，只有常规澄清和范围确认才排除在外。该规则在 <code>using-superpowers</code> 中只存在一次，并在实际做出决策的地方被引用：brainstorming、规划、stress-test 以及调试会话中的转折点。</p>
+<p><strong>步骤5——决策捕获。</strong> 当一个选择难以撤销、脱离上下文令人意外且是真实权衡的结果时，智能体会提议将其记录为 <code>docs/decisions/</code> 中的架构决策记录（Architecture Decision Record）——一个包含上下文、决策、理由和后果的带时间戳的说明。这些是识别标志，而非可借故跳过的清单：当某个决策大体符合时，智能体倾向于提议记录而非略过，只有常规澄清和范围确认才排除在外。该规则在 <code>using-superpowers</code> 中只存在一次，并在实际做出决策的地方被引用：brainstorming、规划、stress-test 以及调试会话中的转折点。</p>
 <p><strong>步骤6——规划。</strong> <code>writing-plans</code> 将设计分解为小粒度任务（每个2–5分钟），包含精确的文件路径、代码和验证步骤。每个任务都成为一个 bead。</p>
 <p><strong>步骤7——实现。</strong> 代码在 TDD 约束下的隔离 git worktree 中运行。编排者创建一个包含任务子项和依赖链的 epic，然后调度实现者子智能体。当多个任务未被阻塞时，并行批处理模式并发运行最多5个，每个在其自己的 worktree 中。每个任务完成后，一个只读审查者在单次传递中返回规格说明合规判决和代码质量判决；bead 仅在审查通过后关闭。任务说明、实现者报告和审查差异作为每个 worktree 的 <code>.internal/sdd/</code> 目录下的文件在各阶段之间传递，保持编排者的上下文精简。</p>
 <p><strong>步骤8——验证。</strong> 完整测试套件重新运行——不依赖开发过程中的上次运行。"测试通过"意味着测试命令刚刚执行完毕且输出已附上。</p>
 <p><strong>步骤9——文档。</strong> <code>document-release</code> 扫描差异与现有文档的对比，查找过时引用、缺失条目和过时示例。当审计标记需要大量散文重写的部分时，<code>write-documentation</code> 对这些部分触发。</p>
 <p><strong>步骤10——关闭分支。</strong> <code>finishing-a-development-branch</code> 检测当前环境——普通仓库、命名分支 worktree 或游离 HEAD——并呈现上下文感知选项：普通和 worktree 上下文有4个选择，游离 HEAD（无法合并）有3个选择。基于来源的清理只删除 <code>.worktrees/</code> 内的 worktree，不影响外部创建的 worktree。该技能以 Land the Plane 协议结束：若本次会话产生了多条新记忆，先提供一次 <code>memory-curator</code> 整理再执行 <code>bd dolt push</code>；随后 <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code> → <code>git status</code>。分支路径在此终止——直到任务状态和代码都到达远端，工作才算完成。</p>
-<p><strong>步骤11——会话关闭。</strong> 仅在非分支路径（研究查询、未创建分支的快速任务）上触发。运行与步骤10 Land the Plane 相同的关闭仪式：关闭 bead、若本次会话产生了多条新记忆则提供一次 <code>memory-curator</code> 整理、推送到远端、验证干净状态。下一个会话运行 <code>bd prime</code> 以恢复完整状态。</p>
+<p><strong>步骤11——会话关闭。</strong> 仅在非分支路径（研究查询、未创建分支的快速任务）上触发。运行与步骤10 Land the Plane 相同的关闭仪式：关闭 bead、若本次会话产生了多条新记忆则提供一次 <code>memory-curator</code> 整理、推送到远端、验证干净状态。下一个会话由启动钩子注入恢复完整状态。</p>
 <h2 id="_8">智能体记忆</h2>
-<p>由于 beads 追踪每个流程步骤，智能体所需的记忆类型作为遵循工作流的副作用而填充。23 个技能中的大多数现在在其自然完成点提示 <code>bd remember</code>——调试后的根本原因、brainstorming 后的设计决策、代码审查后的审查洞察——因此记忆捕获发生在技能工作流内，而不是作为单独步骤。</p>
+<p>由于 beads 追踪每个流程步骤，智能体所需的记忆类型作为遵循工作流的副作用而填充。22 个技能中的大多数现在在其自然完成点提示 <code>bd remember</code>——调试后的根本原因、brainstorming 后的设计决策、代码审查后的审查洞察——因此记忆捕获发生在技能工作流内，而不是作为单独步骤。</p>
 <table>
 <thead>
 <tr>
@@ -914,7 +914,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 </tr>
 <tr>
 <td>长期记忆</td>
-<td><code>bd remember</code> + <code>bd prime</code></td>
+<td><code>bd remember</code> + 精选注入 + <code>bd memories</code></td>
 <td>我上周学到了什么？</td>
 </tr>
 <tr>
@@ -940,6 +940,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 </tbody>
 </table>
 <p><code>memory-curator</code> 技能会整合、去重并修剪 <code>bd remember</code> 积累的记忆库——在会话关闭时若捕获了多条新记忆则提供，或可随时按需调用。</p>
+<p>并非每条记忆都应进入注入集。整理器按 <code>@type</code> 对每条笔记分类，而类型<em>即是</em>路由决策：你希望无需提示即浮现的可操作规则（<code>lesson</code>、<code>pattern</code>、<code>root-cause</code>、<code>correction</code>）保留为注入记忆，而仅指向某个文档或 ADR 的参考类笔记（<code>research</code>、<code>design</code>、<code>decision</code>）则路由到 <strong><code>bsp.kb.</code> 键值知识库</strong>——持久保存并随 Dolt 同步，但从不自动注入。可按需通过 <code>bd kv list | grep '^ *bsp.kb'</code>（或结构化的 <code>bd kv list --json | jq</code> 形式）检索。注入上下文保持精简且高信噪比，同时不丢失任何内容。</p>
 <h2 id="_9">研究基础</h2>
 <h3 id="cialdini-2021">Cialdini (2021) — 影响力原则</h3>
 <p>《影响力：说服心理学》（<em>Influence: The Psychology of Persuasion</em>）中的三个原则塑造了技能的写作方式。权威性：铁律使用绝对性措辞，因为智能体将权威指令视为更难覆盖的规则。一致性：一旦智能体开始一个技能的流程，一致性压力使其在剩余步骤中保持正轨。稀缺性：像"你无法为此找到合理借口"这样的措辞消除了存在替代方案的感觉。</p>
@@ -981,7 +982,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <h3 id="sdo">技能发现优化（SDO）</h3>
 <p>一个实证发现：当技能的 YAML <code>description</code> 字段总结工作流（"任务间的代码审查"）时，智能体会遵循描述而不是阅读完整的技能内容，并跳过完整技能指定的步骤。因此，每个技能的 <code>description</code> 是触发条件（"何时使用"），而不是工作流摘要（"这做什么"），这迫使完整内容被阅读。</p>
 <h2 id="_10">设计决策</h2>
-<p><strong>插件接管 beads 钩子。</strong> Beads 的 <code>bd setup claude</code> 安装运行 <code>bd prime</code> 的钩子。插件也需要注入技能上下文。与其同时触发两者并在冗余上下文上浪费3–4k tokens，插件的钩子承担两项工作，并在独立钩子仍然安装时发出警告。</p>
+<p><strong>插件接管 beads 钩子。</strong> Beads 的 <code>bd setup claude</code> 安装运行 <code>bd prime</code> 的钩子。插件也需要注入技能上下文。与其同时触发两者并在冗余上下文上浪费 tokens，插件的钩子承担两项工作——在 8 KB 硬性上限内组合按显著度精选的 beads 上下文，而不是注入完整的 <code>bd prime</code> 转储（在 218 条记忆的库上实测减少 91.6%）——并在独立钩子仍然安装时让出自身的 beads 部分并发出警告。</p>
 <p><strong>Land the Plane 在分支技能中。</strong> 会话关闭协议位于 <code>finishing-a-development-branch</code>（步骤6）而非单独的技能中。分支路径在S10终止，包含完整的推送仪式。非分支路径（研究查询）使用S11（SESSION_CLOSE）执行相同仪式，但不包含分支决策树。</p>
 <p><strong>仅模板智能体调度。</strong> 代码审查是最后一个通过独立智能体文件（<code>agents/code-reviewer.md</code>）调度的子智能体。在v0.6.0中该文件被移除，审查者通过其技能的提示词模板调度，与实现者和研究员保持一致。所有子智能体定义现在都位于使用它们的技能内部。</p>
 <p><strong>技能是 Markdown，而非代码。</strong> 遵循 Superpowers 的零依赖哲学，所有技能都是带 YAML 前置元数据的纯 Markdown。无需构建步骤。唯一的运行时依赖是 <code>bd</code>，它是可选的——技能在没有它的情况下仍然有效，只是失去了持久性。</p>
@@ -1014,7 +1015,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年7月6日 13:54:28 UTC">2026年7月6日</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年7月9日 15:44:06 UTC">2026年7月9日</span>
   </span>
 
     

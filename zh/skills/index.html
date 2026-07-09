@@ -85,7 +85,7 @@
 <meta property="twitter:description" content="可组合技能的完整参考，包含触发映射、分类说明、bd 命令用法，以及展示技能相互调用关系的链式图。" />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/zh/skills.png" />
 <meta name="panzoom-theme" content="material">
-<meta name="panzoom-data" content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'> </head>
+<meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
   
   
     
@@ -676,17 +676,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#auditing-upstream-drift" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        auditing-upstream-drift
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#memory-curator" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -878,7 +867,7 @@
 <p>本页面由 AI 自动翻译，可能存在术语或语义偏差。如有疑问，请以<a href="./">英文原文</a>为准。</p>
 </div>
 <h1 id="_1">技能参考</h1>
-<p>beads-superpowers 附带 23 个可组合技能，通过 <code>Skill</code> 工具按需加载。引导技能 <code>using-superpowers</code> 在每次会话开始时加载，并将请求路由至适合当前任务的技能。技能为强制性要求——当某个技能适用时，智能体必须调用它。</p>
+<p>beads-superpowers 附带 22 个可组合技能，通过 <code>Skill</code> 工具按需加载。引导技能 <code>using-superpowers</code> 在每次会话开始时加载，并将请求路由至适合当前任务的技能。技能为强制性要求——当某个技能适用时，智能体必须调用它。</p>
 <h2 id="_2">触发映射</h2>
 <p>在会话开始时注入的 <code>using-superpowers</code> 引导技能会告知智能体哪个技能适用于哪个任务：</p>
 <table>
@@ -951,7 +940,7 @@
 </tr>
 </tbody>
 </table>
-<p>其他可用技能：<code>document-release</code>、<code>getting-up-to-speed</code>、<code>dispatching-parallel-agents</code>、<code>project-init</code>、<code>writing-skills</code>、<code>auditing-upstream-drift</code></p>
+<p>其他可用技能：<code>document-release</code>、<code>getting-up-to-speed</code>、<code>dispatching-parallel-agents</code>、<code>project-init</code>、<code>writing-skills</code></p>
 <h2 id="_3">按类别</h2>
 <table>
 <thead>
@@ -987,7 +976,7 @@
 </tr>
 <tr>
 <td><strong>生命周期</strong></td>
-<td><a href="#document-release">document-release</a>, <a href="#getting-up-to-speed">getting-up-to-speed</a>, <a href="#auditing-upstream-drift">auditing-upstream-drift</a>, <a href="#memory-curator">memory-curator</a>, <a href="#session-handoff">session-handoff</a></td>
+<td><a href="#document-release">document-release</a>, <a href="#getting-up-to-speed">getting-up-to-speed</a>, <a href="#memory-curator">memory-curator</a>, <a href="#session-handoff">session-handoff</a></td>
 </tr>
 <tr>
 <td><strong>设置</strong></td>
@@ -1096,7 +1085,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 </div>
 <h2 id="_4">所有技能</h2>
 <h3 id="using-superpowers">using-superpowers</h3>
-<p>在每次会话开始时注入的引导技能。将智能体路由至当前任务对应的正确技能，并承载生产级行为规范，确保每个会话遵循无捷径、无静默缩减范围、永不引入安全回归的标准。它还承载决策捕获约定：当某个选择难以撤销、出乎意料且存在真实权衡时，智能体会提议在 <code>decisions/</code> 中记录一条 ADR。其他所有技能都依赖于此技能先行加载。</p>
+<p>在每次会话开始时注入的引导技能。将智能体路由至当前任务对应的正确技能，并承载生产级行为规范，确保每个会话遵循无捷径、无静默缩减范围、永不引入安全回归的标准。它还承载决策捕获约定：当某个选择难以撤销、出乎意料且存在真实权衡时，智能体会提议在 <code>docs/decisions/</code> 中记录一条 ADR。其他所有技能都依赖于此技能先行加载。</p>
 <h3 id="writing-skills">writing-skills</h3>
 <p>用于创建和修改技能的元技能。强制执行面向过程文档的 TDD：新技能在编写 SKILL.md 之前需要一个失败的测试。Frontmatter 描述必须是触发条件，而非工作流摘要（参见 <a href="../methodology/">方法论</a> 中的 SDO）。</p>
 <h3 id="brainstorming">brainstorming</h3>
@@ -1143,10 +1132,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p>遍历 README、CHANGELOG、CLAUDE.md、CONTRIBUTING 及其他文档，查找并修复与已发布代码之间的偏差。覆盖率地图不仅能捕获过时的文档，还能发现完全缺失的文档——例如没有参考页面的新标志或命令——并对每条 CHANGELOG 条目按"变更了什么、为何值得关注、如何使用"进行评分。</p>
 <h3 id="getting-up-to-speed">getting-up-to-speed</h3>
 <p><strong>触发条件：</strong> 会话开始、压缩后，或"catch me up"/"where are we"。</p>
-<p>运行 <code>bd prime</code>，深入研究代码库（子智能体的并行扇出按仓库规模分级：<code>&lt;40</code> / <code>40–150</code> / <code>&gt;150</code> 个被跟踪文件），并生成结构化的当前状态摘要。它会将最新的 <code>.internal/handoff/</code> 文档（由其对应技能 <code>session-handoff</code> 写入）作为未读收件箱读取，纳入摘要后在结束时归档，以免后续会话重复读取；当 <code>HEAD</code> 已越过该文档记录的提交时，HEAD 时效性回退机制会将其标记为可能过时。预发布验证门将摘要中的每个声明都与会话中实际运行的命令相对应，beads 与 git 的对比检查会标记已发布但仍处于开放状态的工作，并在结束时清理被取代的 <code>continuation-*</code> 记忆。</p>
-<h3 id="auditing-upstream-drift">auditing-upstream-drift</h3>
-<p><strong>触发条件：</strong> 插件发布前，或检查过时情况时。</p>
-<p>对照 <a href="https://github.com/obra/superpowers">obra/superpowers</a> 和 <a href="https://github.com/gastownhall/beads">gastownhall/beads</a> 进行审计，检查需要移植的新技能、已变更的命令和文档改进。</p>
+<p>通过一次 <code>orient.sh</code> 调用收集 beads 状态与最新交接文档，深入研究代码库（子智能体的并行扇出按仓库规模分级：<code>&lt;40</code> / <code>40–150</code> / <code>&gt;150</code> 个被跟踪文件），并生成结构化的当前状态摘要。它会将最新的 <code>.internal/handoff/</code> 文档（由其对应技能 <code>session-handoff</code> 写入）作为未读收件箱读取，纳入摘要后在结束时归档，以免后续会话重复读取；当 <code>HEAD</code> 已越过该文档记录的提交时，HEAD 时效性回退机制会将其标记为可能过时。预发布验证门将摘要中的每个声明都与会话中实际运行的命令相对应，beads 与 git 的对比检查会标记已发布但仍处于开放状态的工作，并在结束时清理被取代的 <code>continuation-*</code> 记忆。</p>
 <h3 id="memory-curator">memory-curator</h3>
 <p><strong>触发时机：</strong> 会话结束时已捕获多条新记忆，或按需进行全量整理。</p>
 <p>将会话中原始的 <code>bd remember</code> 笔记，通过会话内智能体转化为结构良好、去重整合后的记忆——无需运行时环境、密钥或嵌入向量。其范围刻意以证据为导向：质量把关的捕获、反思式整合与修剪，而非追求结构丰富性。它绝不会静默修改记忆库——它会提出一份经过审查的命令列表，由你确认后才写入。</p>
@@ -1155,7 +1141,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p>三条路径：全新初始化、从远端引导，或在 Dolt 历史分叉时进行恢复。</p>
 <h3 id="research-driven-development">research-driven-development</h3>
 <p><strong>触发条件：</strong> 研究性问题、"what is X"、"how does Y work"、"compare A vs B"。</p>
-<p>将主题分解为子问题，并行为每个子问题派发一名研究者（以及针对代码库相关主题的 <code>@explore</code>），对照逐字来源引用验证每个关键性声明，并将发现综合到带有每条发现置信度的持久性文档中。铁律：没有文档就没有研究——禁止给出没有持久性制品的口头答案。</p>
+<p>将主题分解为子问题，并行为每个子问题派发一名研究者（以及针对代码库相关主题的 <code>@explore</code>），随后由一个独立的盲验证者对每个关键性声明进行核查——它独立地重新抓取被引用的来源，确认其确实支持该声明——并将通过核查的发现综合到带有每条发现置信度的持久性文档中。铁律：没有文档就没有研究——禁止给出没有持久性制品的口头答案。</p>
 <h3 id="write-documentation">write-documentation</h3>
 <p><strong>触发条件：</strong> 编写或改写面向用户的文本——文档、指南、电子邮件、PR 描述、发布说明。</p>
 <p>改编自 <a href="https://github.com/Anbeeld/WRITING.md">WRITING.md</a> 的 14 条写作规则体系。以上下文优先起草，将必要检查作为修订轮次，针对使 LLM 文本易于识别的模式（规律性、目录式文本、虚假简洁）。与 <code>document-release</code> 配合使用（后者处理<em>何时</em>更新，而非<em>如何</em>写作）。</p>
@@ -1225,7 +1211,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <tr>
 <td>存储学习</td>
 <td><code>bd remember "insight"</code></td>
-<td>23 个技能中的大多数会提示执行此操作</td>
+<td>22 个技能中的大多数会提示执行此操作</td>
 </tr>
 <tr>
 <td>附加证据</td>
@@ -1325,7 +1311,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年7月6日 13:54:25 UTC">2026年7月6日</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年7月9日 15:42:01 UTC">2026年7月9日</span>
   </span>
 
     

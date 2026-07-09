@@ -83,7 +83,7 @@
 <meta property="twitter:description" content="A lean orchestrator triages each request and routes it to the skills that own each step — research, planning, TDD implementation, a review gate, and parallel batch mode — instead of a rigid state machine." />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/workflow.png" />
 <meta name="panzoom-theme" content="material">
-<meta name="panzoom-data" content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'> </head>
+<meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
   
   
     
@@ -879,7 +879,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <h3 id="brainstorm">Brainstorm</h3>
 <p><code>brainstorming</code> explores the solution space through structured questions, surfaces assumptions, and produces a design spec committed to git. The design must be user-approved before anything moves forward, and the spec-review gate offers a <code>stress-test</code> every time to interrogate it adversarially.</p>
 <h3 id="decision-capture">Decision capture</h3>
-<p>When a choice is hard to reverse, surprising without its context, and a real trade-off, the agent offers to record an ADR in <code>decisions/</code> — context, decision, consequences, alternatives considered. The agent leans toward offering whenever a decision plausibly fits these marks; only routine clarifications and scope calls fall outside. It turns an implicit decision into an explicit record a later reader can trace.</p>
+<p>When a choice is hard to reverse, surprising without its context, and a real trade-off, the agent offers to record an ADR in <code>docs/decisions/</code> — context, decision, consequences, alternatives considered. The agent leans toward offering whenever a decision plausibly fits these marks; only routine clarifications and scope calls fall outside. It turns an implicit decision into an explicit record a later reader can trace.</p>
 <h3 id="plan">Plan</h3>
 <p><code>writing-plans</code> breaks the design into bite-sized tasks (2–5 minutes each) with exact file paths, code, and verification steps, and every task becomes a bead. The plan must be user-approved. There is no "TBD" or "as needed" — every step is concrete, or the plan isn't ready.</p>
 <h3 id="implement">Implement</h3>
@@ -899,7 +899,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <h3 id="finish">Finish</h3>
 <p><code>finishing-a-development-branch</code> detects the environment — normal repo, named-branch worktree, or detached HEAD — and presents context-aware options: four choices for normal and worktree contexts, three for detached HEAD, where merging is unavailable. Provenance-based cleanup only removes worktrees inside <code>.worktrees/</code>. It ends with the Land the Plane protocol: close beads, push to the remotes, verify a clean tree. Branch work isn't done until both <code>bd dolt push</code> and <code>git push</code> succeed.</p>
 <h3 id="session-close">Session close</h3>
-<p>On non-branch paths — research queries, quick tasks that never created a branch — the same close ritual runs without the merge step: <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code> → <code>git status</code>. If the session produced several new memories, the orchestrator offers a <code>memory-curator</code> pass before <code>bd dolt push</code>. The next session runs <code>bd prime</code> to restore the full picture.</p>
+<p>On non-branch paths — research queries, quick tasks that never created a branch — the same close ritual runs without the merge step: <code>bd close</code> → <code>bd dolt push</code> → <code>git push</code> → <code>git status</code>. If the session produced several new memories, the orchestrator offers a <code>memory-curator</code> pass before <code>bd dolt push</code>. The next session's start-hook injection restores the full picture.</p>
 <h2 id="review-gate">Review gate</h2>
 <p>When SDD delegates to a subagent, the result passes through four checks before it's accepted:</p>
 <ol>
@@ -958,7 +958,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><strong>Debug</strong> — Fires on bugs, test failures, or unexpected behavior. <code>systematic-debugging</code> enforces a four-phase investigation (observe → hypothesize → investigate → fix) before any code change, so you don't jump from "tests fail" to "try this fix" without understanding why.</p>
 <p><strong>Code review</strong> — Fires when review feedback arrives. <code>receiving-code-review</code> enforces anti-sycophantic reception: evaluate each suggestion technically, surface disagreements explicitly, and track what actually changed in response.</p>
 <h2 id="session-protocol">Session protocol</h2>
-<p><strong>Start:</strong> The SessionStart hook fires automatically, injecting skill context and running <code>bd prime</code>. That surfaces unblocked beads, in-progress work from previous sessions, and persistent memories. Orient before claiming; claim before implementing.</p>
+<p><strong>Start:</strong> The SessionStart hook fires automatically, injecting skill context plus a composed beads context — a <code>bd</code> command pointer and the highest-salience persistent memories. Run <code>bd ready</code> to surface unblocked beads and in-progress work from previous sessions. Orient before claiming; claim before implementing.</p>
 <p><strong>End:</strong> Finish for code paths, Session close for non-branch paths. Close every bead with evidence; if the session produced several new memories, offer a <code>memory-curator</code> pass before the push. Push the beads remote, push git, verify a clean tree. A session with uncommitted work or unpushed commits hasn't landed — the push is what completion means.</p>
 
 
@@ -982,7 +982,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 6, 2026 13:54:28 UTC">July 6, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 9, 2026 10:33:14 UTC">July 9, 2026</span>
   </span>
 
     

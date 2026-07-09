@@ -85,7 +85,7 @@
 <meta property="twitter:description" content="一个精简的编排器对每个请求进行分类，并将其路由到负责每个步骤的技能——研究、计划、TDD 实现、审查门控和并行批处理模式——而不是一个僵化的状态机。" />
 <meta property="twitter:image" content="https://dollardill.github.io/beads-superpowers/assets/images/social/zh/workflow.png" />
 <meta name="panzoom-theme" content="material">
-<meta name="panzoom-data" content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'> </head>
+<meta name="panzoom-data" content='{"selectors": [".d2", ".mermaid"], "initial_zoom_level": 1.0}'> </head>
   
   
     
@@ -885,7 +885,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <h3 id="brainstorm">头脑风暴（Brainstorm）</h3>
 <p><code>brainstorming</code> 通过结构化问题探索解决方案空间，梳理假设，并生成提交到 git 的设计规格说明。设计必须经过用户批准才能继续，规格说明审查门控每次都提供 <code>stress-test</code> 选项以进行对抗性审查。</p>
 <h3 id="decision-capture">决策捕获（Decision capture）</h3>
-<p>当一个选择难以逆转、离开上下文令人困惑、且存在真实权衡时，智能体会提出在 <code>decisions/</code> 目录中记录一条 ADR——包含背景、决策、后果和已考虑的替代方案。只要某个决策大体符合这些标志，智能体便倾向于提议记录；只有例行澄清和范围确认才排除在外。它将隐式决策转化为后续读者可以追溯的显式记录。</p>
+<p>当一个选择难以逆转、离开上下文令人困惑、且存在真实权衡时，智能体会提出在 <code>docs/decisions/</code> 目录中记录一条 ADR——包含背景、决策、后果和已考虑的替代方案。只要某个决策大体符合这些标志，智能体便倾向于提议记录；只有例行澄清和范围确认才排除在外。它将隐式决策转化为后续读者可以追溯的显式记录。</p>
 <h3 id="plan">计划（Plan）</h3>
 <p><code>writing-plans</code> 将设计拆分为小粒度任务（每项 2–5 分钟），包含精确的文件路径、代码和验证步骤，每个任务都成为一个 bead。计划必须经过用户批准。没有"待定"或"视需而定"——每个步骤都是具体的，否则计划尚未就绪。</p>
 <h3 id="implement">实现（Implement）</h3>
@@ -905,7 +905,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <h3 id="finish">完成（Finish）</h3>
 <p><code>finishing-a-development-branch</code> 检测环境——普通仓库、命名分支 worktree 或分离 HEAD——并提供上下文感知的选项：普通和 worktree 上下文提供四个选项，分离 HEAD 提供三个（合并不可用）。基于来源的清理仅移除 <code>.worktrees/</code> 内的 worktree。最后执行 Land the Plane 协议：关闭 bead，推送到远程，验证干净的工作树。在 <code>bd dolt push</code> 和 <code>git push</code> 都成功之前，分支工作未完成。</p>
 <h3 id="session-close">会话关闭（Session close）</h3>
-<p>在非分支路径上——研究查询、从未创建分支的快速任务——相同的收尾流程在没有合并步骤的情况下运行：<code>bd close</code> → <code>bd dolt push</code> → <code>git push</code> → <code>git status</code>。若本次会话产生了多条新记忆，编排者会在 <code>bd dolt push</code> 之前提供一次 <code>memory-curator</code> 整理。下一个会话运行 <code>bd prime</code> 以恢复完整上下文。</p>
+<p>在非分支路径上——研究查询、从未创建分支的快速任务——相同的收尾流程在没有合并步骤的情况下运行：<code>bd close</code> → <code>bd dolt push</code> → <code>git push</code> → <code>git status</code>。若本次会话产生了多条新记忆，编排者会在 <code>bd dolt push</code> 之前提供一次 <code>memory-curator</code> 整理。下一个会话由启动钩子注入恢复完整上下文。</p>
 <h2 id="_4">审查门控 <a id="review-gate"></a></h2>
 <p>当 SDD 委托给子智能体时，结果在被接受前需通过四项检查：</p>
 <ol>
@@ -964,7 +964,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
 <p><strong>调试（Debug）</strong> — 在出现 bug、测试失败或意外行为时触发。<code>systematic-debugging</code> 在进行任何代码变更之前强制执行四阶段调查（观察 → 假设 → 调查 → 修复），因此不会在不理解原因的情况下从"测试失败"直接跳到"尝试这个修复"。</p>
 <p><strong>代码审查（Code review）</strong> — 在收到审查反馈时触发。<code>receiving-code-review</code> 强制执行反对谄媚式接受：从技术角度评估每条建议，明确指出分歧，并追踪实际响应中发生的更改。</p>
 <h2 id="_5">会话协议</h2>
-<p><strong>开始：</strong> SessionStart 钩子自动触发，注入技能上下文并运行 <code>bd prime</code>。这会显示未阻塞的 bead、前一会话的进行中工作以及持久化记忆。先定位，后认领；先认领，后实现。</p>
+<p><strong>开始：</strong> SessionStart 钩子自动触发，注入技能上下文以及一份组合式 beads 上下文——一个 <code>bd</code> 命令指引加上显著度最高的持久化记忆。运行 <code>bd ready</code> 以显示未阻塞的 bead 和前一会话的进行中工作。先定位，后认领；先认领，后实现。</p>
 <p><strong>结束：</strong> 代码路径执行完成（Finish），非分支路径执行会话关闭（Session close）。用证据关闭每个 bead；若本次会话产生了多条新记忆，在推送前提供一次 <code>memory-curator</code> 整理。推送 Beads 远程，推送 git，验证干净的工作树。有未提交工作或未推送提交的会话尚未落地——推送才意味着完成。</p>
 
 
@@ -988,7 +988,7 @@ Hold "Alt" / "Option" to enable pan &amp; zoom
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年7月6日 13:54:28 UTC">2026年7月6日</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="2026年7月9日 10:33:14 UTC">2026年7月9日</span>
   </span>
 
     
