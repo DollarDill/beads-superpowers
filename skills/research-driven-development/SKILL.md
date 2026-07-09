@@ -94,7 +94,7 @@ Each agent's brief MUST state all four parts (Anthropic's delegation contract �
 
 1. **Objective** — the specific sub-question, not the whole topic.
 2. **Output format** — structured findings, and a **verbatim supporting quote for every load-bearing claim** (this is what lets Step 4 verify soundness without re-fetching).
-3. **Tools / sources** — which to prefer (official docs over blogs; LSP for code).
+3. **Tools / sources** — which to prefer (official docs over blogs).
 4. **Boundaries** — what this agent owns vs. its neighbours, so sub-questions don't overlap.
 
 Add to every brief: **start wide, then narrow** — open with a SHORT broad query, see what's available, then narrow. Never lead with a long, hyper-specific query.
