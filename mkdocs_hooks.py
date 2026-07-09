@@ -24,6 +24,9 @@ Remove this shim once panzoom guards its pops upstream (e.g. ``pop(key, None)``)
 Tracked in the zh-docs epic bead + an upstream issue.
 """
 
+import shutil
+from pathlib import Path
+
 from mkdocs.plugins import event_priority
 
 _PANZOOM_POPPED_KEYS = ("mermaid", "images", "exclude", "include_selectors", "exclude_selectors")
@@ -46,3 +49,22 @@ def on_config(config, **kwargs):
         for key, value in _panzoom_saved_opts.items():
             panzoom.config[key] = value
     return config
+
+
+def on_post_build(config, **kwargs):
+    """Publish a duplicate of the generated sitemap named ``sitemap_index.xml``.
+
+    Site-only SEO experiment (does NOT affect the distributed plugin): some
+    search-console/robots probes look for a ``sitemap_index.xml`` name. We copy
+    the MkDocs-generated ``sitemap.xml`` verbatim (plus its ``.gz``) so the
+    duplicate can never drift from the real, auto-generated sitemap. Idempotent,
+    so it is safe under mkdocs-static-i18n's per-locale re-builds.
+    """
+    site_dir = Path(config["site_dir"])
+    for src_name, dst_name in (
+        ("sitemap.xml", "sitemap_index.xml"),
+        ("sitemap.xml.gz", "sitemap_index.xml.gz"),
+    ):
+        src = site_dir / src_name
+        if src.exists():
+            shutil.copy2(src, site_dir / dst_name)
