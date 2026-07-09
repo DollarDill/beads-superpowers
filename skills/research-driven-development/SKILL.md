@@ -1,6 +1,6 @@
 ---
 name: research-driven-development
-description: Use when the user asks a question about a topic, requests research, or when you need to understand something before planning. Dispatches parallel research agents, synthesizes findings into a persistent document, and writes it to the project's research directory. Triggers on "research this", "what is X", "how does Y work", "compare A vs B", "investigate", "deep dive", "look into".
+description: Use when the user asks a question about a topic, requests research, or when understanding something is needed before planning. Triggers on "research this", "what is X", "how does Y work", "compare A vs B", "investigate", "deep dive", "look into".
 ---
 
 # Research-Driven Development
@@ -75,9 +75,11 @@ bd update <id> --claim
 |------|------|--------|----------|
 | Simple fact-finding | one factual answer | 0–1 (no decomposition) | ~3–10 |
 | Comparison / decision | weigh 2+ options | 2–4 sub-questions, one agent each | ~10–15 each |
-| Complex / open-ended | broad or architectural | up to 5 sub-questions | as needed |
+| Complex / open-ended | broad or architectural | up to 10 sub-questions | as needed |
 
-**Hard ceiling: at most 5 parallel agents per round.** `@explore` (Step 3), when dispatched, counts as one of the 5. Scale effort to the question — do not over-dispatch.
+**Hard ceiling: at most 10 parallel agents per round.** `@explore` (Step 3), when dispatched, counts as one of the 10. Verifiers (Step 4) and gap-closing rounds (Step 4.5) are excluded from this cap — their own separate budget. Scale effort to the question — do not over-dispatch.
+
+**Concurrency reality:** the harness runs ~min(16, cores−2) agents concurrently, so main researchers + verifiers queue rather than all firing at once — 10 is the per-round design ceiling, not a concurrency promise.
 
 ## Step 2: Check Existing Knowledge
 
@@ -97,7 +99,7 @@ find .internal/research -name "*.md" -exec grep -l "<keyword>" {} \; 2>/dev/null
 
 ## Step 3: Decompose + Dispatch Parallel Research Agents
 
-**Decompose first** (skip for the Simple tier): break the topic into **3–6 complementary sub-questions** (for opinion/design topics, 2–3 perspectives) that collectively cover it. Assign **one researcher agent per sub-question** — never hand every agent the raw topic. Launch all agents in a **single message with multiple `Agent` tool calls** so they run concurrently. **Cap: 5 parallel agents (Step 1).**
+**Decompose first** (skip for the Simple tier): break the topic into **3–6 complementary sub-questions** (for opinion/design topics, 2–3 perspectives) that collectively cover it. Assign **one researcher agent per sub-question** — never hand every agent the raw topic. Launch all agents in a **single message with multiple `Agent` tool calls** so they run concurrently. **Cap: 10 parallel agents (Step 1).**
 
 ### The delegation contract (every dispatch)
 
@@ -120,13 +122,13 @@ Dispatch via the `Agent` tool:
 
 ### Agent B: @explore (codebase) — one agent, conditional
 
-Dispatch **exactly one** `@explore` agent (`subagent_type: "Explore"`) **only when the topic has codebase relevance** ("how does X work *here*", "should we adopt Y"). It counts as one of the 5 and is **not decomposed** (it's already a broad codebase sweep), but gets the same 4-part contract:
+Dispatch **exactly one** `@explore` agent (`subagent_type: "Explore"`) **only when the topic has codebase relevance** ("how does X work *here*", "should we adopt Y"). It counts as one of the 10 and is **not decomposed** (it's already a broad codebase sweep), but gets the same 4-part contract:
 
 > Objective: find existing implementations, patterns, config, tests, and docs related to [topic] in this repo. Output: what exists, where (`file:line`), and how it relates. Boundaries: codebase only — no web. Report concisely.
 
 ### How many agents
 
-- **Topic touches our codebase** (common case): N web sub-question agents + **1 `@explore`**, total ≤ 5.
+- **Topic touches our codebase** (common case): N web sub-question agents + **1 `@explore`**, total ≤ 10.
 - **Pure external topic**: skip `@explore`; all slots go to web sub-questions.
 - **Pure codebase question**: dispatch only `@explore`.
 
@@ -252,7 +254,7 @@ Evidence: <file:line / source / repro | none>"
 | "The first pass answered it" | First passes miss the non-obvious. Run the Step-4 gap check. |
 | "The source is about the right topic" | Topical ≠ supporting. Verify the quote actually states the claim. |
 | "I'll hand the agents the whole topic" | Decompose. Give each agent one bounded sub-question + the 4-part contract. |
-| "This needs 10 agents" | Cap at 5. Scale effort to the query tier. |
+| "This needs 20 agents" | Cap at 10. Scale effort to the query tier. |
 | "The cheaper recommendation is fine to default to" | Any recommendation that advises a shortcut, descope, material-risk trade-off, or security regression must be flagged as such — never the default path (Production-Grade Doctrine). |
 
 ## Example
