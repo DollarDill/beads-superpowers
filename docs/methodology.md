@@ -110,7 +110,7 @@ graph TD
 
 **Step 1 — Setup.** Every task begins with a bead. Before any research or code, the work is captured (`bd create`), claimed (`bd update --claim`), and synced. If the session dies, the bead record shows an in-progress item that can be recovered.
 
-**Step 2 — Research.** The `research-driven-development` skill decomposes the topic into sub-questions and dispatches one researcher per sub-question in parallel — plus an `@explore` agent that maps the affected code when the topic touches the codebase. Running them concurrently cuts research time sharply, and each agent returns a verbatim quote for every load-bearing claim — which a separate blinded verifier then double-checks by independently re-fetching the source, so findings are grounded in what the sources actually say rather than taken on trust.
+**Step 2 — Research.** The `research-driven-development` skill decomposes the topic into sub-questions and dispatches one researcher per sub-question in parallel — plus an `@explore` agent that maps the affected code when the topic touches the codebase. Running them concurrently cuts research time sharply, and each agent returns a verbatim quote for every load-bearing claim, which a separate blinded verifier then double-checks by independently re-fetching the source, so findings are grounded in what the sources actually say rather than taken on trust.
 
 **Step 3 — Knowledge capture.** Findings are written to a persistent document; key learnings go into `bd remember` so they surface in future sessions.
 
