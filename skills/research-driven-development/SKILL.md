@@ -88,12 +88,12 @@ Before launching new research, search for existing coverage:
 ```bash
 # Check beads memories for prior context
 bd memories <keyword>
-# Also search the kv knowledge base (reference-class notes live here, not in memories)
-bd kv list | grep -i '^ *bsp.kb' | grep -i <keyword>
 
 # Search project research directory
 find .internal/research -name "*.md" -exec grep -l "<keyword>" {} \; 2>/dev/null
 ```
+
+Also search the kv knowledge base (reference-class notes live there, not in memories) — same lookup researchers run; see the "Search the knowledge base first" step in `./researcher-prompt.md`.
 
 **If comprehensive coverage already exists:** Reference it, add any new findings as updates, and close the bead. Do not duplicate existing research.
 
@@ -134,7 +134,7 @@ Dispatch **exactly one** `@explore` agent (`subagent_type: "Explore"`) **only wh
 
 ## Step 4: Synthesize + Verify Findings
 
-After the agents return, you synthesize. The three review touches operate at distinct granularities — claim-level here, coverage-level in Step 4.5, document-level in the Step 5 checklist — and are not redundant.
+After the agents return, you synthesize.
 
 1. **Merge findings** — combine the sub-question results + codebase findings; merge semantic duplicates.
 2. **Verify grounding (dispatch the 3-layer stage below)** — every load-bearing claim must clear layer 1 + layer 2 (escalating to layer 3 on doubt) before being kept. Tag each surviving load-bearing claim inline with its verified source (`[S1]`).
@@ -145,7 +145,7 @@ After the agents return, you synthesize. The three review touches operate at dis
 
 ### Grounding Verify Stage
 
-The verifier's job is narrow — **citation grounding, not truth-judgment**: does the cited source actually contain a span that entails this claim? It never judges whether the claim is true in some absolute sense, only whether the cited source backs it up. This stage is **universal — every tier, including Simple** (one cheap verifier for a single-fact claim closes the grounding gap without a special case).
+The verifier's job is narrow — **citation soundness, not truth-judgment**: does the cited source actually contain a span that entails this claim? It never judges whether the claim is true in some absolute sense, only whether the cited source backs it up. This stage is **universal — every tier, including Simple** (one cheap verifier for a single-fact claim closes the grounding gap without a special case).
 
 **Load-bearing heuristic:** a claim is load-bearing if a recommendation, decision, or comparison in the document rests on it. Non-load-bearing color/context claims are not verified.
 
@@ -195,22 +195,17 @@ Write the document using the structure in **`./document-template.md`** (read it 
 
 ### Quality Checklist
 
-Before writing, verify your document passes these checks:
+Before writing — and again as a self-grade before closing, running one Step-4.5 round if any axis fails — verify your document passes these checks:
 
 - [ ] **Summary exists** and is 2-3 sentences (not a paragraph)
-- [ ] **Every finding has evidence** — no unsourced claims
-- [ ] **Sources section has 3+ entries** with URLs (not "various sources")
+- [ ] **Every finding has evidence and citation soundness** — no unsourced claims, and each load-bearing claim's source actually supports it, confirmed by the grounding verify stage's independent re-fetch (Step 4) — the Step 3 quote is only the fallback
+- [ ] **Factual accuracy** — claims match their sources
+- [ ] **Sources section has 3+ entries** with URLs (not "various sources"), including ≥1 primary/official source for each load-bearing claim
 - [ ] **Dates and versions noted** for time-sensitive information
 - [ ] **Contradictions resolved** — if sources disagreed, which is right and why
 - [ ] **Codebase context included** — what exists now, not just what the web says
-- [ ] **Recommendations are actionable** — "do X" not "consider doing X"
-
-**Self-grade before closing** (if any axis fails, run one Step-4.5 round):
-
-- [ ] **Factual accuracy** — claims match their sources
-- [ ] **Citation soundness** — each load-bearing claim's source actually supports it (verified against the quote)
 - [ ] **Completeness** — every sub-question answered
-- [ ] **Source quality** — ≥1 primary/official source for each load-bearing claim
+- [ ] **Recommendations are actionable** — "do X" not "consider doing X"
 - [ ] **Effort efficiency** — agent count matched the query tier (no over-dispatch)
 
 ## Step 6: End-Gate + Close the Bead
@@ -252,7 +247,7 @@ Evidence: <file:line / source / repro | none>"
 | "One source is enough" | Cross-reference across 3+ independent sources. Single-source findings get flagged. |
 | "I'll skip the knowledge base check" | You might duplicate existing research. Always search first. |
 | "The first pass answered it" | First passes miss the non-obvious. Run the Step-4 gap check. |
-| "The source is about the right topic" | Topical ≠ supporting. Verify the quote actually states the claim. |
+| "The source is about the right topic" | Topical ≠ supporting. The verify stage re-fetches the source independently and checks for a verbatim entailing span — don't rely on topical similarity. |
 | "I'll hand the agents the whole topic" | Decompose. Give each agent one bounded sub-question + the 4-part contract. |
 | "This needs 20 agents" | Cap at 10. Scale effort to the query tier. |
 | "The cheaper recommendation is fine to default to" | Any recommendation that advises a shortcut, descope, material-risk trade-off, or security regression must be flagged as such — never the default path (Production-Grade Doctrine). |
