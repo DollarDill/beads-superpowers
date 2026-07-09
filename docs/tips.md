@@ -26,6 +26,7 @@ recovery, coordination — lives in the upstream reference linked below.
 | `bd dep add <child> <depends-on>` | Add dependency |
 | `bd note <id> "context"` | Append evidence to a bead |
 | `bd remember "insight"` / `bd memories <kw>` / `bd forget <id>` | Persist / search / remove learnings |
+| `bd kv list \| grep '^ *bsp.kb'` | Search the `bsp.kb.` reference knowledge base (routed `research`/`design`/`decision` notes) |
 | `bd dolt push` / `pull` | Sync beads DB to/from Dolt remote |
 
 !!! info "Go deeper — upstream Beads docs"

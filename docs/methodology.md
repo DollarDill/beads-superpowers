@@ -146,6 +146,8 @@ Because beads tracks every process step, the memory types agents need are popula
 
 The `memory-curator` skill consolidates, deduplicates, and prunes the memory store that `bd remember` builds up — offered at session-close when several new memories were captured, or on-demand anytime.
 
+Not every memory belongs in the injected set. The curator classifies each note by `@type`, and the type *is* the routing decision: actionable rules you want surfaced unprompted (`lesson`, `pattern`, `root-cause`, `correction`) stay injected memories, while reference-class notes that merely point at a doc or ADR (`research`, `design`, `decision`) route to a **`bsp.kb.` key-value knowledge base** — persisted and Dolt-synced, but never auto-injected. Retrieve those on demand with `bd kv list | grep '^ *bsp.kb'` (or the structured `bd kv list --json | jq` form). The injected context stays small and high-signal while nothing is lost.
+
 ## Research basis
 
 ### Cialdini (2021) — Influence principles

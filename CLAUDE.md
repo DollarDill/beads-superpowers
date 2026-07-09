@@ -108,6 +108,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harn
 ## Common Gotchas
 
 - **Embedded Dolt mode** — `.beads/metadata.json` `dolt_mode: embedded` runs the Dolt engine **in-process** (no separate sql-server). This does NOT disable sync: `bd dolt status/show/push/pull` all work and a remote is configured (`origin`, git+ssh). (Verified 2026-06-28: `bd dolt push` → "Push complete".) Genuine push failures are setup-specific (diverged history, GitHub push-protection if a token is in Dolt history) — see the `project-init` skill, not a blanket "embedded fails".
+- **Reference-class memories live in `bsp.kb.` (kv), not `bd memories`** — the `memory-curator` taxonomy makes `@type` the routing decision: `research`/`design`/`decision` notes (pointers to docs/ADRs) move to a `bsp.kb.<subtype>.<key>` kv knowledge base that persists + Dolt-syncs but is **never** session-injected, while `lesson`/`pattern`/`root-cause`/`correction` stay injected memories. Search the kb with `bd kv list | grep '^ *bsp.kb'` — note the leading-space (`bd kv list` indents keys **2 spaces**, so a `^bsp.kb` anchor matches nothing). `bd memories <keyword>` only covers injected memories.
 - **`export.git-add` pollutes branches (v1.0.2 and earlier)** — In beads v1.0.2 and earlier, `export.git-add` defaulted to `true`, auto-staging `issues.jsonl` on every commit. Workaround: `bd config set export.git-add false` before branch work. In **v1.0.4+**, auto-export is opt-in by default — no workaround needed. Check with `bd config show`.
 - **DCI only works in SKILL.md** — The `!` backtick syntax (Dynamic Context Injection) only works in `SKILL.md` and `.claude/commands/*.md`. NOT in agent `.md` files, `CLAUDE.md`, or rules files.
 - **Never run `npx skills add` from inside this repo** — It replaces real skill files in `skills/` with symlinks to `.agents/skills/`, destroying the source. Use `-g` flag from `/tmp` or another directory.
@@ -213,6 +214,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 | Store learning                    | `bd remember "insight"`                                 |
 | Remove stale memory               | `bd forget <id>`                                        |
 | Search memories                   | `bd memories <keyword>`                                 |
+| Search kv knowledge base          | `bd kv list \| grep '^ *bsp.kb'`                        |
 | Append note to bead               | `bd note <id> "context"`                                |
 | Find duplicate beads              | `bd find-duplicates`                                    |
 | Lint issue sections               | `bd lint [id...]`                                       |

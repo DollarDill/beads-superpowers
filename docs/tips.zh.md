@@ -28,6 +28,7 @@ description: 快速参考 bd 命令速查表、技能路由表、常见问题故
 | `bd dep add <child> <depends-on>` | 添加依赖关系 |
 | `bd note <id> "context"` | 向 bead 追加证据 |
 | `bd remember "insight"` / `bd memories <kw>` / `bd forget <id>` | 持久化 / 搜索 / 删除学习内容 |
+| `bd kv list \| grep '^ *bsp.kb'` | 搜索 `bsp.kb.` 参考知识库（已路由的 `research`/`design`/`decision` 笔记） |
 | `bd dolt push` / `pull` | 将 beads 数据库同步到/从 Dolt 远程 |
 
 !!! info "深入了解 — 上游 Beads 文档"
