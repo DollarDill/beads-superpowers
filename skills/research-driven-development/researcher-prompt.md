@@ -54,10 +54,6 @@ Agent tool (subagent_type: "general-purpose"):
        explain which is more authoritative
     6. **Identify sub-tasks** — If research reveals work that should be tracked, note
        recommended beads to create in your output
-    7. **Design tasks** — When research is for a new feature or system design (not just
-       information gathering), note in your output that the dispatching agent should invoke
-       `Skill(beads-superpowers:brainstorming)` for Socratic design refinement after
-       reviewing your findings
 
     ## Research Principles
 
@@ -77,7 +73,7 @@ Agent tool (subagent_type: "general-purpose"):
       understand the broader task.
     - Skip beads labelled `human-only` — these are for human action only.
 
-    ## Output Format
+    ## Output & Report Format
 
     ```markdown
     # Research: [Topic]
@@ -109,14 +105,8 @@ Agent tool (subagent_type: "general-purpose"):
     - [Source Title](URL) — [What was extracted from this source]
     ```
 
-    ## Report Format
-
-    When done, report:
-    - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Structured findings in the output format above
-    - Sources consulted (minimum 3)
-    - Any unresolved questions or contradictions
-    - Recommended beads for follow-up work
+    When done, report a **Status** alongside the structured output above:
+    DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 
     Use DONE_WITH_CONCERNS if findings are incomplete or contradictory.
     Use BLOCKED if the topic requires access you don't have.
