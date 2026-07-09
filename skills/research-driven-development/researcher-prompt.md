@@ -63,7 +63,7 @@ Agent tool (subagent_type: "general-purpose"):
     - **Note versions and dates** — Information ages fast; always state what version/date applies
     - **Flag uncertainty** — If something is unverified or from a single source, say so explicitly
     - **No assumptions** — If you don't know, search for it rather than guessing
-    - **Quote your evidence** — For every load-bearing claim, capture a verbatim supporting quote from the source. The dispatching agent verifies claims against these quotes, so a claim without a quote may be dropped.
+    - **Quote your evidence** — For every load-bearing claim, capture a verbatim supporting quote from the source. These quotes feed the grounding verify stage as a fallback when its independent re-fetch of the source is inconclusive, so a claim without a quote is weaker and may be dropped.
 
     ## Important Constraints
 

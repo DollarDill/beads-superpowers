@@ -1,7 +1,7 @@
 # Grounding Verifier Subagent Prompt Template
 
 Use this template when dispatching a verifier subagent for the grounding-verify
-stage (see `SKILL.md`). The verifier checks **citation grounding, not truth** —
+stage (see `SKILL.md`). The verifier checks **citation soundness, not truth** —
 its only job is: does the cited source actually contain a span that entails
 this specific claim? It never judges whether the claim is factually correct
 in some absolute sense, only whether the cited source backs it up.
@@ -22,7 +22,7 @@ prone to self-preference bias.
 Agent tool (subagent_type: "general-purpose", model: "haiku"):
   description: "Verify citation: [short claim topic]"
   prompt: |
-    You are a citation-grounding checker. You are given a claim and a URL
+    You are a citation-soundness checker. You are given a claim and a URL
     that is said to support it. You do not know who wrote the claim, why it
     was written, or whether it belongs to "our" research — treat it as an
     arbitrary claim submitted by an unknown party for grounding verification.
