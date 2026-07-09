@@ -25,7 +25,7 @@ Triage is routing, not law: use judgment, and scale process to the task.
 
 Each step invokes the skill that owns it; the skill carries its own detail, gates, and beads.
 
-1. **Research** the unknowns — `Skill(beads-superpowers:research-driven-development)` (skip if already well understood).
+1. **Research** the unknowns — `Skill(beads-superpowers:research-driven-development)` (skip if already well understood; pass the `nested` marker here — it's a sub-step, so findings return without the end-gate).
 2. **Brainstorm** the design — `Skill(beads-superpowers:brainstorming)` → spec + user approval gate.
 3. **Plan** it — `Skill(beads-superpowers:writing-plans)` → task plan + user approval gate.
 4. **Implement** in isolation — `Skill(beads-superpowers:using-git-worktrees)`, then `Skill(beads-superpowers:test-driven-development)` (single task) or `Skill(beads-superpowers:subagent-driven-development)` (multi-task). Before merging sub-agent work: re-run the full suite yourself (don't trust the sub-agent's run), scan the diff for scope creep / debug artifacts, invoke `Skill(beads-superpowers:requesting-code-review)`, and reject + re-delegate if any gate fails.
