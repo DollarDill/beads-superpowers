@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
 Sitemap: https://dollardill.github.io/beads-superpowers/sitemap.xml
+Sitemap: https://dollardill.github.io/beads-superpowers/sitemap_index.xml
