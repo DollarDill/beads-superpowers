@@ -9,7 +9,7 @@ site/
 .tmp/
 
 # Architecture Decision Records (local working docs)
-decisions/
+docs/decisions/
 
 # Beads / Dolt files (added by bd init)
 .dolt/

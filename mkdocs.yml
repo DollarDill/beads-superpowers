@@ -7,6 +7,12 @@ site_description: >-
   Antigravity, Factory Droid, and Pi.
 site_author: Dillon Frawley
 site_dir: site
+
+# ADRs live in docs/decisions/ but are gitignored/local-only (see check-adr-gitignored.sh).
+# Exclude them from the build so internal ADRs never render into the published site.
+exclude_docs: |
+  decisions/
+
 repo_url: https://github.com/DollarDill/beads-superpowers
 repo_name: DollarDill/beads-superpowers
 edit_uri: edit/main/docs/
@@ -60,6 +66,10 @@ plugins:
   - git-revision-date-localized:
       enable_creation_date: true
       type: date
+      # gitignored ADRs under docs/decisions/ have no git history — exclude them
+      # so this plugin doesn't warn per-file (exclude_docs alone doesn't cover it).
+      exclude:
+        - decisions/*
   - panzoom:
       full_screen: true
       key: "alt"
