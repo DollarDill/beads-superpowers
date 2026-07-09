@@ -103,7 +103,7 @@ Use your structured question tool for risky changes. Provide context, recommenda
 - Use Edit tool with exact string matches — never use Write to overwrite CHANGELOG.md
 - Ensure each bullet leads with what the user can *do*, not implementation details
 - Flag commit-message-style entries for rewrite to user-forward language
-- Strip internal references — human-facing CHANGELOG/README entries do NOT carry `ADR-NNNN` or `bd-xxxx` tags. Those belong in commit messages and `decisions/` (gitignored, invisible to readers); in reader-facing prose they are noise pointing at nothing. Describe the change, not its tracking ID.
+- Strip internal references — human-facing CHANGELOG/README entries do NOT carry `ADR-NNNN` or `bd-xxxx` tags. Those belong in commit messages and `docs/decisions/` (gitignored, invisible to readers); in reader-facing prose they are noise pointing at nothing. Describe the change, not its tracking ID.
 
 **Sell-test (0–3 rubric).** Score each entry — this scoring always applies:
 

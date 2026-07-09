@@ -328,7 +328,7 @@ These are not bans. They are quick places to scan when default LLM writing slips
 - persuasive three-part cadence or triadic rhythm used by reflex (`clearer, faster, cheaper`)
 - one-thought-per-sentence strings where adjacent claims should be coordinated or subordinated
 - decorative emoji and checkmark bullets in prose contexts
-- internal tracker IDs in reader-facing prose (`ADR-NNNN`, `bd-xxxx`) — these belong in commits and `decisions/`, not human docs; describe the change, not its ID
+- internal tracker IDs in reader-facing prose (`ADR-NNNN`, `bd-xxxx`) — these belong in commits and `docs/decisions/`, not human docs; describe the change, not its ID
 - generic-to-the-platform replies that reference nothing specific to the actual conversation
 - `Great question` / `Absolutely` / `I hope this helps` / `Feel free to reach out`
 

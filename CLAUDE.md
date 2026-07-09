@@ -89,7 +89,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harn
 - `opencode/` — Native OpenCode TypeScript plugin (`beads-superpowers-plugin.ts`). Two in-process hooks: a once-per-session bootstrap and a compaction re-injection. Distributed via `install.sh`.
 - `example-workflow/` — Ready-to-use project template: `CLAUDE.md` (Karpathy behavioral principles + beads integration) and `agents/yegge.md` (lean router — triages requests and routes to skills). `install.sh --with-yegge` installs `yegge.md` globally (opt-in; not installed by default).
 - `docs/` — MkDocs Material source pages (6 EN + 6 ZH pages + assets). Template variables (`{{ skill_count }}`) computed at build time via `main.py` macros plugin. Contains ONLY website content.
-- `decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
+- `docs/decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs, `.internal/sdd/` (SDD scratch), and `.internal/brainstorm/` (brainstorm server sessions).
 - `tests/` — deterministic suites (hooks, manifests, skills contracts, install-shape, installer Docker E2E, brainstorm-server Node tests) run via the `just` surface; the LLM-driven suites (claude-code, explicit-skill-requests, skill-triggering, subagent-driven-dev) are deprecated in place — see `tests/*/DEPRECATED.md`.
 - `scripts/` — `bump-version.sh` (sync version across 8 files), `check-skill-count.sh` (guard: forbid hardcoded skill counts + structural self-consistency), `build-docs.sh`, `check-agent-bead-stamp.sh`, `check-zh-docs.sh`, `check-convention-sync.sh` (verify shared convention blocks are byte-identical across skills), `lint-shell.sh` (shellcheck gate over tracked `.sh` with committed baseline; visible SKIP when shellcheck absent), `check-askuser-genericization.sh` (guard: skills use generic question-tool phrasing — ADR-0041).
@@ -148,7 +148,7 @@ docs/                      # MkDocs source pages — website content ONLY
   index.md, getting-started.md, methodology.md, skills.md, workflow.md, tips.md
   index.zh.md, getting-started.zh.md, methodology.zh.md, skills.zh.md, workflow.zh.md, tips.zh.md
   assets/                  # Banner SVG
-decisions/                 # Architecture Decision Records (gitignored, local-only)
+docs/decisions/            # Architecture Decision Records (gitignored, local-only)
 .internal/                 # Working docs (gitignored)
   specs/                   # Design specs from brainstorming
   plans/                   # Implementation plans from writing-plans

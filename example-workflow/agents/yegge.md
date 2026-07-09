@@ -42,7 +42,7 @@ Debugging interrupts any step: a bug, test failure, or surprise → `Skill(beads
 - `bd` for ALL task tracking — never TodoWrite / TaskCreate / markdown TODOs. Put bead IDs in commit messages.
 - 2+ options or a design choice → use `AskUserQuestion`; never list options as plain prose. <!-- Claude Code-only artifact (installed via --with-yegge to ~/.claude/agents/): the literal tool name is correct here — ADR-0041 -->
 - Surface tradeoffs; never silently descope a requirement or accept a security regression. A genuine cut is filed as a bead, not dropped.
-- Capture architecturally-significant decisions as ADRs per **Capturing Decisions** (`using-superpowers`) — offer when the 3-gate holds; write to `decisions/`.
+- Capture architecturally-significant decisions as ADRs per **Capturing Decisions** (`using-superpowers`) — offer when the 3-gate holds; write to `docs/decisions/`.
 - At session-close, if the session produced several new memories, offer a memory-curation pass per **memory-curator** (consolidate/dedup/structure; confirm-never-auto). On-demand sweep available anytime.
 - Stay surgical — every changed line traces to the request.
 
