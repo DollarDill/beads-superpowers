@@ -76,7 +76,7 @@ Before launching new research, search for existing coverage:
 # Check beads memories for prior context
 bd memories <keyword>
 # Also search the kv knowledge base (reference-class notes live here, not in memories)
-bd kv list | grep -i '^bsp.kb' | grep -i <keyword>
+bd kv list | grep -i '^ *bsp.kb' | grep -i <keyword>
 
 # Search project research directory
 find .internal/research -name "*.md" -exec grep -l "<keyword>" {} \; 2>/dev/null

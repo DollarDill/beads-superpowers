@@ -75,7 +75,7 @@ Reference-class memories (`research`/`design`/`decision`) live in the beads **kv
   Single-line is mandatory: `bd kv list` renders one `key = value` per line, so a multi-line value breaks `grep` retrieval.
 
 - **Retrieval (kv has no server-side search — client-side only):**
-  - Skim: `bd kv list | grep -i '^bsp.kb' | grep -i <keyword>`
+  - Skim: `bd kv list | grep -i '^ *bsp.kb' | grep -i <keyword>` (bd indents each pair 2 spaces — `^ *` tolerates it)
   - Structured: `bd kv list --json | jq -r 'to_entries | map(select(.key|startswith("bsp.kb."))) | map(select(.value|fromjson|.tags|index("<tag>"))) | .[].key'`
 
 - **Move-out invariant (curator route step):** write the `bsp.kb.` key → **verify** (`bd kv get` returns it) → **then** `bd forget` the memory. Never forget first. Existence-check the key before writing (idempotent re-run). Run the secret/PII scan on the body first — **flag for removal, never relocate** a secret into kv.

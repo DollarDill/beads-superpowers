@@ -205,7 +205,7 @@ Produce **exactly this Markdown structure**. Heading levels are H2; tables and l
 - <after compaction: the prior in-session thread / decisions> [source: handoff doc]
 <Backward delta only. Degrades to "Fresh session — no prior in-session delta" when none. Does NOT restate the open-ready bead table above, nor the Last release line.>
 
-**Known operational quirks:** <from `bd memories` keyword scan + `bd kv list | grep '^bsp.kb'` (reference-class KB); from docs/known-issues/* if present> [source: bd memories + bsp.kb]
+**Known operational quirks:** <from `bd memories` keyword scan + `bd kv list | grep '^ *bsp.kb'` (reference-class KB); from docs/known-issues/* if present> [source: bd memories + bsp.kb]
 **Other captured memories:** <one line per memory not surfaced above>
 
 ---

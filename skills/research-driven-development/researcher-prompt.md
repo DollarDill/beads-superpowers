@@ -41,7 +41,7 @@ Agent tool (subagent_type: "general-purpose"):
        ```
        Also search the kv knowledge base (reference-class notes live there):
        ```bash
-       bd kv list | grep -i '^bsp.kb' | grep -i "<keyword>"
+       bd kv list | grep -i '^ *bsp.kb' | grep -i "<keyword>"
        ```
        Check it before researching from scratch. If comprehensive coverage already
        exists, reference it — do not duplicate.
