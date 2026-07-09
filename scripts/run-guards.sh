@@ -20,4 +20,5 @@ run "askuser genericization (.claude)" bash scripts/check-askuser-genericization
 run "skill ref namespacing"  bash scripts/check-skill-ref-namespace.sh
 run "skill ref namespacing (.claude)" bash scripts/check-skill-ref-namespace.sh .claude/skills
 run "install hook no-fork"  bash scripts/check-install-hook-fork.sh
+run "adr gitignored"        bash scripts/check-adr-gitignored.sh
 exit "$rc"
