@@ -28,7 +28,7 @@ The `using-superpowers` bootstrap, injected at session start, tells the agent wh
 | Consolidate or dedup memories | `memory-curator` |
 | Hand work to the next session | `session-handoff` (human-invoked) |
 
-Also available: `document-release`, `getting-up-to-speed`, `dispatching-parallel-agents`, `project-init`
+Also available: `document-release`, `getting-up-to-speed`, `dispatching-parallel-agents`, `project-init`, `tracking-with-beads`
 
 ## By category
 
@@ -40,7 +40,7 @@ Also available: `document-release`, `getting-up-to-speed`, `dispatching-parallel
 | **Quality** | [test-driven-development](#test-driven-development), [systematic-debugging](#systematic-debugging), [verification-before-completion](#verification-before-completion) |
 | **Review** | [requesting-code-review](#requesting-code-review), [receiving-code-review](#receiving-code-review) |
 | **Infrastructure** | [using-git-worktrees](#using-git-worktrees), [finishing-a-development-branch](#finishing-a-development-branch) |
-| **Lifecycle** | [document-release](#document-release), [getting-up-to-speed](#getting-up-to-speed), [memory-curator](#memory-curator), [session-handoff](#session-handoff) |
+| **Lifecycle** | [document-release](#document-release), [getting-up-to-speed](#getting-up-to-speed), [memory-curator](#memory-curator), [session-handoff](#session-handoff), [tracking-with-beads](#tracking-with-beads) |
 | **Setup** | [project-init](#project-init) |
 | **Research** | [research-driven-development](#research-driven-development) |
 | **Writing** | [write-documentation](#write-documentation) |
@@ -237,6 +237,12 @@ Decomposes the topic into sub-questions, dispatches one researcher per sub-quest
 ### session-handoff
 
 **Human-invoked only.** Writes a grounded session-handoff document and stores a `bd remember` continuation note so the next session can pick up in-progress work without relying on chat history. Its counterpart `getting-up-to-speed` consumes that document on the next session's orientation, then archives it.
+
+### tracking-with-beads
+
+**Trigger:** When another skill defers to bd conventions, or for policy questions ("how should this be tracked", "what's the bd convention for X").
+
+The beads policy of record: frugal reads and batched writes, the `--claim` consent boundary, capture-quality rules for `bd remember`, and the land-the-plane close policy. Commands aren't documented here — `bd human` is the single source of truth; this skill is why-and-when, not what-to-type.
 
 ## Beads commands
 
