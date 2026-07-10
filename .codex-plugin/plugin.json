@@ -19,5 +19,28 @@
     "workflow",
     "beads",
     "issue-tracking"
-  ]
+  ],
+  "skills": "./skills/",
+  "hooks": {},
+  "interface": {
+    "displayName": "Beads Superpowers",
+    "shortDescription": "Planning, TDD, debugging, and delivery workflows with persistent beads task memory",
+    "longDescription": "Use Beads Superpowers to guide agent work through brainstorming, implementation planning, test-driven development, systematic debugging, parallel execution, code review, and finish-the-branch workflows — with every task tracked in a persistent, Dolt-backed beads database that survives across sessions.",
+    "developerName": "Dillon Frawley",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "I've got an idea for something I'd like to build.",
+      "Let's add a feature to this project."
+    ],
+    "websiteURL": "https://github.com/DollarDill/beads-superpowers",
+    "privacyPolicyURL": "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement",
+    "termsOfServiceURL": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service",
+    "brandColor": "#F59E0B",
+    "screenshots": []
+  }
 }
