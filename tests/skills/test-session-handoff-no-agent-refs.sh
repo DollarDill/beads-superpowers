@@ -12,7 +12,7 @@ SURFACES=(
   "example-workflow/agents/yegge.md"
   "hooks/hooks.json"
   "hooks/codex-hooks.json"
-  "opencode/beads-superpowers-plugin.ts"
+  ".opencode/plugins/beads-superpowers.js"
   ".kimi-plugin/plugin.json"
 )
 for f in "${SURFACES[@]}"; do

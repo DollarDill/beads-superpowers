@@ -21,7 +21,7 @@ expect_red() {  # expect_red <label> <cmd>...
 #  SHAPE_EXPECTED_ROOT pins the assert_all_skills yardstick to the real checkout — without it
 #  the mutated copy would be both install source AND ground truth, a tautology that can't fail.)
 MUT1=$(mktemp -d)
-cp -rf "$REPO_ROOT/skills" "$REPO_ROOT/example-workflow" "$REPO_ROOT/hooks" "$REPO_ROOT/opencode" \
+cp -rf "$REPO_ROOT/skills" "$REPO_ROOT/example-workflow" "$REPO_ROOT/hooks" "$REPO_ROOT/.opencode" \
       "$REPO_ROOT/install.sh" "$REPO_ROOT/package.json" "$MUT1/"
 mkdir -p "$MUT1/tests"
 cp -rf "$REPO_ROOT/tests/install-shape" "$MUT1/tests/install-shape"

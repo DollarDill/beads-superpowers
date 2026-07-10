@@ -217,13 +217,10 @@ fi
 if command -v opencode >/dev/null 2>&1; then
   echo "  [INFO] OpenCode detected in container"
 
-  # OpenCode skills installed
-  oc_skill_count=$(find "$HOME/.config/opencode/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-  assert_count_gte "$oc_skill_count" 22 "OpenCode skill count >= 22"
-  assert_dir_exists "$HOME/.config/opencode/skills/using-superpowers" "OpenCode skill: using-superpowers"
-
-  # OpenCode plugin installed
-  assert_file_exists "$HOME/.config/opencode/plugins/beads-superpowers-plugin.ts" "OpenCode plugin installed"
+  # OpenCode is git-install only (see .opencode/INSTALL.md) — install.sh must
+  # NOT copy skills or a plugin for it.
+  assert_file_not_exists "$HOME/.config/opencode/skills/using-superpowers/SKILL.md" "OpenCode skills not copied"
+  assert_file_not_exists "$HOME/.config/opencode/plugins/beads-superpowers.js" "OpenCode plugin not copied"
 else
   echo "  [SKIP] OpenCode not in container — skipping OpenCode assertions"
 fi
@@ -282,9 +279,9 @@ if command -v codex >/dev/null 2>&1; then
 fi
 
 if command -v opencode >/dev/null 2>&1; then
-  oc_remaining=$(find "$HOME/.config/opencode/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-  assert_count_eq "$oc_remaining" 0 "OpenCode skills removed"
-  assert_file_not_exists "$HOME/.config/opencode/plugins/beads-superpowers-plugin.ts" "OpenCode plugin removed"
+  # Never installed by this script (git-install only) — still absent post-uninstall.
+  assert_file_not_exists "$HOME/.config/opencode/skills/using-superpowers/SKILL.md" "OpenCode skills still absent"
+  assert_file_not_exists "$HOME/.config/opencode/plugins/beads-superpowers.js" "OpenCode plugin still absent"
 fi
 
 # ============================================================

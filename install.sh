@@ -3,7 +3,7 @@
 # https://github.com/DollarDill/beads-superpowers
 #
 # Preferred install for Claude Code / Codex: use the native plugin system.
-# For OpenCode: use this script (it deploys the TypeScript plugin natively).
+# For OpenCode: git-install via opencode.json — see .opencode/INSTALL.md.
 # Use this script for: beads/Dolt bootstrap, npx/scripted hook registration,
 # optional yegge.md agent install (--with-yegge), version pinning (--version), or CI automation.
 #
@@ -161,7 +161,8 @@ create_staging() {
 }
 
 # Move staged skills to final destinations. Primary target (Claude Code) is required;
-# secondary targets (Codex, OpenCode) warn on failure.
+# secondary target (Codex) warns on failure. OpenCode is git-install only (see
+# .opencode/INSTALL.md) — this just prints a pointer.
 promote_staging() {
   local source_skills="$1"
   local count=0
@@ -185,9 +186,7 @@ promote_staging() {
     install_codex_from "$SKILLS_DIR" || warn "Codex skill install failed — Claude Code install succeeded"
   fi
   if [ "$HAS_OPENCODE" = 1 ]; then
-    local extract_root
-    extract_root="$(dirname "$source_skills")"
-    install_opencode_from "$SKILLS_DIR" "$extract_root" || warn "OpenCode install failed — Claude Code install succeeded"
+    info "OpenCode detected — install via the git plugin spec in opencode.json (see .opencode/INSTALL.md); this script no longer copies OpenCode artifacts."
   fi
 
   success "Installed $count skills"
@@ -201,7 +200,7 @@ beads-superpowers — scripted / advanced installer
 Preferred install for Tier-1 CLIs:
   Claude Code:  claude plugin marketplace add DollarDill/beads-superpowers
   Codex:        codex plugin marketplace add DollarDill/beads-superpowers
-  OpenCode:     see https://github.com/DollarDill/beads-superpowers#opencode
+  OpenCode:     see .opencode/INSTALL.md (git plugin spec)
 
 Use this script when you need:
   - beads/Dolt bootstrap and hook registration outside the plugin system
@@ -363,7 +362,7 @@ print_consent() {
     echo "  Codex CLI detected — skills will also be installed to ~/.codex/skills/"
   fi
   if [ "$HAS_OPENCODE" = 1 ]; then
-    echo "  OpenCode detected — skills will also be installed to ~/.config/opencode/"
+    echo "  OpenCode detected — install via the git plugin spec in opencode.json (see .opencode/INSTALL.md)"
   fi
   echo
 }
@@ -407,6 +406,8 @@ uninstall_codex_support() {
   fi
 }
 
+# Legacy copy-mode cleanup (pre-0.12) — OpenCode is git-install only as of 0.12
+# (see .opencode/INSTALL.md); this removes artifacts a prior install.sh copied.
 uninstall_opencode_support() {
   local oc_skills="$HOME/.config/opencode/skills"
   local removed=0
@@ -445,42 +446,6 @@ install_codex_from() {
     fi
   done
   success "Codex: installed $installed skills to $codex_skills/"
-}
-
-install_opencode_from() {
-  local source_dir="$1"
-  local extract_dir="${2:-}"
-  local oc_skills="$HOME/.config/opencode/skills"
-  mkdir -p "$oc_skills"
-  local installed=0
-  for skill in "${KNOWN_SKILLS[@]}"; do
-    if [ -d "$source_dir/$skill" ]; then
-      cp -rf "$source_dir/$skill" "$oc_skills/$skill"
-      installed=$((installed + 1))
-    fi
-  done
-  success "OpenCode: installed $installed skills to $oc_skills/"
-
-  # Copy TS plugin if available from extract dir
-  if [ -n "$extract_dir" ]; then
-    local oc_plugins="$HOME/.config/opencode/plugins"
-    mkdir -p "$oc_plugins"
-    if [ -f "$extract_dir/opencode/beads-superpowers-plugin.ts" ]; then
-      cp -f "$extract_dir/opencode/beads-superpowers-plugin.ts" "$oc_plugins/"
-      success "OpenCode: installed plugin to $oc_plugins/"
-    fi
-
-    # Canonical composer hook: the TS plugin execs <opencode-root>/hooks/session-start
-    # --emit-plain (bead 7bod). The hook resolves PLUGIN_ROOT as its parent dir, so
-    # <opencode-root>/skills/using-superpowers/SKILL.md (installed above) resolves.
-    if [ -f "$extract_dir/hooks/session-start" ]; then
-      local oc_hooks="$HOME/.config/opencode/hooks"
-      mkdir -p "$oc_hooks"
-      cp -f "$extract_dir/hooks/session-start" "$oc_hooks/session-start"
-      chmod +x "$oc_hooks/session-start"  # direct exec relies on the bash shebang
-      success "OpenCode: installed canonical hook to $oc_hooks/"
-    fi
-  fi
 }
 
 # Optional agent install — opt-in via --with-yegge (default: not installed).
@@ -533,7 +498,6 @@ try_local_install() {
   mkdir -p "$STAGING_DIR/repo"
   cp -rf "$FLAG_SOURCE/skills" "$STAGING_DIR/repo/skills"
   [ -d "$FLAG_SOURCE/example-workflow" ] && cp -rf "$FLAG_SOURCE/example-workflow" "$STAGING_DIR/repo/example-workflow"
-  [ -d "$FLAG_SOURCE/opencode" ] && cp -rf "$FLAG_SOURCE/opencode" "$STAGING_DIR/repo/opencode"
   [ -d "$FLAG_SOURCE/hooks" ] && cp -rf "$FLAG_SOURCE/hooks" "$STAGING_DIR/repo/hooks"
 
   if ! promote_staging "$STAGING_DIR/repo/skills"; then
@@ -989,7 +953,7 @@ print_next_steps() {
   if [ "$HAS_OPENCODE" = 1 ]; then
     echo
     printf '  %bOpenCode:%b\n' "${BOLD}" "${NC}"
-    echo "    Plugin installed — skills and hooks are active automatically."
+    echo "    Install via the git plugin spec in opencode.json — see .opencode/INSTALL.md."
   fi
   echo
   if [ "$HAS_COPILOT" = 1 ]; then info "Copilot CLI detected — native install: copilot plugin marketplace add DollarDill/beads-superpowers && copilot plugin install beads-superpowers@beads-superpowers-marketplace"; fi
@@ -1083,7 +1047,7 @@ print_dry_run() {
     echo "  + Codex CLI skills"
   fi
   if [ "$HAS_OPENCODE" = 1 ]; then
-    echo "  + OpenCode skills + plugin"
+    echo "  (OpenCode: see .opencode/INSTALL.md — git plugin spec, not installed by this script)"
   fi
   echo
   echo "No files were modified."

@@ -14,7 +14,7 @@ fi
 if [ -f "$ROOT/skills/using-superpowers/reminder-content.txt" ]; then
   echo "FAIL: reminder-content.txt still exists"; fail=1
 fi
-if grep -q "reminder" "$ROOT/opencode/beads-superpowers-plugin.ts"; then
+if grep -q "reminder" "$ROOT/.opencode/plugins/beads-superpowers.js"; then
   echo "FAIL: opencode plugin still references reminder"; fail=1
 fi
 [ "$fail" = 0 ] && echo "PASS: no per-prompt hook surface in hooks/"

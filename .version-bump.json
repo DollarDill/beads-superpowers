@@ -21,10 +21,6 @@
       "key": "plugins[0].version"
     },
     {
-      "path": "opencode/package.json",
-      "key": "version"
-    },
-    {
       "path": ".cursor-plugin/plugin.json",
       "key": "version"
     },
