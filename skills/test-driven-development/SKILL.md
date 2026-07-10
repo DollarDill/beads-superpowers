@@ -387,5 +387,3 @@ No exceptions without your human partner's permission.
 - **executing-plans** — per-task execution follows TDD cycle.
 
 **Pairs with:** **systematic-debugging** — Phase 4 of debugging creates a failing test to prove the root cause, then follows TDD to fix it.
-
-**Required by:** **writing-skills** — REQUIRED BACKGROUND. The RED-GREEN-REFACTOR cycle is the foundation of skill creation.

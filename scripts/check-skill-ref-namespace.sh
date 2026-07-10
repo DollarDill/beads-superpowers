@@ -6,7 +6,7 @@
 # source form canonical. Occurrence-based (grep -o) so a line holding both a
 # good and a bad ref still fails. Deliberately NO-SPACE 'Skill(' only: prose
 # like "Skill (64 characters maximum)" is a natural English parenthetical and
-# false-positives under 'Skill ?\(' (2 live instances in writing-skills docs);
+# false-positives under 'Skill ?\(' (seen in since-removed skill docs);
 # a space-form *invocation* has never occurred in this repo.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

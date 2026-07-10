@@ -30,7 +30,6 @@ CB4_SITES=(
   skills/test-driven-development/SKILL.md
   .claude/skills/auditing-upstream-drift/SKILL.md
   skills/project-init/SKILL.md
-  skills/writing-skills/SKILL.md
   skills/subagent-driven-development/SKILL.md
   skills/using-git-worktrees/SKILL.md
   skills/requesting-code-review/SKILL.md

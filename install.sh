@@ -36,13 +36,13 @@ KNOWN_SKILLS=(
   session-handoff stress-test subagent-driven-development
   systematic-debugging test-driven-development using-git-worktrees
   using-superpowers verification-before-completion write-documentation
-  writing-plans writing-skills
+  writing-plans
 )
 
 # Skills shipped by past releases but no longer distributed (ADR-0044).
 # Removed on upgrade/uninstall ONLY — never on fresh install (evidence gate:
 # we only delete from roots a prior beads-superpowers install owned).
-LEGACY_SKILLS=(auditing-upstream-drift)
+LEGACY_SKILLS=(auditing-upstream-drift writing-skills)
 
 KNOWN_AGENTS=(yegge)
 
