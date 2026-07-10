@@ -36,6 +36,9 @@ rm -f ~/.config/opencode/hooks/session-start
 
 For the copied skills (superseded by the plugin's auto-registered skills), run
 `install.sh --uninstall` — it removes exactly the set a prior install copied.
+Note its scope: `--uninstall` is a full multi-harness teardown — it also
+removes the Claude Code and Codex skills, hooks, and agents it installed, so
+reinstall for those harnesses afterward if you still use them.
 Avoid deleting from `~/.config/opencode/skills/` by hand: you risk removing
 skills you authored yourself.
 
@@ -55,11 +58,12 @@ OpenCode and Bun versions pin that resolved git dependency in a lockfile or
 cache, so a restart may not pick up the newest beads-superpowers commit. If
 updates do not appear, clear OpenCode's package cache or reinstall the plugin.
 
-To pin a specific version:
+To pin a specific version, append a `#vX.Y.Z` ref (substitute a real release
+tag):
 
 ```json
 {
-  "plugin": ["beads-superpowers@git+https://github.com/DollarDill/beads-superpowers.git#v0.11.0"]
+  "plugin": ["beads-superpowers@git+https://github.com/DollarDill/beads-superpowers.git#vX.Y.Z"]
 }
 ```
 
