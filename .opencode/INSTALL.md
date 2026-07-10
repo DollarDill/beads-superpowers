@@ -32,11 +32,12 @@ once the git plugin is active:
 ```bash
 rm -f ~/.config/opencode/plugins/beads-superpowers-plugin.ts
 rm -f ~/.config/opencode/hooks/session-start
-# Copied skills (superseded by the plugin's auto-registered skills):
-for d in ~/.config/opencode/skills/*/; do [ -f "$d/SKILL.md" ] && rm -rf "$d"; done
 ```
 
-Or run `install.sh --uninstall`, which removes the same artifacts.
+For the copied skills (superseded by the plugin's auto-registered skills), run
+`install.sh --uninstall` — it removes exactly the set a prior install copied.
+Avoid deleting from `~/.config/opencode/skills/` by hand: you risk removing
+skills you authored yourself.
 
 ## Usage
 
