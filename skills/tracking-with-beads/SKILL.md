@@ -1,6 +1,6 @@
 ---
 name: tracking-with-beads
-description: The beads (bd) conventions of record — frugality, consent boundaries, capture quality, and close-out policy. Use when another skill defers to bd conventions, or when deciding how work should be tracked ("how should this be tracked", "what's the bd convention for X", "which bead type/priority"). Not for running routine bd commands.
+description: The beads (bd) conventions of record — frugality, consent boundaries, capture quality, and close-out policy. Use when another skill defers to bd conventions, or when deciding how work should be tracked ("how should this be tracked", "what's the bd convention for X", "which bead type/priority"). Not for routine bd operations — creating, closing, or querying beads needs no skill read.
 ---
 
 # Tracking with Beads
