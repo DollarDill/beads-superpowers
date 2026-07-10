@@ -67,7 +67,7 @@ The first change was mechanical: every `TodoWrite` call across the original 14 S
 | Mark task as completed | `bd close <task-id> --reason "Implemented login"` |
 | "More tasks remain?" | `bd ready --parent <epic-id>` |
 
-The replacement works at two levels. Execution skills track plan tasks as beads. Checklist-heavy skills like brainstorming (9 steps) and writing-skills (20 steps) create a bead for each internal step. Both levels persist, because if checklist tracking is ephemeral while task tracking is persistent, agents learn that some tracking is optional.
+The replacement works at two levels. Execution skills track plan tasks as beads. Checklist-heavy skills like brainstorming (9 steps) create a bead for each internal step. Both levels persist, because if checklist tracking is ephemeral while task tracking is persistent, agents learn that some tracking is optional.
 
 Subsequent changes went further:
 
@@ -160,7 +160,7 @@ Compliance doubled from 33% to 72% when AI agents received absolute rules instea
 
 ### TDD applied recursively
 
-The `writing-skills` meta-skill revealed that TDD principles apply to process documentation itself:
+Upstream superpowers' writing-skills meta-skill (not shipped in this fork) revealed that TDD principles apply to process documentation itself:
 
 | TDD Concept | Skill Creation Equivalent |
 |-------------|--------------------------|
@@ -191,4 +191,4 @@ An empirical finding: when a skill's YAML `description` field summarized the wor
 - [obra/superpowers](https://github.com/obra/superpowers) v6.1.1 — composable skills for AI agents (MIT)
 - [gastownhall/beads](https://github.com/gastownhall/beads) v1.1.0 — Persistent issue tracker for AI agents (MIT)
 - Cialdini, R. B. (2021). *Influence: The Psychology of Persuasion* (New and Expanded Edition). Harper Business.
-- Meincke, L., et al. (2025). AI agent compliance with explicit vs hedged instructions. Referenced in `skills/writing-skills/persuasion-principles.md`.
+- Meincke, L., et al. (2025). AI agent compliance with explicit vs hedged instructions. Referenced in upstream superpowers' writing-skills/persuasion-principles.md.

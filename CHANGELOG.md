@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Removed
+
+- **BREAKING: the `writing-skills` meta-skill is no longer shipped.** It authored upstream-style skills — maintenance weight this fork doesn't need. Existing installs have it removed on upgrade/uninstall via `install.sh` (never on fresh install); the `skills` npx channel simply stops listing it.
+
 ## [0.11.0] - 2026-07-10
 
 ### Changed

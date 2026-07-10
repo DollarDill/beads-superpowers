@@ -52,7 +52,6 @@ recovery, coordination — lives in the upstream reference linked below.
 | Respond to review feedback | `receiving-code-review` |
 | Merge or close a branch | `finishing-a-development-branch` |
 | Run independent tasks in parallel | `dispatching-parallel-agents` |
-| Create or modify a skill | `writing-skills` |
 | Update docs after shipping | `document-release` |
 | Research a topic | `research-driven-development` |
 | Write human-facing prose | `write-documentation` |

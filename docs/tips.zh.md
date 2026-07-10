@@ -54,7 +54,6 @@ description: 快速参考 bd 命令速查表、技能路由表、常见问题故
 | 回应审查反馈 | `receiving-code-review` |
 | 合并或关闭分支 | `finishing-a-development-branch` |
 | 并行运行独立任务 | `dispatching-parallel-agents` |
-| 创建或修改技能 | `writing-skills` |
 | 发布后更新文档 | `document-release` |
 | 研究某个主题 | `research-driven-development` |
 | 编写面向用户的文档 | `write-documentation` |

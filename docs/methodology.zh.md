@@ -70,7 +70,7 @@ graph TB
 | Mark task as completed | `bd close <task-id> --reason "Implemented login"` |
 | "More tasks remain?" | `bd ready --parent <epic-id>` |
 
-替换在两个层面有效。执行技能将计划任务作为 bead 追踪。像 brainstorming（9个步骤）和 writing-skills（20个步骤）这样的检查表密集型技能为每个内部步骤创建一个 bead。两个层面都需要持久化，因为如果检查表追踪是短暂的而任务追踪是持久的，智能体就会认为某些追踪是可选的。
+替换在两个层面有效。执行技能将计划任务作为 bead 追踪。像 brainstorming（9个步骤）这样的检查表密集型技能为每个内部步骤创建一个 bead。两个层面都需要持久化，因为如果检查表追踪是短暂的而任务追踪是持久的，智能体就会认为某些追踪是可选的。
 
 后续变化更进一步：
 
@@ -163,7 +163,7 @@ graph TD
 
 ### TDD 的递归应用
 
-`writing-skills` 元技能揭示了 TDD 原则适用于流程文档本身：
+上游 superpowers 的 writing-skills 元技能（本 fork 未提供）揭示了 TDD 原则适用于流程文档本身：
 
 | TDD 概念 | 技能创建等价物 |
 |---------|-------------|
@@ -194,4 +194,4 @@ graph TD
 - [obra/superpowers](https://github.com/obra/superpowers) v6.1.1 — 适用于 AI 智能体的可组合技能（MIT）
 - [gastownhall/beads](https://github.com/gastownhall/beads) v1.1.0 — 适用于 AI 智能体的持久化问题追踪器（MIT）
 - Cialdini, R. B. (2021). *Influence: The Psychology of Persuasion*（新增扩展版）. Harper Business.
-- Meincke, L., et al. (2025). AI 智能体对明确指令与模糊指令的合规性研究。参见 `skills/writing-skills/persuasion-principles.md`。
+- Meincke, L., et al. (2025). AI 智能体对明确指令与模糊指令的合规性研究。参见上游 superpowers 的 writing-skills/persuasion-principles.md。

@@ -28,13 +28,13 @@ The `using-superpowers` bootstrap, injected at session start, tells the agent wh
 | Consolidate or dedup memories | `memory-curator` |
 | Hand work to the next session | `session-handoff` (human-invoked) |
 
-Also available: `document-release`, `getting-up-to-speed`, `dispatching-parallel-agents`, `project-init`, `writing-skills`
+Also available: `document-release`, `getting-up-to-speed`, `dispatching-parallel-agents`, `project-init`
 
 ## By category
 
 | Category | Skills |
 |---|---|
-| **Meta** | [using-superpowers](#using-superpowers), [writing-skills](#writing-skills) |
+| **Meta** | [using-superpowers](#using-superpowers) |
 | **Design** | [brainstorming](#brainstorming), [writing-plans](#writing-plans), [stress-test](#stress-test) |
 | **Execution** | [subagent-driven-development](#subagent-driven-development), [executing-plans](#executing-plans), [dispatching-parallel-agents](#dispatching-parallel-agents) |
 | **Quality** | [test-driven-development](#test-driven-development), [systematic-debugging](#systematic-debugging), [verification-before-completion](#verification-before-completion) |
@@ -55,7 +55,6 @@ config:
 graph TD
   subgraph Meta
     US["using-superpowers"]
-    WS["writing-skills"]
   end
   subgraph Design
     BR["brainstorming"]
@@ -120,10 +119,6 @@ graph TD
 ### using-superpowers
 
 Bootstrap skill injected at every session start. Routes the agent to the correct skill for the current task, and carries the production-grade doctrine that holds every session to a no-shortcuts, no-silent-descope, never-a-security-regression standard. It also carries the decision-capture convention: when a choice is hard to reverse, surprising, and a genuine trade-off, the agent offers to record an ADR in `docs/decisions/`. All other skills depend on this one having loaded first.
-
-### writing-skills
-
-Meta-skill for creating and modifying skills. Enforces TDD-for-process-docs: new skills need a failing test before the SKILL.md is written. Frontmatter descriptions must be trigger conditions, not workflow summaries (see SDO in [Methodology](methodology.md)).
 
 ### brainstorming
 

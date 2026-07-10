@@ -253,7 +253,6 @@ This plugin uses `bd` (beads) for ALL task tracking.
 | document-release               | Post-ship documentation audit and sync                                                                                      |
 | project-init                   | Beads/Dolt DB setup, bootstrap, and recovery                                                                                |
 | dispatching-parallel-agents    | 2+ independent tasks without shared state                                                                                   |
-| writing-skills                 | Meta-skill for creating/modifying skills                                                                                    |
 | auditing-upstream-drift (maintainer-only — `.claude/skills/`, not distributed) | Detect staleness vs upstream superpowers/beads                             |
 | getting-up-to-speed            | Session orientation — reads latest session-handoff doc + bd context + adaptive codebase deep-dive + structured current-state summary |
 | research-driven-development    | Parallel research agents → blinded citation-grounding verify → synthesized knowledge base document. Triggers on "research this", "what is X", "how does Y work" |

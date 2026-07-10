@@ -67,7 +67,6 @@ Underneath all of it is a production-grade standard: the agent treats every task
 | Skill | What it does |
 |-------|-------------|
 | `using-superpowers` | Bootstrap — injected at session start, routes to the right skill |
-| `writing-skills` | Meta-skill for creating or modifying skills in this plugin |
 
 ## Docs
 
