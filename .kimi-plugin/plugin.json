@@ -8,18 +8,22 @@
   "homepage": "https://github.com/DollarDill/beads-superpowers",
   "license": "MIT",
   "keywords": [
-    "beads",
-    "superpowers",
+    "brainstorming",
+    "subagent-driven-development",
+    "skills",
+    "planning",
     "tdd",
     "debugging",
-    "issue-tracking",
-    "agents"
+    "code-review",
+    "workflow",
+    "beads",
+    "issue-tracking"
   ],
   "skills": "./skills/",
   "sessionStart": {
     "skill": "using-superpowers"
   },
-  "skillInstructions": "When a skill references Claude Code tools, map them to Kimi-native equivalents: use AskUserQuestion for clarifying choices; use the Agent tool (subagent_type coder/explore/plan) for subagent dispatch; use the native Skill tool to load skills; Read/Write/Edit for files; Bash for shell; Grep/Glob for search; FetchURL/WebSearch for web. IMPORTANT: this plugin tracks ALL tasks with the `bd` (beads) CLI run via Bash — do NOT use TodoList/TodoWrite for task tracking. Run `bd prime` at the start of each session to load persistent project memory.",
+  "skillInstructions": "Kimi Code tool mapping for beads-superpowers skills:\n\n- When a beads-superpowers skill says to ask the user, ask clarifying questions, ask one question at a time, present multiple-choice options, use the terminal for a question, or wait for the user's choice, call Kimi Code's `AskUserQuestion` tool. Do not render those choices as plain assistant text unless `AskUserQuestion` is unavailable or the session is in auto permission mode.\n- For `AskUserQuestion`, provide 1 question with 2-4 concrete options when possible. Put the recommended option first and suffix its label with `(Recommended)`.\n- IMPORTANT: this plugin tracks ALL tasks with the `bd` (beads) CLI run via Bash — when a skill refers to `TodoWrite` or task tracking, use `bd` commands, NEVER Kimi Code's `TodoList`. Run `bd prime` at the start of each session to load persistent project memory.\n- When a beads-superpowers skill says `Task tool (general-purpose)` or asks you to dispatch an implementer/reviewer subagent, use Kimi Code's `Agent` tool with a Kimi subagent type. Do not pass `general-purpose` as `subagent_type`.\n- For implementation, code review, spec review, quality review, and filled Superpowers subagent prompt templates, call `Agent` with `subagent_type: \"coder\"`, paste the fully filled prompt into `prompt`, and provide a short `description`.\n- For read-only codebase exploration that would take several searches, use `Agent` with `subagent_type: \"explore\"`.\n- For read-only planning or architecture design, use `Agent` with `subagent_type: \"plan\"`.\n- Keep dependent Superpowers subagent steps sequential. Use multiple `Agent` calls, or `run_in_background: true` only when the work is independent and background agents are available.\n- When a beads-superpowers skill refers to the `Skill` tool, use Kimi Code's native `Skill` tool.\n- Use Kimi Code's `Read`, `Write`, `Edit`, `Bash`, `Grep`, `Glob`, `FetchURL`, `WebSearch`, and MCP tools by their actual exposed names.\n- When a skill asks to search file contents, use `Grep`; when it asks to find files by path or pattern, use `Glob`; when it asks to fetch a URL, use `FetchURL`; when it asks to search the web, use `WebSearch`.",
   "interface": {
     "displayName": "Beads Superpowers",
     "shortDescription": "Process-discipline skills + persistent beads memory.",

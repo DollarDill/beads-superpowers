@@ -9,11 +9,15 @@
   "repository": "https://github.com/DollarDill/beads-superpowers",
   "license": "MIT",
   "keywords": [
-    "beads",
-    "superpowers",
+    "brainstorming",
+    "subagent-driven-development",
+    "skills",
+    "planning",
     "tdd",
     "debugging",
-    "issue-tracking",
-    "agents"
+    "code-review",
+    "workflow",
+    "beads",
+    "issue-tracking"
   ]
 }
