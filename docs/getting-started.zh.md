@@ -36,7 +36,7 @@ npm install -g @beads/bd    # any platform
 |-----|---------------|
 | Claude Code | 原生插件市场（见下文） |
 | Codex CLI | 原生插件市场 + `codex_hooks = true`（见下文） |
-| OpenCode | curl 安装程序（见下文） |
+| OpenCode | `opencode.json` 中的 git 插件规范（见下文） |
 
 ### 第 2 层 — 尽力而为
 
@@ -80,11 +80,15 @@ codex_hooks = true
 
 ### OpenCode
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
+将其添加到您的 `opencode.json`（全局或项目级）的 `plugin` 数组中：
+
+```json
+{
+  "plugin": ["beads-superpowers@git+https://github.com/DollarDill/beads-superpowers.git"]
+}
 ```
 
-安装程序检测到 OpenCode 后，会将技能复制到 `~/.config/opencode/skills/`，并将 TypeScript 插件复制到 `~/.config/opencode/plugins/`（自动激活）。
+重启 OpenCode。技能会自动注册，会话引导 + beads 上下文也会自动注入——无需其他步骤。详情、版本固定、从 pre-0.12 安装程序副本迁移及故障排除，请参阅 [.opencode/INSTALL.md](https://github.com/DollarDill/beads-superpowers/blob/main/.opencode/INSTALL.md)。
 
 ### 脚本安装（`curl | bash`）
 
@@ -100,7 +104,6 @@ curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/i
 |-----|------------|----------------|
 | Claude Code | `~/.claude/skills/` | `settings.json` 中的 SessionStart 钩子 |
 | Codex | `~/.codex/skills/` | 在 `~/.codex/config.toml` 中使用 `codex_hooks = true` 启用 |
-| OpenCode | `~/.config/opencode/skills/` | `~/.config/opencode/plugins/` 处的 TypeScript 插件（自动激活） |
 
 在以下任一情况下，请使用脚本安装：
 
@@ -165,7 +168,7 @@ codex plugin marketplace update beads-superpowers-marketplace
 copilot plugin update beads-superpowers
 ```
 
-**OpenCode / 脚本安装 / npx：**
+**脚本安装 / npx：**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
@@ -174,6 +177,10 @@ npx skills add DollarDill/beads-superpowers -g --copy -y
 ```
 
 重新运行安装程序或 `npx skills add` 将覆盖现有安装。无需重新运行 `bd init`——您现有的 `.beads/` 数据库不受影响。
+
+**OpenCode：**
+
+重启 OpenCode 以获取 git 插件规范中的最新提交。部分 OpenCode/Bun 版本会缓存已解析的 git 依赖——如果更新未生效，请清除 OpenCode 的包缓存或重新安装插件。要固定特定版本，请在插件规范后附加 `#vX.Y.Z` 引用。详情：[.opencode/INSTALL.md](https://github.com/DollarDill/beads-superpowers/blob/main/.opencode/INSTALL.md)。
 
 ## 验证是否正常工作
 

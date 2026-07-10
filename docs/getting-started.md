@@ -33,7 +33,7 @@ These paths are tested end-to-end. Prefer them.
 |-----|---------------|
 | Claude Code | Native plugin marketplace (see below) |
 | Codex CLI | Native plugin marketplace + `codex_hooks = true` (see below) |
-| OpenCode | curl installer (see below) |
+| OpenCode | git plugin spec in `opencode.json` (see below) |
 
 ### Tier 2 — Best-effort
 
@@ -79,11 +79,15 @@ To get the SessionStart hook under Codex, use the scripted installer (`install.s
 
 ### OpenCode
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
+Add to the `plugin` array in your `opencode.json` (global or project-level):
+
+```json
+{
+  "plugin": ["beads-superpowers@git+https://github.com/DollarDill/beads-superpowers.git"]
+}
 ```
 
-The installer detects OpenCode and copies skills to `~/.config/opencode/skills/` and the TypeScript plugin to `~/.config/opencode/plugins/` (active automatically).
+Restart OpenCode. Skills auto-register and the session bootstrap + beads context inject automatically — no other steps. Details, version pinning, migration from pre-0.12 installer copies, and troubleshooting: [.opencode/INSTALL.md](https://github.com/DollarDill/beads-superpowers/blob/main/.opencode/INSTALL.md).
 
 ### Scripted install (`curl | bash`)
 
@@ -99,7 +103,6 @@ The installer auto-detects which CLIs are on your system and installs skills and
 |-----|------------|----------------|
 | Claude Code | `~/.claude/skills/` | SessionStart hook in `settings.json` |
 | Codex | `~/.codex/skills/` | Enable with `codex_hooks = true` in `~/.codex/config.toml` |
-| OpenCode | `~/.config/opencode/skills/` | TypeScript plugin at `~/.config/opencode/plugins/` (active automatically) |
 
 Use the scripted install when you need any of:
 
@@ -164,7 +167,7 @@ codex plugin marketplace update beads-superpowers-marketplace
 copilot plugin update beads-superpowers
 ```
 
-**OpenCode / scripted / npx:**
+**Scripted / npx:**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
@@ -173,6 +176,10 @@ npx skills add DollarDill/beads-superpowers -g --copy -y
 ```
 
 Re-running the installer or `npx skills add` overwrites the existing installation. No `bd init` needed — your existing `.beads/` database is untouched.
+
+**OpenCode:**
+
+Restart OpenCode to pick up the latest commit from the git plugin spec. Some OpenCode/Bun versions cache the resolved git dependency — clear OpenCode's package cache or reinstall the plugin if updates don't appear. To pin a specific version, append a `#vX.Y.Z` ref to the plugin spec. Details: [.opencode/INSTALL.md](https://github.com/DollarDill/beads-superpowers/blob/main/.opencode/INSTALL.md).
 
 ## Verify it works
 

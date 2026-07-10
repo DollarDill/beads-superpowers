@@ -76,7 +76,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harnesses — Cursor, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi — that merges [Superpowers](https://github.com/obra/superpowers) skills (v6.1.1) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.1.0). It gives AI coding agents composable process-discipline skills (TDD, brainstorming, systematic debugging, code review, verification) plus persistent task memory via a Dolt-backed database.
 
 **Repository:** <https://github.com/DollarDill/beads-superpowers>
-**Version:** 0.10.0
+**Version:** 0.11.0
 **License:** MIT (fork of obra/superpowers, also MIT)
 
 ## Architecture
@@ -86,7 +86,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harn
 - `skills/` — one skill per `skills/<name>/SKILL.md` directory. Some include prompt templates (`implementer-prompt.md`, `researcher-prompt.md`) or helper scripts. Auto-discovered by Claude Code — do NOT declare in `plugin.json`.
 - `agents/` — Removed in v0.6.0. Code-reviewer is now dispatched via `skills/requesting-code-review/code-reviewer.md` prompt template. Subagents (implementer, researcher) use prompt templates inside their skills, not standalone agent files.
 - `hooks/` — `session-start` (SessionStart: injects `using-superpowers` + composed beads context — curated memories + a `bd prime` pointer), the single recurring hook. Multi-format output supports Claude Code, Codex, Cursor, and generic CLIs. Registered in `hooks/hooks.json` (Claude Code) and `hooks/codex-hooks.json` (Codex). Auto-discovered.
-- `opencode/` — Native OpenCode TypeScript plugin (`beads-superpowers-plugin.ts`). Two in-process hooks: a once-per-session bootstrap and a compaction re-injection. Distributed via `install.sh`.
+- `.opencode/` — OpenCode plugin (`plugins/beads-superpowers.js`, upstream-parity base + beads graft) + `INSTALL.md`. Git-install only via the opencode.json plugin spec; `install.sh` no longer copies OpenCode artifacts (its `--uninstall` still cleans pre-0.12 copies).
 - `example-workflow/` — Ready-to-use project template: `CLAUDE.md` (Karpathy behavioral principles + beads integration) and `agents/yegge.md` (lean router — triages requests and routes to skills). `install.sh --with-yegge` installs `yegge.md` globally (opt-in; not installed by default).
 - `docs/` — MkDocs Material source pages (6 EN + 6 ZH pages + assets). Template variables (`{{ skill_count }}`) computed at build time via `main.py` macros plugin. Contains ONLY website content.
 - `docs/decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
@@ -142,6 +142,9 @@ cp -rf source dest          # NOT: cp -r source dest
 .codex-plugin/
   plugin.json              # Codex CLI plugin manifest (mirrors .claude-plugin/)
   marketplace.json         # Codex CLI marketplace config
+.opencode/
+  plugins/beads-superpowers.js  # OpenCode plugin (upstream-parity base + beads graft)
+  INSTALL.md               # Version pinning, migration, troubleshooting
 agents/                    # Removed in v0.6.0 (code-reviewer consolidated to skill template)
 assets/                    # Banner SVG
 docs/                      # MkDocs source pages — website content ONLY
@@ -168,9 +171,6 @@ hooks/
   codex-hooks.json         # Codex CLI hook registration (refs same scripts)
   session-start            # Bash: injects using-superpowers + composed beads context (multi-format output)
   run-hook.cmd             # Windows polyglot wrapper
-opencode/
-  beads-superpowers-plugin.ts  # Native OpenCode TypeScript plugin (2 hooks)
-  package.json             # Plugin dependencies
 scripts/
   bump-version.sh          # Sync version across package.json + plugin manifests
   check-skill-count.sh     # Guard: forbid hardcoded skill counts + structural self-consistency
@@ -280,7 +280,7 @@ Skills are plain Markdown. The docs site uses MkDocs Material.
 
 ### Validation — the `just` surface (tool, not gate)
 
-Run `just check` after touching harness plumbing (hooks/, install.sh, manifests, opencode/).
+Run `just check` after touching harness plumbing (hooks/, install.sh, manifests, .opencode/).
 Pre-commit covers commit-time hygiene; nothing here is CI-enforced by design.
 
 ```bash
@@ -325,14 +325,13 @@ external eval-harness project. Each suite's `DEPRECATED.md` explains why it was 
 
 ## Version Management
 
-Version is declared in 8 files that must stay in sync:
+Version is declared in 7 files that must stay in sync:
 
 - `package.json`
 - `.claude-plugin/plugin.json`
 - `.claude-plugin/marketplace.json`
 - `.codex-plugin/plugin.json`
 - `.codex-plugin/marketplace.json`
-- `opencode/package.json`
 - `.cursor-plugin/plugin.json`
 - `.kimi-plugin/plugin.json`
 

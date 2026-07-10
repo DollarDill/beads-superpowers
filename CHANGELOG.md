@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Harness plugin manifests re-aligned with upstream superpowers v6.1.1.** Keyword sets restored to upstream's per-manifest vocabulary (plus `beads`/`issue-tracking`), the Kimi `skillInstructions` re-adopts upstream's full tool mapping with the beads override, the Claude marketplace manifest regains its description field, and `.codex-plugin/plugin.json` adopts upstream's Codex portal packaging (`skills` path, empty `hooks`, `interface` block) with beads-superpowers branding. Five deliberate divergences newly registered in the maintainer drift-audit skill; Gemini support deferred (upstream's own Gemini pointer is broken).
+- **BREAKING: OpenCode install is now git-install only, exactly like upstream.** The plugin moved to `.opencode/plugins/beads-superpowers.js` (upstream's plugin as the base — message-transform bootstrap, config-hook skill auto-registration — plus the beads graft: composer-sourced context and compaction re-injection). Install by adding `"plugin": ["beads-superpowers@git+https://github.com/DollarDill/beads-superpowers.git"]` to opencode.json; `package.json` gains the `main` entry the git spec loads. `install.sh` no longer copies OpenCode artifacts — pre-0.12 copies keep working but are frozen; migrate per `.opencode/INSTALL.md` (or `install.sh --uninstall` removes them). The version-sync set drops `opencode/package.json` (8 → 7 files).
+
 ### Removed
 
 - **BREAKING: the `writing-skills` meta-skill is no longer shipped.** It authored upstream-style skills — maintenance weight this fork doesn't need. Existing installs have it removed on upgrade/uninstall via `install.sh` (never on fresh install); the `skills` npx channel simply stops listing it.

@@ -22,11 +22,11 @@ git switch -c feat/my-improvement
 
 **Hooks and scripts:** The session-start hook is bash on Unix, batch on Windows (polyglot via `run-hook.cmd`). See `.internal/windows/polyglot-hooks.md` for cross-platform details.
 
-**Plugin manifests:** Eight files must stay in sync: `package.json`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, `.codex-plugin/marketplace.json`, `opencode/package.json`, `.cursor-plugin/plugin.json`, and `.kimi-plugin/plugin.json`. Use `./scripts/bump-version.sh <version>` to update all eight, or use `--check` to detect drift.
+**Plugin manifests:** Seven files must stay in sync: `package.json`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, `.codex-plugin/marketplace.json`, `.cursor-plugin/plugin.json`, and `.kimi-plugin/plugin.json`. Use `./scripts/bump-version.sh <version>` to update all seven, or use `--check` to detect drift.
 
 ## Tests
 
-Run `just check` before submitting changes that touch harness plumbing (hooks/, install.sh, manifests, opencode/). See CLAUDE.md § Build & Test.
+Run `just check` before submitting changes that touch harness plumbing (hooks/, install.sh, manifests, .opencode/). See CLAUDE.md § Build & Test.
 
 ```bash
 just check      # deterministic set: guards + hooks + manifests + contracts + install-shape

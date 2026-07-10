@@ -133,11 +133,15 @@ To get the SessionStart hook under Codex, use the scripted installer (`install.s
 
 #### OpenCode
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
+Add to the `plugin` array in your `opencode.json` (global or project-level):
+
+```json
+{
+  "plugin": ["beads-superpowers@git+https://github.com/DollarDill/beads-superpowers.git"]
+}
 ```
 
-The installer detects OpenCode and copies skills to `~/.config/opencode/skills/` and the TypeScript plugin to `~/.config/opencode/plugins/` (active automatically).
+Skills auto-register and the session bootstrap + beads context inject automatically — no other steps. Details, version pinning, migration from pre-0.12 installer copies, and troubleshooting: [.opencode/INSTALL.md](.opencode/INSTALL.md).
 
 ### Tier 2 — Best-effort
 
