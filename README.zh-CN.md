@@ -137,11 +137,15 @@ codex_hooks = true
 
 #### OpenCode
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
+将其添加到您的 `opencode.json`（全局或项目级）的 `plugin` 数组中：
+
+```json
+{
+  "plugin": ["beads-superpowers@git+https://github.com/DollarDill/beads-superpowers.git"]
+}
 ```
 
-安装程序检测到 OpenCode 后，会将技能复制到 `~/.config/opencode/skills/`，并将 TypeScript 插件复制到 `~/.config/opencode/plugins/`（自动激活）。
+技能会自动注册，会话引导 + beads 上下文也会自动注入——无需其他步骤。详情、版本固定、从 pre-0.12 安装程序副本迁移及故障排除，请参阅 [.opencode/INSTALL.md](.opencode/INSTALL.md)。
 
 ### 第 2 层——尽力支持
 

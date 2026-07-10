@@ -43,7 +43,7 @@ The LLM-driven suites under `tests/` are deprecated in place — skill behavior 
 - [ ] No TodoWrite references in skills
 - [ ] No hardcoded skill counts: `./scripts/check-skill-count.sh` passes
 - [ ] Anti-rationalization tables, Iron Laws, Red Flags untouched
-- [ ] Version bumped in all 8 manifests if metadata changed (`./scripts/bump-version.sh --check`)
+- [ ] Version bumped in all 7 manifests if metadata changed (`./scripts/bump-version.sh --check`)
 - [ ] `CHANGELOG.md` updated under `[Unreleased]`
 - [ ] Full audit run (maintainers): `.claude/skills/auditing-upstream-drift/SKILL.md`
 

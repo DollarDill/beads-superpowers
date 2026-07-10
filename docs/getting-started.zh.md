@@ -208,7 +208,7 @@ sequenceDiagram
   Note over Agent: Agent is now skill-aware
 ```
 
-OpenCode 使用自己的 TypeScript 插件，而非 `hooks/hooks.json`，包含两个进程内钩子：`chat.message` 钩子在每次会话中仅首次注入相同的引导内容，`experimental.session.compacting` 钩子在上下文窗口压缩后重新注入 beads 上下文。
+OpenCode 使用自己的 JavaScript 插件（`.opencode/plugins/beads-superpowers.js`），而非 `hooks/hooks.json`，包含三个进程内钩子：`config` 钩子自动注册技能，`experimental.chat.messages.transform` 钩子在每次会话中仅首次将相同的引导内容注入首条用户消息，`experimental.session.compacting` 钩子在上下文窗口压缩后重新注入 beads 上下文。
 
 ## 配置
 

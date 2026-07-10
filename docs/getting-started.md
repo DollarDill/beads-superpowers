@@ -207,7 +207,7 @@ sequenceDiagram
   Note over Agent: Agent is now skill-aware
 ```
 
-OpenCode uses its own TypeScript plugin instead of `hooks/hooks.json`, with two in-process hooks: a `chat.message` hook injects the same bootstrap once per session, and an `experimental.session.compacting` hook re-injects beads context after the context window compacts.
+OpenCode uses its own JavaScript plugin (`.opencode/plugins/beads-superpowers.js`) instead of `hooks/hooks.json`, with three in-process hooks: a `config` hook auto-registers the skills, an `experimental.chat.messages.transform` hook injects the same bootstrap into the first user message once per session, and an `experimental.session.compacting` hook re-injects beads context after the context window compacts.
 
 ## Configuration
 
