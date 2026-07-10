@@ -6,6 +6,15 @@ set -euo pipefail
 
 VERSION="${VERSION:?VERSION env var required}"
 
+# Expected skill count — derived from the KNOWN_SKILLS array in the install.sh
+# under test (the installer copies exactly that set; never hardcode skill
+# counts — see scripts/check-skill-count.sh).
+EXPECTED_SKILLS=$(sed -n '/^KNOWN_SKILLS=(/,/^)/p' /src/install.sh | tr ' ' '\n' | grep -c '^[a-z][a-z-]*$') || true
+if [ "${EXPECTED_SKILLS:-0}" -lt 1 ]; then
+    echo "FATAL: could not derive KNOWN_SKILLS count from /src/install.sh" >&2
+    exit 1
+fi
+
 # --- Assertion helpers ---
 pass=0
 fail=0
@@ -170,7 +179,7 @@ stop_http_server
 
 # Skills: count + spot-check
 skill_count=$(find "$HOME/.claude/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-assert_count_gte "$skill_count" 22 "skill count >= 22"
+assert_count_gte "$skill_count" "$EXPECTED_SKILLS" "skill count >= expected"
 assert_dir_exists "$HOME/.claude/skills/brainstorming" "skill: brainstorming"
 assert_dir_exists "$HOME/.claude/skills/test-driven-development" "skill: TDD"
 assert_dir_exists "$HOME/.claude/skills/using-superpowers" "skill: using-superpowers"
@@ -206,7 +215,7 @@ if command -v codex >/dev/null 2>&1; then
 
   # Codex skills installed
   codex_skill_count=$(find "$HOME/.codex/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-  assert_count_gte "$codex_skill_count" 22 "Codex skill count >= 22"
+  assert_count_gte "$codex_skill_count" "$EXPECTED_SKILLS" "Codex skill count >= expected"
   assert_dir_exists "$HOME/.codex/skills/using-superpowers" "Codex skill: using-superpowers"
   assert_file_exists "$HOME/.codex/skills/brainstorming/SKILL.md" "Codex skill has SKILL.md"
 else
@@ -329,7 +338,7 @@ BEADS_SUPERPOWERS_CHECKSUMS_URL="http://localhost:8888/checksums.txt" \
 stop_http_server
 
 skill_count=$(find "$HOME/.claude/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-assert_count_gte "$skill_count" 22 "checksum: valid tarball installs"
+assert_count_gte "$skill_count" "$EXPECTED_SKILLS" "checksum: valid tarball installs"
 
 # Clean up for next checksum test
 bash /src/install.sh --uninstall 2>/dev/null || true
@@ -359,7 +368,7 @@ stop_http_server
 
 assert_output_contains "$output" "skipped" "checksum: --skip-checksum message shown"
 skill_count=$(find "$HOME/.claude/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-assert_count_gte "$skill_count" 22 "checksum: --skip-checksum install succeeds"
+assert_count_gte "$skill_count" "$EXPECTED_SKILLS" "checksum: --skip-checksum install succeeds"
 
 bash /src/install.sh --uninstall 2>/dev/null || true
 
@@ -375,7 +384,7 @@ BEADS_SUPERPOWERS_CHECKSUMS_URL="http://localhost:8888/missing-checksums.txt" \
 stop_http_server
 
 skill_count=$(find "$HOME/.claude/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-assert_count_gte "$skill_count" 22 "checksum: missing checksums.txt still installs"
+assert_count_gte "$skill_count" "$EXPECTED_SKILLS" "checksum: missing checksums.txt still installs"
 
 bash /src/install.sh --uninstall 2>/dev/null || true
 
@@ -392,7 +401,7 @@ BEADS_SUPERPOWERS_TARBALL_URL="$TARBALL_URL" \
 stop_http_server
 
 skill_count=$(find "$HOME/.claude/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-assert_count_gte "$skill_count" 22 "fallback: tarball tier installs skills"
+assert_count_gte "$skill_count" "$EXPECTED_SKILLS" "fallback: tarball tier installs skills"
 
 # Check version:tier format
 assert_file_exists "$HOME/.claude/skills/.beads-superpowers-version" "fallback: version file exists"
@@ -407,7 +416,7 @@ output=$(bash /src/install.sh --yes --version "$VERSION" 2>&1) || true
 restore_tools
 
 skill_count=$(find "$HOME/.claude/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-assert_count_gte "$skill_count" 22 "fallback: git clone tier installs skills"
+assert_count_gte "$skill_count" "$EXPECTED_SKILLS" "fallback: git clone tier installs skills"
 assert_file_contains "$HOME/.claude/skills/.beads-superpowers-version" "git" "fallback: version file shows git tier"
 
 bash /src/install.sh --uninstall 2>/dev/null || true
