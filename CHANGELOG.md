@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **`tracking-with-beads` policy core + the first Pocock-shaped skill.** A new model-invoked skill owns the beads conventions of record (frugality, the `--claim` consent boundary, capture quality, land-the-plane policy); bd command tables defer to `bd human`. `getting-up-to-speed` is the pilot redesign (ADR-0049): steps with checkable completion criteria, every-run reference inline-pruned, branch-only edge cases behind `references/edge-cases.md`, own-operation kernels guarded by a per-site signature map in `check-convention-sync.sh`, and a contract test that pins invariants instead of prose. Output contract unchanged. Existing `.beads/PRIME.md` safety-net files keep their old pointer text until deleted (the file explains its own refresh); new ones name `tracking-with-beads`.
+
 ### Changed
 
 - **Harness plugin manifests re-aligned with upstream superpowers v6.1.1.** Keyword sets restored to upstream's per-manifest vocabulary (plus `beads`/`issue-tracking`), the Kimi `skillInstructions` re-adopts upstream's full tool mapping with the beads override, the Claude marketplace manifest regains its description field, and `.codex-plugin/plugin.json` adopts upstream's Codex portal packaging (`skills` path, empty `hooks`, `interface` block) with beads-superpowers branding. Five deliberate divergences newly registered in the maintainer drift-audit skill; Gemini support deferred (upstream's own Gemini pointer is broken).
