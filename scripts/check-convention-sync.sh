@@ -35,7 +35,6 @@ CB4_SITES=(
   skills/requesting-code-review/SKILL.md
   skills/receiving-code-review/SKILL.md
   skills/research-driven-development/SKILL.md
-  skills/getting-up-to-speed/SKILL.md
   skills/finishing-a-development-branch/SKILL.md
   skills/dispatching-parallel-agents/SKILL.md
   skills/document-release/SKILL.md
@@ -47,8 +46,13 @@ CB5_SITES=(
   skills/executing-plans/SKILL.md
   skills/using-git-worktrees/SKILL.md
   skills/project-init/SKILL.md
-  skills/getting-up-to-speed/SKILL.md
   skills/writing-plans/SKILL.md
+)
+
+# --- Per-site kernel map (ADR-0049): each redesigned skill pins ONE ASCII invariant
+# line phrased for its own operation. site|signature pairs; grep -qF per site.
+KERNEL_MAP=(
+  'skills/getting-up-to-speed/SKILL.md|is FORBIDDEN here'
 )
 
 FAIL=0
@@ -64,6 +68,17 @@ check_block() {
   done
 }
 
+check_kernels() {
+  local entry f sig
+  for entry in "${KERNEL_MAP[@]}"; do
+    f="${entry%%|*}"; sig="${entry#*|}"
+    if [ ! -f "$f" ]; then echo "MISSING FILE: $f"; FAIL=1; continue; fi
+    if ! grep -qF -- "$sig" "$f"; then
+      echo "KERNEL DRIFT: $f lost its pinned invariant: $sig"; FAIL=1
+    fi
+  done
+}
+
 self_test() {
   # Prove the grep-based detector distinguishes a correct copy from a mutated one.
   local tmp; tmp="$(mktemp -d)"
@@ -75,6 +90,21 @@ self_test() {
   if grep -qF -- "$fixture" "$tmp/mutated.txt"; then
     echo "self-test FAIL: detector did NOT catch the mutated block"; ok=0
   fi
+
+  # Kernel-map self-test (ADR-0049): copy a real KERNEL_MAP site into a temp dir,
+  # strip its pinned kernel line, and confirm the check flags the mutation.
+  local ksrc="skills/getting-up-to-speed/SKILL.md" ksig="is FORBIDDEN here"
+  if [ ! -f "$ksrc" ]; then
+    echo "self-test FAIL: kernel fixture source missing: $ksrc"; ok=0
+  else
+    cp -f "$ksrc" "$tmp/kernel-correct.md"
+    grep -v -- "$ksig" "$ksrc" > "$tmp/kernel-mutated.md"
+    grep -qF -- "$ksig" "$tmp/kernel-correct.md" || { echo "self-test FAIL: kernel signature missing from unmutated copy"; ok=0; }
+    if grep -qF -- "$ksig" "$tmp/kernel-mutated.md"; then
+      echo "self-test FAIL: kernel detector did NOT catch the stripped kernel line"; ok=0
+    fi
+  fi
+
   rm -rf "$tmp"
   if [ "$ok" -eq 1 ]; then echo "self-test OK: detector matches correct, rejects mutated"; return 0; else return 1; fi
 }
@@ -86,6 +116,7 @@ fi
 check_block "CB-3 Capture gate"    "$CB3_SIG" "${CB3_SITES[@]}"
 check_block "CB-4 memory convention" "$CB4_SIG" "${CB4_SITES[@]}"
 check_block "CB-5 bd-frugality" "$CB5_SIG" "${CB5_SITES[@]}"
+check_kernels
 
 if [ "$FAIL" -eq 0 ]; then
   echo "convention-sync: OK (all canonical blocks byte-identical at their sites)"

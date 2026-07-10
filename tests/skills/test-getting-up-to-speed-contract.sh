@@ -1,53 +1,46 @@
 #!/usr/bin/env bash
-# Contract test for getting-up-to-speed Phase-4 output contract.
+# Contract test for getting-up-to-speed — pins INVARIANTS, not prose (ADR-0049 / stress-test B5).
+# KEEP: behavioral output-contract strings + hard-won mechanics markers (mu0s fixes).
+# Never add prose-structure assertions (section headings, narrative wording).
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SKILL="$ROOT/skills/getting-up-to-speed/SKILL.md"
+EDGE="$ROOT/skills/getting-up-to-speed/references/edge-cases.md"
 fail=0
 
-check_exact() {  # behavioral output string — fixed-string, must be present
-  if grep -Fq "$1" "$SKILL"; then echo "PASS: $1"; else echo "FAIL: missing — $1"; fail=1; fi
-}
-check_loose() {  # structural header — case-insensitive substring, must be present
-  if grep -iq "$1" "$SKILL"; then echo "PASS: $1"; else echo "FAIL: missing — $1"; fail=1; fi
+check_exact() {  # fixed-string, must be present
+  if grep -Fq "$1" "$2"; then echo "PASS: $1"; else echo "FAIL: missing — $1 ($2)"; fail=1; fi
 }
 
-# Behavioral contract strings — exact
-check_exact "I'm ready for your next instruction"
-check_exact "Do NOT auto-claim"
-# Structural headers — loose (ASCII substrings, no em-dash/parenthetical)
-check_loose "Phase 4"
-check_loose "Current State"
-check_loose "Recent Activity"
-check_loose "Verification Gate"
-check_loose "Output Contract"
-# Band rescale (Change 2) — new Heavy threshold present, old > 500 gone
-check_loose "> 150"
-if grep -Fq -- "> 500" "$SKILL"; then echo "FAIL: stale > 500 band threshold present"; fail=1; else echo "PASS: no stale > 500 threshold"; fi
+# --- Behavioral output contract (what the user sees) ---
+check_exact "I'm ready for your next instruction" "$SKILL"
+check_exact "Do NOT auto-claim" "$SKILL"
+check_exact "Archived consumed handoff" "$SKILL"
+check_exact "left in inbox" "$SKILL"
+check_exact "Current State" "$SKILL"
+check_exact "Recent Activity" "$SKILL"
 
-# Handoff read (Change 1)
-check_loose "Session-handoff doc"
-check_loose "Last handoff"
-check_loose "ls -t .internal/handoff"
-check_loose "Headline-only"
+# --- Hard-won mechanics markers (mu0s recency + consume-on-read; prune consent) ---
+check_exact "is-ancestor" "$SKILL"
+check_exact "possibly stale" "$SKILL"
+check_exact ".internal/handoff/archive" "$SKILL"
+check_exact "predates HEAD" "$SKILL"
+check_exact "key prefix" "$SKILL"
+check_exact "never guess-delete" "$SKILL"
+check_exact "Pruned N superseded continuation pointers" "$SKILL"
 
-# Continuation prune (Change 3)
-check_loose "superseded continuation"
-check_loose "key prefix"
-check_loose "memory-curator"
-check_loose "never guess-delete"
+# --- Consent + secrets guardrails (security floor: must stay inline) ---
+check_exact "FORBIDDEN" "$SKILL"
+check_exact "never echo doc body sections that could carry secrets" "$SKILL"
+check_exact "never bare \`bd memories\`" "$SKILL"
 
-# Recency backstop (mu0s fix — Task 1)
-check_loose "possibly stale"
-check_loose "is-ancestor"
-check_loose "older unread handoff"
-check_loose "recency"
-check_loose "predates HEAD"   # locks the terminal-line suppression narration
+# --- Scale band (Heavy threshold current, stale band gone) ---
+check_exact "> 150" "$SKILL"
+if grep -Fq -- "> 500" "$SKILL"; then echo "FAIL: stale > 500 band"; fail=1; else echo "PASS: no stale > 500"; fi
 
-# Consume-on-read (mu0s fix — Task 2)
-check_loose ".internal/handoff/archive"
-check_exact "Archived consumed handoff"
-check_loose "left in inbox"
-check_loose "single local mutation"
+# --- Branch-only reference shipped + pointed at ---
+if [ -f "$EDGE" ]; then echo "PASS: edge-cases reference exists"; else echo "FAIL: references/edge-cases.md missing"; fail=1; fi
+check_exact "references/edge-cases.md" "$SKILL"
+check_exact "possibly stale" "$EDGE"
 
 [ "$fail" -eq 0 ] && echo "PASS: getting-up-to-speed contract" || exit 1
