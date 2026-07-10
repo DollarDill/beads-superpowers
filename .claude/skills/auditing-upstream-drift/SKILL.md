@@ -79,10 +79,10 @@ claude plugin validate .claude-plugin/plugin.json
 
 If validation fails, the plugin CANNOT be installed. Fix before proceeding.
 
-**Check 1.2 — Version consistency across 8 files:**
+**Check 1.2 — Version consistency across 7 files:**
 ```bash
 ./scripts/bump-version.sh --check
-# ALL 8 must show the same version string.
+# ALL 7 must show the same version string.
 ```
 
 If versions drift, run: `./scripts/bump-version.sh <version>`
