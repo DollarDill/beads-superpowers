@@ -54,6 +54,11 @@ CB5_SITES=(
 KERNEL_MAP=(
   'skills/getting-up-to-speed/SKILL.md|is FORBIDDEN here'
   'skills/session-handoff/SKILL.md|never weaken it'
+  'skills/memory-curator/SKILL.md|Never persist secrets, credentials, tokens, keys, or PII'
+  'skills/memory-curator/SKILL.md|Never forget first'
+  'skills/document-release/SKILL.md|auto-resolved answer is not consent'
+  'skills/stress-test/SKILL.md|bd update <id> --claim'
+  'skills/research-driven-development/SKILL.md|bd update <id> --claim'
 )
 
 FAIL=0
