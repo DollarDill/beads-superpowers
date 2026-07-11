@@ -44,6 +44,8 @@ output, then author the diagnosis yourself against the Decision Matrix below:
 **Diagnosis:** <one-line read of what the sections above show>
 **Path:** <A/B/C/D/E/F, from the Decision Matrix>
 
+Done when: both lines above are written and a single path letter is chosen.
+
 `bd doctor` is intentionally NOT part of the battery — `--fix --yes` can mutate. Run it only
 after the diagnosis→path block above is emitted and a path is chosen (bd v1.1.0+ `bd doctor`
 also flags migration-content skew vs remote; surface that before any sync work).
@@ -90,6 +92,8 @@ bd dolt remote add origin git+ssh://git@github.com/<owner>/<repo>.git
 # 4. First push
 bd dolt push
 ```
+
+Done when: `bd list` shows the test bead created and closed, and (if a remote was added) `bd dolt push` succeeds.
 
 ## Path B: Bootstrap from Remote (Cloned Repo)
 
