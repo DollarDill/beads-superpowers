@@ -24,7 +24,7 @@ Two classes; **procedural** memory (how-to / workflow) lives in the **skills**, 
 - **semantic** — durable facts that stay true.
 - **episodic** — time-bound records of what happened.
 
-**The `@type` is the routing decision.** Classify once; the type deterministically sets store, injection, and lifecycle. There is no separate "memory or kv?" judgment — you choose a type, and the type carries the store.
+**The `@type` is the routing decision.** Classify once; the type deterministically sets store, injection, and lifecycle.
 
 | `@type` | store | injected at session start? | lifecycle |
 |---|---|---|---|
@@ -58,7 +58,7 @@ Every memory keeps its existing key and carries one greppable header line:
 - `@type` — `<class>:<subtype>` from the taxonomy — the subtype sets store/injection/lifecycle per the taxonomy table above. `@created` — ISO date. `@salience` — 1–5, best-effort.
   `@refs` — related bead IDs / memory keys. `@tags` — lexical filter.
 
-One line. The class makes the prune signal greppable (`bd memories | grep '@type=episodic:'`);
+The class makes the prune signal greppable (`bd memories | grep '@type=episodic:'`);
 `@salience`/`@tags` filter recall.
 
 ## kv knowledge base (`bsp.kb.`)
@@ -87,6 +87,7 @@ dedup); cross-cluster consolidation and pruning come after, and only where clear
 
 1. **Gather** — `bd memories --json` for the full store; `bd dolt status` to record the pre-sweep
    state for rollback.
+   Done when: the full memory list and the pre-sweep Dolt state are both captured.
 2. **Extract** — pull salient, self-contained, date-grounded facts; classify each by the taxonomy and
    normalize its `@type` to `class:subtype` (correcting any malformed `@type` it encounters). Store a
    fact ONLY if it carries checkable evidence (cited `file:line`,
@@ -94,8 +95,10 @@ dedup); cross-cluster consolidation and pruning come after, and only where clear
    `verification-before-completion`. No evidence → drop, or store at low `@salience`. Procedural how-to
    → flag for a skill, don't store. **Never persist secrets, credentials, tokens, keys, or PII** — the session hook
    injects curated memories into every future session (the full store via `bd prime`) and Dolt history outlives `bd forget`.
+   Done when: every extracted item carries a normalized `@type` and is evidence-backed, low-salience, dropped, or flagged for a skill.
 3. **Reconcile** — ADD new facts; UPDATE a same-topic memory in place with `bd remember --key <existing>`,
    merging so the result keeps the MOST information (never silently shrink); skip what's already present.
+   Done when: every extracted fact is added, merged, or skipped.
 4. **Consolidate** — collapse a themed cluster of **episodic** memories into one timeless **semantic**
    fact with `@refs` to its sources, then retire the cluster. The only step that shrinks the pile.
    Extract a record's durable content into a semantic memory BEFORE retiring it — never drop an episodic
@@ -117,12 +120,9 @@ This mutates the store injected into every future session (curated by the sessio
 ## Red Flags
 | Thought | Reality |
 |---------|---------|
-| "I'll just apply the merges" | Never mutate silently. Propose the list; the user approves first. |
+| "I'll just apply the merges" | Propose the list; the user approves first — never mutate silently. |
 | "This memory is probably fine to store" | No cited evidence → it doesn't meet the bar. Drop or low-salience. |
-| "I'll keep the shorter version on UPDATE" | UPDATE keeps the MOST information. Never silently shrink. |
-| "Consolidate hard to shrink fast" | Lose no distinct fact; extract durable content to semantic first, then retire. |
-| "Episodic, so safe to drop" | Never retire the latest continuation/handoff; soft-tombstone, never hard-delete. |
-| "There might be a token in here, but it's internal" | Never persist secrets/PII. Redact or skip. |
+| "There might be a token in here, but it's internal" | Redact or skip. Never persist secrets/PII. |
 
 ## Beads Integration
 ```bash
