@@ -76,7 +76,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harnesses — Cursor, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi — that merges [Superpowers](https://github.com/obra/superpowers) skills (v6.1.1) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.1.0). It gives AI coding agents composable process-discipline skills (TDD, brainstorming, systematic debugging, code review, verification) plus persistent task memory via a Dolt-backed database.
 
 **Repository:** <https://github.com/DollarDill/beads-superpowers>
-**Version:** 0.11.0
+**Version:** 0.12.0
 **License:** MIT (fork of obra/superpowers, also MIT)
 
 ## Architecture
@@ -180,6 +180,9 @@ scripts/
   lint-shell.sh              # Shellcheck gate over tracked .sh (baseline + visible-SKIP)
   lint-shell-baseline.txt    # Committed lint baseline (empty at adoption — repo is clean)
   check-askuser-genericization.sh  # Guard: literal AskUserQuestion only under using-superpowers/references/ (ADR-0041)
+  generate-ghpages-stubs.sh        # ADR-0050: regenerate gh-pages redirect stubs from ghpages-stub-titles.tsv
+  ghpages-stub-titles.tsv          # Stub slug→title map (input to the generator)
+  verify-ghpages-stubs.sh          # Battery: verify the gh-pages redirect bridge (worktree or `live` mode)
 skills/                    # beads-native skills (auto-discovered, each has SKILL.md;
                            #   branch-only reference files in per-skill references/ subdirs)
 .claude/skills/            # maintainer-only skills (git-tracked, NOT distributed — ADR-0044)

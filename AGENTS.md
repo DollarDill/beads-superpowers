@@ -117,16 +117,15 @@ When modifying skills in this repo:
 
 ## Tests
 
+Deterministic suites run via the `just` surface (see CLAUDE.md § Build & Test):
+
 ```bash
-# Brainstorm server (25+31 tests, fast, free)
-cd tests/brainstorm-server && npm test && node ws-protocol.test.js
-
-# Claude Code skill tests (9 subtests, ~$0.10, ~165s)
-bash tests/claude-code/run-skill-tests.sh --timeout 600
-
-# Integration test (optional, ~$4-5, 10-30 min)
-bash tests/claude-code/run-skill-tests.sh --integration --timeout 2400
+just            # = just check: guards + hooks + manifests + contracts + install-shape
+just server     # brainstorm-server Node tests (opt-in)
+just docker     # installer Docker E2E (opt-in, slow)
 ```
+
+The LLM-driven suites under `tests/` are deprecated in place — see `tests/*/DEPRECATED.md`.
 
 ## Non-Interactive Shell Commands
 

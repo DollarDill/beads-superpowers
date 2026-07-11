@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.11.0-4f46e5.svg"></a>
+  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.12.0-4f46e5.svg"></a>
   <a href="https://github.com/DollarDill/beads-superpowers/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/DollarDill/beads-superpowers?style=social"></a>
 </p>
 
@@ -56,6 +56,7 @@ Underneath all of it is a production-grade standard: the agent treats every task
 | `finishing-a-development-branch` | Merge/PR flow + Land the Plane (close beads, push) |
 | `document-release` | Post-ship doc audit — keeps README, CHANGELOG, and ARCHITECTURE in sync |
 | `project-init` | Beads/Dolt DB setup, bootstrap, and recovery |
+| `tracking-with-beads` | The beads conventions of record — how work gets tracked, captured, and closed out |
 | `getting-up-to-speed` | Session orientation — reads the latest session-handoff doc, loads `bd` context, and produces a current-state summary |
 | `memory-curator` | Session-close/on-demand memory consolidation — deduplicates and prunes the `bd` memory store |
 | `session-handoff` | Human-invoked — writes a grounded handoff doc + continuation memory to resume in-progress work |
@@ -76,7 +77,7 @@ Underneath all of it is a production-grade standard: the agent treats every task
 - [Skills Reference](https://algocents.com/beads-superpowers/skills/) — All skills explained
 - [Methodology](https://algocents.com/beads-superpowers/methodology/) — Why this workflow exists
 
-Docs *content* lives in this repo (`docs/` — PRs welcome); the site is built and published from a separate deployment repo (ADR-0050).
+Docs *content* lives in this repo (`docs/` — PRs welcome); the site is built and published from a separate deployment repo.
 
 ## Quickstart
 
