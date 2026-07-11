@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.10.0-4f46e5.svg"></a>
+  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.11.0-4f46e5.svg"></a>
   <a href="https://github.com/DollarDill/beads-superpowers/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/DollarDill/beads-superpowers?style=social"></a>
 </p>
 
@@ -70,7 +70,13 @@ Underneath all of it is a production-grade standard: the agent treats every task
 
 ## Docs
 
-**[dollardill.github.io/beads-superpowers](https://dollardill.github.io/beads-superpowers/)** — getting started, methodology, skills reference, example workflow, and tips.
+**[algocents.com/beads-superpowers](https://algocents.com/beads-superpowers/)** — getting started, methodology, skills reference, example workflow, and tips.
+
+- [Example Workflow docs](https://algocents.com/beads-superpowers/workflow/) — Full walkthrough with diagrams
+- [Skills Reference](https://algocents.com/beads-superpowers/skills/) — All skills explained
+- [Methodology](https://algocents.com/beads-superpowers/methodology/) — Why this workflow exists
+
+Docs *content* lives in this repo (`docs/` — PRs welcome); the site is built and published from a separate deployment repo (ADR-0050).
 
 ## Quickstart
 

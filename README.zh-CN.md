@@ -76,7 +76,7 @@
 
 ## 文档
 
-**[dollardill.github.io/beads-superpowers](https://dollardill.github.io/beads-superpowers/)** — 快速入门、方法论、技能参考、示例工作流与使用技巧。
+**[algocents.com/beads-superpowers](https://algocents.com/beads-superpowers/)** — 快速入门、方法论、技能参考、示例工作流与使用技巧。
 
 ## 快速开始
 
