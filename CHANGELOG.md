@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > **Forked from:** [obra/superpowers](https://github.com/obra/superpowers) v5.0.7 (2026-03-31)
 > **Beads integration based on:** [gastownhall/beads](https://github.com/gastownhall/beads) v1.0.4 (2026-05-09)
 
+## [Unreleased]
+
+### Added
+
+- Maintainer contact email (`dillon@algocents.com`) in the plugin manifests' author/owner fields, `package.json`, SECURITY.md, and the Code of Conduct — a direct address replaces the previous GitHub-profile indirection, matching where upstream superpowers carries its contact.
+
 ## [0.12.0] - 2026-07-12
 
 ### Added

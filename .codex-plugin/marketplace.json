@@ -1,7 +1,8 @@
 {
   "name": "beads-superpowers-marketplace",
   "owner": {
-    "name": "Dillon Frawley"
+    "name": "Dillon Frawley",
+    "email": "dillon@algocents.com"
   },
   "plugins": [
     {
@@ -10,7 +11,8 @@
       "version": "0.12.0",
       "source": "./",
       "author": {
-        "name": "Dillon Frawley"
+        "name": "Dillon Frawley",
+        "email": "dillon@algocents.com"
       }
     }
   ]

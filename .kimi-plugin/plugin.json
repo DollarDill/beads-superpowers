@@ -3,7 +3,8 @@
   "version": "0.12.0",
   "description": "Superpowers skills + Beads issue tracking for Kimi Code. Composable skills + persistent task memory.",
   "author": {
-    "name": "Dillon Frawley"
+    "name": "Dillon Frawley",
+    "email": "dillon@algocents.com"
   },
   "homepage": "https://github.com/DollarDill/beads-superpowers",
   "license": "MIT",

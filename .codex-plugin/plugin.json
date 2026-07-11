@@ -3,7 +3,8 @@
   "description": "Superpowers skills + Beads issue tracking for Claude Code, Codex, OpenCode, and 6 more AI coding agents. Composable skills + persistent task memory.",
   "version": "0.12.0",
   "author": {
-    "name": "Dillon Frawley"
+    "name": "Dillon Frawley",
+    "email": "dillon@algocents.com"
   },
   "homepage": "https://github.com/DollarDill/beads-superpowers",
   "repository": "https://github.com/DollarDill/beads-superpowers",

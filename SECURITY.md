@@ -26,7 +26,7 @@ Instead, use GitHub's private vulnerability reporting:
 GitHub will notify the maintainer privately and create a draft advisory.
 
 If you cannot use GitHub's private reporting, email the maintainer directly
-via the contact details on [DollarDill's GitHub profile](https://github.com/DollarDill).
+at <dillon@algocents.com>.
 
 ## What to include
 
