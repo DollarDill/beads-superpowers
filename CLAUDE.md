@@ -118,6 +118,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harn
 - **Plugin cache goes stale** — After modifying skills, the installed plugin cache is outdated. Symlink the cache to this repo (see "Syncing Source" section below). `claude plugin update` has a [cache bug](https://github.com/anthropics/claude-code/issues/14061).
 - **Skill `description` field trap** — Putting workflow descriptions in skill `description` frontmatter causes Claude to follow the description instead of reading the full skill body (SDO problem). Descriptions should state trigger conditions only.
 - **Codex plugin channel doesn't register hooks** — codex-cli (verified 0.142.5) rejects a populated `hooks` object in the plugin manifest ("ignoring hooks: … found object") and auto-discovers nothing usable, so plugin/marketplace installs get skills but NO SessionStart hook. `install.sh` wires the hook explicitly — it is the supported Codex hook path.
+- **`gh-pages` is a frozen SEO redirect bridge (ADR-0050)** — 1:1 instant-meta-refresh stubs → algocents.com, live until the sunset-gate bead (≥ 2027-07) closes. NEVER delete the branch, disable GitHub Pages, or "clean up" the stale-looking branch. Verify anytime: `bash scripts/verify-ghpages-stubs.sh live`.
 
 ## Non-Interactive Shell Commands
 
