@@ -237,12 +237,14 @@ fi
 # --emit-plain: raw text, no JSON envelope (consumed by OpenCode plugin / install.sh shims).
 # Cursor hooks expect additional_context (snake_case).
 # Claude Code hooks expect hookSpecificOutput.additionalContext (nested).
+# CLAUDE_PROJECT_DIR covers settings.json-registered hooks (Claude Code sets it
+# on every hook invocation; plugin-channel invocations also get CLAUDE_PLUGIN_ROOT).
 # Copilot CLI (v1.0.11+) and others expect additionalContext (top-level, SDK standard).
 if [ "$BSP_EMIT_PLAIN" = "1" ]; then
   printf '%s\n' "$session_context_raw"
 elif [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
   printf '{\n  "additional_context": "%s"\n}\n' "$(escape_for_json "$session_context_raw")"
-elif { [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] || [ -n "${CODEX_PLUGIN_ROOT:-}" ]; } && [ -z "${COPILOT_CLI:-}" ]; then
+elif { [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] || [ -n "${CODEX_PLUGIN_ROOT:-}" ] || [ -n "${CLAUDE_PROJECT_DIR:-}" ]; } && [ -z "${COPILOT_CLI:-}" ]; then
   printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$(escape_for_json "$session_context_raw")"
 else
   printf '{\n  "additionalContext": "%s"\n}\n' "$(escape_for_json "$session_context_raw")"
