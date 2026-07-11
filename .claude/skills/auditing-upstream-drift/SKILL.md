@@ -69,6 +69,8 @@ bd update <audit-id> --claim
 
 **Check suite — Phases 1–3 (Plugin Infrastructure Health, Test Execution, Content Integrity):** the runnable check commands (manifests, versions, tests, content-integrity greps) live in [references/check-suite.md](references/check-suite.md) — open when executing the audit's check phases.
 
+Done when: every check in Phases 1–3 reports PASS, or each FAIL is fixed before continuing.
+
 ---
 
 ### Phase 4: Progressive Skill Chain Integrity
@@ -100,6 +102,8 @@ grep -q "^## Beads" skills/using-superpowers/SKILL.md && echo "PASS: bootstrap h
 # verification-before-completion has Beads Completion section
 grep -q "Beads Completion" skills/verification-before-completion/SKILL.md && echo "PASS: verification has beads completion" || echo "FAIL"
 ```
+
+Done when: every chain-link check reports PASS, or each FAIL is fixed.
 
 ---
 
@@ -166,6 +170,8 @@ Our hook is intentionally different (composes beads context — curated memories
 rm -rf /tmp/superpowers-upstream
 ```
 
+Done when: Checks 5.1–5.5 are run and every CHANGED skill is categorised (Safe merge / Conflict / New content / SKIP deliberate divergence).
+
 ---
 
 ### Phase 6: Upstream Beads Drift
@@ -196,6 +202,8 @@ bd prime 2>&1 | head -20
 - New status codes → update lifecycle references
 - New CLI flags → update quick reference tables
 - Changes to gate/molecule/formula system → assess skill impact
+
+Done when: bd version, new/changed commands, and `bd prime` format are compared against baseline, and Check 6.4's watch areas are assessed for skill impact.
 
 ---
 
@@ -265,6 +273,8 @@ else
 fi
 ```
 
+Done when: Checks 7.1–7.7 all report PASS, or each FAIL is fixed.
+
 ---
 
 ### Phase 8: Generate Audit Report
@@ -328,6 +338,8 @@ Close the audit bead:
 ```bash
 bd close <audit-id> --reason "Audit complete: N findings (C critical, I important, M minor)"
 ```
+
+Done when: findings beads are created, the report is written to `.internal/audits/YYYY-MM-DD-upstream-drift.md`, and the audit bead is closed with evidence.
 
 ---
 
