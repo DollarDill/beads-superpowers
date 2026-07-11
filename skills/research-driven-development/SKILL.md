@@ -32,17 +32,6 @@ Dispatch parallel research agents, synthesize their findings, and write a persis
 
 > **Every load-bearing claim must be grounded by the verify stage (Step 4) before the document is written.**
 
-## Modes
-
-You are **top-level** unless the caller passed a `nested` marker — that's caller-declared, and the default is top-level (the no-signal case is a direct user research request).
-
-- **Top-level (default):** run the pipeline, then present the **end-gate** (Step 6).
-- **Nested:** run the pipeline, **return findings to the caller — no end-gate.**
-
-## Output Path
-
-Research documents are written to **`.internal/research/`** — the project-local, gitignored knowledge base. Not configurable.
-
 ## Pipeline
 
 ```
@@ -58,9 +47,9 @@ Step 6: End-gate (top-level only) + close bead
 
 ## Step 0: Scope Check (conditional)
 
-If the question is already specific, **skip this step**. Fire it **only when you cannot name the sources you'd search or the decision the answer informs** — e.g. "research databases" (too vague). Do NOT fire when scope is already present — e.g. "compare Postgres vs SQLite for our embedded Dolt use case".
+If the question is already specific, **skip this step**. Fire it **only when you cannot name the sources you'd search or the decision the answer informs** — e.g. "research databases" (too vague). Do NOT fire when scope is already present — e.g. "compare Postgres vs SQLite for our embedded Dolt use case". This is disambiguation, not a quality gate — mandatory scope-gating just duplicates what a capable model already does; the "When NOT to Use" list still applies.
 
-When it fires, ask 2–3 clarifying questions via your structured question tool (scope · use-case · the decision it informs), then weave the answers into the research question before Step 1. This is disambiguation, not a quality gate — mandatory scope-gating just duplicates what a capable model already does. The "When NOT to Use" list still applies.
+When it fires, ask 2–3 clarifying questions via your structured question tool (scope · use-case · the decision it informs), then weave the answers into the research question before Step 1.
 
 ## Step 1: Create a Bead + Calibrate Effort
 
@@ -77,9 +66,7 @@ bd update <id> --claim
 | Comparison / decision | weigh 2+ options | 2–4 sub-questions, one agent each | ~10–15 each |
 | Complex / open-ended | broad or architectural | up to 10 sub-questions | as needed |
 
-**Hard ceiling: at most 10 parallel agents per round.** `@explore` (Step 3), when dispatched, counts as one of the 10. Verifiers (Step 4) and gap-closing rounds (Step 4.5) are excluded from this cap — their own separate budget. Scale effort to the question — do not over-dispatch.
-
-**Concurrency reality:** the harness runs ~min(16, cores−2) agents concurrently, so main researchers + verifiers queue rather than all firing at once — 10 is the per-round design ceiling, not a concurrency promise.
+**Hard ceiling: at most 10 parallel agents per round.** `@explore` (Step 3), when dispatched, counts as one of the 10. Verifiers (Step 4) and gap-closing rounds (Step 4.5) are excluded from this cap — their own separate budget. **Concurrency reality:** the harness runs ~min(16, cores−2) agents concurrently, so main researchers + verifiers queue rather than all firing at once — 10 is the per-round design ceiling, not a concurrency promise. Scale effort to the question — do not over-dispatch.
 
 ## Step 2: Check Existing Knowledge
 
@@ -126,11 +113,7 @@ Dispatch **exactly one** `@explore` agent (`subagent_type: "Explore"`) **only wh
 
 > Objective: find existing implementations, patterns, config, tests, and docs related to [topic] in this repo. Output: what exists, where (`file:line`), and how it relates. Boundaries: codebase only — no web. Report concisely.
 
-### How many agents
-
-- **Topic touches our codebase** (common case): N web sub-question agents + **1 `@explore`**, total ≤ 10.
-- **Pure external topic**: skip `@explore`; all slots go to web sub-questions.
-- **Pure codebase question**: dispatch only `@explore`.
+**Pure codebase question**: dispatch only `@explore`.
 
 ## Step 4: Synthesize + Verify Findings
 
@@ -161,20 +144,20 @@ Dedup semantically-equivalent claims first, then verify the **top-K** load-beari
 3. Dispatch via the `Agent` tool: `subagent_type: "general-purpose"`, `model: "haiku"`.
 4. Collect its three-way verdict: `{ verdict: SUPPORTED | UNSUPPORTED | INCONCLUSIVE, supporting_span, confidence, reason }`.
 
-**Layer 3 — escalate on doubt (not always-on):** a clean SUPPORTED verdict with a verbatim span is accepted immediately — no escalation. **Only** on UNSUPPORTED / INCONCLUSIVE / low-confidence, escalate that single claim: first to a **3-way Haiku ensemble** (majority verdict, same `./verifier-prompt.md` template); if still split, to **one fresh blinded Sonnet verifier** (`model: "sonnet"`, same template, same blinding/re-fetch contract) whose verdict is final — keeping the grounding chain independent of the author model end-to-end.
+**Layer 3 — escalate on doubt (not always-on):** a clean SUPPORTED verdict with a verbatim span is accepted immediately — no escalation. **Only** on UNSUPPORTED / INCONCLUSIVE / low-confidence, escalate that single claim: first to a **3-way Haiku ensemble** (majority verdict, same `./verifier-prompt.md` template); if still split, to **one fresh blinded Sonnet verifier** (`model: "sonnet"`, same template, same blinding/re-fetch contract) whose verdict is final — keeping the grounding chain independent of the author model end-to-end. Verifiers and escalations are **excluded from the 10-cap** — their own budget, separate from the main research fan-out (~1 verifier per load-bearing claim; 3-way only when contested).
 
 **Verdict handling:**
 - **SUPPORTED** → keep the claim, tagged with its verified span/source.
 - **UNSUPPORTED** → the source doesn't actually support the claim → feeds Step 4.5.
 - **INCONCLUSIVE** → never drop the claim for a fetch failure. Retry once / follow one redirect / fall back to the researcher's original quote; if still unreadable, keep the claim but flag it "source unverifiable" with lowered confidence, and feed it to Step 4.5 for a better source.
 
-Verifiers and escalations are **excluded from the 10-cap** — their own budget, separate from the main research fan-out (~1 verifier per load-bearing claim; 3-way only when contested).
-
 ## Step 4.5: Gap-Closing Round (if needed)
 
 If Step 4 surfaced load-bearing claims resting on a single source, unresolved, or **UNSUPPORTED / unresolved-INCONCLUSIVE from the grounding verify stage**, **dispatch one narrow follow-up round of 1–2 targeted agents** aimed only at those gaps (not a second full fan-out) to find a legitimate supporting source, then re-synthesize and re-verify. **Cap: 1–2 rounds total.** Record each: `bd note <id> "reflection round N: chasing <gaps>"`. If a claim still can't be grounded after this round, **remove it from the findings and revise any recommendation resting on it** — never leave it dangling; record the drop in the document's Refuted / Discarded Claims section with the reason. If no gaps, skip.
 
 ## Step 5: Write the Document
+
+Research documents are written to **`.internal/research/`** — the project-local, gitignored knowledge base. Not configurable.
 
 List existing category subdirectories and pick the one that best matches the research topic:
 
@@ -209,6 +192,8 @@ Before writing — and again as a self-grade before closing, running one Step-4.
 - [ ] **Effort efficiency** — agent count matched the query tier (no over-dispatch)
 
 ## Step 6: End-Gate + Close the Bead
+
+You are **top-level** unless the caller passed a `nested` marker — that's caller-declared, and the default is top-level (the no-signal case is a direct user research request).
 
 **Nested mode:** skip the end-gate — return your findings to the caller.
 
