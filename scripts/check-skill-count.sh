@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # check-skill-count.sh — guard against hardcoded skill-count drift + structural self-consistency.
 #
-# The exact skill count lives ONLY in the docs {{ skill_count }} macro (main.py). Everywhere else the
-# integer is removed from prose; this guard forbids it from creeping back, and asserts that every
-# skill directory has exactly one SKILL.md (frontmatter validity is covered by check-skill-frontmatter.py).
+# The exact skill count lives only in the {{ skill_count }} macro tokens in docs/ pages; the computing
+# macro (main.py) is hub-owned in the-factory-website tenants/beads-superpowers/ (ADR-0050). Everywhere
+# else the integer is removed from prose; this guard forbids it from creeping back, and asserts that
+# every skill directory has exactly one SKILL.md (frontmatter validity is covered by check-skill-frontmatter.py).
 #
 # Usage:
 #   scripts/check-skill-count.sh             # check the real tree (structural + drift guard)

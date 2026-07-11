@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# check-adr-gitignored.sh — ADRs live under docs/decisions/ (inside the mkdocs-published
-# docs/ tree) but MUST stay gitignored/local-only. A .gitignore regression would commit and
-# publish internal ADRs to the public docs site. This guard fails loudly on that regression.
+# check-adr-gitignored.sh — docs/ is consumed by the-factory-website's mkdocs build
+# (exclude_docs: decisions/ lives in THEIR tenant config — ADR-0050); ADRs must stay gitignored
+# here so they never publish. A .gitignore regression would commit and publish internal ADRs to
+# the public docs site. This guard fails loudly on that regression.
 set -uo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT" || exit 2

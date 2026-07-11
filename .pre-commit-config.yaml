@@ -7,7 +7,6 @@ repos:
         args: [--markdown-linebreak-ext=md]
       - id: end-of-file-fixer
       - id: check-yaml
-        exclude: mkdocs\.yml
       - id: check-json
       - id: check-merge-conflict
       - id: check-added-large-files

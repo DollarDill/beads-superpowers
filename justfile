@@ -37,6 +37,3 @@ server:
 
 docker:
     bash tests/installer/run-tests.sh
-
-docs:
-    mkdocs build --strict
