@@ -59,6 +59,8 @@ KERNEL_MAP=(
   'skills/document-release/SKILL.md|auto-resolved answer is not consent'
   'skills/stress-test/SKILL.md|bd update <id> --claim'
   'skills/research-driven-development/SKILL.md|bd update <id> --claim'
+  'skills/project-init/SKILL.md|Iron Law: NEVER Run'
+  '.claude/skills/auditing-upstream-drift/SKILL.md|NO PLUGIN RELEASE WITHOUT A FULL AUDIT FIRST'
 )
 
 FAIL=0
