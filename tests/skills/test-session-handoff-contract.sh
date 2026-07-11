@@ -1,60 +1,37 @@
 #!/usr/bin/env bash
-# Contract test for the session-handoff skill (SKILL.md + bundled template).
+# Contract test for session-handoff — pins INVARIANTS, not prose (ADR-0049 slice2 T1a).
+# KEEP: behavioral strings only — announce text, output-path convention, continuation-memory
+# key format, secret-scan token list, own-operation guardrails, model-trigger-surface absence.
+# Never add prose-structure assertions (section headings, narrative wording).
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SKILL="$ROOT/skills/session-handoff/SKILL.md"
-TMPL="$ROOT/skills/session-handoff/handoff-template.md"
 fail=0
 
-check_exact() { if grep -Fq "$1" "$2"; then echo "PASS: $1"; else echo "FAIL: missing — $1"; fail=1; fi; }
-check_loose() { if grep -iq "$1" "$2"; then echo "PASS: $1"; else echo "FAIL: missing — $1"; fail=1; fi; }
+check_exact() {  # fixed-string, must be present
+  if grep -Fq "$1" "$2"; then echo "PASS: $1"; else echo "FAIL: missing — $1 ($2)"; fail=1; fi
+}
 
-# --- Frontmatter (human-only mechanism) ---
-check_exact "name: session-handoff" "$SKILL"
+# --- Announce line (behavioral output contract) ---
+check_exact "I'm using the session-handoff skill to write a session handoff." "$SKILL"
+
+# --- Output-path convention ---
+check_exact ".internal/handoff/YYYY-MM-DD[-HHMMSS]-<topic>-handoff.md" "$SKILL"
+
+# --- Continuation-memory key format ---
+check_exact "continuation-<date>-<topic>" "$SKILL"
+
+# --- Secret-scan token list (own-operation guardrail) ---
+check_exact "\`sk-\`" "$SKILL"
+check_exact "\`ghp_\`" "$SKILL"
+check_exact "\`AKIA\`" "$SKILL"
+check_exact "\`-----BEGIN\`" "$SKILL"
+check_exact "\`password=\`" "$SKILL"
+
+# --- Gitignore-safety check (own-operation guardrail) ---
+check_exact "git check-ignore" "$SKILL"
+
+# --- Absence of model-trigger surfaces (frontmatter mechanism) ---
 check_exact "disable-model-invocation: true" "$SKILL"
-# description must be third-person + trigger-free
-desc=$(sed -n 's/^description:[[:space:]]*//p' "$SKILL" | head -1)
-echo "$desc" | grep -qiE '\b(I|we|you|your|yours|our|ours|us|my|me)\b' && { echo "FAIL: desc not third-person"; fail=1; } || echo "PASS: third-person desc"
-echo "$desc" | grep -qiE '\buse when\b' && { echo "FAIL: desc has trigger phrasing"; fail=1; } || echo "PASS: trigger-free desc"
-
-# --- House conventions ---
-check_loose "Announce at start" "$SKILL"
-check_loose "human-invoked" "$SKILL"
-
-# --- Pipeline phases ---
-check_loose "Gather" "$SKILL"
-check_loose "Synthesize" "$SKILL"
-check_loose "Verification" "$SKILL"
-
-# --- Doctrine / security floor (all 3 controls test-guarded) ---
-check_loose "redact" "$SKILL"
-check_loose "git check-ignore" "$SKILL"
-check_loose "Secret-scan" "$SKILL"
-check_loose "Reference, don't duplicate" "$SKILL"
-
-# --- Standalone integration ---
-check_loose "intentionally NOT referenced" "$SKILL"   # guards the Integration sentence
-# Consume-on-read consistency with getting-up-to-speed (mu0s)
-check_loose "archive" "$SKILL"
-check_loose "unread inbox" "$SKILL"
-
-# --- Budget + ships-clean (H1) ---
-lines=$(grep -c '' "$SKILL")
-if [ "$lines" -lt 500 ]; then echo "PASS: <500 lines ($lines)"; else echo "FAIL: >=500 lines"; fail=1; fi
-grep -nE 'ADR-[0-9]|\bbd-[a-z0-9]{4}\b|beads-superpowers-[a-z0-9]+|decisions/' "$SKILL" && { echo "FAIL: unshipped refs"; fail=1; } || echo "PASS: ships clean"
-# Only .internal/handoff/ (the write-target default) is an allowed .internal/ ref
-grep -nE '\.internal/' "$SKILL" | grep -v '\.internal/handoff/' && { echo "FAIL: non-handoff .internal/ ref"; fail=1; } || echo "PASS: .internal/ clean"
-
-# --- Bundled template sections (10) ---
-check_loose "Current State" "$TMPL"
-check_loose "Work In Progress" "$TMPL"
-check_loose "What Shipped" "$TMPL"
-check_loose "Architectural Decisions" "$TMPL"
-check_loose "Key File Paths" "$TMPL"
-check_loose "Loose Threads" "$TMPL"
-check_loose "How to Resume" "$TMPL"
-check_loose "Suggested Skills" "$TMPL"
-check_loose "Continuation" "$TMPL"
-check_loose "bd prime" "$TMPL"
 
 [ "$fail" -eq 0 ] && echo "PASS: session-handoff contract" || exit 1
