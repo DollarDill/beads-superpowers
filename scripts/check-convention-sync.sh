@@ -53,6 +53,7 @@ CB5_SITES=(
 # line phrased for its own operation. site|signature pairs; grep -qF per site.
 KERNEL_MAP=(
   'skills/getting-up-to-speed/SKILL.md|is FORBIDDEN here'
+  'skills/session-handoff/SKILL.md|never weaken it'
 )
 
 FAIL=0
