@@ -16,8 +16,6 @@ Write for the actual context.
 
 The goal is prose that fits the medium, the task, and the reader. If it does that well, it will usually read as human-authored as a side effect. Do not optimize for "sounding human." Do not optimize for beating detectors. Both produce worse writing.
 
-Some rules below are prose-quality defaults. Some target common chatbot defaults. They are not the same thing.
-
 ## When to Use
 
 - Writing or substantially rewriting any human-facing text
@@ -38,12 +36,10 @@ Some rules below are prose-quality defaults. Some target common chatbot defaults
 ## Beads Integration
 
 ```bash
-# At skill start
 bd create "Write: <description of what's being written>" -t task
-
-# At completion
-bd close <id> --reason "Written: <what>, checks run: <which checks passed>"
 ```
+
+Closed with evidence at Step 6 — the single source of truth for the close command.
 
 ## Core Workflow
 
@@ -76,27 +72,39 @@ Before writing anything, answer these four questions:
 3. **What do they need?** (an answer, a next action, understanding, a decision...)
 4. **What register?** (formal technical docs, casual chat, professional email, marketing...)
 
+Done when: all four questions have explicit answers.
+
 ### Step 2: Structure Decision
 
 - **Task-oriented text:** Identify the answer or next action that belongs first.
 - **Long-form text:** Decide the through-line and one concrete example, moment, or case that can carry real weight in the piece.
 - Apply medium routing (see below).
 
+Done when: the answer/next-action (task-oriented) or through-line-plus-example (long-form) is decided, and medium routing is applied.
+
 ### Step 3: Draft
 
 Draft to fit the identified context, not an abstract idea of "good writing." The core rules below should be internalized during drafting, not mechanically applied paragraph by paragraph. Focus on substance over style.
+
+Done when: a complete draft exists covering the identified context.
 
 ### Step 4: Required Checks
 
 Run the revision checks scaled to the length and stakes of the piece. Fix issues inline during this pass. See the Required Checks section below.
 
+Done when: the scaled check set has been run and every issue it found is fixed inline.
+
 ### Step 5: Cut
 
 Cut what sounds generic, ceremonial, over-engineered, suspiciously over-specific, or too cleanly modular. Collapse paragraphs that restate each other. Replace the most generic clause in the piece with something specific or delete it.
 
+Done when: the piece has been reviewed for generic/ceremonial language and the most generic clause is fixed or gone.
+
 ### Step 6: Present to User
 
-Show the final text. If the user requests changes, loop back to Step 3. When approved, close the bead with evidence of which checks were run.
+Show the final text. If the user requests changes, loop back to Step 3. When approved, close the bead: `bd close <id> --reason "Written: <what>, checks run: <which checks passed>"`.
+
+Done when: the user has approved the text and the bead is closed with evidence of which checks ran.
 
 ## Precedence
 
@@ -275,20 +283,7 @@ These are tripwires, not goals. Use them to catch genericity, visible regularity
 
 ## Optional Long-Form Diagnostics
 
-Use these only when the required checks are not enough for a longer piece.
-
-- **Paragraph spread.** Count sentences in each paragraph. If nearly all land at the same count, vary one.
-- **Sentence spread.** Compare the shortest and longest sentences. If everything sits in the same medium band, vary one.
-- **Sentence architecture audit.** Look at sentence types, not only length. If most sentences are simple declaratives, combine one pair with coordination or subordination. If every sentence starts fresh instead of carrying reference forward, revise one to begin from the previous thought.
-- **Punctuation audit.** If em dashes, colons, or parentheticals keep doing the same job, swap some for commas or full stops.
-- **Lead audit.** In web, docs, email, or task-oriented text, is the answer or requested action visible early? In analysis or criticism, is the first general claim tied to concrete evidence soon enough?
-- **Hidden-list audit.** Count sentences whose main work is listing three or more parallel items. If three or more sentences do list work, rewrite at least one around a single consequence, contrast, or example.
-- **Causality audit.** Mark every sentence claiming that one thing caused, proved, drove, enabled, prevented, or explained another. If the evidence only supports sequence or correlation, weaken the relationship.
-- **Motif audit.** If the same image, opposition, or repeated wording carries the piece, remove at least one instance unless each recurrence changes the argument.
-- **Catalog audit.** If one paragraph names three or more terms, features, or labels from the same milestone, rewrite around one consequence instead.
-- **Bucket audit.** If you can label each paragraph with a clean category heading and those labels barely overlap, the piece is too modular. Cross-wire at least one paragraph.
-
-These are fallback heuristics, not targets to optimize for.
+Ten fallback heuristics for when the Required Checks above aren't enough for a longer piece — not targets to optimize for. See [references/long-form-diagnostics.md](references/long-form-diagnostics.md).
 
 ## Examples of Useful Corrections
 
