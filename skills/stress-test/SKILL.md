@@ -39,6 +39,8 @@ Read the design, plan, or decision document thoroughly. If no document exists, a
 
 **Restore point (Mode A only):** If the target artifact has uncommitted changes, commit or stash them before starting — this preserves a clean restore point before inline edits begin. In the normal flow (brainstorming → stress-test), the artifact is already committed.
 
+Done when: the target is understood well enough to enumerate its decision branches, and (Mode A) the artifact sits at a clean restore point.
+
 ### Phase 2: Map the Decision Tree
 
 Identify every decision branch in the target:
@@ -50,6 +52,8 @@ Identify every decision branch in the target:
 - Failure modes (what's the worst case?)
 - Alternatives not considered (what about approach W?)
 - **Security & risk (mandatory branch):** does any branch take a shortcut, descope a requirement, or accept material risk? Does anything weaken or bypass a security control, or introduce a vulnerability? Per the Production-Grade Doctrine, a design that does fails the stress test by default. (If the design has no security surface, resolve this branch as "no security surface — N/A" — do not fabricate a finding.)
+
+Done when: every branch category above has been checked against the target, including the mandatory Security & risk branch.
 
 ### Phase 3: Interrogate One Branch at a Time
 
@@ -93,6 +97,8 @@ Remaining: Error handling, Scale, Rollback, Testing strategy
 - Always state your recommendation in the message body BEFORE the structured question — the recommendation is the substance; the click is just the gate
 - If you can answer by exploring the codebase, do that instead of asking
 - When the user agrees, move on. When they push back, explore deeper.
+
+Done when: every mapped branch is marked resolved and the status line reads N/N.
 
 ### Phase 4: Document Findings
 
@@ -164,6 +170,8 @@ fi
 # If none available: just report the path
 ```
 
+Done when: findings exist in the applicable form — Mode A's Results section appended (or a `bd note` recorded), or Mode B's report file created.
+
 ### Phase 4.5: Reflexion Self-Review
 
 After documenting findings, run a single self-critique pass. This is internal reasoning — not shown to the user. Only the consequences (new or re-opened branches) are visible.
@@ -189,6 +197,8 @@ After documenting findings, run a single self-critique pass. This is internal re
 ```
 
 **Termination rule:** Reflexion runs exactly once. One self-critique pass, address what it finds, then proceed to Phase 5. No recursive reflexion.
+
+Done when: the one self-critique pass has run and its coverage, depth, and missed-angle findings are resolved.
 
 ### Phase 5: Close
 
@@ -218,17 +228,17 @@ After the work is settled, present the Capture gate (you MUST present it; the us
 
 Route: **ADR / ADR+memory** → write the ADR per the 3-mark gate (`docs/decisions/ADR-NNNN-<kebab>.md`, sections Context/Decision/Rationale/Consequences, update `docs/decisions/INDEX.md`). **Memory / ADR+memory** → `bd remember "<kind>: <durable, evidence-backed insight>"`. **Skip** → nothing.
 
+Done when: `bd close` has run with evidence and the Capture gate has been presented and routed (including Skip).
+
 ## Anti-Rationalization
 
 | Shortcut | Reality |
 |----------|---------|
 | "I asked 3 questions, that's enough" | Cover ALL major branches — count the decision tree, not the questions |
-| "The user seems confident" | Confidence ≠ correctness — interrogate anyway |
 | "This is a simple project" | Simple projects have the most unexamined assumptions |
 | "We already brainstormed this" | Brainstorming proposes; stress-testing challenges |
 | "I don't want to slow things down" | Catching a flaw now saves 10x the time later |
 | "They clicked Agree fast, so this is going well" | Speed ≠ depth — fast agreement might mean they're not reading your recommendation carefully. Don't reduce rigor. |
-| "I can shorten my recommendation since they just need to click" | The recommendation IS the value. The structured question replaces how the user responds, not how thoroughly you interrogate. |
 | "It's a reasonable trade-off" | Name the downside and its blast radius. A material-risk trade-off is surfaced to the user, never waved through — and a security regression is never acceptable. |
 | "Security's out of scope for this design" | Security is in scope for every design. If a branch touches auth, data, input, or secrets, interrogate it. |
 
@@ -237,15 +247,10 @@ Route: **ADR / ADR+memory** → write the ADR per the 3-mark gate (`docs/decisio
 **Never:**
 - Skip branches because they seem obvious
 - Accept "it's fine" without specific reasoning
-- Ask multiple questions in one message
-- Forget to provide your own recommended answer
-- End without a findings summary
-- Present the structured question without a substantive recommendation preceding it in the message body
 - Wave through a shortcut, a silent descope, a material-risk trade-off, or a security regression — these fail the stress test by default (Production-Grade Doctrine)
 
 **Always:**
 - Provide a recommended answer for every question
-- Explore the codebase before asking the user
 - Track resolved vs unresolved branches
 - Produce a written findings summary
 - Create and close a bead with evidence
