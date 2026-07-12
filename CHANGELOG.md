@@ -13,6 +13,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Maintainer contact email (`dillon@algocents.com`) in the plugin manifests' author/owner fields, `package.json`, SECURITY.md, and the Code of Conduct — a direct address replaces the previous GitHub-profile indirection, matching where upstream superpowers carries its contact.
 
+### Fixed
+
+- bd command syntax across the instruction surface now matches the binary: brainstorming's `--graph` guidance (file-path arg, real node-schema behavior), the phantom `bd human <id>` reference, and a repo-wide audit of asserted flags. New house rule at the always-loaded layer and in tracking-with-beads: the binary is SSOT — read `bd <cmd> --help` on first use, never guess.
+
 ## [0.12.0] - 2026-07-12
 
 ### Added
