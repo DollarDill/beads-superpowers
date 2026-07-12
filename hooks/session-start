@@ -160,7 +160,7 @@ if command -v bd >/dev/null 2>&1 && [ -d .beads ] && [ ! -e .beads/PRIME.md ] &&
      To stop it being recreated: bd config set custom.prime-safety-net false -->
 # Beads Workflow (lean pointer)
 Session context is injected by the beads-superpowers hook.
-- Work queue: `bd ready -n 10` · commands: `bd human` · syntax: `bd <cmd> --help` first · conventions: `tracking-with-beads` skill
+- Work queue: `bd ready -n 10` · commands: `bd human` · syntax: `bd <cmd> --help` first (the binary is SSOT) · conventions: `tracking-with-beads` skill
 - Memories: `bd memories <keyword>` · one memory: `bd recall <key>`
 - Full default prime content: `bd prime --export`
 NET
