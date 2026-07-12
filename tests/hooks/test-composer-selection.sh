@@ -55,10 +55,16 @@ echo "$out" | grep -q "FULL BODY OF MEDIUM DESIGN" || { echo "FAIL: s4 body abse
   || { echo "FAIL: s5 not before s4"; exit 1; }
 echo "$out" | grep -q "core memories: 4 of 6 injected" || { echo "FAIL: disclosure line wrong"; exit 1; }
 
-# 3. ceiling clip: tiny ceiling keeps continuation, clips the rest, emits tail
-out=$(bsp_compose_memories 40)
-echo "$out" | grep -q "CONTINUATION NEW BODY" || { echo "FAIL: continuation clipped"; exit 1; }
+# 3. ceiling clip: ceiling 90 fits the continuation SECTION (### header + 21B body
+#    + scaffolding ≈ 55B), clips the rest, emits tail. Ceiling 40 does NOT fit the
+#    section -> continuation degrades to a pointer line (ADR-0052: no bypass).
+out=$(bsp_compose_memories 90)
+echo "$out" | grep -q "CONTINUATION NEW BODY" || { echo "FAIL: continuation clipped at 90"; exit 1; }
 echo "$out" | grep -q "more core memories over budget" || { echo "FAIL: no +N tail"; exit 1; }
+out=$(bsp_compose_memories 40)
+echo "$out" | grep -q "CONTINUATION NEW BODY" && { echo "FAIL: continuation body injected over allowance (bypass not removed)"; exit 1; }
+# shellcheck disable=SC2016  # backticks are literal markdown in the asserted output, not expansions
+echo "$out" | grep -q 'continuation over budget — `bd recall continuation-2026-07-07-new`' || { echo "FAIL: degraded continuation pointer line absent"; exit 1; }
 
 # 4. pre-sweep notice when no salience headers exist
 cat > "$TMP/fixtures/memories.json" <<'FIX'
@@ -131,5 +137,19 @@ out=$(BSP_MEM_NUDGE_AT=1 bsp_compose_memories 8192)   # total_count=1 >= 1 -> nu
 echo "$out" | grep -qi "memory-curator" || { echo "FAIL: size-nudge absent above threshold"; exit 1; }
 out=$(BSP_MEM_NUDGE_AT=999 bsp_compose_memories 8192)  # below threshold -> no nudge
 echo "$out" | grep -qi "run the memory-curator" && { echo "FAIL: nudged below threshold"; exit 1; }
+
+# 9. scaffolding-accurate accounting: body alone fits the ceiling, full section
+#    "### pad-lesson\n"(15) + 49 + "\n\n"(2) = 66B (command substitution strips the
+#    file's trailing newline -> body is 49B). Ceiling 60: body-only accounting
+#    (49 <= 60) would wrongly inject; section accounting (66 > 60) clips.
+cat > "$TMP/fixtures/memories.json" <<'FIX'
+{
+  "pad-lesson": "@type=semantic:lesson @created=2026-07-09 @salience=5 pad body"
+}
+FIX
+{ printf 'y%.0s' {1..49}; echo; } > "$TMP/fixtures/recall-pad-lesson.txt"
+out=$(bsp_compose_memories 60)
+echo "$out" | grep -q "yyyy" && { echo "FAIL: section over ceiling injected — accounting ignores scaffolding"; exit 1; }
+echo "$out" | grep -q "core memories: 0 of 1 injected" || { echo "FAIL: scaffolding-test disclosure wrong"; exit 1; }
 
 echo "PASS: composer selection/ceiling"

@@ -51,18 +51,28 @@ bsp_compose_memories() {
     selected=$(printf '%s\n' "$listing" | bsp_select_memory_keys)
     [ -n "$cont" ] && selected=$(printf '9\t%s\n%s' "$cont" "$selected" | awk '!seen[$2]++')
 
-    local sal key body len
+    local sal key body entry len
     while IFS=$'\t' read -r sal key; do
         [ -z "$key" ] && continue
         body=$(bd recall "$key" 2>/dev/null) || continue
-        len=$(printf '%s' "$body" | wc -c)  # BYTES, not chars — ${#body} undercounts UTF-8
-        if [ "$sal" != "9" ] && [ $((used + len)) -gt "$ceiling" ]; then
-            skipped=$((skipped + 1)); continue
-        fi
-        section="${section}### ${key}
+        entry="### ${key}
 ${body}
 
 "
+        len=$(printf '%s' "$entry" | wc -c)  # FULL section BYTES: header+body+scaffolding (ADR-0052); not ${#var} — UTF-8
+        if [ $((used + len)) -gt "$ceiling" ]; then
+            if [ "$sal" = "9" ]; then
+                # continuation: first claim on the allowance, but no bypass —
+                # degrade to a pointer line that preserves the key (ADR-0052)
+                # shellcheck disable=SC2016  # backticks are literal markdown code-format markers, not expansions
+                entry="continuation over budget — \`bd recall ${key}\`
+"
+                section="${section}${entry}"
+                used=$((used + $(printf '%s' "$entry" | wc -c)))
+            fi
+            skipped=$((skipped + 1)); continue
+        fi
+        section="${section}${entry}"
         used=$((used + len)); injected=$((injected + 1))
     done <<<"$(printf '%s\n' "$selected" | sort -t$'\t' -k1,1nr)"
 
