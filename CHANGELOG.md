@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - bd command syntax across the instruction surface now matches the binary: brainstorming's `--graph` guidance (file-path arg, real node-schema behavior), the phantom `bd human <id>` reference, and a repo-wide audit of asserted flags. New house rule at the always-loaded layer and in tracking-with-beads: the binary is SSOT — read `bd <cmd> --help` on first use, never guess.
+- project-init no longer asserts the phantom `bd vc log` (no such command in bd v1.1.0 — `bd vc` is commit/merge/status only). The three SKILL.md sites and `scripts/diagnose.sh` now use `bd vc status`, verified against `--help`; the diagnostic battery's `== db ==` section previously dumped `bd vc` usage text instead of VC evidence on every run.
+- The SDD implementer prompt template no longer instructs subagents to claim/close beads. The beads lifecycle section is now explicitly controller-owned, matching the "only the orchestrating agent manages beads" convention and the SDD flow diagram; subagents report evidence + a suggested close reason instead.
 
 ## [0.12.0] - 2026-07-12
 
