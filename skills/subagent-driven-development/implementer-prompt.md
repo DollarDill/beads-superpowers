@@ -29,15 +29,14 @@ Agent tool (subagent_type: "general-purpose"):
 
     **Ask them now.** Raise any concerns before starting work.
 
-    ## Beads Lifecycle
+    ## Beads Lifecycle (Controller-Owned)
 
-    Every task is tracked as a bead. You MUST follow this lifecycle:
-
-    1. **Claim at start:** `bd update <bead-id> --claim`
-    2. **Work the task** (see workflow below)
-    3. **Close with evidence:** `bd close <bead-id> --reason "what passed and how"`
-
-    A bead closed without verification evidence is worse than a bead left open.
+    Your task is tracked as a bead, but only the orchestrating agent manages
+    beads — subagents do NOT touch beads. Never run `bd` commands. The
+    controller claims the bead before dispatching you and closes it after
+    reviewing your report — your report is the close evidence (see Report
+    Format), and a bead closed without verification evidence is worse than
+    a bead left open.
 
     ## Mandatory Skills
 
@@ -66,15 +65,14 @@ Agent tool (subagent_type: "general-purpose"):
     For each task:
 
     ```text
-    1. Claim the bead: bd update <bead-id> --claim
-    2. Read the task requirements from the plan
-    3. Invoke Skill(beads-superpowers:test-driven-development) — write failing test FIRST
-    4. Implement the minimum code to pass the test
-    5. If tests fail unexpectedly → Invoke Skill(beads-superpowers:systematic-debugging)
-    6. Run acceptance criteria checks
-    7. If ALL pass → Invoke Skill(beads-superpowers:verification-before-completion)
-    8. Commit your work
-    9. Close bead: bd close <bead-id> --reason "evidence of what passed"
+    1. Read the task requirements from the plan
+    2. Invoke Skill(beads-superpowers:test-driven-development) — write failing test FIRST
+    3. Implement the minimum code to pass the test
+    4. If tests fail unexpectedly → Invoke Skill(beads-superpowers:systematic-debugging)
+    5. Run acceptance criteria checks
+    6. If ALL pass → Invoke Skill(beads-superpowers:verification-before-completion)
+    7. Commit your work
+    8. Report back with evidence + suggested close reason — the controller closes the bead
     ```
 
     Work from: [directory]
