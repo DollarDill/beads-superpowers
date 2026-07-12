@@ -135,7 +135,7 @@ git commit -m "feat: add specific feature"
 
 **Beads integration:** When executing this plan, the executing skill creates an epic bead for the plan and a child task bead for each Task N. The `- [ ]` checkboxes remain in the markdown for human readability, but task-level tracking uses beads (`bd create`, `bd update --claim`, `bd close --reason`). Dependencies between tasks should be declared with `bd dep add`.
 
-**Atomic creation:** the executing skill SHOULD create the epic + tasks + dependencies atomically via `bd create --graph` (one JSON plan, `--dry-run` first), not a sequential loop — this avoids orphaned beads on mid-sequence failure. Falls back to sequential `bd create`/`bd dep add` if unavailable.
+**Atomic creation:** the executing skill SHOULD create the epic + tasks + dependencies atomically via `bd create --graph <plan-file.json>` (JSON plan file — `--graph` takes a file path; `--dry-run` first), not a sequential loop — this avoids orphaned beads on mid-sequence failure. Falls back to sequential `bd create`/`bd dep add` if unavailable.
 
 **Required bead-body sections:** `bd lint` (Self-Review step 0) requires `## Success Criteria` in the epic bead's description and `## Acceptance Criteria` in each task bead's description. Include them at creation time. In `--graph` JSON, embed them in each node's `description` string — the graph schema has no separate criteria field. In the sequential fallback, `--acceptance "<criteria>"` also satisfies the check. The epic's Success Criteria derive from the plan's **Goal**; each task's copy from its **Acceptance Criteria** block.
 
