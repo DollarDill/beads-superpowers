@@ -220,7 +220,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 | Find duplicate beads              | `bd find-duplicates`                                    |
 | Lint issue sections               | `bd lint [id...]`                                       |
 | Defer work                        | `bd defer <id> --until="<date>"`                        |
-| Flag for human decision           | `bd human <id>`                                         |
+| Flag for human decision           | `bd label add <id> human`                               |
 | Validate parallel readiness       | `bd swarm validate <epic-id>`                           |
 | Atomic batch operations           | `bd batch` (stdin or `-f file`)                         |
 | Run in another directory          | `bd -C <path> <command>`                                |
@@ -230,6 +230,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 ### Rules
 
 - Use `bd` for ALL task tracking — never TodoWrite, TaskCreate, or markdown TODOs
+- Never guess bd syntax — on first use of a command this session, read `bd <cmd> --help` (the binary is SSOT)
 - Only the orchestrating agent manages beads — subagents do NOT touch beads
 - Include bead IDs in commit messages: `git commit -m "Add feature (bd-a1b2)"`
 - Every session ends with Land the Plane: `bd close` → `bd dolt push` → `git push`
