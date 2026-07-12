@@ -15,6 +15,7 @@ Bounded reads only; never bare `bd memories`.
 
 - Cap reads: `bd ready -n 10` · `bd show --short <id>` to skim (full `bd show` only when the body is needed) · `bd memories <keyword>` · `bd kv list | grep '^ *bsp.kb'` for the reference knowledge base (note the leading-space indent).
 - Batch writes: several creates/updates/closes = one `bd batch` or `bd create --graph` call (`--dry-run` first), not a loop. Keep write confirmations — they are evidence.
+- The binary is SSOT for syntax: on first use of an unverified bd command or flag this session, read `bd <cmd> --help` before running it — never assert syntax from memory.
 - Filter big outputs before they hit context: `... | grep -E "PATTERN" | head -20`.
 
 ## Consent boundary

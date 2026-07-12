@@ -53,6 +53,7 @@ CB5_SITES=(
 # line phrased for its own operation. site|signature pairs; grep -qF per site.
 KERNEL_MAP=(
   'skills/getting-up-to-speed/SKILL.md|is FORBIDDEN here'
+  'skills/tracking-with-beads/SKILL.md|on first use of an unverified bd command or flag this session'
   'skills/session-handoff/SKILL.md|never weaken it'
   'skills/memory-curator/SKILL.md|Never persist secrets, credentials, tokens, keys, or PII'
   'skills/memory-curator/SKILL.md|Never forget first'
