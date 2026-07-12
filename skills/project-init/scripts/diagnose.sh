@@ -25,7 +25,7 @@ b cat .beads/metadata.json || echo "metadata.json: UNAVAILABLE"
 
 echo "== db =="
 b bd list -n 5 || echo "bd list: UNAVAILABLE (db unreadable or absent)"
-b bd vc log    || echo "bd vc log: UNAVAILABLE"
+b bd vc status || echo "bd vc status: UNAVAILABLE"
 
 echo "== dolt-remote =="
 git ls-remote origin 2>/dev/null | grep -i dolt | head -5 || echo "git origin dolt refs: NONE FOUND"

@@ -38,7 +38,7 @@ bash scripts/diagnose.sh
 
 One Bash call gathers the full read-only battery as labeled RAW DATA (no verdicts, no
 fixes): `bd`/`dolt` versions, `.beads/` presence, `config.yaml`/`metadata.json`, whether
-`bd list`/`bd vc log` work, and any dolt refs on the git remote. Read the `== section ==`
+`bd list`/`bd vc status` work, and any dolt refs on the git remote. Read the `== section ==`
 output, then author the diagnosis yourself against the Decision Matrix below:
 
 **Diagnosis:** <one-line read of what the sections above show>
@@ -103,7 +103,7 @@ bd bootstrap
 
 # 2. Verify
 bd list                    # Should show existing issues
-bd vc log | head -5        # Should show commit history
+bd vc status               # Should show branch + commit hash
 
 # After any pull: repair denormalized blocked flags (bd v1.1.0+)
 bd recompute-blocked
@@ -162,7 +162,7 @@ bd bootstrap
 
 # 3. Verify
 bd list
-bd vc log | head -5
+bd vc status
 
 # 4. Re-import exported data if needed
 bd import /tmp/beads-backup.jsonl 2>/dev/null
