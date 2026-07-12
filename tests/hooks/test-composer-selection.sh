@@ -138,6 +138,25 @@ echo "$out" | grep -qi "memory-curator" || { echo "FAIL: size-nudge absent above
 out=$(BSP_MEM_NUDGE_AT=999 bsp_compose_memories 8192)  # below threshold -> no nudge
 echo "$out" | grep -qi "run the memory-curator" && { echo "FAIL: nudged below threshold"; exit 1; }
 
+# 8b. escalation tier: count >= BSP_MEM_ESCALATE_AT -> file-a-bead directive,
+#     tier-1 line suppressed (tiers never stack — ADR-0052)
+out=$(BSP_MEM_NUDGE_AT=1 BSP_MEM_ESCALATE_AT=1 bsp_compose_memories 8192)
+echo "$out" | grep -q "file ONE chore bead" || { echo "FAIL: escalation directive absent at threshold"; exit 1; }
+echo "$out" | grep -q "consolidate/route" && { echo "FAIL: tiers stacked"; exit 1; }
+out=$(BSP_MEM_NUDGE_AT=1 BSP_MEM_ESCALATE_AT=999 bsp_compose_memories 8192)
+echo "$out" | grep -q "file ONE chore bead" && { echo "FAIL: directive fired below escalate threshold"; exit 1; }
+echo "$out" | grep -q "consolidate/route" || { echo "FAIL: tier-1 nudge lost"; exit 1; }
+
+# 10. escalation fires on the uncurated (pre-sweep) path too — backlog is backlog
+cat > "$TMP/fixtures/memories.json" <<'FIX'
+{
+  "plain-a": "uncurated body a",
+  "plain-b": "uncurated body b"
+}
+FIX
+out=$(BSP_MEM_ESCALATE_AT=2 bsp_compose_memories 8192)
+echo "$out" | grep -q "file ONE chore bead" || { echo "FAIL: directive absent on pre-sweep path"; exit 1; }
+
 # 9. scaffolding-accurate accounting: body alone fits the ceiling, full section
 #    "### pad-lesson\n"(15) + 49 + "\n\n"(2) = 66B (command substitution strips the
 #    file's trailing newline -> body is 49B). Ceiling 60: body-only accounting

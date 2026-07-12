@@ -27,11 +27,23 @@ bsp_latest_continuation() {
     sed -n 's/^[[:space:]]*"\(continuation-[^"]*\)":.*/\1/p' | sort | tail -1
 }
 
+# Two-tier memory-backlog escalation (ADR-0052). Tier 2 (>= ESCALATE_AT) injects a
+# file-ONE-deduped-bead directive; tier 1 is the soft sweep nudge. if/elif => never stack.
+bsp_backlog_lines() {
+    local count="$1" nudge_at="${BSP_MEM_NUDGE_AT:-150}" escalate_at="${BSP_MEM_ESCALATE_AT:-300}"
+    if [ "$count" -ge "$escalate_at" ]; then
+        # shellcheck disable=SC2016  # backticks are literal markdown code-format markers, not expansions
+        printf 'memory store at %s (>= %s): check for an open memory-curation bead (`bd query "status=open"`, titles matching "memory-curator sweep"); if none exists, file ONE chore bead — `bd create "Run memory-curator sweep: store at %s memories" -t chore` with the agent-filed stamp — then continue with the current work. Never file a duplicate.\n' "$count" "$escalate_at" "$count"
+    elif [ "$count" -ge "$nudge_at" ]; then
+        # shellcheck disable=SC2016
+        printf 'store at %s memories (>= %s) — run the memory-curator sweep to consolidate/route.\n' "$count" "$nudge_at"
+    fi
+}
+
 # Compose the memories section under a byte ceiling.
 # $1 = ceiling bytes. Uses `bd memories --json` (selection) + `bd recall` (bodies).
 bsp_compose_memories() {
     local ceiling="$1" listing total_count selected cont section="" used=0 skipped=0 injected=0
-    local nudge_at="${BSP_MEM_NUDGE_AT:-150}"
     listing=$(bd memories --json 2>/dev/null) || listing=""
     [ -z "$listing" ] && return 0
     total_count=$(printf '%s\n' "$listing" | grep -cE '^[[:space:]]*"[^"]+":' || true)
@@ -44,6 +56,7 @@ bsp_compose_memories() {
         printf 'run the memory-curator curation sweep to choose what is ambient. '
         # shellcheck disable=SC2016  # backticks are literal markdown code-format markers, not expansions
         printf 'Search: `bd memories <keyword>` · fetch: `bd recall <key>`\n'
+        bsp_backlog_lines "$total_count"
         return 0
     fi
 
@@ -82,11 +95,7 @@ ${body}
     # shellcheck disable=SC2016  # backticks are literal markdown code-format markers, not expansions
     printf 'core memories: %s of %s injected (salience>=4 + latest continuation, %s-byte budget) — search the rest: `bd memories <keyword>` · fetch: `bd recall <key>`\n' \
         "$injected" "$total_count" "$ceiling"
-    if [ "$total_count" -ge "$nudge_at" ]; then
-        # shellcheck disable=SC2016
-        printf 'store at %s memories (>= %s) — run the memory-curator sweep to consolidate/route.\n' \
-            "$total_count" "$nudge_at"
-    fi
+    bsp_backlog_lines "$total_count"
 }
 
 # Static bd workflow pointer (onboard-style; ~250 tok)
