@@ -230,7 +230,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 ### Rules
 
 - Use `bd` for ALL task tracking — never TodoWrite, TaskCreate, or markdown TODOs
-- Never guess bd syntax — on first use of a command this session, read `bd <cmd> --help` (the binary is SSOT)
+- Never guess bd syntax — on first use of a command or flag this session, read `bd <cmd> --help` (the binary is SSOT)
 - Only the orchestrating agent manages beads — subagents do NOT touch beads
 - Include bead IDs in commit messages: `git commit -m "Add feature (bd-a1b2)"`
 - Every session ends with Land the Plane: `bd close` → `bd dolt push` → `git push`
