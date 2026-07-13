@@ -34,7 +34,7 @@ KNOWN_SKILLS=(
   getting-up-to-speed memory-curator project-init
   receiving-code-review requesting-code-review research-driven-development
   session-handoff stress-test subagent-driven-development
-  systematic-debugging test-driven-development tracking-with-beads using-git-worktrees
+  systematic-debugging test-driven-development using-git-worktrees
   using-superpowers verification-before-completion write-documentation
   writing-plans
 )
@@ -42,7 +42,7 @@ KNOWN_SKILLS=(
 # Skills shipped by past releases but no longer distributed (ADR-0044).
 # Removed on upgrade/uninstall ONLY — never on fresh install (evidence gate:
 # we only delete from roots a prior beads-superpowers install owned).
-LEGACY_SKILLS=(auditing-upstream-drift writing-skills)
+LEGACY_SKILLS=(auditing-upstream-drift writing-skills tracking-with-beads)
 
 KNOWN_AGENTS=(yegge)
 
