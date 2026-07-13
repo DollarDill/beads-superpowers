@@ -7,10 +7,10 @@ set -uo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT" || exit 2
 
-if git check-ignore -q docs/decisions; then
-  echo "OK: docs/decisions/ is gitignored"
+if git check-ignore -q docs/decisions/ADR-0000-probe.md; then
+  echo "OK: ADR files under docs/decisions/ are gitignored"
   exit 0
 fi
-echo "FAIL: docs/decisions/ is NOT gitignored — internal ADRs risk being committed and published."
-echo "Fix: ensure .gitignore ignores docs/decisions/ (e.g. a line 'docs/decisions/')."
+echo "FAIL: ADR files under docs/decisions/ are NOT gitignored — internal ADRs risk being committed and published."
+echo "Fix: ensure .gitignore has 'docs/decisions/*' (and '!docs/decisions/.gitkeep' to keep the dir materialized)."
 exit 1

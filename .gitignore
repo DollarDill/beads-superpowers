@@ -9,7 +9,8 @@ site/
 .tmp/
 
 # Architecture Decision Records (local working docs)
-docs/decisions/
+docs/decisions/*
+!docs/decisions/.gitkeep
 
 # Beads / Dolt files (added by bd init)
 .dolt/
