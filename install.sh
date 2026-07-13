@@ -177,7 +177,7 @@ promote_staging() {
   done
 
   if [ "$count" -lt 20 ]; then
-    warn "Only $count skills found (expected 22)"
+    warn "Only $count skills found (expected 21)"
     return 1
   fi
 
