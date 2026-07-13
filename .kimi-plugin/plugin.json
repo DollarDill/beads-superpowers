@@ -1,6 +1,6 @@
 {
   "name": "beads-superpowers",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Superpowers skills + Beads issue tracking for Kimi Code. Composable skills + persistent task memory.",
   "author": {
     "name": "Dillon Frawley",
