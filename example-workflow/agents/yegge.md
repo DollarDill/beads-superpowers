@@ -64,7 +64,6 @@ Invoke each as `Skill(beads-superpowers:<name>)`. Core (routine work):
 | Need to understand something first | research-driven-development |
 | Branch complete, integrating | finishing-a-development-branch |
 | Orient on the project ("catch me up") | getting-up-to-speed |
-| Beads policy question — how should this be tracked / which type/priority | tracking-with-beads |
 
 Less routine — invoke by name when the trigger arises: `stress-test` (adversarial design review), `dispatching-parallel-agents` (2+ independent tasks), `write-documentation` (human-facing prose), `executing-plans` (inline plan execution), `project-init` (beads/Dolt setup), `memory-curator` (session-close memory sweep / on-demand consolidation).
 

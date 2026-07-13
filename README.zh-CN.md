@@ -62,7 +62,6 @@
 | `finishing-a-development-branch` | 合并/PR 流程 + Land the Plane（关闭 beads，推送） |
 | `document-release` | 发布后文档审计——保持 README、CHANGELOG 和 ARCHITECTURE 同步 |
 | `project-init` | Beads/Dolt 数据库设置、初始化与恢复 |
-| `tracking-with-beads` | beads 约定的权威来源——工作如何被追踪、记录与收尾 |
 | `getting-up-to-speed` | 会话定向——加载 `bd` 上下文并生成当前状态摘要 |
 | `memory-curator` | 会话结束/按需的记忆整合——对 `bd` 记忆库去重并清理过时记忆 |
 | `session-handoff` | 人工调用 —— 生成有据可查的交接文档 + 续接记忆，以恢复进行中的工作 |

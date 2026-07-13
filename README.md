@@ -56,7 +56,6 @@ Underneath all of it is a production-grade standard: the agent treats every task
 | `finishing-a-development-branch` | Merge/PR flow + Land the Plane (close beads, push) |
 | `document-release` | Post-ship doc audit — keeps README, CHANGELOG, and ARCHITECTURE in sync |
 | `project-init` | Beads/Dolt DB setup, bootstrap, and recovery |
-| `tracking-with-beads` | The beads conventions of record — how work gets tracked, captured, and closed out |
 | `getting-up-to-speed` | Session orientation — reads the latest session-handoff doc, loads `bd` context, and produces a current-state summary |
 | `memory-curator` | Session-close/on-demand memory consolidation — deduplicates and prunes the `bd` memory store |
 | `session-handoff` | Human-invoked — writes a grounded handoff doc + continuation memory to resume in-progress work |

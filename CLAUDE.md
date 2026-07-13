@@ -234,7 +234,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 - Only the orchestrating agent manages beads — subagents do NOT touch beads
 - Include bead IDs in commit messages: `git commit -m "Add feature (bd-a1b2)"`
 - Every session ends with Land the Plane: `bd close` → `bd dolt push` → `git push`
-- Beads *policy* lives in the `tracking-with-beads` skill (skills carry own-operation kernels only); bd *commands* defer to `bd human` — don't restate command tables in skills
+- Beads *policy* is embedded where it's read — using-superpowers' Beads section plus inline own-operation kernels (no dedicated policy skill); bd *commands* defer to `bd human` — don't restate command tables in skills
 
 ## Skills
 
@@ -247,7 +247,6 @@ This plugin uses `bd` (beads) for ALL task tracking.
 | subagent-driven-development    | Fresh agent per task + single task review (spec + quality verdicts); parallel batch mode for independent tasks              |
 | executing-plans                | Batch execution in single session                                                                                           |
 | test-driven-development        | RED-GREEN-REFACTOR — Iron Law: no code without failing test                                                                 |
-| tracking-with-beads            | Beads policy of record — frugality, consent boundary, capture quality, land-the-plane; commands defer to `bd human` |
 | systematic-debugging           | 4-phase root cause analysis before proposing fixes                                                                          |
 | verification-before-completion | Evidence before claims — bd close requires evidence                                                                         |
 | requesting-code-review         | Dispatches code reviewer subagent                                                                                           |
