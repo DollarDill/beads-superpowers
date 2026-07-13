@@ -11,7 +11,7 @@ Orient on the project before any work: re-derive the current state from **ground
 
 **When NOT to use:** a single targeted question; already oriented this session and nothing changed; a fresh empty repo (use the `project-init` skill).
 
-**frugal bd kernel:** bounded reads only; never bare `bd memories`. `bd ready --claim` is FORBIDDEN here — orientation ends at the terminal contract and the user picks the work. Full policy: the `tracking-with-beads` skill.
+**frugal bd kernel:** bounded reads only; never bare `bd memories`. `bd ready --claim` is FORBIDDEN here — orientation ends at the terminal contract and the user picks the work.
 
 ## Steps
 
@@ -116,7 +116,7 @@ Done when: all five pass and the summary is emitted ending on the terminal contr
 
 ### 5 — Close
 
-1. Capture durable, evidence-backed insights: `bd remember "<kind>: <insight>"` (quality bar: the `tracking-with-beads` skill). Stale Phase-1 memory → `bd forget <id>`.
+1. Capture durable, evidence-backed insights: `bd remember "<kind>: <insight>"`. Stale Phase-1 memory → `bd forget <id>`.
 2. Prune continuation pointers to one: keep the memory paired with the doc read; forget the rest matching the `continuation-` **key prefix** only. Ambiguous keeper → keep ALL and skip (never guess-delete). Report: "Pruned N superseded continuation pointers; kept `<key>`."
 3. Archive the consumed doc (only if one was read; AFTER the prune):
    `mkdir -p .internal/handoff/archive && mv -f "<doc>" .internal/handoff/archive/`
@@ -144,4 +144,4 @@ Anything off-path — no git, detached HEAD, empty log, hundreds of changed file
 
 ## Integration
 
-**Uses:** `dispatching-parallel-agents` (Heavy path) · `tracking-with-beads` (bd policy). **Pairs with:** `project-init` (fresh/empty repos).
+**Uses:** `dispatching-parallel-agents` (Heavy path). **Pairs with:** `project-init` (fresh/empty repos).
