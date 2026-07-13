@@ -202,6 +202,7 @@ bd prime 2>&1 | head -20
 - New status codes → update lifecycle references
 - New CLI flags → update quick reference tables
 - Changes to gate/molecule/formula system → assess skill impact
+- **Version-stamped schema kernels:** on any bd version bump, `grep -rn "verified at bd v" skills/` and re-verify each stamped schema paragraph against the new binary (`--help` + `--dry-run` probe); update the stamp or file a fix bead.
 
 Done when: bd version, new/changed commands, and `bd prime` format are compared against baseline, and Check 6.4's watch areas are assessed for skill impact.
 
