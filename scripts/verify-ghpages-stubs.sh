@@ -24,7 +24,8 @@ for p in "${PATHS[@]}"; do
   echo "$html" | grep -qi "noindex"                             && { say "FAIL $p: contains noindex"; fail=1; }
 done
 if [ "$MODE" = live ]; then
-  curl -sf "$OLD_BASE/sitemap.xml" | grep -q "<loc>$OLD_BASE/" || { say "FAIL: old sitemap missing/wrong"; fail=1; }
+  sitemap=$(curl -sf "$OLD_BASE/sitemap.xml" || true)  # capture first: grep -q closing the pipe early fails curl under pipefail
+  echo "$sitemap" | grep -q "<loc>$OLD_BASE/" || { say "FAIL: old sitemap missing/wrong"; fail=1; }
   curl -sfo /dev/null "$OLD_BASE/googlec875b47c36713f6b.html"  || { say "FAIL: GSC token not served"; fail=1; }
 else
   [ -f "$DIR/.nojekyll" ]                        || { say "FAIL: .nojekyll missing"; fail=1; }
