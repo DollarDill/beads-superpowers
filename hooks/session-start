@@ -11,6 +11,19 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 BSP_MEM_CEILING=8192
+# Claude Code persists any hook output's additionalContext OUT-OF-LINE above
+# 10,000 chars (hard-coded, per-hook-output, not configurable):
+#   https://code.claude.com/docs/en/hooks   (verified 2026-07-12, ADR-0052)
+# Symptom of rot: session start shows a <persisted-output> pointer instead of
+# inline context. Fallback ladder: if the E2E probe persists, drop to 8500.
+BSP_ENVELOPE_BUDGET=9500
+# Reserved bytes around/inside the beads side that the memory ceiling does NOT
+# count: wrapper joins ("\n\n<beads-context>\n" … "\n</beads-context>" ≈ 37B)
+# plus the composer's fixed frame — section header (~30B), +N-over-budget tail
+# (≤60B), disclosure line (≤170B), and the worst-case tier-2 escalation
+# directive (≤340B) — rounded up for slack. Enforced by the overflow fixture in
+# tests/hooks/test-bootstrap-budget.sh.
+BSP_WRAP_OVERHEAD=768
 
 # Selection input is `bd memories --json`: one `"key": "body"` entry per line
 # (verified shape, bd v1.1.0) with the FULL body inline — immune to the plain
@@ -212,14 +225,6 @@ done
 # Read using-superpowers content
 using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>/dev/null) || using_superpowers_content="beads-superpowers: using-superpowers skill unreadable"
 
-# Compose beads section (skipped if an external bd prime hook owns injection)
-beads_context=""
-if [ "$bd_prime_already_hooked" -eq 0 ] && command -v bd &>/dev/null && bd memories --json >/dev/null 2>&1; then
-    beads_context="$(bsp_bd_pointer)
-
-$(bsp_compose_memories "$BSP_MEM_CEILING")"
-fi
-
 # Escape string for JSON embedding using bash parameter substitution.
 escape_for_json() {
     local s="$1"
@@ -242,6 +247,22 @@ You have beads-superpowers.
 ${using_superpowers_content}
 ${warning_message_raw}
 </EXTREMELY_IMPORTANT>"
+
+# Compose beads section AFTER measuring the bootstrap side — the beads side gets
+# exactly the remainder of the total envelope budget (ADR-0052). min() lives HERE,
+# in the caller; bsp_compose_memories keeps its plain <ceiling> signature.
+# (Skipped if an external bd prime hook owns injection.)
+beads_context=""
+if [ "$bd_prime_already_hooked" -eq 0 ] && command -v bd &>/dev/null && bd memories --json >/dev/null 2>&1; then
+    bsp_pointer="$(bsp_bd_pointer)"
+    bsp_allowance=$(( BSP_ENVELOPE_BUDGET - $(printf '%s' "$session_context_raw" | wc -c) \
+                      - $(printf '%s' "$bsp_pointer" | wc -c) - BSP_WRAP_OVERHEAD ))
+    [ "$bsp_allowance" -lt 0 ] && bsp_allowance=0
+    bsp_mem_ceiling=$(( bsp_allowance < BSP_MEM_CEILING ? bsp_allowance : BSP_MEM_CEILING ))
+    beads_context="${bsp_pointer}
+
+$(bsp_compose_memories "$bsp_mem_ceiling")"
+fi
 
 # Append beads context if available
 if [ -n "$beads_context" ]; then
