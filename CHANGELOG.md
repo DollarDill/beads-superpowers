@@ -14,6 +14,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Maintainer contact email (`dillon@algocents.com`) in the plugin manifests' author/owner fields, `package.json`, SECURITY.md, and the Code of Conduct — a direct address replaces the previous GitHub-profile indirection, matching where upstream superpowers carries its contact.
 - Memory-backlog escalation tier: at ≥300 stored memories (`BSP_MEM_ESCALATE_AT`), the session hook injects a directive to file one deduplicated memory-curation chore bead (the ≥150 soft nudge is unchanged; tiers never stack).
 
+### Removed
+
+- The `tracking-with-beads` policy skill. Beads policy now lives where it is read — the using-superpowers Beads section and inline kernels in the skills that perform each operation; commands remain owned by the bd binary (`bd human`, `bd <cmd> --help`). Upgrades remove previously installed copies automatically.
+
 ### Fixed
 
 - bd command syntax across the instruction surface now matches the binary: brainstorming's `--graph` guidance (file-path arg, real node-schema behavior), the phantom `bd human <id>` reference, and a repo-wide audit of asserted flags. New house rule at the always-loaded layer and in tracking-with-beads: the binary is SSOT — read `bd <cmd> --help` on first use, never guess.
