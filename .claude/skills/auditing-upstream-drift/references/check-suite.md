@@ -187,3 +187,7 @@ bash scripts/check-convention-sync.sh
 ```
 
 The cross-cutting convention blocks (Capture gate, memory convention) are duplicated across skills by design and MUST be byte-identical at every site. Any divergent or missing copy fails this check. (The doctrine floor is NOT byte-duplicated: it is a canonical block in `using-superpowers` plus per-skill woven floor lines — see the Known Deliberate Divergences table.)
+
+### Registered upstream divergence — stripped detritus (ADR-0048 exception, slice-3)
+
+The fork does NOT ship upstream superpowers' non-functional bundled artifacts (eval fixtures, creation logs). Removed in slice-3: `skills/systematic-debugging/{CREATION-LOG.md, test-academic.md, test-pressure-1.md, test-pressure-2.md, test-pressure-3.md}`. A re-sync from upstream must NOT re-introduce them. The genuine upstream reference files (condition-based-waiting*, defense-in-depth.md, root-cause-tracing.md, find-polluter.sh) are retained verbatim.
