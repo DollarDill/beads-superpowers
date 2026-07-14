@@ -188,7 +188,7 @@ Done when: the doc commit is pushed, the health summary is output, and the bead 
 - **Never early-exit without the coverage map:** the Step 1.5 empty-check may exit only after the coverage map confirms zero new public surface AND zero `.md` changed. When in doubt, run the full audit — a false-skip ships undocumented surface.
 - **Offer doc-debt, don't auto-create:** present coverage gaps; create `docs-debt` beads only on confirmation, and dedupe against existing open ones.
 
-**Capture what you learned.** At close, record every durable, evidence-backed insight from this work — anything still true next month, tied to a file, test, or command. Don't skip because it feels minor: if it would save a future session time or stop a repeated mistake, record it. Never record guesses, one-offs, or secrets (tokens, keys, PII — every memory is injected into all future sessions). Update an existing memory in place (`bd remember --key <key>`) rather than adding a near-duplicate.
+**Capture what you learned.** At close, record durable, evidence-backed insights (still true next month, tied to a file, test, or command). Never record guesses, one-offs, or secrets (tokens, keys, PII — every memory is injected into all future sessions). Update in place (`bd remember --key <key>`) rather than adding a near-duplicate.
 
 ```bash
 bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / pattern / design / root-cause / research

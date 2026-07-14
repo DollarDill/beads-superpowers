@@ -16,7 +16,7 @@ cd "$ROOT" || exit 1
 
 # ASCII-only signature slices (no em-dash) so the patterns are shell/grep-safe.
 CB3_SIG="what should I capture?"
-CB4_SIG="Don't skip because it feels minor"
+CB4_SIG="or secrets (tokens, keys, PII"
 
 CB3_SITES=(
   skills/brainstorming/SKILL.md
