@@ -79,14 +79,14 @@ OUTPUT_FILE="$TEST_PROJECT/claude-output.txt"
 
 PROMPT="You are testing the spec document reviewer.
 
-Then review the spec at $TEST_PROJECT/.internal/specs/test-feature-design.md using the criteria from that template.
+Then review the spec at $TEST_PROJECT/.internal/specs/test-feature-design.md.
 
 Look for:
 - TODOs, placeholders, 'TBD', incomplete sections
 - Sections saying 'to be defined later' or 'will spec when X is done'
 - Sections noticeably less detailed than others
 
-Output your review in the format specified in the template."
+Output your review as a list of the issues you found."
 
 echo "================================================================================"
 if ! cd "$SCRIPT_DIR/../.." || ! timeout 120 claude -p "$PROMPT" --permission-mode bypassPermissions 2>&1 | tee "$OUTPUT_FILE"; then
