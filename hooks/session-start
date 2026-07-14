@@ -120,7 +120,7 @@ This workspace uses **bd (beads)**. Core commands:
 - `bd ready -n 10` — unblocked work · `bd show --short <id>` — skim an issue
 - `bd create "Title" -t task -p 2` — create · `bd close <id> --reason "..."` — complete
 - `bd query "status=open"` — search · `bd remember "insight"` — persist a memory
-- `bd batch` / `bd create --graph` — many writes, one call
+- `bd batch` / `bd import` — many writes, one call
 Commands: `bd human` · syntax: `bd <cmd> --help` on first use — the binary is SSOT. If beads context was not injected this session: `bd prime`.
 PTR
 }
