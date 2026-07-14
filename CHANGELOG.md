@@ -12,6 +12,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Bead-creation instructions now use `bd import` (JSONL) instead of `bd create --graph`. The `--graph` node schema was undiscoverable from the binary (no `--help`, no schema dump) and rotted repeatedly; `bd import` round-trips with `bd export` (so the schema can't rot) and is atomic. `parent-child` deps + rich fields (`description`, `acceptance_criteria`) ride the import; inter-task `blocks` ordering is wired with `bd batch` afterward. Applies to `writing-plans`, `subagent-driven-development`, `executing-plans`, `brainstorming`, the CB-5 batch-writes line, the session-start hook, and the docs (EN+ZH). (ADR-0054, bd-dm2b)
+- Beads-graft in the 13 upstream-inherited skills minimized (ADR-0049 slice 3). The `bd`-frugality convention block is removed where the always-loaded session hook already carries it (its `--claim` consent boundary is retained per-site as a floor kernel, and the using-git-worktrees copy is corrected to match its actual single-bead claim). The capture-what-you-learned block is shortened uniformly across its sites. Upstream skill content is unchanged and the security floor (destructive-gate consents, the secrets rule, land-the-plane) is byte-for-byte intact. (bd-3u8u)
+
+### Removed
+
+- Seven dead bundled files: two superseded document-reviewer prompt templates (`plan-document-reviewer-prompt.md`, `spec-document-reviewer-prompt.md`, replaced by the stress-test workflow) and five upstream eval/creation-log artifacts under `systematic-debugging/` that served no runtime purpose. (bd-3u8u)
 
 ## [0.13.0] - 2026-07-14
 
