@@ -57,6 +57,10 @@ KERNEL_MAP=(
   'skills/executing-plans/SKILL.md|the consent gate binds even when this skill is not loaded'
   'skills/subagent-driven-development/SKILL.md|the consent gate binds even when this skill is not loaded'
   'skills/using-git-worktrees/SKILL.md|the consent gate binds even when this skill is not loaded'
+  'skills/finishing-a-development-branch/SKILL.md|Work is NOT complete until'
+  'skills/finishing-a-development-branch/SKILL.md|This will permanently delete:'
+  'skills/using-git-worktrees/SKILL.md|A skipped, dismissed, or auto-resolved answer is not consent'
+  'skills/executing-plans/SKILL.md|bd import -'
 )
 
 FAIL=0
