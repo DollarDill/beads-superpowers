@@ -320,7 +320,7 @@ You: I'm using Subagent-Driven Development to execute this plan.
 [Read plan file once: .internal/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]
 [Create epic + tasks via bd import (parent-child rides the import; blocks wired after):]
-[  bd create "Epic: <name>" -t epic -p2 -d "<goal>\n\n## Success Criteria\n- ..."  -> note epic id]
+[  bd create "Epic: <name>" -t epic -p 2 -d "<goal + '## Success Criteria' heading on its own line>"  -> note epic id]
 [  Author tasks as JSONL, one per line, id OMITTED, each with a parent-child dep to the epic]
 [    and "## Acceptance Criteria" in description; pipe to: bd import -]
 [    (schema: bd import --help / bd export <id>; confirm output has no "Skipped dependency")]
