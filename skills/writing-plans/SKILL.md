@@ -135,9 +135,9 @@ git commit -m "feat: add specific feature"
 
 **Beads integration:** When executing this plan, the executing skill creates an epic bead for the plan and a child task bead for each Task N. The `- [ ]` checkboxes remain in the markdown for human readability, but task-level tracking uses beads (`bd create`, `bd update --claim`, `bd close --reason`). Dependencies between tasks should be declared with `bd dep add`.
 
-**Atomic creation:** the executing skill SHOULD create the epic + tasks + dependencies atomically via `bd create --graph <plan-file.json>` (JSON plan file — `--graph` takes a file path; `--dry-run` first), not a sequential loop — this avoids orphaned beads on mid-sequence failure. Falls back to sequential `bd create`/`bd dep add` if unavailable.
+**Atomic creation:** the executing skill creates the epic + tasks via `bd import` (JSONL) — `bd create` the epic, then `bd import -` the tasks (each with a `parent-child` dep to the epic and rich fields), then `bd batch` any inter-task `blocks` ordering. Not a sequential create-loop. The exact kernel lives in the executing skill (subagent-driven-development / executing-plans).
 
-**Required bead-body sections:** `bd lint` (Self-Review step 0) requires `## Success Criteria` in the epic bead's description and `## Acceptance Criteria` in each task bead's description. Include them at creation time. In `--graph` JSON, embed them in each node's `description` string — the graph schema has no separate criteria field. In the sequential fallback, `--acceptance "<criteria>"` also satisfies the check. The epic's Success Criteria derive from the plan's **Goal**; each task's copy from its **Acceptance Criteria** block.
+**Required bead-body sections:** `bd lint` (Self-Review step 0) requires `## Success Criteria` in the epic bead's description and `## Acceptance Criteria` in each task bead's description. Include them at creation time — embed them in each bead's `description` in the import JSONL (or use the `acceptance_criteria` field). The epic's Success Criteria derive from the plan's **Goal**; each task's copy from its **Acceptance Criteria** block.
 
 > **bd frugality: bounded output, one round trip.** Cap reads: `bd ready -n 10`,
 > `bd show --short <id>` to skim (full `bd show` only when the body is needed),
