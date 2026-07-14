@@ -96,7 +96,7 @@ graph TD
 
 在创建 worktree 之前，技能会运行预检：确认智能体未处于 worktree 或子模块内部，并在由人工而非 SDD 自动化启动时请求确认。
 
-当多个任务处于未阻塞状态时，**并行批处理模式**最多并发运行五个任务，每个任务在自己的 worktree 中；当任务之间存在依赖时，顺序模式每次运行一个任务。每个子智能体的结果在被接受前都必须经过[审查门控](#review-gate)；初始的 epic、任务和依赖图通过 `bd create --graph` 原子性地创建，`bd batch` 处理后续的关闭、添加依赖和更新操作。
+当多个任务处于未阻塞状态时，**并行批处理模式**最多并发运行五个任务，每个任务在自己的 worktree 中；当任务之间存在依赖时，顺序模式每次运行一个任务。每个子智能体的结果在被接受前都必须经过[审查门控](#review-gate)；初始的 epic 和任务通过 `bd import`（JSONL，先用 `bd create` 创建 epic）创建；`bd batch` 负责 `blocks` 排序以及后续的关闭和更新操作。
 
 !!! info "深入了解 — 上游 Beads 文档"
     - [多智能体协调](https://gastownhall.github.io/beads/multi-agent) — 并行批处理模式之下的工具级原语

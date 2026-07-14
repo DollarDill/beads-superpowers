@@ -248,7 +248,7 @@ graph TD
 |---|---|---|
 | 创建史诗 | `bd create "Epic: name" -t epic` | SDD, executing-plans |
 | 创建任务 | `bd create "Task: name" -t task --parent <epic>` | SDD, executing-plans |
-| 原子化计划创建 | `bd create --graph plan.json [--dry-run]` | writing-plans, SDD |
+| 原子化计划创建 | `bd import`（JSONL，先 `bd create` 创建 epic） | writing-plans, SDD |
 | 快速捕获 | `bd q "title"` | 任意技能 |
 | 认领工作 | `bd update <id> --claim` | executing-plans |
 | 完成工作 | `bd close <id> --reason "why"` | 所有执行类技能 |

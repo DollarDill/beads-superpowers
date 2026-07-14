@@ -19,7 +19,7 @@ recovery, coordination — lives in the upstream reference linked below.
 | `bd epic status <id>` | Epic progress summary |
 | `bd create "Epic: name" -t epic -p 2` | New epic at priority 2 |
 | `bd create "Task: title" -t task --parent <epic>` | Task under an epic |
-| `bd create --graph plan.json` | Atomic epic + tasks + deps (dry-run first) |
+| `bd create` epic + `bd import` tasks | Atomic rich task creation (schema via `bd export`) |
 | `bd q "quick title"` | Quick capture |
 | `bd update <id> --claim` | Claim as in-progress |
 | `bd close <id> --reason "..."` | Complete with evidence |

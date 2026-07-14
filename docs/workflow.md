@@ -93,7 +93,7 @@ Code runs in an isolated worktree under TDD (red-green-refactor). The orchestrat
 
 Before creating the worktree, the skill runs pre-flight checks: it confirms the agent isn't already inside a worktree or a submodule, and asks for consent when a human, rather than the SDD automation, kicked it off.
 
-When several tasks are unblocked, **parallel batch mode** runs up to five concurrently, each in its own worktree; sequential mode runs one at a time when tasks depend on each other. Every subagent result passes through the [review gate](#review-gate) before it's accepted, and the initial epic, tasks, and dependency graph are created atomically with `bd create --graph`; `bd batch` handles subsequent close, dep-add, and update operations.
+When several tasks are unblocked, **parallel batch mode** runs up to five concurrently, each in its own worktree; sequential mode runs one at a time when tasks depend on each other. Every subagent result passes through the [review gate](#review-gate) before it's accepted, and the initial epic and tasks are created with `bd import` (JSONL, after `bd create` for the epic); `bd batch` handles `blocks` ordering and subsequent close and update operations.
 
 !!! info "Go deeper — upstream Beads docs"
     - [Multi-agent coordination](https://gastownhall.github.io/beads/multi-agent) — the tool-level primitives beneath parallel batch mode

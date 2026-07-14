@@ -21,7 +21,7 @@ description: 快速参考 bd 命令速查表、技能路由表、常见问题故
 | `bd epic status <id>` | Epic 进度摘要 |
 | `bd create "Epic: name" -t epic -p 2` | 新建优先级为 2 的 epic |
 | `bd create "Task: title" -t task --parent <epic>` | 在 epic 下创建任务 |
-| `bd create --graph plan.json` | 原子化创建 epic + 任务 + 依赖（先 dry-run） |
+| `bd create` epic + `bd import` 任务 | 原子化富任务创建（schema 见 `bd export`） |
 | `bd q "quick title"` | 快速捕获 |
 | `bd update <id> --claim` | 认领为进行中 |
 | `bd close <id> --reason "..."` | 附带证据完成任务 |
