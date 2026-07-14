@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > **Forked from:** [obra/superpowers](https://github.com/obra/superpowers) v5.0.7 (2026-03-31)
 > **Beads integration based on:** [gastownhall/beads](https://github.com/gastownhall/beads) v1.0.4 (2026-05-09)
 
+## [Unreleased]
+
+### Changed
+
+- Bead-creation instructions now use `bd import` (JSONL) instead of `bd create --graph`. The `--graph` node schema was undiscoverable from the binary (no `--help`, no schema dump) and rotted repeatedly; `bd import` round-trips with `bd export` (so the schema can't rot) and is atomic. `parent-child` deps + rich fields (`description`, `acceptance_criteria`) ride the import; inter-task `blocks` ordering is wired with `bd batch` afterward. Applies to `writing-plans`, `subagent-driven-development`, `executing-plans`, `brainstorming`, the CB-5 batch-writes line, the session-start hook, and the docs (EN+ZH). (ADR-0054, bd-dm2b)
+
 ## [0.13.0] - 2026-07-14
 
 ### Added
