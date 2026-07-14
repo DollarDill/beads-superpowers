@@ -92,15 +92,7 @@ digraph process {
 
 **Checking for remaining tasks:** Use `bd ready --parent <epic-id>` to see remaining unblocked child tasks. Use `bd epic status <epic-id>` for a summary view of completion percentage. When `bd ready` returns no results for the epic, all tasks are complete.
 
-> **bd frugality: bounded output, one round trip.** Cap reads: `bd ready -n 10`,
-> `bd show --short <id>` to skim (full `bd show` only when the body is needed),
-> `bd memories <keyword>` (NEVER bare `bd memories` — it dumps the whole store).
-> Batch writes: several closes/updates/dep-adds = one `bd batch`; an epic + children =
-> `bd import`, not a create-loop. Filter big outputs before they hit context
-> (`... | grep -E "PATTERN" | head -20`). Keep write confirmations — they are evidence.
-> **`--claim` boundary:** `bd ready --claim` ONLY in autonomous take-next-task flows
-> (this skill's batch/wave dispatch). FORBIDDEN wherever the user picks the work —
-> orientation, brainstorming, session close. Efficiency never erodes a consent gate.
+> **`--claim` consent boundary.** This skill's autonomous take-next / batch-dispatch flow is the one place `bd ready --claim` is legitimate. That autonomous `--claim` is FORBIDDEN wherever the user picks the work (orientation, brainstorming, session close) — the consent gate binds even when this skill is not loaded.
 
 ## Parallel Batch Mode
 

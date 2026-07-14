@@ -139,16 +139,6 @@ git commit -m "feat: add specific feature"
 
 **Required bead-body sections:** `bd lint` (Self-Review step 0) requires `## Success Criteria` in the epic bead's description and `## Acceptance Criteria` in each task bead's description. Include them at creation time — embed them in each bead's `description` in the import JSONL (or use the `acceptance_criteria` field). The epic's Success Criteria derive from the plan's **Goal**; each task's copy from its **Acceptance Criteria** block.
 
-> **bd frugality: bounded output, one round trip.** Cap reads: `bd ready -n 10`,
-> `bd show --short <id>` to skim (full `bd show` only when the body is needed),
-> `bd memories <keyword>` (NEVER bare `bd memories` — it dumps the whole store).
-> Batch writes: several closes/updates/dep-adds = one `bd batch`; an epic + children =
-> `bd import`, not a create-loop. Filter big outputs before they hit context
-> (`... | grep -E "PATTERN" | head -20`). Keep write confirmations — they are evidence.
-> **`--claim` boundary:** `bd ready --claim` ONLY in autonomous take-next-task flows
-> (this skill's batch/wave dispatch). FORBIDDEN wherever the user picks the work —
-> orientation, brainstorming, session close. Efficiency never erodes a consent gate.
-
 ## No Placeholders
 
 Every step must contain the actual content an engineer needs. These are **plan failures** — never write them:

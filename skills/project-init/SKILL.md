@@ -50,16 +50,6 @@ Done when: both lines above are written and a single path letter is chosen.
 after the diagnosis→path block above is emitted and a path is chosen (bd v1.1.0+ `bd doctor`
 also flags migration-content skew vs remote; surface that before any sync work).
 
-> **bd frugality: bounded output, one round trip.** Cap reads: `bd ready -n 10`,
-> `bd show --short <id>` to skim (full `bd show` only when the body is needed),
-> `bd memories <keyword>` (NEVER bare `bd memories` — it dumps the whole store).
-> Batch writes: several closes/updates/dep-adds = one `bd batch`; an epic + children =
-> `bd import`, not a create-loop. Filter big outputs before they hit context
-> (`... | grep -E "PATTERN" | head -20`). Keep write confirmations — they are evidence.
-> **`--claim` boundary:** `bd ready --claim` ONLY in autonomous take-next-task flows
-> (this skill's batch/wave dispatch). FORBIDDEN wherever the user picks the work —
-> orientation, brainstorming, session close. Efficiency never erodes a consent gate.
-
 ## Decision Matrix
 
 Based on diagnostic results, follow the appropriate path:

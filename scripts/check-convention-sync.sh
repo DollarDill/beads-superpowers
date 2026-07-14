@@ -17,7 +17,6 @@ cd "$ROOT" || exit 1
 # ASCII-only signature slices (no em-dash) so the patterns are shell/grep-safe.
 CB3_SIG="what should I capture?"
 CB4_SIG="Don't skip because it feels minor"
-CB5_SIG='bd frugality: bounded output, one round trip'
 
 CB3_SITES=(
   skills/brainstorming/SKILL.md
@@ -41,14 +40,6 @@ CB4_SITES=(
   skills/write-documentation/SKILL.md
   skills/verification-before-completion/SKILL.md
 )
-CB5_SITES=(
-  skills/subagent-driven-development/SKILL.md
-  skills/executing-plans/SKILL.md
-  skills/using-git-worktrees/SKILL.md
-  skills/project-init/SKILL.md
-  skills/writing-plans/SKILL.md
-)
-
 # --- Per-site kernel map (ADR-0049): each redesigned skill pins ONE ASCII invariant
 # line phrased for its own operation. site|signature pairs; grep -qF per site.
 KERNEL_MAP=(
@@ -63,6 +54,9 @@ KERNEL_MAP=(
   'skills/research-driven-development/SKILL.md|bd update <id> --claim'
   'skills/project-init/SKILL.md|Iron Law: NEVER Run'
   '.claude/skills/auditing-upstream-drift/SKILL.md|NO PLUGIN RELEASE WITHOUT A FULL AUDIT FIRST'
+  'skills/executing-plans/SKILL.md|the consent gate binds even when this skill is not loaded'
+  'skills/subagent-driven-development/SKILL.md|the consent gate binds even when this skill is not loaded'
+  'skills/using-git-worktrees/SKILL.md|the consent gate binds even when this skill is not loaded'
 )
 
 FAIL=0
@@ -125,7 +119,6 @@ fi
 
 check_block "CB-3 Capture gate"    "$CB3_SIG" "${CB3_SITES[@]}"
 check_block "CB-4 memory convention" "$CB4_SIG" "${CB4_SITES[@]}"
-check_block "CB-5 bd-frugality" "$CB5_SIG" "${CB5_SITES[@]}"
 check_kernels
 
 if [ "$FAIL" -eq 0 ]; then
