@@ -319,16 +319,13 @@ You: I'm using Subagent-Driven Development to execute this plan.
 
 [Read plan file once: .internal/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]
-[Create epic + tasks + deps atomically via bd create --graph:]
-[  Build plan.json: {nodes:[{key,title,type,priority,parent_key,description}],]
-[                   edges:[{from_key:<dependent>,to_key:<dependency>,type:"blocks"}]}]
-[  Each description embeds the bd lint-required section: epic -> "## Success Criteria",]
-[  task -> "## Acceptance Criteria" (copied from the plan; no separate graph field exists)]
-[  bd create --graph plan.json --dry-run   <- dry-run first]
-[  bd create --graph plan.json]
-[  Fallback: sequential bd create loop + bd dep add if --graph unavailable]
-[  Tip: wire multiple deps atomically to avoid orphaned deps if one fails:]
-[  printf 'dep add <task-3-id> <task-1-id>\ndep add <task-3-id> <task-2-id>\n' | bd batch]
+[Create epic + tasks via bd import (parent-child rides the import; blocks wired after):]
+[  bd create "Epic: <name>" -t epic -p2 -d "<goal>\n\n## Success Criteria\n- ..."  -> note epic id]
+[  Author tasks as JSONL, one per line, id OMITTED, each with a parent-child dep to the epic]
+[    and "## Acceptance Criteria" in description; pipe to: bd import -]
+[    (schema: bd import --help / bd export <id>; confirm output has no "Skipped dependency")]
+[  Wire task ordering (blocks): bd ready --parent <epic-id> --json -> child ids, then]
+[  printf 'dep add <t3> <t1> blocks\ndep add <t3> <t2> blocks\n' | bd batch]
 
 Task 1: Hook installation script
 
