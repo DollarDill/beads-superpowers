@@ -21,55 +21,34 @@ Load plan, review critically, execute all tasks, report when complete.
 3. If concerns: Raise them with your human partner before starting
 4. If no concerns: Create epic bead and child beads for each task, then proceed
 
-   Build a JSON plan file (`plan.json`) with the graph schema:
-
-   ```json
-   {
-     "nodes": [
-       {"key": "epic1", "title": "Epic: <plan-name>", "type": "epic", "priority": 2,
-        "description": "<goal>\n\n## Success Criteria\n- <measurable outcome from the plan's Goal>"},
-       {"key": "t1", "title": "Task 1: <title>", "type": "task", "priority": 2, "parent_key": "epic1",
-        "description": "<summary>\n\n## Acceptance Criteria\n- <outcome from the task's Acceptance Criteria block>"},
-       {"key": "t2", "title": "Task 2: <title>", "type": "task", "priority": 2, "parent_key": "epic1",
-        "description": "<summary>\n\n## Acceptance Criteria\n- <outcome from the task's Acceptance Criteria block>"}
-     ],
-     "edges": [
-       {"from_key": "t2", "to_key": "t1", "type": "blocks"}
-     ]
-   }
-   ```
-
-   Edge direction: `from_key` = dependent task (needs `to_key` done first). `type` is the dependency kind (`blocks`); it is optional and defaults to a blocking dependency.
-
-   Required sections: `bd lint` requires `## Success Criteria` in the epic's description and `## Acceptance Criteria` in each task's description — embed them in the `description` strings as above (the graph schema has no separate criteria field).
+   Create the epic, then import the child tasks as JSONL:
 
    ```bash
-   # Validate structure without writing:
-   bd create --graph plan.json --dry-run
+   # 1. Create the epic (→ note its id):
+   bd create "Epic: <plan-name>" -t epic -p 2 -d "<goal>
 
-   # Create all nodes and edges atomically:
-   bd create --graph plan.json
+## Success Criteria
+- <measurable outcome from the plan's Goal>"
+
+   # 2. Author the tasks as JSONL — one issue per line, id OMITTED (auto-assigned;
+   #    a supplied colliding id would overwrite that bead and reset its omitted fields).
+   #    Parent each to the epic; embed the bd lint-required '## Acceptance Criteria' in
+   #    'description' (or the 'acceptance_criteria' field). Read `bd import --help` on
+   #    first use; `bd export <id>` round-trips a real bead as a schema template.
+   cat <<'EOF' | bd import -
+{"title":"Task 1: <title>","issue_type":"task","priority":2,"description":"<summary>\n\n## Acceptance Criteria\n- <outcome>","dependencies":[{"depends_on_id":"<epic-id>","type":"parent-child"}]}
+{"title":"Task 2: <title>","issue_type":"task","priority":2,"description":"<summary>\n\n## Acceptance Criteria\n- <outcome>","dependencies":[{"depends_on_id":"<epic-id>","type":"parent-child"}]}
+EOF
    ```
 
-   > **Fallback** (if `--graph` is unavailable — older bd or schema skew): fall back to the sequential `bd create`/`bd dep add` loop:
-   > ```bash
-   > bd create "Epic: <plan-name>" -t epic --acceptance "All tasks pass, tests green"
-   > bd create "Task 1: <title>" -t task --parent <epic-id> --acceptance "<task's Acceptance Criteria>"
-   > bd dep add <task-2-id> <task-1-id>
-   > ```
+   Confirm the import output shows no `Skipped dependency` (a dep to a missing target is skipped, not rolled back). `bd lint` requires `## Success Criteria` in the epic's description and `## Acceptance Criteria` in each task's — embed them as above.
 
-   > **Tip — rich bead fields:**
-   > - `--body-file <file>` — avoids shell escaping issues with multi-line descriptions
-   > - `--acceptance "<criteria>"` — stores done criteria separately from description
-   > - `--design "<notes>"` or `--design-file <file>` — stores design context
-   > - `--notes "<text>"` — stores open questions or supplementary context
-   > - `--silent` — returns only the created ID (for scripting and dependency wiring)
-
-   > **Tip — atomic dependency wiring:** After creating task beads, wire dependency chains atomically using `bd batch` to prevent orphaned deps if one operation fails:
+   > **Wire task ordering (`blocks`) after the import.** `parent-child` rides the import, but inter-task `blocks` deps do not (children's ids are auto-assigned, so siblings can't reference each other in one file). Capture the ids **scoped to the parent** (a title grep collides with old beads), then wire ordering atomically:
    > ```bash
-   > printf 'dep add <task-2-id> <task-1-id>\ndep add <task-3-id> <task-2-id>\n' | bd batch
+   > bd ready --parent <epic-id> --json   # → the child task ids
+   > printf 'dep add <task-2-id> <task-1-id> blocks\n' | bd batch
    > ```
-   > Note: `bd batch create` does not support `--description`, `--parent`, or `--acceptance` flags. Use regular `bd create` for task creation.
+   > Note: `bd batch create` does not support `--description`/`--parent`/`--acceptance` — that is why task *creation* uses `bd import`, not `bd batch`.
 
 ### Step 2: Execute Tasks
 
