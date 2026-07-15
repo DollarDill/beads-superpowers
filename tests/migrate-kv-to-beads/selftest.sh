@@ -71,6 +71,11 @@ METACHAR_SUMMARY='Line one with $VAR and `cmd` and "double" and '"'"'single'"'"'
 Line two after a literal newline.'
 kv_set "bsp.kb.decision.fixture-metachars" "semantic:decision" "$METACHAR_SUMMARY" "docs/decisions/ADR-META.md"
 
+# NOTE: the fake tokens in the (e)/(f)/(k) fixtures below are assembled at runtime
+# via $(printf %s <prefix>) instead of being written as literals — otherwise this
+# secret-scan test's own fixtures would trip GitHub secret-scanning push protection.
+# The reassembled runtime value is a normal token the migration's scanner must still
+# catch, so the fixtures still work. Do NOT re-inline them as plain literals.
 # (e) fake secret (GitHub PAT shape: ghp_ + 36 chars)
 kv_set "bsp.kb.decision.fixture-secret" "semantic:decision" \
   "fixture-secret: leaked token $(printf %s ghp)_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 must never be written to a bead." \
