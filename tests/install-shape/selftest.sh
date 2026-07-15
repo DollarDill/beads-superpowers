@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# selftest.sh — guard-the-guards: 4 mutations that MUST make the suite fail.
+# selftest.sh — guard-the-guards: mutations that MUST make the suite fail.
 # A checker that cannot fail is decoration.
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -69,5 +69,66 @@ else
   expect_red "planted residue" bash -c "[ ! -e '$SB4/skills/using-superpowers/SKILL.md' ]"
 fi
 rm -rf "$SB4"
+
+# Mutations 5-7: check-kb-labels.sh (the KB label guard) actually fails on each
+# of its 3 invariants. Each mutation creates its violation bead in a THROWAWAY
+# scratch bd DB (mktemp -d OUTSIDE the repo tree, `bd init` there) — NEVER the
+# real, Dolt-synced store. The idiom needs no db-flag plumbing: the guard
+# resolves its vocab file from $0 (this repo's scripts/ dir, always an
+# absolute path here), while `bd list` auto-discovers whatever .beads is
+# above the CALLER's CWD. Running the guard with CWD = the scratch dir (via
+# `bash -c "cd '$SBx' && bash '$REPO_ROOT/scripts/check-kb-labels.sh'"`) makes
+# it see ONLY the scratch DB. After each mutation we assert the real store is
+# still clean — the isolation proof, not just an assumption.
+# Setup failures (bd init) are rig breakage, NOT a caught mutation — never let
+# them masquerade as red.
+assert_real_store_clean() {  # assert_real_store_clean <mutation-label>
+  local label="$1"
+  local leaked
+  leaked=$(cd "$REPO_ROOT" && bd list --label kb --status all --json 2>/dev/null | jq -c '.[]')
+  if [ -n "$leaked" ]; then
+    echo "SELFTEST FAIL: '$label' leaked a bead into the real store: $leaked"; rc=1
+  else
+    echo "SELFTEST ok: '$label' left the real store untouched"
+  fi
+}
+
+# Mutation 5: label outside the vocab file -> vocab-membership invariant fails.
+SB5=$(mktemp -d)
+if ! (cd "$SB5" && bd init --non-interactive >/dev/null 2>&1); then
+  echo "SELFTEST FAIL: mutation-5 setup 'bd init' failed (rig broken, not a caught mutation)"; rc=1
+elif ! (cd "$SB5" && bd create "bad vocab word" -t task -l "kb,notavocabword" --defer +1d --silent >/dev/null 2>&1); then
+  echo "SELFTEST FAIL: mutation-5 setup 'bd create' failed (rig broken, not a caught mutation)"; rc=1
+else
+  expect_red "kb guard: label not in vocab" bash -c "cd '$SB5' && bash '$REPO_ROOT/scripts/check-kb-labels.sh'"
+  assert_real_store_clean "kb guard: label not in vocab"
+fi
+rm -rf "$SB5"
+
+# Mutation 6: 'kb' with zero topic labels -> min-topic invariant fails.
+SB6=$(mktemp -d)
+if ! (cd "$SB6" && bd init --non-interactive >/dev/null 2>&1); then
+  echo "SELFTEST FAIL: mutation-6 setup 'bd init' failed (rig broken, not a caught mutation)"; rc=1
+elif ! (cd "$SB6" && bd create "no topic label" -t task -l "kb" --defer +1d --silent >/dev/null 2>&1); then
+  echo "SELFTEST FAIL: mutation-6 setup 'bd create' failed (rig broken, not a caught mutation)"; rc=1
+else
+  expect_red "kb guard: no topic label beyond kb" bash -c "cd '$SB6' && bash '$REPO_ROOT/scripts/check-kb-labels.sh'"
+  assert_real_store_clean "kb guard: no topic label beyond kb"
+fi
+rm -rf "$SB6"
+
+# Mutation 7: 4 topic labels, ALL valid vocab words -> max-cap invariant fails
+# in isolation (a mix of valid+invalid labels would false-green by tripping
+# the vocab check instead of the cap check).
+SB7=$(mktemp -d)
+if ! (cd "$SB7" && bd init --non-interactive >/dev/null 2>&1); then
+  echo "SELFTEST FAIL: mutation-7 setup 'bd init' failed (rig broken, not a caught mutation)"; rc=1
+elif ! (cd "$SB7" && bd create "too many topics" -t task -l "kb,memory,hooks,positioning,skills-arch" --defer +1d --silent >/dev/null 2>&1); then
+  echo "SELFTEST FAIL: mutation-7 setup 'bd create' failed (rig broken, not a caught mutation)"; rc=1
+else
+  expect_red "kb guard: >3 topic labels" bash -c "cd '$SB7' && bash '$REPO_ROOT/scripts/check-kb-labels.sh'"
+  assert_real_store_clean "kb guard: >3 topic labels"
+fi
+rm -rf "$SB7"
 
 exit "$rc"
