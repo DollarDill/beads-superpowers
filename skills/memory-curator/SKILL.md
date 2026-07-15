@@ -32,14 +32,14 @@ Two classes; **procedural** memory (how-to / workflow) lives in the **skills**, 
 | `semantic:root-cause` | memory | yes (salience≥4) | durable; consolidate |
 | `semantic:pattern` | memory | yes (salience≥4) | durable; consolidate |
 | `semantic:correction` | memory | yes | durable (supersedes a wrong memory) |
-| `semantic:research` | **kv** (`bsp.kb.`) | **no** | durable-in-kv — pointer to a research doc |
-| `semantic:design` | **kv** (`bsp.kb.`) | **no** | durable-in-kv — pointer to an ADR/spec |
-| `semantic:decision` | **kv** (`bsp.kb.`) | **no** | durable-in-kv — pointer to an ADR |
+| `semantic:research` | **deferred knowledge-bead** | **no** | deferred bead; pointer to a research doc (`metadata.doc`); `bd supersede` on replacement |
+| `semantic:design` | **deferred knowledge-bead** | **no** | deferred bead; pointer to an ADR/spec (`metadata.doc`); `bd supersede` on replacement |
+| `semantic:decision` | **deferred knowledge-bead** | **no** | deferred bead; pointer to an ADR (`metadata.doc`); `bd supersede` on replacement |
 | `episodic:continuation` | memory | latest only | supersede on next |
 | `episodic:done` / `cleanup` / `review` | memory → retire | no | consolidate into a semantic fact, then drop; age-out (>30d) safety net |
 
 **Crisp routing definitions (the boundary that keeps determinism honest):**
-- `research` / `design` / `decision` = a **pointer** whose detail lives in a doc/ADR you would re-open when relevant. Injecting it every session wastes context — route to `bsp.kb.` (§ kv knowledge base).
+- `research` / `design` / `decision` = a **pointer** whose detail lives in a doc/ADR you would re-open when relevant. Injecting it every session wastes context — route to a deferred knowledge-bead (§ Beads-native knowledge store).
 - `lesson` / `root-cause` / `pattern` / `correction` = a **standalone, actionable rule** you want surfaced *unprompted* so you don't repeat a mistake (e.g. "bd worktree default path is ./<name>, not .worktrees/"). Stays an injected memory.
 - **Escape hatch:** if a research/design item is genuinely a standalone reusable rule, classify it as a `lesson`/`pattern` — you change the *type*, never the store directly.
 
@@ -61,24 +61,22 @@ Every memory keeps its existing key and carries one greppable header line:
 The class makes the prune signal greppable (`bd memories | grep '@type=episodic:'`);
 `@salience`/`@tags` filter recall.
 
-## kv knowledge base (`bsp.kb.`)
+## Beads-native knowledge store
 
-Reference-class memories (`research`/`design`/`decision`) live in the beads **kv store**, not `memory.` — kv is never auto-injected, so pointers stay out of every session's context but keep persistence + Dolt sync.
+Reference-class memories (`research`/`design`/`decision`) live as **deferred knowledge-beads**, not in `memory.` — a deferred bead is never auto-injected at session start, so pointers stay out of every session's context but keep persistence + Dolt sync.
 
-- **Key:** `bsp.kb.<subtype>.<memory-key>` — derived deterministically from the memory's existing key (collision-free, idempotent on re-run). Plugin-scoped `bsp.kb.` avoids any future beads-native namespace collision (beads reserves `memory.`).
-- **Value:** compact, single-line, properly-escaped JSON (emit with `jq -c` / a real serializer — never string concatenation):
+- **Bead:** `status=deferred` with a far-future `--defer 2099-01-01` — never `closed` (closed beads are GC-deleted at 90d). `issue_type` matches the subtype (`research`/`design`/`decision`); every knowledge-bead also carries the class-marker label `kb` plus 1–3 topic labels from the controlled vocabulary (`scripts/kb-label-vocab.txt`).
+- **Body:** the research doc / ADR stays on disk as the source of truth; the bead is the queryable index/pointer via `metadata.doc` (display-only), with a one-line summary as the description:
 
-  ```json
-  {"type":"semantic:research","created":"2026-07-08","salience":3,"refs":["<doc-path>","<bead-id>"],"tags":["..."],"summary":"one-line breadcrumb; detail lives in refs"}
+  ```bash
+  bd create "<one-line summary>" -t <research|design|decision> -l kb,<topic-labels> \
+    --defer 2099-01-01 --metadata "$(jq -nc --arg d "<doc-path>" '{doc:$d}')" --silent
   ```
 
-  Single-line is mandatory: `bd kv list` renders one `key = value` per line, so a multi-line value breaks `grep` retrieval.
-
-- **Retrieval (kv has no server-side search — client-side only):**
-  - Skim: `bd kv list | grep -i '^ *bsp.kb' | grep -i <keyword>` (bd indents each pair 2 spaces — `^ *` tolerates it)
-  - Structured: `bd kv list --json | jq -r 'to_entries | map(select(.key|startswith("bsp.kb."))) | map(select(.value|fromjson|.tags|index("<tag>"))) | .[].key'`
-
-- **Move-out invariant (curator route step):** write the `bsp.kb.` key → **verify** (`bd kv get` returns it) → **then** `bd forget` the memory. Never forget first. Existence-check the key before writing (idempotent re-run). Run the secret/PII scan on the body first — **flag for removal, never relocate** a secret into kv.
+- **Retrieval:** `bd list --label <topic> --status all` (topic) and `bd search "<kw>" --status all` (keyword) — never metadata filters (broken in `bd`), never `find-duplicates`.
+- **Lifecycle:** `bd supersede <old> --with <new>` on replacement — the superseded bead closes and decays; the live pointer stays deferred.
+- **Move-out invariant (curator route step):** write the deferred knowledge-bead → **verify** (`bd show <id>` returns it) → **then** `bd forget` the memory. Never forget first. Existence-check before writing (idempotent re-run). Run the secret/PII scan on the body first — **flag for removal, never relocate** a secret into a bead.
+- **Aging path:** a cooled injected memory (low `@salience`, or superseded) can retire into a deferred knowledge-bead too, not just a tombstone — same move-out invariant above (write → verify → `bd forget`), never a copy left behind in both stores.
 
 ## The sweep
 One pass. Input: the session (in context) + `bd memories --json`. Output: a **reviewed** list of
