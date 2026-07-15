@@ -44,31 +44,65 @@ echo "PASS (2/5): deferred knowledge-bead hidden from bd ready"
 # exactly 1 (not 0 — the closed control must be swept; not 2 — the deferred bead must
 # not be). No `|| true` anywhere near these two assertions.
 decay_count() {
-  bde gc --dry-run --older-than 0 --skip-dolt 2>&1 | grep -oE 'Decay: [0-9]+' | grep -oE '[0-9]+'
+  # Aggregate decay count from `bd gc --dry-run`. bd always prints a "Decay: <n>" line;
+  # if that format ever changes, emit a clear FAIL (on stderr, so it survives $()
+  # capture) instead of letting set -e abort the script with no diagnostic.
+  local out num
+  out=$(bde gc --dry-run --older-than 0 --skip-dolt 2>&1)
+  num=$(printf '%s\n' "$out" | grep -oE 'Decay: [0-9]+' | grep -oE '[0-9]+') || num=""
+  if [ -z "$num" ]; then
+    printf 'FAIL: could not parse "Decay: <n>" from bd gc output (interface changed?):\n%s\n' "$out" >&2
+    return 2
+  fi
+  printf '%s\n' "$num"
 }
 
+# "before" side (deterministic, non-racy): only the never-closed deferred bead exists,
+# so nothing is decay-eligible — the count MUST be 0. This proves the deferred bead is
+# GC-safe on its own, independent of any timing.
 before=$(decay_count)
 [ "$before" = "0" ] \
   || { echo "FAIL: decay set non-empty before any closed bead exists (got $before, want 0) — deferred bead is leaking into GC"; exit 1; }
 
+# "after" side: close exactly one control bead, then POLL until the decay set reflects
+# it. `--older-than 0` uses a second-granularity cutoff evaluated at gc-run time, so a
+# bead closed in the same wall-clock second is not yet "older than 0 days" — a fixed
+# `sleep 1` races that boundary (measured ~15-20% false-0). The poll waits for the
+# cutoff to roll over instead of assuming a fixed margin is always enough:
+#   count == 1  -> success: closed control decayed, deferred did NOT (break)
+#   count  > 1  -> FAIL NOW: the deferred bead leaked into the decay set — the exact
+#                  regression this two-sided check exists to catch; never keep polling
+#   count == 0  -> the cutoff second has not rolled over yet; keep polling
+#   timeout     -> FAIL: closed control never entered the decay set
 closed=$(bde create "closed control" -t task --silent)
 bde close "$closed" --reason ctl >/dev/null
-# `--older-than 0` compares closed_at against a same-second cutoff; a bead closed in the
-# same wall-clock second as the gc check can race the cutoff and be excluded (verified
-# empirically: 3/3 runs showed decay=0 with no sleep, 3/3 showed decay=1 with sleep 1).
-sleep 1
-after=$(decay_count)
+after=""
+for _ in $(seq 1 20); do   # ~20 * 0.25s = 5s bound
+  n=$(decay_count)
+  if [ "$n" = "1" ]; then after=1; break; fi
+  if [ "$n" -gt 1 ]; then
+    echo "FAIL: deferred bead leaked into the decay set (decay count=$n, want 1) — GC-safety regression"; exit 1
+  fi
+  sleep 0.25
+done
 [ "$after" = "1" ] \
-  || { echo "FAIL: decay set did not isolate the closed control (got $after, want 1) — either the deferred bead leaked into GC or the closed control was skipped"; exit 1; }
-echo "PASS (3/5): GC-safety two-sided (before=$before after=$after) — deferred bead survives decay, closed control does not"
+  || { echo "FAIL: closed control never entered the decay set within ~5s — decay/GC interface regressed"; exit 1; }
+echo "PASS (3/5): GC-safety two-sided (before=0, after=1 via bounded poll) — deferred bead survives decay, closed control does not"
 
-# 4. Supersede: `bd supersede <old> --with <new>` closes+links the old bead, and it
-# stays queryable via --status all (the KB store's edit-in-place path).
+# 4. Supersede: `bd supersede <old> --with <new>` CLOSES + links the old bead, and it
+# stays queryable via --status all (the KB store's supersede-then-decay lifecycle).
 new=$(bde create "positioning reconsider" -t decision -l kb,positioning --defer 2099-01-01 --silent)
 bde supersede "$id" --with "$new" >/dev/null
+# 4a. old bead is actually CLOSED, not merely linked. `--status all` would also match an
+# open/deferred bead, so a regression where supersede stops closing (but still links)
+# must fail here. `list --id <old> --status closed` returns the bead iff its stored
+# status is closed (verified: a still-deferred bead does NOT match this filter).
+bde list --id "$id" --status closed | grep -q "$id" \
+  || { echo "FAIL: supersede did not close old bead $id (status != closed) — supersede-then-decay lifecycle broken"; exit 1; }
+# 4b. and it remains queryable via --status all (edit-in-place retrieval).
 bde list --label positioning --status all | grep -q "$id" \
   || { echo "FAIL: superseded bead $id no longer queryable via --status all"; exit 1; }
-echo "PASS (4/5): supersede closes+links old bead, still queryable via --status all"
+echo "PASS (4/5): supersede closes old bead + links; still queryable via --status all"
 
 # 5. Search: `bd search <kw> --status all` finds the bead by keyword.
 bde search "positioning decision" --status all | grep -q "$id" \
