@@ -76,11 +76,14 @@ Before launching new research, search for existing coverage:
 # Check beads memories for prior context
 bd memories <keyword>
 
-# Search project research directory
-find .internal/research -name "*.md" -exec grep -l "<keyword>" {} \; 2>/dev/null
+# Query the knowledge-beads — the primary dedup index now (reference-class
+# research lives here as deferred `research`-labeled beads, not in the old
+# kv store or as a doc-grep)
+bd list --label <topic> --status all
+bd search "<keywords>" --status all
 ```
 
-Also search the kv knowledge base (reference-class notes live there, not in memories) — same lookup researchers run; see the "Search the knowledge base first" step in `./researcher-prompt.md`.
+Same lookup researchers run; see the "Search the knowledge base first" step in `./researcher-prompt.md`.
 
 **If comprehensive coverage already exists:** Reference it, add any new findings as updates, and close the bead. Do not duplicate existing research.
 
@@ -159,22 +162,22 @@ If Step 4 surfaced load-bearing claims resting on a single source, unresolved, o
 
 Research documents are written to **`.internal/research/`** — the project-local, gitignored knowledge base. Not configurable.
 
-List existing category subdirectories and pick the one that best matches the research topic:
-
-```bash
-find .internal/research -maxdepth 1 -mindepth 1 -type d 2>/dev/null
-```
-
-If a category fits, write inside it; if none fits (or none exist), write to `.internal/research/` directly.
-
-```bash
-# Example: research about CI/CD → engineering-and-technology subdirectory
-mkdir -p .internal/research/<category>
-```
-
 Filename: `YYYY-MM-DD-<topic-slug>.md`
 
 Write the document using the structure in **`./document-template.md`** (read it now).
+
+### Create the Research Knowledge-Bead
+
+Creating the knowledge-bead is part of this step, not a separate one — it happens the moment the document is written, never deferred to later.
+
+**Secret/PII scan first:** before creating the bead, scan the one-line summary and the doc path for secrets or PII (tokens, keys, credentials, personal data) — same discipline as the kv migration engine and memory-curator. If either looks like a secret, flag it and **skip bead creation**. Never write a secret/token/PII into a bead description or metadata: bead descriptions are queryable and ride Dolt history, which outlives `bd forget`.
+
+```bash
+bd create "<one-line summary of the research>" -t research -l kb,<1-3 topic labels from scripts/kb-label-vocab.txt> \
+  --defer 2099-01-01 --metadata "$(jq -nc --arg d "<docpath>" '{doc:$d}')" --silent
+```
+
+Labels: `kb` plus 1–3 topics from the controlled vocabulary (`scripts/kb-label-vocab.txt`) — the guard requires at least one topic label, at most three, and every label present in the vocab.
 
 ### Quality Checklist
 

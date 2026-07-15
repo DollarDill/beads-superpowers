@@ -39,9 +39,11 @@ Agent tool (subagent_type: "general-purpose"):
        # Search the project research directory
        find .internal/research -name "*.md" -exec grep -li "<keyword>" {} \; 2>/dev/null
        ```
-       Also search the kv knowledge base (reference-class notes live there):
+       Also query the knowledge-beads (reference-class research lives there as
+       deferred `research`-labeled beads, not in the old kv store):
        ```bash
-       bd kv list | grep -i '^ *bsp.kb' | grep -i "<keyword>"
+       bd list --label <topic> --status all
+       bd search "<keyword>" --status all
        ```
        Check it before researching from scratch. If comprehensive coverage already
        exists, reference it — do not duplicate.
