@@ -251,6 +251,8 @@ User asks: "How does Dolt handle merge conflicts?"
    Dispatch @explore: "Search codebase for Dolt merge, conflict..."
 4. Synthesize: researcher found cell-level merge docs, explore found bd dolt pull usage
 5. Write to .internal/research/2026-05-01-dolt-merge-conflict-handling.md
+5a. Secret/PII scan the summary, then create the knowledge-bead:
+    bd create "Dolt uses cell-level 3-way merge on SQL tables (no textual conflict markers)" -t research -l kb,rdd,beads-tooling --defer 2099-01-01 --metadata '{"doc":".internal/research/2026-05-01-dolt-merge-conflict-handling.md"}' --silent
 6. bd close <id> --reason "Research complete: Dolt uses cell-level merge on SQL tables"
 ```
 
