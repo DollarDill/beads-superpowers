@@ -788,6 +788,7 @@ This workspace uses **bd (beads)**. Core commands:
 - `bd ready -n 10` — unblocked work · `bd show --short <id>` — skim an issue
 - `bd create "Title" -t task -p 2` — create · `bd close <id> --reason "..."` — complete
 - `bd query "status=open"` — search · `bd remember "insight"` — persist a memory
+- knowledge store: `bd list --label <topic> --status all` — prior decisions/research/design (deferred beads)
 Full reference: `bd human`. If beads context was not injected this session: `bd prime`.
 
 ## Persistent Memories
