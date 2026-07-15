@@ -29,22 +29,39 @@ esac
 [ -f "$MAP" ] || { echo "migrate-kv-to-beads: labelmap file not found: $MAP" >&2; exit 1; }
 
 # Secret/PII scan (mandatory): flag-and-skip, never write a hit into a bead
-# description. Bead descriptions are queryable and ride Dolt history (outlives
-# 'bd forget') — a secret written once is effectively permanent.
+# description OR metadata.doc — both are queryable and ride Dolt history (which
+# outlives 'bd forget'), so a secret written once is effectively permanent.
 looks_like_secret() {
   local text="$1" tok
-  grep -Eiq 'gh[pousr]_[A-Za-z0-9]{36,}' <<<"$text" && return 0
-  grep -Eq 'AKIA[0-9A-Z]{16}' <<<"$text" && return 0
-  grep -Eq -- '-----BEGIN [A-Z ]*PRIVATE KEY-----' <<<"$text" && return 0
+  # 1) Well-known / labeled token shapes — matched against the WHOLE text so
+  #    surrounding quotes or punctuation can't defeat detection. Provider
+  #    prefixes are case-sensitive as issued.
+  grep -Eq 'gh[pousr]_[A-Za-z0-9]{36,}' <<<"$text" && return 0                # GitHub PAT/OAuth/App/refresh
+  grep -Eq 'xox[baprs]-[A-Za-z0-9-]{10,}' <<<"$text" && return 0              # Slack (lowercase, no case-mix)
+  grep -Eq '(sk|pk|rk)_(live|test)_[A-Za-z0-9]{16,}' <<<"$text" && return 0   # Stripe
+  grep -Eq 'sk-[A-Za-z0-9]{20,}' <<<"$text" && return 0                       # OpenAI
+  grep -Eq 'AIza[A-Za-z0-9_-]{20,}' <<<"$text" && return 0                    # Google API key
+  grep -Eq 'eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}' <<<"$text" && return 0 # JWT (header.payload)
+  grep -Eq 'Bearer [A-Za-z0-9._-]{20,}' <<<"$text" && return 0                # Bearer token
+  grep -Eq 'AKIA[0-9A-Z]{16}' <<<"$text" && return 0                          # AWS access key id
+  grep -Eq -- '-----BEGIN [A-Z ]*PRIVATE KEY-----' <<<"$text" && return 0     # PEM private key
   grep -Eiq '(secret|api[_-]?key|password)[[:space:]]*[:=][[:space:]]*[A-Za-z0-9/+_.-]{8,}' <<<"$text" && return 0
-  # Heuristic for unlabeled high-entropy credentials: a whitespace-delimited
-  # token >=32 chars mixing lower+upper+digit reads as a random secret, not a
-  # kebab-case slug, hex hash, or URL (those stay single-case).
+  # 2) Generic high-entropy fallback (per whitespace-delimited token >=32 chars).
+  #    Flag a token that is ENTIRELY base64 alphabet ([A-Za-z0-9+/] + optional
+  #    '=' padding) AND contains a digit AND is NOT pure hex. This catches
+  #    base32/base62/base64 random-secret encodings of ANY case (padded or not,
+  #    single-case included — the gap the reviewer flagged) while NOT
+  #    false-flagging the shapes that legitimately fill these summaries: git
+  #    SHAs / MD5 / SHA-256 (pure hex, excluded), file paths & URLs (carry
+  #    '.'/':'/'-'/'_' so they aren't base64-alphabet-only), and lowercase
+  #    slash-separated word lists like 'a/b/c/d' (no digit). Calibrated to ZERO
+  #    false positives against the real 129-entry store.
   while IFS= read -r tok; do
     [ "${#tok}" -ge 32 ] || continue
-    if grep -q '[a-z]' <<<"$tok" && grep -q '[A-Z]' <<<"$tok" && grep -q '[0-9]' <<<"$tok"; then
-      return 0
-    fi
+    [[ $tok =~ ^[A-Za-z0-9+/]+={0,2}$ ]] || continue   # entirely base64 alphabet
+    [[ $tok =~ [0-9] ]] || continue                    # has a digit (excludes word-lists)
+    [[ $tok =~ ^[0-9a-fA-F]+={0,2}$ ]] && continue      # pure hex -> git SHA/MD5/SHA-256, skip
+    return 0
   done < <(grep -oE '[^[:space:]]+' <<<"$text")
   return 1
 }
@@ -72,12 +89,37 @@ if ! kv_json=$(bd kv list --json); then
   echo "migrate-kv-to-beads: ERROR — 'bd kv list' failed" >&2
   exit 2
 fi
-keys=$(jq -r --arg s "semantic:$SUB" '
+
+# Classify every bsp.kb.* entry with a PER-ENTRY defensive parse (try/catch), so
+# one malformed .value cannot abort the whole run. The pre-fix single filter ran
+# `.value|fromjson` on every bsp.kb.* entry BEFORE the subtype test, so a bad
+# value under ANY subtype aborted every subtype's migration with a raw jq dump.
+# Here each entry becomes exactly one TSV record: "target\t<key>" (parses to an
+# object whose .type == semantic:<SUB>) or "malformed\t<key>" (unparseable, or
+# not a JSON object). Non-object / other-subtype parseable entries emit nothing.
+classified=$(jq -r --arg s "semantic:$SUB" '
     to_entries[]
     | select(.key | startswith("bsp.kb."))
-    | select((.value | fromjson | .type) == $s)
-    | .key
+    | . as $e
+    | (try ($e.value | fromjson) catch null) as $p
+    | if ($p | type) != "object" then "malformed\t\($e.key)"
+      elif ($p.type == $s)       then "target\t\($e.key)"
+      else empty end
   ' <<<"$kv_json")
+
+malformed=0
+keys=""
+while IFS=$'\t' read -r status key; do
+  [ -n "$status" ] || continue
+  if [ "$status" = "malformed" ]; then
+    # Surface by name (never a silent drop, never a raw jq dump). A malformed
+    # entry keeps its expected-count auditable across the per-subtype runs.
+    echo "WARN: unparseable kv value for $key — skipped" >&2
+    malformed=$((malformed + 1))
+  else
+    keys+="$key"$'\n'
+  fi
+done <<<"$classified"
 
 created=0
 skipped_exists=0
@@ -98,7 +140,9 @@ while IFS= read -r key; do
   summary=$(jq -r '.summary' <<<"$val")
   doc=$(jq -r '.refs[0] // ""' <<<"$val")
 
-  if looks_like_secret "$summary"; then
+  # Scan BOTH the summary (-> description) and doc (-> metadata.doc): both land
+  # in the bead and ride Dolt history.
+  if looks_like_secret "$summary" || looks_like_secret "$doc"; then
     echo "FLAG: $key — possible secret, skipped for human review" >&2
     skipped_secret=$((skipped_secret + 1))
     continue
@@ -122,4 +166,4 @@ while IFS= read -r key; do
   created=$((created + 1))
 done <<<"$keys"
 
-echo "migrate-kv-to-beads: subtype=$SUB created=$created skip-exists=$skipped_exists skip-secret=$skipped_secret skip-no-label=$skipped_nolabel"
+echo "migrate-kv-to-beads: subtype=$SUB created=$created skip-exists=$skipped_exists skip-secret=$skipped_secret skip-no-label=$skipped_nolabel malformed=$malformed"

@@ -9,6 +9,13 @@
 #       a literal string-prefix of fixture-prefix-extra)
 #   (d) metachar/newline summary round-trips into the bead description intact
 #   (e) secret-bearing summary is skipped + flagged, never written
+# Review-round-2 additions:
+#   (f) single-case token (lowercase Slack xoxb-...) is flagged + skipped
+#   (g) control (git SHA + kebab slug + prose) is MIGRATED, NOT false-flagged
+#   (h) no-label-mapping entry is skipped (no bead), surfaced on stderr
+#   (i) malformed TARGET-subtype value -> WARN by name, no bead, run still exits 0
+#   (j) malformed OTHER-subtype value does NOT abort/block the target migration
+#   (k) secret in the doc/refs[0] field (not just summary) is flagged + skipped
 # Also confirms: deferred beads are hidden from `bd ready`, the created set is
 # guard-valid (scripts/check-kb-labels.sh), kv is untouched (read-only), and
 # the REAL repo's kb-bead set is unchanged before/after (read-only checks
@@ -69,12 +76,46 @@ kv_set "bsp.kb.decision.fixture-secret" "semantic:decision" \
   "fixture-secret: leaked token $(printf %s ghp)_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 must never be written to a bead." \
   "docs/decisions/ADR-SECRET.md"
 
+# (f) single-case (all-lowercase) Slack bot token — the exact class the old
+# AND-of-three-cases entropy check missed. Must be flagged + skipped.
+kv_set "bsp.kb.decision.fixture-slack" "semantic:decision" \
+  "fixture-slack: leaked bot token $(printf %s xoxb)-1234567890-abcdefghijklmnopqrstuvwx must never land in a bead." \
+  "docs/decisions/ADR-SLACK.md"
+
+# (g) control: legit content that MUST NOT be false-flagged — a 40-char git SHA
+# (pure hex), a kebab-case slug (>=32, has hyphens), and normal prose. Proves
+# the broadened scan doesn't block real entries.
+kv_set "bsp.kb.decision.fixture-control" "semantic:decision" \
+  "fixture-control: see commit da39a3ee5e6b4b0d3255bfef95601890afd80709 and decision-decline-loop-engineering-2026-06-27 in normal prose." \
+  "docs/decisions/ADR-CONTROL.md"
+
+# (h) present in the target subtype but ABSENT from the labelmap -> skip (no bead).
+kv_set "bsp.kb.decision.fixture-nolabel" "semantic:decision" \
+  "fixture-nolabel: a decision with no reviewed label mapping." "docs/decisions/ADR-NOLABEL.md"
+
+# (k) clean summary but a secret in refs[0] (-> metadata.doc). Must be flagged.
+kv_set "bsp.kb.decision.fixture-doc-secret" "semantic:decision" \
+  "fixture-doc-secret: a perfectly clean summary with the secret hidden in its doc ref." \
+  "https://example.com/x?token=$(printf %s ghp)_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+# (i) malformed TARGET-subtype value (non-JSON) — must be surfaced by name, not abort.
+(cd "$SB" && bd kv set "bsp.kb.decision.fixture-malformed-decision" 'this is NOT json {oops' >/dev/null)
+# (j) malformed OTHER-subtype value — must not block the decision run.
+(cd "$SB" && bd kv set "bsp.kb.design.fixture-malformed-design" 'also }not{ json' >/dev/null)
+
+# labelmap: fixture-slack and fixture-doc-secret ARE given valid mappings on
+# purpose — so the ONLY thing preventing their bead creation is the secret scan.
+# If the scan missed, a bead would be created and (f)/(k) would fail loudly.
+# fixture-nolabel is deliberately omitted. Malformed entries never reach lookup.
 {
   printf 'bsp.kb.decision.fixture-normal\ttesting-guards,release\n'
   printf 'bsp.kb.decision.fixture-prefix\thooks\n'
   printf 'bsp.kb.decision.fixture-prefix-extra\tmemory,docs\n'
   printf 'bsp.kb.decision.fixture-metachars\tpositioning\n'
   printf 'bsp.kb.decision.fixture-secret\thooks\n'
+  printf 'bsp.kb.decision.fixture-slack\thooks\n'
+  printf 'bsp.kb.decision.fixture-control\tadr-process\n'
+  printf 'bsp.kb.decision.fixture-doc-secret\thooks\n'
 } >"$MAP"
 
 get_bead() { # get_bead <kv_key> <json>
@@ -153,6 +194,80 @@ else
   fail "(e) no FLAG printed for secret entry; stderr was: $err1"
 fi
 
+# (f) single-case Slack token: flagged + not written
+if [ -z "$(get_bead "bsp.kb.decision.fixture-slack" "$after1")" ]; then
+  pass "(f) single-case Slack token NOT written as a bead"
+else
+  fail "(f) single-case Slack token WAS written (entropy gap not closed)"
+fi
+if grep -q 'FLAG: bsp.kb.decision.fixture-slack' <<<"$err1"; then
+  pass "(f) single-case Slack token flagged on stderr"
+else
+  fail "(f) no FLAG for single-case Slack token; stderr was: $err1"
+fi
+
+# (g) control: git SHA + kebab slug + prose -> MIGRATED, not false-flagged
+ctrl=$(get_bead "bsp.kb.decision.fixture-control" "$after1")
+if [ -n "$ctrl" ]; then
+  pass "(g) control (git SHA + kebab slug + prose) migrated, NOT false-flagged"
+else
+  fail "(g) control entry was FALSE-FLAGGED/skipped — legit content blocked"
+fi
+if grep -q 'FLAG: bsp.kb.decision.fixture-control' <<<"$err1"; then
+  fail "(g) control entry was flagged as a secret (false positive)"
+else
+  pass "(g) control entry not flagged (no false positive)"
+fi
+
+# (h) no-label-mapping: no bead + surfaced on stderr
+if [ -z "$(get_bead "bsp.kb.decision.fixture-nolabel" "$after1")" ]; then
+  pass "(h) no-label-mapping entry not written as a bead"
+else
+  fail "(h) no-label-mapping entry created a (guard-invalid) bead"
+fi
+if grep -q 'skip (no label mapping): bsp.kb.decision.fixture-nolabel' <<<"$err1"; then
+  pass "(h) no-label-mapping surfaced on stderr"
+else
+  fail "(h) no-label-mapping not surfaced; stderr was: $err1"
+fi
+
+# (i) malformed TARGET-subtype: WARN by name + no bead (never a silent drop)
+if grep -q 'WARN: unparseable kv value for bsp.kb.decision.fixture-malformed-decision — skipped' <<<"$err1"; then
+  pass "(i) malformed target-subtype value surfaced by name (WARN)"
+else
+  fail "(i) malformed target-subtype value not surfaced by name; stderr was: $err1"
+fi
+if [ -z "$(get_bead "bsp.kb.decision.fixture-malformed-decision" "$after1")" ]; then
+  pass "(i) malformed target-subtype value produced no bead"
+else
+  fail "(i) malformed target-subtype value produced a bead"
+fi
+
+# (j) malformed OTHER-subtype does not abort/block: run 1 exited 0 (asserted
+# above) AND the normal target entries still migrated. Also surfaced by name.
+if [ -n "$normal" ] && [ "$rc1" -eq 0 ]; then
+  pass "(j) malformed other-subtype value did NOT abort the target migration"
+else
+  fail "(j) malformed other-subtype value blocked/aborted the target migration"
+fi
+if grep -q 'WARN: unparseable kv value for bsp.kb.design.fixture-malformed-design — skipped' <<<"$err1"; then
+  pass "(j) malformed other-subtype value surfaced by name (WARN)"
+else
+  fail "(j) malformed other-subtype value not surfaced by name; stderr was: $err1"
+fi
+
+# (k) secret in the doc/refs[0] field: flagged + not written
+if [ -z "$(get_bead "bsp.kb.decision.fixture-doc-secret" "$after1")" ]; then
+  pass "(k) entry with a secret in its doc ref NOT written as a bead"
+else
+  fail "(k) entry with a secret in its doc ref WAS written (doc field not scanned)"
+fi
+if grep -q 'FLAG: bsp.kb.decision.fixture-doc-secret' <<<"$err1"; then
+  pass "(k) doc-field secret flagged on stderr"
+else
+  fail "(k) no FLAG for doc-field secret; stderr was: $err1"
+fi
+
 # --- run 2: idempotency -------------------------------------------------------
 out2=$(cd "$SB" && bash "$MIGRATE" decision "$MAP" 2>"$SB/run2.err")
 after2=$(cd "$SB" && bd list --label kb --status all --limit 0 --json)
@@ -164,7 +279,7 @@ count2=$(jq 'length' <<<"$after2")
 # shellcheck disable=SC2015  # pass/fail always succeed, so A && B || C can't misfire
 grep -q 'created=0 ' <<<"$out2" && pass "(b) 2nd run summary reports created=0" \
   || fail "(b) 2nd run summary did not report created=0: $out2"
-for k in fixture-normal fixture-prefix fixture-prefix-extra fixture-metachars; do
+for k in fixture-normal fixture-prefix fixture-prefix-extra fixture-metachars fixture-control; do
   if grep -q "skip (exists): bsp.kb.decision.$k ->" <<<"$out2"; then
     pass "(b) 2nd run: skip-exists printed for $k"
   else
