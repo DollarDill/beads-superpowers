@@ -78,18 +78,18 @@ rm -rf "$SB4"
 # absolute path here), while `bd list` auto-discovers whatever .beads is
 # above the CALLER's CWD. Running the guard with CWD = the scratch dir (via
 # `bash -c "cd '$SBx' && bash '$REPO_ROOT/scripts/check-kb-labels.sh'"`) makes
-# it see ONLY the scratch DB. After each mutation we assert the real store is
-# still clean — the isolation proof, not just an assumption.
+# it see ONLY the scratch DB. After each mutation we assert THIS mutation's
+# scratch bead id is absent from the real store — keyed on the specific id,
+# NOT global emptiness, so it stays green after T4 migrates real kb-beads in.
 # Setup failures (bd init) are rig breakage, NOT a caught mutation — never let
 # them masquerade as red.
-assert_real_store_clean() {  # assert_real_store_clean <mutation-label>
-  local label="$1"
-  local leaked
-  leaked=$(cd "$REPO_ROOT" && bd list --label kb --status all --json 2>/dev/null | jq -c '.[]')
-  if [ -n "$leaked" ]; then
-    echo "SELFTEST FAIL: '$label' leaked a bead into the real store: $leaked"; rc=1
+assert_scratch_bead_absent() {  # assert_scratch_bead_absent <mutation-label> <scratch-bead-id>
+  local label="$1" bead_id="$2" real_ids
+  real_ids=$(cd "$REPO_ROOT" && bd list --label kb --status all --limit 0 --json 2>/dev/null | jq -r '.[].id')
+  if printf '%s\n' "$real_ids" | grep -qxF "$bead_id"; then
+    echo "SELFTEST FAIL: '$label' leaked scratch bead '$bead_id' into the real store"; rc=1
   else
-    echo "SELFTEST ok: '$label' left the real store untouched"
+    echo "SELFTEST ok: '$label' scratch bead '$bead_id' absent from real store (no leak)"
   fi
 }
 
@@ -97,11 +97,11 @@ assert_real_store_clean() {  # assert_real_store_clean <mutation-label>
 SB5=$(mktemp -d)
 if ! (cd "$SB5" && bd init --non-interactive >/dev/null 2>&1); then
   echo "SELFTEST FAIL: mutation-5 setup 'bd init' failed (rig broken, not a caught mutation)"; rc=1
-elif ! (cd "$SB5" && bd create "bad vocab word" -t task -l "kb,notavocabword" --defer +1d --silent >/dev/null 2>&1); then
+elif ! bead5=$(cd "$SB5" && bd create "bad vocab word" -t task -l "kb,notavocabword" --defer +1d --silent 2>/dev/null); then
   echo "SELFTEST FAIL: mutation-5 setup 'bd create' failed (rig broken, not a caught mutation)"; rc=1
 else
   expect_red "kb guard: label not in vocab" bash -c "cd '$SB5' && bash '$REPO_ROOT/scripts/check-kb-labels.sh'"
-  assert_real_store_clean "kb guard: label not in vocab"
+  assert_scratch_bead_absent "kb guard: label not in vocab" "$bead5"
 fi
 rm -rf "$SB5"
 
@@ -109,11 +109,11 @@ rm -rf "$SB5"
 SB6=$(mktemp -d)
 if ! (cd "$SB6" && bd init --non-interactive >/dev/null 2>&1); then
   echo "SELFTEST FAIL: mutation-6 setup 'bd init' failed (rig broken, not a caught mutation)"; rc=1
-elif ! (cd "$SB6" && bd create "no topic label" -t task -l "kb" --defer +1d --silent >/dev/null 2>&1); then
+elif ! bead6=$(cd "$SB6" && bd create "no topic label" -t task -l "kb" --defer +1d --silent 2>/dev/null); then
   echo "SELFTEST FAIL: mutation-6 setup 'bd create' failed (rig broken, not a caught mutation)"; rc=1
 else
   expect_red "kb guard: no topic label beyond kb" bash -c "cd '$SB6' && bash '$REPO_ROOT/scripts/check-kb-labels.sh'"
-  assert_real_store_clean "kb guard: no topic label beyond kb"
+  assert_scratch_bead_absent "kb guard: no topic label beyond kb" "$bead6"
 fi
 rm -rf "$SB6"
 
@@ -123,11 +123,11 @@ rm -rf "$SB6"
 SB7=$(mktemp -d)
 if ! (cd "$SB7" && bd init --non-interactive >/dev/null 2>&1); then
   echo "SELFTEST FAIL: mutation-7 setup 'bd init' failed (rig broken, not a caught mutation)"; rc=1
-elif ! (cd "$SB7" && bd create "too many topics" -t task -l "kb,memory,hooks,positioning,skills-arch" --defer +1d --silent >/dev/null 2>&1); then
+elif ! bead7=$(cd "$SB7" && bd create "too many topics" -t task -l "kb,memory,hooks,positioning,skills-arch" --defer +1d --silent 2>/dev/null); then
   echo "SELFTEST FAIL: mutation-7 setup 'bd create' failed (rig broken, not a caught mutation)"; rc=1
 else
   expect_red "kb guard: >3 topic labels" bash -c "cd '$SB7' && bash '$REPO_ROOT/scripts/check-kb-labels.sh'"
-  assert_real_store_clean "kb guard: >3 topic labels"
+  assert_scratch_bead_absent "kb guard: >3 topic labels" "$bead7"
 fi
 rm -rf "$SB7"
 

@@ -8,8 +8,17 @@
 set -euo pipefail
 VOCAB="$(dirname "$0")/kb-label-vocab.txt"
 fail=0
+# Query up front so we can distinguish a genuine 'bd' failure (corrupt/locked/
+# unavailable DB) from a genuinely empty store — swallowing stderr into an
+# empty read loop would print a false "OK". --limit 0 = unlimited: the default
+# --limit 50 would silently skip violations in the 51st+ knowledge-bead, and
+# this store is designed to hold ~129.
+if ! rows=$(bd list --label kb --status all --limit 0 --json); then
+  echo "kb-labels: ERROR — 'bd list' query failed; cannot verify knowledge-bead labels" >&2
+  exit 2
+fi
 # CRITICAL: process substitution (NOT a pipe) so 'fail' lives in THIS shell and exit propagates.
-# A `bd list | while read ...` pipe would run the loop body in a subshell, losing fail=1.
+# A `... | while read ...` pipe would run the loop body in a subshell, losing fail=1.
 while read -r row; do
   id=$(jq -r '.id' <<<"$row")
   mapfile -t labels < <(jq -r '.labels[]?' <<<"$row")
@@ -20,6 +29,6 @@ while read -r row; do
   done
   [ "$topic" -ge 1 ] || { echo "FAIL $id: no topic label beyond 'kb'"; fail=1; }
   [ "$topic" -le 3 ] || { echo "FAIL $id: >3 topic labels"; fail=1; }
-done < <(bd list --label kb --status all --json 2>/dev/null | jq -c '.[] | {id, labels}')
+done < <(jq -c '.[] | {id, labels}' <<<"$rows")
 [ "$fail" -eq 0 ] && echo "kb-labels: OK (all knowledge-beads obey the vocab contract)"
 exit "$fail"
