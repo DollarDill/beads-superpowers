@@ -168,6 +168,18 @@ else
     expect_green "kb doc-reconciliation: matching bead (control)" \
       bash -c "cd '$SB8' && bash '$REPO_ROOT/scripts/check-kb-doc-reconciliation.sh'"
     assert_scratch_bead_absent "kb doc-reconciliation: orphan doc" "$bead8"
+    # Scoped-WARN check: a bead whose metadata.doc is an OPAQUE ref (no '/',
+    # e.g. a bead-id/kv-key from the kv->beads migration) must NOT emit a
+    # 'warn:' line — proves the WARN loop is path-shaped-scoped, not a bare
+    # `[ -f "$d" ]` that false-warns on every opaque ref.
+    if ! (cd "$SB8" && bd create "opaque-ref doc bead" -t task -l kb --defer +1d \
+          --metadata '{"doc":"4l5v"}' --silent >/dev/null 2>&1); then
+      echo "SELFTEST FAIL: mutation-8 setup 'bd create' (opaque-ref bead) failed (rig broken, not a caught mutation)"; rc=1
+    elif (cd "$SB8" && bash "$REPO_ROOT/scripts/check-kb-doc-reconciliation.sh" 2>&1) | grep -q '^warn:'; then
+      echo "SELFTEST FAIL: kb doc-reconciliation warned on an opaque (non-path) metadata.doc"; rc=1
+    else
+      echo "SELFTEST ok: kb doc-reconciliation: no warn on opaque (non-path) metadata.doc"
+    fi
   fi
   if [ -d "$REPO_ROOT/.internal/research" ]; then
     echo "SELFTEST FAIL: mutation-8 leaked into real .internal/research (isolation broken)"; rc=1

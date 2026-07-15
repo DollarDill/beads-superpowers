@@ -35,8 +35,21 @@ done
 shopt -u nullglob
 
 # WARN-ONLY — bead -> doc: a bead pointing at a doc absent locally is
-# EXPECTED (docs are per-machine) — never fails.
-while read -r d; do [ -z "$d" ] || [ -f "$d" ] || echo "warn: bead doc not present locally: $d"; done <<<"$beaddocs"
+# EXPECTED (docs are per-machine) — never fails. Scoped to PATH-SHAPED
+# metadata.doc values only: real doc paths contain a '/'
+# (.internal/research/foo.md, docs/decisions/ADR-x.md); the kv->beads
+# migration also stores opaque bead-id / kv-key refs verbatim (e.g. '4l5v',
+# 'aniv', 'beads-superpowers-c2m6'), which are NOT filesystem paths — a bare
+# `[ -f "4l5v" ]` is false forever and would emit a false WARN every run,
+# indistinguishable from the genuine "doc exists in a bead but isn't synced
+# to this machine" case this WARN exists to catch.
+while read -r d; do
+  [ -z "$d" ] && continue
+  case "$d" in
+    */*) [ -f "$d" ] || echo "warn: bead doc not present locally: $d" ;;
+    *)   : ;;   # opaque ref (bead-id/kv-key), not a path — nothing to reconcile
+  esac
+done <<<"$beaddocs"
 
 [ "$fail" -eq 0 ] && echo "kb-doc-reconciliation: OK (all local research docs have knowledge-beads)"
 exit "$fail"
