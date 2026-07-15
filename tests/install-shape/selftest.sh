@@ -13,6 +13,14 @@ expect_red() {  # expect_red <label> <cmd>...
     echo "SELFTEST ok: '$label' correctly fails"
   fi
 }
+expect_green() {  # expect_green <label> <cmd>... — the GREEN-control counterpart to expect_red.
+  local label="$1"; shift
+  if "$@" > /dev/null 2>&1; then
+    echo "SELFTEST ok: '$label' correctly passes"
+  else
+    echo "SELFTEST FAIL: '$label' should have gone GREEN but failed"; rc=1
+  fi
+}
 
 # Mutation 1: source copy missing one skill dir -> the REAL assert-claude.sh must fail.
 # (Runs the actual assertion code path via the SHAPE_REPO_ROOT override, not an inline re-check.
@@ -130,5 +138,43 @@ else
   assert_scratch_bead_absent "kb guard: >3 topic labels" "$bead7"
 fi
 rm -rf "$SB7"
+
+# Mutation 8: check-kb-doc-reconciliation.sh (Task 8's doc<->bead guard) —
+# a local research doc with no matching knowledge-bead must fail RED (a
+# skipped capture); adding a bead whose metadata.doc matches the file must
+# then pass GREEN, proving the guard discriminates rather than always
+# failing. Scratch-isolated exactly like mutations 5-7: mktemp -d OUTSIDE the
+# repo, `bd init` there, own throwaway .internal/research/ dir. Running the
+# guard with CWD = the scratch dir makes BOTH its `bd list` auto-discovery
+# AND its relative DIR=".internal/research" resolve entirely inside the
+# scratch tree — the real store and the real .internal/research (which
+# doesn't exist pre-Task-9) are never touched. Setup failures (bd init /
+# mkdir / write) are rig breakage, NOT a caught mutation — never let them
+# masquerade as red.
+SB8=$(mktemp -d)
+if ! (cd "$SB8" && bd init --non-interactive >/dev/null 2>&1); then
+  echo "SELFTEST FAIL: mutation-8 setup 'bd init' failed (rig broken, not a caught mutation)"; rc=1
+elif ! mkdir -p "$SB8/.internal/research"; then
+  echo "SELFTEST FAIL: mutation-8 setup 'mkdir .internal/research' failed (rig broken, not a caught mutation)"; rc=1
+elif ! echo "# orphan research doc" > "$SB8/.internal/research/orphan.md"; then
+  echo "SELFTEST FAIL: mutation-8 setup 'write orphan.md' failed (rig broken, not a caught mutation)"; rc=1
+else
+  expect_red "kb doc-reconciliation: orphan doc, no bead" \
+    bash -c "cd '$SB8' && bash '$REPO_ROOT/scripts/check-kb-doc-reconciliation.sh'"
+  if ! bead8=$(cd "$SB8" && bd create "orphan doc control bead" -t task -l kb --defer +1d \
+        --metadata '{"doc":".internal/research/orphan.md"}' --silent 2>/dev/null); then
+    echo "SELFTEST FAIL: mutation-8 setup 'bd create' (control bead) failed (rig broken, not a caught mutation)"; rc=1
+  else
+    expect_green "kb doc-reconciliation: matching bead (control)" \
+      bash -c "cd '$SB8' && bash '$REPO_ROOT/scripts/check-kb-doc-reconciliation.sh'"
+    assert_scratch_bead_absent "kb doc-reconciliation: orphan doc" "$bead8"
+  fi
+  if [ -d "$REPO_ROOT/.internal/research" ]; then
+    echo "SELFTEST FAIL: mutation-8 leaked into real .internal/research (isolation broken)"; rc=1
+  else
+    echo "SELFTEST ok: mutation-8 real .internal/research still absent (no leak)"
+  fi
+fi
+rm -rf "$SB8"
 
 exit "$rc"
