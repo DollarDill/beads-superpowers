@@ -69,6 +69,7 @@ You MUST complete each phase before proceeding to the next.
    - New dependencies, config changes
    - Environmental differences
    - For workflow-level issues (blocked beads, stuck execution): `bd ready --explain` shows dependency reasoning
+   - Check the knowledge store for this symptom before investigating further: `bd memories <symptom-keywords>` (prior root-cause/lesson memories) and `bd list --label <topic> --status all` (+ `bd search "<symptom>" --status all` for decision/design knowledge-beads). Emit a one-line result — `KB check: N hits on <labels>` (or `KB check: none`). If a prior root cause or decision already covers this, use it — don't re-debug something already understood.
 
 4. **Gather Evidence in Multi-Component Systems**
 
