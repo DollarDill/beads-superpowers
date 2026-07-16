@@ -96,7 +96,7 @@ Then emit **exactly** this structure. Deterministic sections (`(verified)`) carr
 ## Recent Activity
 <3–5 commits as narrative · in-progress beads · prior thread from handoff. Degrades to "Fresh session — no prior in-session delta".>
 
-**Known operational quirks:** <from bd memories keyword scan + bsp.kb + docs/known-issues>
+**Known operational quirks:** <from bd memories keyword scan + kb-labeled beads (`bd search`) + docs/known-issues>
 **Other captured memories:** <count + retrieval pointer>
 
 ---

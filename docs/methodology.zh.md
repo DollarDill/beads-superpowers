@@ -149,7 +149,7 @@ graph TD
 
 `memory-curator` 技能会整合、去重并修剪 `bd remember` 积累的记忆库——在会话关闭时若捕获了多条新记忆则提供，或可随时按需调用。
 
-并非每条记忆都应进入注入集。整理器按 `@type` 对每条笔记分类，而类型*即是*路由决策：你希望无需提示即浮现的可操作规则（`lesson`、`pattern`、`root-cause`、`correction`）保留为注入记忆，而仅指向某个文档或 ADR 的参考类笔记（`research`、`design`、`decision`）则路由到 **`bsp.kb.` 键值知识库**——持久保存并随 Dolt 同步，但从不自动注入。可按需通过 `bd kv list | grep '^ *bsp.kb'`（或结构化的 `bd kv list --json | jq` 形式）检索。注入上下文保持精简且高信噪比，同时不丢失任何内容。
+并非每条记忆都应进入注入集。整理器按 `@type` 对每条笔记分类，而类型*即是*路由决策：你希望无需提示即浮现的可操作规则（`lesson`、`pattern`、`root-cause`、`correction`）保留为注入记忆，而仅指向某个文档或 ADR 的参考类笔记（`research`、`design`、`decision`）则成为**延迟知识 bead（deferred knowledge-bead）**——持久保存并随 Dolt 同步，标记 `kb` 标签加主题标签，但从不自动注入。可按需通过 `bd list --label <topic> --status all`（按主题）或 `bd search "<keyword>" --status all`（按关键词）检索。注入上下文保持精简且高信噪比，同时不丢失任何内容。
 
 ## 研究基础
 
