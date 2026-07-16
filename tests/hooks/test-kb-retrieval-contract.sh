@@ -13,6 +13,12 @@ T=$(mktemp -d)
 trap 'rm -rf "$T" 2>/dev/null || true' EXIT
 bde() { bd -C "$T" "$@"; }
 
+# Assertion idiom: capture-then-grep — `out=$(bde ...)` then `printf '%s' "$out" | grep -q`.
+# NEVER `bde ... | grep -q` on a live pipe: grep -q exits at first match, bd's remaining
+# writes (bodies, footer lines) hit the closed pipe, and `set -o pipefail` turns correct
+# output into a false FAIL — and on negative assertions into a false PASS (captured
+# lesson `lesson-producer-grep-q-pattern-under-set-o`, bead sq23, refixed here 2026-07-17).
+
 # --skip-agents --skip-hooks: no CLAUDE.md/AGENTS.md/git-hooks scaffolding in the
 # scratch dir — this test only needs a working embedded-Dolt bd DB, nothing else.
 # `bd init` must run via `cd` (subshell), NOT `bd -C <dir> init` — `-C` requires an
@@ -31,12 +37,14 @@ bodyid=$(printf '%s' "distilled summary with body-only marker zzqxprobe for retr
   | bde create "flatlong fixture sample" -t decision -l kb,retrieval --defer 2099-01-01 --body-file - --silent)
 
 # 1. Label query: `bd list --label <topic> --status all` returns the deferred bead.
-bde list --label positioning --status all | grep -q "$id" \
+out1=$(bde list --label positioning --status all)
+printf '%s' "$out1" | grep -q "$id" \
   || { echo "FAIL: label query did not return $id"; exit 1; }
 echo "PASS (1/5): label query finds deferred knowledge-bead"
 
 # 2. Ready-hidden: a deferred knowledge-bead is NOT in `bd ready`.
-bde ready | grep -q "$id" && { echo "FAIL: deferred bead $id appeared in bd ready"; exit 1; }
+out2=$(bde ready)
+printf '%s' "$out2" | grep -q "$id" && { echo "FAIL: deferred bead $id appeared in bd ready"; exit 1; }
 echo "PASS (2/5): deferred knowledge-bead hidden from bd ready"
 
 # 3. GC-safety — TWO-SIDED (Branch 7, the crux). `bd gc --dry-run` (verified against
@@ -101,30 +109,36 @@ bde supersede "$id" --with "$new" >/dev/null
 # open/deferred bead, so a regression where supersede stops closing (but still links)
 # must fail here. `list --id <old> --status closed` returns the bead iff its stored
 # status is closed (verified: a still-deferred bead does NOT match this filter).
-bde list --id "$id" --status closed | grep -q "$id" \
+out4a=$(bde list --id "$id" --status closed)
+printf '%s' "$out4a" | grep -q "$id" \
   || { echo "FAIL: supersede did not close old bead $id (status != closed) — supersede-then-decay lifecycle broken"; exit 1; }
 # 4b. and it remains queryable via --status all (edit-in-place retrieval).
-bde list --label positioning --status all | grep -q "$id" \
+out4b=$(bde list --label positioning --status all)
+printf '%s' "$out4b" | grep -q "$id" \
   || { echo "FAIL: superseded bead $id no longer queryable via --status all"; exit 1; }
 echo "PASS (4/5): supersede closes old bead + links; still queryable via --status all"
 
 # 5. Search: `bd search <kw> --status all` finds the bead by keyword.
-bde search "positioning decision" --status all | grep -q "$id" \
+out5=$(bde search "positioning decision" --status all)
+printf '%s' "$out5" | grep -q "$id" \
   || { echo "FAIL: search did not find $id"; exit 1; }
 echo "PASS (5/5): search finds knowledge-bead by keyword"
 
 # 6. Fused read: `bd list --flat --long` prints the description body inline
 # (tree mode suppresses --long — the skills document the --flat form).
-bde list --label retrieval --status all --flat --long | grep -q "zzqxprobe" \
+out6=$(bde list --label retrieval --status all --flat --long)
+printf '%s' "$out6" | grep -q "zzqxprobe" \
   || { echo "FAIL: list --flat --long did not print the description body"; exit 1; }
 echo "PASS (6/9): list --flat --long emits full bodies"
 
 # 7. Body recall two-sided: list --desc-contains finds a body-only keyword;
 # search (title-only) must NOT — if search becomes body-aware, simplify the
 # skill text and re-pin.
-bde list --label kb --status all --desc-contains "zzqxprobe" | grep -q "$bodyid" \
+out7a=$(bde list --label kb --status all --desc-contains "zzqxprobe")
+printf '%s' "$out7a" | grep -q "$bodyid" \
   || { echo "FAIL: list --desc-contains missed the body-only keyword"; exit 1; }
-if bde search "zzqxprobe" --status all | grep -q "$bodyid"; then
+out7b=$(bde search "zzqxprobe" --status all)
+if printf '%s' "$out7b" | grep -q "$bodyid"; then
   echo "FAIL: bd search matched a body-only keyword — search is no longer title-only; update skill text + this pin"; exit 1
 fi
 echo "PASS (7/9): --desc-contains body recall + search title-only limitation"
@@ -142,7 +156,8 @@ echo "PASS (8/9): multi-id bd show returns all requested bodies"
 memout=$(bde remember "lesson probe: recall-roundtrip-full-text zzqxmem end-marker" 2>&1)
 memkey=$(printf '%s' "$memout" | grep -oE '\[[^]]+\]' | head -1 | tr -d '[]')
 [ -n "$memkey" ] || { echo "FAIL: could not parse memory key from bd remember output: $memout"; exit 1; }
-bde recall "$memkey" | grep -q "zzqxmem end-marker" \
+out9=$(bde recall "$memkey")
+printf '%s' "$out9" | grep -q "zzqxmem end-marker" \
   || { echo "FAIL: bd recall did not return the full memory text"; exit 1; }
 echo "PASS (9/9): bd remember -> bd recall full-text round-trip"
 
