@@ -236,7 +236,7 @@ If yes, check provenance before removing:
 # Only remove worktrees inside .worktrees/ (created by our tooling)
 WORKTREE_PATH=$(bd worktree info --path 2>/dev/null)
 case "$WORKTREE_PATH" in
-  */.worktrees/*) bd worktree remove <worktree-name> ;;
+  */.worktrees/*) bd worktree remove "$WORKTREE_PATH" ;;
   *) echo "WARNING: This worktree is not inside .worktrees/ — it may have been created externally. Skipping automatic removal." ;;
 esac
 ```
