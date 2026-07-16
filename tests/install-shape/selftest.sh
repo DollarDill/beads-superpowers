@@ -93,7 +93,10 @@ rm -rf "$SB4"
 # them masquerade as red.
 assert_scratch_bead_absent() {  # assert_scratch_bead_absent <mutation-label> <scratch-bead-id>
   local label="$1" bead_id="$2" real_ids
-  real_ids=$(cd "$REPO_ROOT" && bd list --label kb --status all --limit 0 --json 2>/dev/null | jq -r '.[].id')
+  if ! real_ids=$(cd "$REPO_ROOT" && bd list --label kb --status all --limit 0 --json 2>/dev/null | jq -r '.[].id'); then
+    echo "SELFTEST FAIL: '$label' — 'bd list --label kb --status all --limit 0 --json' failed; cannot verify no leak"; rc=1
+    return
+  fi
   if printf '%s\n' "$real_ids" | grep -qxF "$bead_id"; then
     echo "SELFTEST FAIL: '$label' leaked scratch bead '$bead_id' into the real store"; rc=1
   else
