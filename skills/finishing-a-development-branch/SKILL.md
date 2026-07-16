@@ -72,6 +72,10 @@ git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 
 Or ask: "This branch split from main - is that correct?"
 
+### Step 3.5: Docs-Audit Gate
+
+document-release must have run on this branch — evidence: a `docs:` commit in `git log <base>..HEAD` not followed by later code commits, or a clean-audit statement from this session. Missing or in doubt → invoke `beads-superpowers:document-release` now (its empty-check exits cheaply when the diff is doc-irrelevant; when in doubt, run the audit). If the audit cannot complete, neither silently pass nor block: prepend "⚠️ docs audit could not complete: <reason>" to the Step 4 options question — the user decides.
+
 ### Step 4: Present Options
 
 **Use your structured question tool** to present options. Do NOT present choices as plain prose when your harness has a question tool; without one, numbered list + STOP. A skipped, dismissed, or auto-resolved answer is not consent — stop and ask in plain text.
@@ -374,5 +378,5 @@ git status    # MUST show "up to date with origin"
 - **executing-plans** — terminal state after all tasks complete.
 
 **Pairs with:**
-- **document-release** — run docs audit before merge/PR.
+- **document-release** — invoked by Step 3.5 (Docs-Audit Gate) before merge/PR options.
 - **verification-before-completion** — tests must pass before merge options are presented.
