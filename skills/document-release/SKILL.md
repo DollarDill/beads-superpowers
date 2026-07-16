@@ -1,6 +1,6 @@
 ---
 name: document-release
-description: Use after code changes are committed but before PR merge to ensure all project documentation accurately reflects shipped code. Covers README, ARCHITECTURE, CONTRIBUTING, CHANGELOG, CLAUDE.md, TODOS, and VERSION files. Triggers on "update docs", "sync documentation", "post-ship docs", "document release", "documentation audit".
+description: Use when implementation on a branch is complete and it is about to be merged or PR'd — or when finishing-a-development-branch reaches its docs-audit gate — and after code changes are committed, to ensure all project documentation accurately reflects shipped code. Covers README, ARCHITECTURE, CONTRIBUTING, CHANGELOG, CLAUDE.md, TODOS, and VERSION files. Triggers on "update docs", "sync documentation", "post-ship docs", "document release", "documentation audit".
 ---
 
 # Document Release: Post-Ship Documentation Update
@@ -197,7 +197,7 @@ bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / patt
 ## Integration
 
 **Called by:**
-- **finishing-a-development-branch** — RECOMMENDED before merge/PR options
+- **finishing-a-development-branch** — its Step 3.5 docs-audit gate invokes this skill before merge/PR options
 - Any workflow where code has shipped and docs need updating
 
 **Pairs with:**
