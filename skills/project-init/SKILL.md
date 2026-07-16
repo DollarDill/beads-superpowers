@@ -79,7 +79,7 @@ bd list                    # Should show the test bead
 bd close <test-id> --reason "Init verification"
 
 # 3. Add remote (if syncing) — RECOMMENDED: a dedicated beads remote (private for public projects),
-#    separate from the code repo (ADR-0057; bd >1.1.0 refuses a code-repo URL without --allow-git-origin)
+#    separate from the code repo (ADR-0057; bd releases after v1.1.0 refuse a code-repo URL without --allow-git-origin)
 bd dolt remote add origin git+ssh://git@github.com/<owner>/<repo>-beads.git
 
 # 4. First push
@@ -133,7 +133,7 @@ bd list                    # Retry
 
 ```bash
 # 1. Add the remote — RECOMMENDED: a dedicated beads remote (private for public projects),
-#    separate from the code repo (ADR-0057; bd >1.1.0 refuses a code-repo URL without --allow-git-origin)
+#    separate from the code repo (ADR-0057; bd releases after v1.1.0 refuse a code-repo URL without --allow-git-origin)
 bd dolt remote add origin git+ssh://git@github.com/<owner>/<repo>-beads.git
 
 # 2. Push to establish remote
