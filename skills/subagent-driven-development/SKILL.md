@@ -191,7 +191,7 @@ digraph parallel_batch {
    a spec-compliance verdict (✅/❌/⚠️) and a code-quality verdict in one pass.
 
 7. For each task that passes review:
-     cd <epic-worktree-path>
+     cd .worktrees/<epic-name>
      git merge feature/<epic>/<task>
      bd worktree remove .worktrees/<task-name>
      bd close <task-id> --reason "Completed: reviews passed"
