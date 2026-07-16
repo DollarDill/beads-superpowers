@@ -40,6 +40,17 @@ CB4_SITES=(
   skills/write-documentation/SKILL.md
   skills/verification-before-completion/SKILL.md
 )
+# KB read-depth fragment (ADR-0058): one byte-identical ASCII sentence at every
+# retrieval instruction site; stripping the read mandate strips the fragment.
+KB_SIG="hits are pointers, not knowledge"
+KB_SITES=(
+  skills/brainstorming/SKILL.md
+  skills/systematic-debugging/SKILL.md
+  skills/research-driven-development/SKILL.md
+  skills/research-driven-development/researcher-prompt.md
+  skills/getting-up-to-speed/SKILL.md
+  hooks/session-start
+)
 # --- Per-site kernel map (ADR-0049): each redesigned skill pins ONE ASCII invariant
 # line phrased for its own operation. site|signature pairs; grep -qF per site.
 KERNEL_MAP=(
@@ -61,6 +72,7 @@ KERNEL_MAP=(
   'skills/finishing-a-development-branch/SKILL.md|This will permanently delete:'
   'skills/using-git-worktrees/SKILL.md|A skipped, dismissed, or auto-resolved answer is not consent'
   'skills/executing-plans/SKILL.md|bd import -'
+  'skills/finishing-a-development-branch/SKILL.md|document-release must have run on this branch'
 )
 
 FAIL=0
@@ -113,6 +125,20 @@ self_test() {
     fi
   fi
 
+  # KB-block self-test (ADR-0058): copy a real KB site, strip the fragment,
+  # and confirm the detector flags the mutation.
+  local kbsrc="skills/brainstorming/SKILL.md" kbsig="hits are pointers, not knowledge"
+  if [ ! -f "$kbsrc" ]; then
+    echo "self-test FAIL: KB fixture source missing: $kbsrc"; ok=0
+  else
+    cp -f "$kbsrc" "$tmp/kb-correct.md"
+    grep -v -- "$kbsig" "$kbsrc" > "$tmp/kb-mutated.md"
+    grep -qF -- "$kbsig" "$tmp/kb-correct.md" || { echo "self-test FAIL: KB signature missing from unmutated copy"; ok=0; }
+    if grep -qF -- "$kbsig" "$tmp/kb-mutated.md"; then
+      echo "self-test FAIL: KB detector did NOT catch the stripped fragment"; ok=0
+    fi
+  fi
+
   rm -rf "$tmp"
   if [ "$ok" -eq 1 ]; then echo "self-test OK: detector matches correct, rejects mutated"; return 0; else return 1; fi
 }
@@ -123,6 +149,7 @@ fi
 
 check_block "CB-3 Capture gate"    "$CB3_SIG" "${CB3_SITES[@]}"
 check_block "CB-4 memory convention" "$CB4_SIG" "${CB4_SITES[@]}"
+check_block "KB read-depth fragment" "$KB_SIG" "${KB_SITES[@]}"
 check_kernels
 
 if [ "$FAIL" -eq 0 ]; then

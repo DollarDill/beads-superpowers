@@ -329,4 +329,24 @@ else
 fi
 rm -rf "$SB12"
 
+# Mutation 13: check-convention-sync.sh (ADR-0058) — a repo copy whose
+# brainstorming/SKILL.md loses the KB read-depth fragment must fail RED; the
+# unmutated copy must pass GREEN (proves the KB_SITES block discriminates).
+# Fixture-isolated: the tracked guard-relevant slice is copied into mktemp -d
+# preserving relative paths; the real tree is never touched. Setup failures
+# are rig breakage, NOT a caught mutation.
+SB13=$(mktemp -d)
+if ! (cd "$REPO_ROOT" && git ls-files -z skills .claude/skills hooks CLAUDE.md scripts/check-convention-sync.sh | xargs -0 -I{} cp --parents {} "$SB13"/); then
+  echo "SELFTEST FAIL: mutation-13 setup copy failed (rig broken, not a caught mutation)"; rc=1
+else
+  grep -v -- "hits are pointers, not knowledge" "$SB13/skills/brainstorming/SKILL.md" > "$SB13/skills/brainstorming/SKILL.md.tmp" \
+    && mv -f "$SB13/skills/brainstorming/SKILL.md.tmp" "$SB13/skills/brainstorming/SKILL.md"
+  expect_red "convention-sync: stripped KB read-depth fragment" \
+    bash "$SB13/scripts/check-convention-sync.sh"
+  cp -f "$REPO_ROOT/skills/brainstorming/SKILL.md" "$SB13/skills/brainstorming/SKILL.md"
+  expect_green "convention-sync: unmutated copy (control)" \
+    bash "$SB13/scripts/check-convention-sync.sh"
+fi
+rm -rf "$SB13"
+
 exit "$rc"
