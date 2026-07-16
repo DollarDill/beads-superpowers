@@ -29,13 +29,13 @@ description: 快速参考 bd 命令速查表、技能路由表、常见问题故
 | `bd note <id> "context"` | 向 bead 追加证据 |
 | `bd remember "insight"` / `bd memories <kw>` / `bd forget <id>` | 持久化 / 搜索 / 删除学习内容 |
 | `bd list --label <topic> --status all` / `bd search "<kw>" --status all` | 搜索知识库——已标记 `kb` 标签的延迟 `research`/`design`/`decision` beads |
-| `bd dolt push` / `pull` | 将 beads 数据库同步到/从 Dolt 远程 |
+| `bd dolt push` / `pull` | 将 beads 数据库同步到/从你的 beads 远端 |
 
 !!! info "深入了解 — 上游 Beads 文档"
     - [CLI 参考](https://gastownhall.github.io/beads/cli-reference) — 每个 `bd` 命令及其全部参数，包括本表精简掉的维护与协调命令（`list`、`stats`、`doctor`、`lint`、`stale`、`find-duplicates`、`defer`、`human`、`swarm`、`batch`、`merge-slot`、`github`、`-C`）
     - [恢复指南](https://gastownhall.github.io/beads/recovery) — Dolt 历史分叉、同步失败
 
-**Land the Plane：** 每次会话结束时执行 `bd close` → `bd dolt push` → `git push`。`finishing-a-development-branch` 技能负责强制执行此流程。
+**Land the Plane：** 每次会话结束时执行 `bd close` → `bd dolt push`（同步到你的 beads 远端） → `git push`（推送到你的代码仓库）。`finishing-a-development-branch` 技能负责强制执行此流程。
 
 ## 技能路由
 
@@ -71,7 +71,7 @@ description: 快速参考 bd 命令速查表、技能路由表、常见问题故
 
 **重复上下文注入** — 插件会检测 `bd setup claude` hooks，并跳过自身的 beads 上下文部分；同一事件的重复触发会由去重标记抑制。若仍出现重复，请运行 `bd setup claude --remove`。
 
-**`bd dolt push` 失败** — 未配置 Dolt 远程。如果不需要远程同步，此错误无害。
+**`bd dolt push` 失败** — 未配置 beads 远端。如果不需要远程同步，此错误无害。
 
 ## Windows
 

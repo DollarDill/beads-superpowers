@@ -169,7 +169,7 @@ Let an LLM propose the topic labels; never auto-apply them. Labels are the query
 
 ### Triage for sensitivity
 
-During that same review, flag anything whose substance shouldn't reach a shared Dolt remote — internal strategy, unreleased plans, competitive positioning. Migration syncs the description, which is new exposure the source file never had. Park flagged items: leave them out of the store, record them in a gitignored exclusions list the reconciliation guard honors, and migrate them only once you have a private remote to hold them.
+During that same review, flag anything whose substance shouldn't reach a shared Dolt remote — internal strategy, unreleased plans, competitive positioning. Migration syncs the description, which is new exposure the source file never had. Park flagged items: leave them out of the store, record them in a gitignored exclusions list the reconciliation guard honors, and migrate them only once you have a dedicated beads remote to hold them.
 
 ### Create or enrich the bead
 
@@ -192,7 +192,7 @@ The `metadata.doc` (or a `metadata.kv_key` for key-value sources) is both the de
 Migration is two-phase, and the phases don't overlap. First verify: counts match your inventory, sample topic queries surface items you know are in there, and the guards are green. Only then retire sources — and only the ones the store *replaced*. A key-value stash or a set of duplicated notes becomes a tombstone (`bd` keeps the provenance of where each item moved), never a hard delete. Corpora that stay the deep-dive body your beads point at — the ADR directory, the research docs — are kept, not retired.
 
 !!! example "In this repo — 129 kv + 36 docs + 55 ADRs"
-    Three corpora moved into 216 knowledge-beads: 63 decision, 75 design, 78 research. The key-value store was retired to tombstones with per-key provenance; the ADR files and research docs stayed in place as the deep-dive bodies their beads point at. Eight items — six research docs and two ADRs — were held back during review because their substance shouldn't reach a shared remote yet, kept green by a gitignored exclusions list. Every run is idempotent: a second pass creates zero beads. The secret scan flagged one token-shaped filename before it landed and wrote nothing sensitive.
+    Three corpora moved into 216 knowledge-beads: 63 decision, 75 design, 78 research. The key-value store was retired to tombstones with per-key provenance; the ADR files and research docs stayed in place as the deep-dive bodies their beads point at. Eight items — six research docs and two ADRs — were held back during review because their substance shouldn't reach a shared remote, kept green by a gitignored exclusions list until a dedicated beads remote existed; once it landed, all eight migrated in a follow-up pass. Every run is idempotent: a second pass creates zero beads. The secret scan flagged one token-shaped filename before it landed and wrote nothing sensitive.
 
 !!! example "In this repo — 14% to 100% retrieval precision"
     The payoff is retrieval you can trust. Before the migration, grepping the key-value store for `position` returned seven hits, one of them relevant; the store's own documented tag query returned zero, because only 26 of 129 entries had ever been tagged and the tags shared no vocabulary. The same question as a topic-label query returned three results, all three relevant — 14% precision to 100%.
