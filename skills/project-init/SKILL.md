@@ -52,15 +52,17 @@ also flags migration-content skew vs remote; surface that before any sync work).
 
 ## Decision Matrix
 
-Based on diagnostic results, follow the appropriate path:
+Based on diagnostic results, follow the appropriate path. "Remote" below always means
+the configured beads remote (`bd dolt remote list`) — independent of the code repo's
+git origin; see "Multi-Repo / Private Beads Remote" below.
 
 | State | Action | Path |
 |-------|--------|------|
 | No .beads/, no remote data | Fresh init | → Path A |
 | No .beads/, remote has dolt refs | Bootstrap from remote | → Path B |
-| .beads/ exists, `bd list` works, remote matches | Already good ✅ | Done |
+| .beads/ exists, `bd list` works, beads remote matches | Already good ✅ | Done |
 | .beads/ exists, `bd list` fails | Run `bd doctor --fix --yes` | → Path D |
-| .beads/ exists, `bd list` works, no remote | Add remote | → Path E |
+| .beads/ exists, `bd list` works, no beads remote configured | Add remote | → Path E |
 | .beads/ exists, push fails "no common ancestor" | Fix diverged history | → Path C |
 | .beads/ exists but empty/corrupt, remote has data | Export + re-bootstrap | → Path F |
 
@@ -76,8 +78,9 @@ bd create "Test bead" -t task -p 4
 bd list                    # Should show the test bead
 bd close <test-id> --reason "Init verification"
 
-# 3. Add remote (if syncing to GitHub)
-bd dolt remote add origin git+ssh://git@github.com/<owner>/<repo>.git
+# 3. Add remote (if syncing) — RECOMMENDED: a dedicated beads repo (private for public projects),
+#    separate from the code repo (ADR-0057; bd >1.1.0 refuses a code-repo URL without --allow-git-origin)
+bd dolt remote add origin git+ssh://git@github.com/<owner>/<repo>-beads.git
 
 # 4. First push
 bd dolt push
@@ -129,14 +132,15 @@ bd list                    # Retry
 ## Path E: Add Remote to Existing Database
 
 ```bash
-# 1. Add the remote
-bd dolt remote add origin git+ssh://git@github.com/<owner>/<repo>.git
+# 1. Add the remote — RECOMMENDED: a dedicated beads repo (private for public projects),
+#    separate from the code repo (ADR-0057; bd >1.1.0 refuses a code-repo URL without --allow-git-origin)
+bd dolt remote add origin git+ssh://git@github.com/<owner>/<repo>-beads.git
 
 # 2. Push to establish remote
 bd dolt push
 
 # 3. Verify
-git ls-remote origin | grep dolt    # Should show refs/dolt/data
+git ls-remote git+ssh://git@github.com/<owner>/<repo>-beads.git | grep dolt    # Should show refs/dolt/data
 ```
 
 ## Path F: Corrupt Local, Remote Has Data
@@ -157,6 +161,64 @@ bd vc status
 # 4. Re-import exported data if needed
 bd import /tmp/beads-backup.jsonl 2>/dev/null
 ```
+
+## Multi-Repo / Private Beads Remote
+
+The Dolt remote is independent of the code repo's git origin — point it anywhere.
+**Choose a dedicated beads remote (a separate, private git repo) when:** the code repo
+is public and beads will hold anything non-public (strategy, unreleased plans, candid
+notes) — Dolt history retains deleted rows, so "public remote" means the full history
+is public. **Same-repo is an explicit opt-in** for private/throwaway projects (bd
+releases after 1.1.0 refuse a `bd dolt remote add` URL matching the git origin without
+`--allow-git-origin`).
+
+**Setup (existing local database):**
+
+```bash
+bd dolt remote add origin git+ssh://git@github.com/<owner>/<project>-beads.git
+bd dolt push
+```
+
+A brand-new private repo must have an initial branch/commit **before** the first
+`bd dolt push` — an empty repo has no branches, and Dolt's git-remotes backend fails
+with "git remote has no branches" against it. Create it with an initial commit first:
+
+```bash
+gh repo create <owner>/<project>-beads --private --add-readme
+```
+
+**New-machine bootstrap (VALIDATED):**
+
+```bash
+bd init --non-interactive --prefix <prefix> --remote "git+ssh://git@github.com/<owner>/<project>-beads.git"
+```
+
+This clones the database from the dedicated private remote in one step and persists
+`sync.remote` — no separate `bd bootstrap` needed (live rehearsal: hydrated 1,854
+records with the private remote correctly wired).
+
+⚠️ **Zero-remote trap (v1.1.0):** with NO Dolt remote configured, `bd dolt push`
+silently adopts the git origin. Never leave zero-remote as a resting state — when
+swapping remotes, always chain the change in one command:
+`bd dolt remote remove origin && bd dolt remote add origin <url>`.
+
+⚠️ **Verify after swapping remotes:** `bd dolt remote remove` can leave the old value
+commented out in `.beads/config.yaml`, and `bd dolt remote add` doesn't always rewrite
+`sync.remote` to match. After swapping, confirm:
+
+```bash
+grep "sync.remote" .beads/config.yaml
+```
+
+If it still shows the old (or code-repo) URL, fix it directly:
+
+```bash
+bd config set sync.remote "git+ssh://git@github.com/<owner>/<project>-beads.git"
+```
+
+**Collision guard (forward-compat):** bd releases after v1.1.0 refuse `bd dolt remote
+add` when the URL matches the git origin, unless `--allow-git-origin` is passed —
+making same-repo an explicit opt-in rather than an accident.
 
 ## Configuration Validation
 
