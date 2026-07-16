@@ -215,7 +215,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 | Store learning                    | `bd remember "insight"`                                 |
 | Remove stale memory               | `bd forget <id>`                                        |
 | Search memories                   | `bd memories <keyword>`                                 |
-| Search knowledge base             | `bd list --label <topic> --status all`                  |
+| Search knowledge base             | `bd list --label <topic> --status all` / `bd search "<kw>" --status all` |
 | Append note to bead               | `bd note <id> "context"`                                |
 | Find duplicate beads              | `bd find-duplicates`                                    |
 | Lint issue sections               | `bd lint [id...]`                                       |
