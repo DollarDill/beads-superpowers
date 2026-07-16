@@ -173,9 +173,12 @@ Creating the knowledge-bead is part of this step, not a separate one — it happ
 **Secret/PII scan first:** before creating the bead, scan the one-line summary and the doc path for secrets or PII (tokens, keys, credentials, personal data) — same discipline as the kv migration engine and memory-curator. If either looks like a secret, flag it and **skip bead creation**. Never write a secret/token/PII into a bead description or metadata: bead descriptions are queryable and ride Dolt history, which outlives `bd forget`.
 
 ```bash
+printf '%s' "<distilled 0.5-2.5KB summary: what the research established, key evidence, verdicts>" | \
 bd create "<one-line summary of the research>" -t research -l kb,<1-3 topic labels from scripts/kb-label-vocab.txt> \
-  --defer 2099-01-01 --metadata "$(jq -nc --arg d "<docpath>" '{doc:$d}')" --silent
+  --defer 2099-01-01 --metadata "$(jq -nc --arg d "<docpath>" '{doc:$d}')" --body-file - --silent
 ```
+
+The description carries the distilled findings — a reader should act on it without opening the doc.
 
 Labels: `kb` plus 1–3 topics from the controlled vocabulary (`scripts/kb-label-vocab.txt`) — the guard requires at least one topic label, at most three, and every label present in the vocab.
 
@@ -252,7 +255,8 @@ User asks: "How does Dolt handle merge conflicts?"
 4. Synthesize: researcher found cell-level merge docs, explore found bd dolt pull usage
 5. Write to .internal/research/2026-05-01-dolt-merge-conflict-handling.md
 5a. Secret/PII scan the summary, then create the knowledge-bead:
-    bd create "Dolt uses cell-level 3-way merge on SQL tables (no textual conflict markers)" -t research -l kb,rdd,beads-tooling --defer 2099-01-01 --metadata '{"doc":".internal/research/2026-05-01-dolt-merge-conflict-handling.md"}' --silent
+    printf '%s' "Dolt uses cell-level 3-way merge on SQL tables: conflicts are detected per cell, not via line-based diff, so there are no textual conflict markers. This repo already exercises the merge path via bd dolt pull/push (see the doc for the full write-up)." | \
+    bd create "Dolt uses cell-level 3-way merge on SQL tables (no textual conflict markers)" -t research -l kb,rdd,beads-tooling --defer 2099-01-01 --metadata '{"doc":".internal/research/2026-05-01-dolt-merge-conflict-handling.md"}' --body-file - --silent
 6. bd close <id> --reason "Research complete: Dolt uses cell-level merge on SQL tables"
 ```
 

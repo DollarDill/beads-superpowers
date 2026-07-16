@@ -69,8 +69,9 @@ Reference-class memories (`research`/`design`/`decision`) live as **deferred kno
 - **Body:** the research doc / ADR stays on disk as the source of truth; the bead is the queryable index/pointer via `metadata.doc` (display-only), with a one-line summary as the description:
 
   ```bash
+  printf '%s' "<distilled summary: what this note establishes>" | \
   bd create "<one-line summary>" -t <research|design|decision> -l kb,<topic-labels> \
-    --defer 2099-01-01 --metadata "$(jq -nc --arg d "<doc-path>" '{doc:$d}')" --silent
+    --defer 2099-01-01 --metadata "$(jq -nc --arg d "<doc-path>" '{doc:$d}')" --body-file - --silent
   ```
 
 - **Retrieval:** `bd list --label <topic> --status all` (topic) and `bd search "<kw>" --status all` (keyword) — never metadata filters (broken in `bd`), never `find-duplicates`.
