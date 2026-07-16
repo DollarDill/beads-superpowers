@@ -5,10 +5,9 @@
 # Dolt-synced/shared; .internal/research docs are gitignored/per-machine — so
 # this is NOT (and can never be) a CI gate.
 #
-# NOT YET wired into scripts/run-guards.sh or justfile `just guards` — that
-# wiring is deliberately deferred to Task 9 (the research-doc migration).
-# Wiring it now would fail `just guards` on every not-yet-migrated doc in any
-# checkout that already has a populated .internal/research/.
+# Wired into scripts/run-guards.sh (`just guards`) since bd-8o3j.8, after all
+# 36 disk docs were indexed as research beads. Self-SKIPs (exit 0) in any
+# checkout without a populated .internal/research/.
 set -euo pipefail
 DIR=".internal/research"
 [ -d "$DIR" ] || { echo "SKIP: no $DIR (local-only)"; exit 0; }

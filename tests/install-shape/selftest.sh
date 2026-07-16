@@ -184,10 +184,13 @@ else
       echo "SELFTEST ok: kb doc-reconciliation: no warn on opaque (non-path) metadata.doc"
     fi
   fi
-  if [ -d "$REPO_ROOT/.internal/research" ]; then
-    echo "SELFTEST FAIL: mutation-8 leaked into real .internal/research (isolation broken)"; rc=1
+  # Leak check is artifact-scoped: the real repo legitimately HAS a populated
+  # .internal/research/ (36 indexed docs post-8o3j.8), so directory existence
+  # proves nothing — only the mutation's own file appearing there would.
+  if [ -f "$REPO_ROOT/.internal/research/orphan.md" ]; then
+    echo "SELFTEST FAIL: mutation-8 leaked orphan.md into real .internal/research (isolation broken)"; rc=1
   else
-    echo "SELFTEST ok: mutation-8 real .internal/research still absent (no leak)"
+    echo "SELFTEST ok: mutation-8 orphan.md absent from real .internal/research (no leak)"
   fi
 fi
 rm -rf "$SB8"
