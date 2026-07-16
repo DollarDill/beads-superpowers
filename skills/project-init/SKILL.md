@@ -78,7 +78,7 @@ bd create "Test bead" -t task -p 4
 bd list                    # Should show the test bead
 bd close <test-id> --reason "Init verification"
 
-# 3. Add remote (if syncing) — RECOMMENDED: a dedicated beads repo (private for public projects),
+# 3. Add remote (if syncing) — RECOMMENDED: a dedicated beads remote (private for public projects),
 #    separate from the code repo (ADR-0057; bd >1.1.0 refuses a code-repo URL without --allow-git-origin)
 bd dolt remote add origin git+ssh://git@github.com/<owner>/<repo>-beads.git
 
@@ -132,7 +132,7 @@ bd list                    # Retry
 ## Path E: Add Remote to Existing Database
 
 ```bash
-# 1. Add the remote — RECOMMENDED: a dedicated beads repo (private for public projects),
+# 1. Add the remote — RECOMMENDED: a dedicated beads remote (private for public projects),
 #    separate from the code repo (ADR-0057; bd >1.1.0 refuses a code-repo URL without --allow-git-origin)
 bd dolt remote add origin git+ssh://git@github.com/<owner>/<repo>-beads.git
 
@@ -174,17 +174,19 @@ releases after 1.1.0 refuse a `bd dolt remote add` URL matching the git origin w
 
 **Setup (existing local database):**
 
-```bash
-bd dolt remote add origin git+ssh://git@github.com/<owner>/<project>-beads.git
-bd dolt push
-```
-
 A brand-new private repo must have an initial branch/commit **before** the first
 `bd dolt push` — an empty repo has no branches, and Dolt's git-remotes backend fails
 with "git remote has no branches" against it. Create it with an initial commit first:
 
 ```bash
 gh repo create <owner>/<project>-beads --private --add-readme
+```
+
+Then add the remote and push:
+
+```bash
+bd dolt remote add origin git+ssh://git@github.com/<owner>/<project>-beads.git
+bd dolt push
 ```
 
 **New-machine bootstrap (VALIDATED):**
