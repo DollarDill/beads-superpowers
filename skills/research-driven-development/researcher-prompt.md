@@ -45,8 +45,10 @@ Agent tool (subagent_type: "general-purpose"):
        bd list --label <topic> --status all
        bd search "<keyword>" --status all
        ```
-       Check it before researching from scratch. If comprehensive coverage already
-       exists, reference it — do not duplicate.
+       Check it before researching from scratch — hits are pointers, not knowledge:
+       read the bodies (`bd show <id1> <id2> ...`, full) before deciding coverage
+       exists. If comprehensive coverage already exists, reference it — do not
+       duplicate.
     2. **Search broadly** — Run 3-5 varied `WebSearch` queries, rewording the topic
        each time
     3. **Fetch primary sources** — Use `WebFetch` on official documentation and

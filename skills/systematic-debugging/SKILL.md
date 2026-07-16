@@ -69,7 +69,7 @@ You MUST complete each phase before proceeding to the next.
    - New dependencies, config changes
    - Environmental differences
    - For workflow-level issues (blocked beads, stuck execution): `bd ready --explain` shows dependency reasoning
-   - Check the knowledge store for this symptom before investigating further: `bd memories <symptom-keywords>` (prior root-cause/lesson memories) and `bd list --label <topic> --status all` (+ `bd search "<symptom>" --status all` for decision/design knowledge-beads). Emit a one-line result — `KB check: N hits on <labels>` (or `KB check: none`). If a prior root cause or decision already covers this, use it — don't re-debug something already understood.
+   - Check the knowledge store for this symptom before investigating further: `bd memories <symptom-keywords>` (prior root-cause/lesson memories) and `bd list --label <topic> --status all` (+ `bd search "<symptom>" --status all` for decision/design knowledge-beads; error strings are body terms: add `--desc-contains "<error-string>"`; >10 hits: narrow the query, never triage truncated titles). Then read — hits are pointers, not knowledge: `bd show <ids>` every plausibly-matching prior decision/design, and `bd recall <key>` every plausibly-matching memory (`bd memories` prints truncated previews) — full bodies, before investigating further. 0 relevant does not mean none exist — re-angle the query once before emitting `KB check: none`. Emit `KB check: N hits, M read` + a one-line disposition each. If a prior root cause or decision already covers this, use it — don't re-debug something already understood.
 
 4. **Gather Evidence in Multi-Component Systems**
 

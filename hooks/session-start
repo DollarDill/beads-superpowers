@@ -121,7 +121,7 @@ This workspace uses **bd (beads)**. Core commands:
 - `bd create "Title" -t task -p 2` — create · `bd close <id> --reason "..."` — complete
 - `bd query "status=open"` — search · `bd remember "insight"` — persist a memory
 - `bd batch` / `bd import` — many writes, one call
-- knowledge store: `bd list --label <topic> --status all` — prior decisions/research/design (deferred beads)
+- knowledge store: `bd list --label <topic> --status all` — prior decisions/research/design (deferred beads); hits are pointers, not knowledge — `bd show <ids>` the relevant ones before relying on them
 Commands: `bd human` · syntax: `bd <cmd> --help` on first use — the binary is SSOT. If beads context was not injected this session: `bd prime`.
 PTR
 }

@@ -83,6 +83,8 @@ bd list --label <topic> --status all
 bd search "<keywords>" --status all
 ```
 
+Read before you verdict: `bd list --label <topic> --status all --flat --long -n 10` prints bodies inline (>10 hits: narrow the query, never triage truncated titles). hits are pointers, not knowledge — a "comprehensive coverage already exists" verdict may only be issued after reading the hit bodies; a verdict from titles alone is not a verdict.
+
 Same lookup researchers run; see the "Search the knowledge base first" step in `./researcher-prompt.md`.
 
 **If comprehensive coverage already exists:** Reference it, add any new findings as updates, and close the bead. Do not duplicate existing research.
