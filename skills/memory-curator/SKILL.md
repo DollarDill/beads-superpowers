@@ -66,7 +66,7 @@ The class makes the prune signal greppable (`bd memories | grep '@type=episodic:
 Reference-class memories (`research`/`design`/`decision`) live as **deferred knowledge-beads**, not in `memory.` — a deferred bead is never auto-injected at session start, so pointers stay out of every session's context but keep persistence + Dolt sync.
 
 - **Bead:** `status=deferred` with a far-future `--defer 2099-01-01` — never `closed` (closed beads are GC-deleted at 90d). `issue_type` matches the subtype (`research`/`design`/`decision`); every knowledge-bead also carries the class-marker label `kb` plus 1–3 topic labels from the controlled vocabulary (`scripts/kb-label-vocab.txt`).
-- **Body:** the research doc / ADR stays on disk as the source of truth; the bead is the queryable index/pointer via `metadata.doc` (display-only), with a one-line summary as the description:
+- **Body:** the research doc / ADR stays on disk as the source of truth; the bead is the queryable index/pointer via `metadata.doc` (display-only), with a distilled summary as the description:
 
   ```bash
   printf '%s' "<distilled summary: what this note establishes>" | \
