@@ -309,7 +309,9 @@ If selected, invoke `Skill(beads-superpowers:memory-curator)` (it proposes a rev
 bd dolt push
 
 # 5. Push code to git remote
-git pull --rebase && git push
+git pull --ff-only && git push
+# If --ff-only fails, the remote actually moved: rebase ONLY if local history is linear;
+# a local merge commit means merge deliberately (rebase flattens it and orphans recorded SHAs).
 
 # 6. Verify clean state
 git status    # MUST show "up to date with origin"

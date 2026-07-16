@@ -150,7 +150,9 @@ bd close <id>         # Complete work
 
    ```bash
    bd close <ids> --reason "<what shipped>"
-   git pull --rebase
+   git pull --ff-only
+   # If --ff-only fails, the remote actually moved: rebase ONLY if local history is linear;
+   # a local merge commit means merge deliberately (rebase flattens it and orphans recorded SHAs).
    bd dolt push   # syncs the beads DB to the Dolt remote (skip/harmless if no remote configured)
    git push
    git status  # MUST show "up to date with origin"
