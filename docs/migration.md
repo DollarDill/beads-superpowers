@@ -33,7 +33,7 @@ graph LR
 
 ## Phase 0 — Principles
 
-Four ideas decide whether the store is worth building. Get them wrong and you rebuild it later; this repo did, twice, and the evidence box at the end of the phase is why.
+Four ideas decide whether the store is worth building. Get them wrong and you rebuild it later; this repo dodged one such mistake at the last minute and had to rework another, and the evidence box at the end of the phase is why.
 
 ### Knowledge lives in the description
 
