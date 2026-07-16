@@ -77,6 +77,7 @@ main() {
     "docs/skills.md docs/skills.zh.md yes"
     "docs/workflow.md docs/workflow.zh.md yes"
     "docs/tips.md docs/tips.zh.md yes"
+    "docs/migration.md docs/migration.zh.md yes"
   )
 
   # Completeness assertion: every top-level docs/*.md page (excluding *.zh.md,
