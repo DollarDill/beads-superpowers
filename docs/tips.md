@@ -27,13 +27,13 @@ recovery, coordination — lives in the upstream reference linked below.
 | `bd note <id> "context"` | Append evidence to a bead |
 | `bd remember "insight"` / `bd memories <kw>` / `bd forget <id>` | Persist / search / remove learnings |
 | `bd list --label <topic> --status all` / `bd search "<kw>" --status all` | Search the knowledge base — deferred `research`/`design`/`decision` beads labeled `kb` |
-| `bd dolt push` / `pull` | Sync beads DB to/from Dolt remote |
+| `bd dolt push` / `pull` | Sync beads DB to/from your beads remote |
 
 !!! info "Go deeper — upstream Beads docs"
     - [CLI reference](https://gastownhall.github.io/beads/cli-reference) — every `bd` command and flag, including the housekeeping and coordination commands trimmed from this sheet (`list`, `stats`, `doctor`, `lint`, `stale`, `find-duplicates`, `defer`, `human`, `swarm`, `batch`, `merge-slot`, `github`, `-C`)
     - [Recovery guides](https://gastownhall.github.io/beads/recovery) — diverged Dolt history, failed syncs
 
-**Land the Plane:** Every session ends with `bd close` → `bd dolt push` → `git push`. The `finishing-a-development-branch` skill enforces this.
+**Land the Plane:** Every session ends with `bd close` → `bd dolt push` (to your beads remote) → `git push` (to your code repo). The `finishing-a-development-branch` skill enforces this.
 
 ## Skill routing
 
@@ -69,7 +69,7 @@ See [Getting Started — Troubleshooting](getting-started.md#troubleshooting) fo
 
 **Double context injection** — The plugin detects `bd setup claude` hooks and skips its own beads-context section; same-event double-firing is suppressed by a dedup marker. If you still see duplicates, run `bd setup claude --remove`.
 
-**`bd dolt push` fails** — No Dolt remote configured. Harmless if you don't need remote sync.
+**`bd dolt push` fails** — No beads remote configured. Harmless if you don't need remote sync.
 
 ## Windows
 

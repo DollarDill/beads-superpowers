@@ -136,12 +136,14 @@ This creates `.beads/` (config, metadata, git hooks), `CLAUDE.md`, and `AGENTS.m
 
 ### Dolt remote (optional)
 
-For cross-session sync of your task history:
+For cross-session sync of your task history, add a **dedicated beads remote** — a separate repo from your code:
 
 ```bash
-bd dolt remote add origin https://doltremoteapi.dolthub.com/your-org/your-repo
+bd dolt remote add origin git@github.com:your-org/your-repo-beads.git
 bd dolt push    # test the connection
 ```
+
+Dolt history retains deleted rows, so a remote that matches your code repo makes that full history public too. A dedicated private repo keeps issue data auth-gated while your code stays public. bd releases after v1.1.0 enforce this with a collision guard: `bd dolt remote add` refuses a URL matching your git origin unless you pass `--allow-git-origin`. Same-repo sync is still available behind that flag — it's an explicit opt-in, not the default.
 
 !!! info "Go deeper — upstream Beads docs"
     - [Core concepts](https://gastownhall.github.io/beads/core-concepts) — how the Dolt-backed database and sync model work
@@ -247,4 +249,4 @@ Or reinstall. Note: `claude plugin update` has a known [cache bug](https://githu
 
 **Stale reminder hook after updating from ≤0.8.2** — Earlier versions registered a per-prompt `superpowers-reminder.sh` hook that no longer ships. See the migration one-liner in the README's [npx section](https://github.com/DollarDill/beads-superpowers#universal-fallback-npx).
 
-**`bd dolt push` fails** — You need a Dolt remote configured first (`bd dolt remote add origin <url>`). If you don't need remote sync, the failure is harmless — beads works fine locally.
+**`bd dolt push` fails** — You need a beads remote configured first: `bd dolt remote add origin <url>` (use a dedicated beads remote, not your code repo's URL — bd releases after v1.1.0 refuse a URL matching git origin unless you pass `--allow-git-origin`). If you don't need remote sync, the failure is harmless — beads works fine locally.

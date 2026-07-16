@@ -137,12 +137,14 @@ bd init
 
 ### Dolt 远端（可选）
 
-用于跨会话同步任务历史记录：
+用于跨会话同步任务历史记录，请添加一个**专属的 beads 远端**——与代码分开的独立仓库：
 
 ```bash
-bd dolt remote add origin https://doltremoteapi.dolthub.com/your-org/your-repo
+bd dolt remote add origin git@github.com:your-org/your-repo-beads.git
 bd dolt push    # test the connection
 ```
+
+Dolt 历史会保留已删除的行，因此若远端与你的代码仓库相同，会连带把这整段历史一并公开。一个专属的私有仓库能让 issue 数据保持鉴权访问，同时代码仍可保持公开。v1.1.0 之后的 bd 版本通过一道碰撞防护来强制这一点：如果 URL 与你的 git origin 相同，`bd dolt remote add` 会拒绝执行，除非你传入 `--allow-git-origin`。同仓库同步在该参数之后仍然可用——它是一个显式的可选项，而非默认行为。
 
 !!! info "深入了解 — 上游 Beads 文档"
     - [核心概念](https://gastownhall.github.io/beads/core-concepts) — Dolt 数据库与同步模型的工作原理
@@ -248,4 +250,4 @@ ln -s ~/workplace/beads-superpowers \
 
 **从 ≤0.8.2 版本升级后残留的提醒钩子** — 早期版本注册了一个每次提示都会触发的 `superpowers-reminder.sh` 钩子，现已不再随插件提供。请参阅 README [npx 部分](https://github.com/DollarDill/beads-superpowers#universal-fallback-npx)中的迁移一行命令。
 
-**`bd dolt push` 失败** — 您需要先配置 Dolt 远端（`bd dolt remote add origin <url>`）。如果您不需要远程同步，此失败无害——Beads 在本地可以正常工作。
+**`bd dolt push` 失败** — 您需要先配置一个 beads 远端：`bd dolt remote add origin <url>`（请使用专属的 beads 远端，而非代码仓库的 URL——v1.1.0 之后的 bd 版本会在 URL 与 git origin 相同时拒绝执行，除非传入 `--allow-git-origin`）。如果您不需要远程同步，此失败无害——Beads 在本地可以正常工作。
