@@ -309,4 +309,24 @@ else
 fi
 rm -rf "$SB11"
 
+# Mutation 12: check-model-genericization.sh (bd-1f5w) — a skill file carrying
+# a hardcoded Claude model name must fail RED; the same content under the
+# ADR-0041 reference-file allowlist must pass GREEN (proves the allowlist
+# discriminates rather than always failing). Fixture-isolated: mktemp -d,
+# guard invoked with an explicit search-root arg — the real skills/ tree is
+# never touched. Setup failures are rig breakage, NOT a caught mutation.
+SB12=$(mktemp -d)
+if ! mkdir -p "$SB12/skills/some-skill" "$SB12/skills/using-superpowers/references"; then
+  echo "SELFTEST FAIL: mutation-12 setup mkdir failed (rig broken, not a caught mutation)"; rc=1
+else
+  echo 'dispatch with model: "haiku"' > "$SB12/skills/some-skill/SKILL.md"
+  expect_red "model genericization: hardcoded model name in skill" \
+    bash "$REPO_ROOT/scripts/check-model-genericization.sh" "$SB12/skills"
+  rm -f "$SB12/skills/some-skill/SKILL.md"
+  echo 'dispatch with model: "haiku"' > "$SB12/skills/using-superpowers/references/claude-code.md"
+  expect_green "model genericization: allowlisted reference file (control)" \
+    bash "$REPO_ROOT/scripts/check-model-genericization.sh" "$SB12/skills"
+fi
+rm -rf "$SB12"
+
 exit "$rc"

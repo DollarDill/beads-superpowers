@@ -17,6 +17,8 @@ run "skill frontmatter"     python3 scripts/check-skill-frontmatter.py
 run "shell lint"            bash scripts/lint-shell.sh
 run "askuser genericization" bash scripts/check-askuser-genericization.sh
 run "askuser genericization (.claude)" bash scripts/check-askuser-genericization.sh .claude/skills
+run "model genericization"  bash scripts/check-model-genericization.sh
+run "model genericization (.claude)" bash scripts/check-model-genericization.sh .claude/skills
 run "skill ref namespacing"  bash scripts/check-skill-ref-namespace.sh
 run "skill ref namespacing (.claude)" bash scripts/check-skill-ref-namespace.sh .claude/skills
 run "install hook no-fork"  bash scripts/check-install-hook-fork.sh

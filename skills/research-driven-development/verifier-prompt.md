@@ -6,11 +6,11 @@ its only job is: does the cited source actually contain a span that entails
 this specific claim? It never judges whether the claim is factually correct
 in some absolute sense, only whether the cited source backs it up.
 
-Dispatch with `model: "haiku"` for the default single-verifier pass. On
+Dispatch with a fast/cheap model for the default single-verifier pass. On
 escalation (verdict was UNSUPPORTED / INCONCLUSIVE / low-confidence, and a
-3-way Haiku ensemble split), dispatch this *same* prompt again with
-`model: "sonnet"` for the final, fresh-context, blinded call — the contract
-below does not change between tiers, only the model strength does.
+3-way fast/cheap-model ensemble split), dispatch this *same* prompt again
+with a stronger model for the final, fresh-context, blinded call — the
+contract below does not change between tiers, only the model strength does.
 
 **Do not fill in who wrote the claim or that it came from "our" research.**
 The dispatching agent supplies only the claim text and the cited URL — no
@@ -19,7 +19,7 @@ blinding is load-bearing: a verifier told "check your own team's claim" is
 prone to self-preference bias.
 
 ```
-Agent tool (subagent_type: "general-purpose", model: "haiku"):
+Agent tool (subagent_type: "general-purpose", fast/cheap model):
   description: "Verify citation: [short claim topic]"
   prompt: |
     You are a citation-soundness checker. You are given a claim and a URL

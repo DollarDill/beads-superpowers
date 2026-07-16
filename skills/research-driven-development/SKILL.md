@@ -141,13 +141,13 @@ Dedup semantically-equivalent claims first, then verify the **top-K** load-beari
 - Every load-bearing claim carries a source tag → else flag ungrounded.
 - The cited URL resolves (HTTP check, e.g. `WebFetch` or a HEAD request) → else flag as a possibly-fabricated source.
 
-**Layer 2 — blinded Haiku verifier (entailment only; default 1 verifier per claim):** for each load-bearing claim that passed layer 1, dispatch one fresh-context verifier:
+**Layer 2 — blinded verifier (fast/cheap model; entailment only; default 1 verifier per claim):** for each load-bearing claim that passed layer 1, dispatch one fresh-context verifier:
 1. `Read` the prompt template at `./verifier-prompt.md`.
 2. Fill in only the claim text and the cited URL — no author, no framing that this is "our" research (the blinding kills self-preference bias).
-3. Dispatch via the `Agent` tool: `subagent_type: "general-purpose"`, `model: "haiku"`.
+3. Dispatch via the `Agent` tool: `subagent_type: "general-purpose"`, using a fast/cheap model.
 4. Collect its three-way verdict: `{ verdict: SUPPORTED | UNSUPPORTED | INCONCLUSIVE, supporting_span, confidence, reason }`.
 
-**Layer 3 — escalate on doubt (not always-on):** a clean SUPPORTED verdict with a verbatim span is accepted immediately — no escalation. **Only** on UNSUPPORTED / INCONCLUSIVE / low-confidence, escalate that single claim: first to a **3-way Haiku ensemble** (majority verdict, same `./verifier-prompt.md` template); if still split, to **one fresh blinded Sonnet verifier** (`model: "sonnet"`, same template, same blinding/re-fetch contract) whose verdict is final — keeping the grounding chain independent of the author model end-to-end. Verifiers and escalations are **excluded from the 10-cap** — their own budget, separate from the main research fan-out (~1 verifier per load-bearing claim; 3-way only when contested).
+**Layer 3 — escalate on doubt (not always-on):** a clean SUPPORTED verdict with a verbatim span is accepted immediately — no escalation. **Only** on UNSUPPORTED / INCONCLUSIVE / low-confidence, escalate that single claim: first to a **3-way fast/cheap-model ensemble** (majority verdict, same `./verifier-prompt.md` template); if still split, to **one fresh blinded stronger-model verifier** (same template, same blinding/re-fetch contract) whose verdict is final — keeping the grounding chain independent of the author model end-to-end. Verifiers and escalations are **excluded from the 10-cap** — their own budget, separate from the main research fan-out (~1 verifier per load-bearing claim; 3-way only when contested).
 
 **Verdict handling:**
 - **SUPPORTED** → keep the claim, tagged with its verified span/source.
