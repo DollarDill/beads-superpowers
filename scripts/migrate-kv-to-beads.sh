@@ -39,7 +39,7 @@ looks_like_secret() {
   grep -Eq 'gh[pousr]_[A-Za-z0-9]{36,}' <<<"$text" && return 0                # GitHub PAT/OAuth/App/refresh
   grep -Eq 'xox[baprs]-[A-Za-z0-9-]{10,}' <<<"$text" && return 0              # Slack (lowercase, no case-mix)
   grep -Eq '(sk|pk|rk)_(live|test)_[A-Za-z0-9]{16,}' <<<"$text" && return 0   # Stripe
-  grep -Eq 'sk-[A-Za-z0-9]{20,}' <<<"$text" && return 0                       # OpenAI
+  grep -Eq 'sk-(proj-)?[A-Za-z0-9]{20,}' <<<"$text" && return 0               # OpenAI (incl. sk-proj-)
   grep -Eq 'AIza[A-Za-z0-9_-]{20,}' <<<"$text" && return 0                    # Google API key
   grep -Eq 'eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}' <<<"$text" && return 0 # JWT (header.payload)
   grep -Eq 'Bearer [A-Za-z0-9._-]{20,}' <<<"$text" && return 0                # Bearer token
@@ -56,6 +56,13 @@ looks_like_secret() {
   #    '.'/':'/'-'/'_' so they aren't base64-alphabet-only), and lowercase
   #    slash-separated word lists like 'a/b/c/d' (no digit). Calibrated to ZERO
   #    false positives against the real 129-entry store.
+  #    Residual gap (deliberate, not closed here): a base64url-encoded secret
+  #    (alphabet swaps '+/' for '-_', no padding) with no vendor prefix evades
+  #    this fallback, because '-'/'_' are exactly the characters used above to
+  #    rule out kebab-case slugs and snake_case identifiers, which fill this
+  #    corpus. Widening the charset to include '-_' would re-open those false
+  #    positives, breaking the zero-FP calibration. Left undetected on purpose;
+  #    revisit only alongside a corpus-wide FP re-calibration.
   while IFS= read -r tok; do
     [ "${#tok}" -ge 32 ] || continue
     [[ $tok =~ ^[A-Za-z0-9+/]+={0,2}$ ]] || continue   # entirely base64 alphabet

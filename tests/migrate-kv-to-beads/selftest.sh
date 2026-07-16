@@ -16,6 +16,8 @@
 #   (i) malformed TARGET-subtype value -> WARN by name, no bead, run still exits 0
 #   (j) malformed OTHER-subtype value does NOT abort/block the target migration
 #   (k) secret in the doc/refs[0] field (not just summary) is flagged + skipped
+#   (l) OpenAI sk-proj- key (proj- hyphen breaks the old contiguous-alnum
+#       pattern) is flagged + skipped
 # Also confirms: deferred beads are hidden from `bd ready`, the created set is
 # guard-valid (scripts/check-kb-labels.sh), kv is untouched (read-only), and
 # the REAL repo's kb-bead set is unchanged before/after (read-only checks
@@ -103,6 +105,13 @@ kv_set "bsp.kb.decision.fixture-doc-secret" "semantic:decision" \
   "fixture-doc-secret: a perfectly clean summary with the secret hidden in its doc ref." \
   "https://example.com/x?token=$(printf %s ghp)_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
+# (l) OpenAI project-scoped key (sk-proj- shape). The old sk-[A-Za-z0-9]{20,}
+# pattern misses this: the "proj-" hyphen breaks the contiguous alphanumeric
+# run the pattern requires. Must be flagged + skipped.
+kv_set "bsp.kb.decision.fixture-openai-proj" "semantic:decision" \
+  "fixture-openai-proj: leaked key $(printf %s sk-proj)-ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 must never be written to a bead." \
+  "docs/decisions/ADR-OPENAI-PROJ.md"
+
 # (i) malformed TARGET-subtype value (non-JSON) — must be surfaced by name, not abort.
 (cd "$SB" && bd kv set "bsp.kb.decision.fixture-malformed-decision" 'this is NOT json {oops' >/dev/null)
 # (j) malformed OTHER-subtype value — must not block the decision run.
@@ -121,6 +130,7 @@ kv_set "bsp.kb.decision.fixture-doc-secret" "semantic:decision" \
   printf 'bsp.kb.decision.fixture-slack\thooks\n'
   printf 'bsp.kb.decision.fixture-control\tadr-process\n'
   printf 'bsp.kb.decision.fixture-doc-secret\thooks\n'
+  printf 'bsp.kb.decision.fixture-openai-proj\thooks\n'
 } >"$MAP"
 
 get_bead() { # get_bead <kv_key> <json>
@@ -271,6 +281,18 @@ if grep -q 'FLAG: bsp.kb.decision.fixture-doc-secret' <<<"$err1"; then
   pass "(k) doc-field secret flagged on stderr"
 else
   fail "(k) no FLAG for doc-field secret; stderr was: $err1"
+fi
+
+# (l) OpenAI sk-proj- key: flagged + not written
+if [ -z "$(get_bead "bsp.kb.decision.fixture-openai-proj" "$after1")" ]; then
+  pass "(l) sk-proj- key NOT written as a bead"
+else
+  fail "(l) sk-proj- key WAS written (sk-proj- gap not closed)"
+fi
+if grep -q 'FLAG: bsp.kb.decision.fixture-openai-proj' <<<"$err1"; then
+  pass "(l) sk-proj- key flagged on stderr"
+else
+  fail "(l) no FLAG for sk-proj- key; stderr was: $err1"
 fi
 
 # --- run 2: idempotency -------------------------------------------------------
