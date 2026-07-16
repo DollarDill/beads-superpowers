@@ -145,6 +145,8 @@ Work is NOT complete until `git push` succeeds:
 ```bash
 bd close <completed-ids> --reason "description"
 bd github push
-git pull --rebase && git push
+git pull --ff-only && git push
+# If --ff-only fails, the remote actually moved: rebase ONLY if local history is linear;
+# a local merge commit means merge deliberately (rebase flattens it and orphans recorded SHAs).
 git status  # MUST show "up to date with origin"
 ```
