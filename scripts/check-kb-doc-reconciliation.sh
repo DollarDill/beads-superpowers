@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # check-kb-doc-reconciliation.sh — LOCAL-DEV guard: every research doc under
 # .internal/research/ has a matching knowledge-bead (catches a skipped
-# capture at write-time, see skills/research-driven-development). Beads are
-# Dolt-synced/shared; .internal/research docs are gitignored/per-machine — so
-# this is NOT (and can never be) a CI gate.
+# capture at write-time, see skills/research-driven-development), AND every
+# ADR under docs/decisions/ (except entries listed in
+# docs/decisions/.kb-exclusions) has a matching decision-bead. Beads are
+# Dolt-synced/shared; .internal/research and docs/decisions are
+# gitignored/per-machine — so this is NOT (and can never be) a CI gate.
 #
 # Wired into scripts/run-guards.sh (`just guards`) since bd-8o3j.8, after all
 # 36 disk docs were indexed as research beads. Self-SKIPs (exit 0) in any
@@ -50,5 +52,22 @@ while read -r d; do
   esac
 done <<<"$beaddocs"
 
-[ "$fail" -eq 0 ] && echo "kb-doc-reconciliation: OK (all local research docs have knowledge-beads)"
+# ENFORCED — doc -> bead, second corpus: every ADR under docs/decisions/ has
+# a decision-bead, except entries listed in docs/decisions/.kb-exclusions
+# (sensitivity-parked ADRs, beads-superpowers-99pv). The ADR-*.md glob
+# structurally excludes INDEX.md — no denylist needed. `[ -e "$f" ]` guards
+# the case where the glob doesn't match anything (no nullglob active here):
+# without it, an unmatched glob leaves the literal pattern string as $f.
+ADIR="docs/decisions"
+EXCL="$ADIR/.kb-exclusions"
+if [ -d "$ADIR" ]; then
+  for f in "$ADIR"/ADR-*.md; do
+    [ -e "$f" ] || continue
+    base=$(basename "$f")
+    [ -f "$EXCL" ] && grep -qxF "$base" "$EXCL" && continue   # sensitivity-parked (99pv)
+    grep -qxF "$f" <<<"$beaddocs" || { echo "FAIL: no decision bead for $f"; fail=1; }
+  done
+fi
+
+[ "$fail" -eq 0 ] && echo "kb-doc-reconciliation: OK (all local research docs and ADRs have knowledge-beads)"
 exit "$fail"
