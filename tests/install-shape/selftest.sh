@@ -199,24 +199,29 @@ rm -rf "$SB8"
 # ADR under docs/decisions/ with no matching decision-bead must fail RED (a
 # missed capture), parallel to mutation 8's research-doc check. Adding a
 # matching decision-bead then passes GREEN (discrimination, not a bare
-# always-fail). A third assertion proves the .kb-exclusions escape hatch:
+# always-fail). A third assertion proves the .kb-exclusions escape hatch
+# (with a leading '# comment' line, exercising comment-line tolerance):
 # listing a SEPARATE orphan's basename in .kb-exclusions suppresses the
 # demand with no bead at all (used for the 2 sensitivity-parked ADRs,
 # beads-superpowers-99pv). Scratch-isolated like mutation 8: mktemp -d
-# OUTSIDE the repo, bd init there, a throwaway .internal/research/ (kept
-# EMPTY — just present, so the guard's top-of-file SKIP-if-absent doesn't
-# short-circuit before reaching the ADR loop) + a throwaway docs/decisions/.
-# Setup failures are rig breakage, NOT a caught mutation — never let them
-# masquerade as red.
+# OUTSIDE the repo, bd init there, a throwaway docs/decisions/ — deliberately
+# WITHOUT a .internal/research/ dir at all. This is the exact scenario a
+# code-review pass reproduced as broken pre-fix: the top-of-file SKIP used to
+# be keyed to .internal/research alone, so a decisions-only checkout
+# short-circuited to SKIP/exit-0 before the ADR loop ever ran. The corpora
+# are now gated independently (each loop has its own `[ -d ]` guard); this
+# rig's very setup — decisions dir present, research dir absent — is what
+# proves the decoupling. Setup failures are rig breakage, NOT a caught
+# mutation — never let them masquerade as red.
 SB9=$(mktemp -d)
 if ! (cd "$SB9" && bd init --non-interactive >/dev/null 2>&1); then
   echo "SELFTEST FAIL: mutation-9 setup 'bd init' failed (rig broken, not a caught mutation)"; rc=1
-elif ! mkdir -p "$SB9/.internal/research" "$SB9/docs/decisions"; then
-  echo "SELFTEST FAIL: mutation-9 setup 'mkdir' failed (rig broken, not a caught mutation)"; rc=1
+elif ! mkdir -p "$SB9/docs/decisions"; then
+  echo "SELFTEST FAIL: mutation-9 setup 'mkdir docs/decisions' failed (rig broken, not a caught mutation)"; rc=1
 elif ! echo "# orphan ADR" > "$SB9/docs/decisions/ADR-9999-test.md"; then
   echo "SELFTEST FAIL: mutation-9 setup 'write ADR-9999-test.md' failed (rig broken, not a caught mutation)"; rc=1
 else
-  expect_red "kb doc-reconciliation: orphan ADR, no decision-bead" \
+  expect_red "kb doc-reconciliation: orphan ADR, no decision-bead, no research dir (decoupling)" \
     bash -c "cd '$SB9' && bash '$REPO_ROOT/scripts/check-kb-doc-reconciliation.sh'"
   if ! bead9=$(cd "$SB9" && bd create "orphan ADR control bead" -t decision -l kb --defer +1d \
         --metadata '{"doc":"docs/decisions/ADR-9999-test.md"}' --silent 2>/dev/null); then
@@ -226,7 +231,8 @@ else
       bash -c "cd '$SB9' && bash '$REPO_ROOT/scripts/check-kb-doc-reconciliation.sh'"
     assert_scratch_bead_absent "kb doc-reconciliation: orphan ADR" "$bead9"
   fi
-  if ! { echo "ADR-8888-excluded.md" > "$SB9/docs/decisions/.kb-exclusions" && \
+  if ! { printf '%s\n' "# comment line — tolerated, never matches a real basename" \
+           "ADR-8888-excluded.md" > "$SB9/docs/decisions/.kb-exclusions" && \
          echo "# excluded orphan ADR" > "$SB9/docs/decisions/ADR-8888-excluded.md"; }; then
     echo "SELFTEST FAIL: mutation-9 setup 'write .kb-exclusions/ADR-8888-excluded.md' failed (rig broken, not a caught mutation)"; rc=1
   else
@@ -243,16 +249,18 @@ rm -rf "$SB9"
 
 # Mutation 10: the ADR loop's glob (docs/decisions/ADR-*.md) must
 # structurally exclude INDEX.md — no denylist. A scratch decisions-dir
-# containing ONLY INDEX.md (the real docs/decisions has exactly this shape:
-# 55 ADR-*.md + INDEX.md) must pass GREEN with zero decision-beads, proving
-# the glob itself — not an incidental absence of INDEX.md content — is what
-# keeps it out of scope. Scratch-isolated like mutation 9. Setup failures
-# are rig breakage, NOT a caught mutation.
+# containing ONLY INDEX.md, with NO .internal/research/ dir at all (the real
+# docs/decisions has exactly this shape: 55 ADR-*.md + INDEX.md), must pass
+# GREEN with zero decision-beads — proving both that the glob itself (not an
+# incidental absence of INDEX.md content) keeps INDEX.md out of scope, AND
+# that a decisions-only checkout doesn't SKIP past the ADR loop. Scratch-
+# isolated like mutation 9. Setup failures are rig breakage, NOT a caught
+# mutation.
 SB10=$(mktemp -d)
 if ! (cd "$SB10" && bd init --non-interactive >/dev/null 2>&1); then
   echo "SELFTEST FAIL: mutation-10 setup 'bd init' failed (rig broken, not a caught mutation)"; rc=1
-elif ! mkdir -p "$SB10/.internal/research" "$SB10/docs/decisions"; then
-  echo "SELFTEST FAIL: mutation-10 setup 'mkdir' failed (rig broken, not a caught mutation)"; rc=1
+elif ! mkdir -p "$SB10/docs/decisions"; then
+  echo "SELFTEST FAIL: mutation-10 setup 'mkdir docs/decisions' failed (rig broken, not a caught mutation)"; rc=1
 elif ! echo "# index" > "$SB10/docs/decisions/INDEX.md"; then
   echo "SELFTEST FAIL: mutation-10 setup 'write INDEX.md' failed (rig broken, not a caught mutation)"; rc=1
 else

@@ -8,11 +8,14 @@
 # gitignored/per-machine — so this is NOT (and can never be) a CI gate.
 #
 # Wired into scripts/run-guards.sh (`just guards`) since bd-8o3j.8, after all
-# 36 disk docs were indexed as research beads. Self-SKIPs (exit 0) in any
-# checkout without a populated .internal/research/.
+# 36 disk docs were indexed as research beads. Each corpus is gated and
+# enforced independently (its own `[ -d ]` guard below) — self-SKIPs (exit 0)
+# only when NEITHER corpus dir is present locally.
 set -euo pipefail
 DIR=".internal/research"
-[ -d "$DIR" ] || { echo "SKIP: no $DIR (local-only)"; exit 0; }
+ADIR="docs/decisions"
+EXCL="$ADIR/.kb-exclusions"
+[ -d "$DIR" ] || [ -d "$ADIR" ] || { echo "SKIP: no $DIR or $ADIR (local-only)"; exit 0; }
 fail=0
 
 # Query up front so we can distinguish a genuine 'bd' failure (corrupt/locked/
@@ -27,13 +30,17 @@ fi
 beaddocs=$(jq -r '.[].metadata.doc // empty' <<<"$rows")
 
 # ENFORCED — doc -> bead: every LOCAL research doc has a knowledge-bead
-# (catches a skipped capture). nullglob so an EMPTY (but existing) $DIR
-# doesn't leave the literal unexpanded glob pattern as a phantom filename.
-shopt -s nullglob
-for f in "$DIR"/*.md; do
-  grep -qxF "$f" <<<"$beaddocs" || { echo "FAIL: no knowledge-bead for $f"; fail=1; }
-done
-shopt -u nullglob
+# (catches a skipped capture). Own [ -d ] guard so this corpus enforces
+# independently of whether $ADIR exists. nullglob so an EMPTY (but existing)
+# $DIR doesn't leave the literal unexpanded glob pattern as a phantom
+# filename.
+if [ -d "$DIR" ]; then
+  shopt -s nullglob
+  for f in "$DIR"/*.md; do
+    grep -qxF "$f" <<<"$beaddocs" || { echo "FAIL: no knowledge-bead for $f"; fail=1; }
+  done
+  shopt -u nullglob
+fi
 
 # WARN-ONLY — bead -> doc: a bead pointing at a doc absent locally is
 # EXPECTED (docs are per-machine) — never fails. Scoped to PATH-SHAPED
@@ -54,12 +61,13 @@ done <<<"$beaddocs"
 
 # ENFORCED — doc -> bead, second corpus: every ADR under docs/decisions/ has
 # a decision-bead, except entries listed in docs/decisions/.kb-exclusions
-# (sensitivity-parked ADRs, beads-superpowers-99pv). The ADR-*.md glob
-# structurally excludes INDEX.md — no denylist needed. `[ -e "$f" ]` guards
-# the case where the glob doesn't match anything (no nullglob active here):
-# without it, an unmatched glob leaves the literal pattern string as $f.
-ADIR="docs/decisions"
-EXCL="$ADIR/.kb-exclusions"
+# (sensitivity-parked ADRs, beads-superpowers-99pv). Own [ -d ] guard (see
+# $ADIR/$EXCL set at the top) so this corpus enforces independently of
+# whether $DIR exists — a decisions-only checkout still catches an orphan
+# ADR. The ADR-*.md glob structurally excludes INDEX.md — no denylist
+# needed. `[ -e "$f" ]` guards the case where the glob doesn't match
+# anything (no nullglob active here): without it, an unmatched glob leaves
+# the literal pattern string as $f.
 if [ -d "$ADIR" ]; then
   for f in "$ADIR"/ADR-*.md; do
     [ -e "$f" ] || continue
