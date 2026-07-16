@@ -23,13 +23,37 @@ case "$1" in
 esac
 FAKE
 chmod +x "$TMP/bin/bd"
-mkdir -p .beads && printf 'dolt_mode: embedded\n' > .beads/config.yaml && printf '{}\n' > .beads/metadata.json
+
+# fake git: logs every invocation to git.log, returns a dolt ref for any ls-remote
+# target (both origin and the configured beads remote) so the ADR-0057 regression
+# path and the configured-remote probe are both exercised in one run.
+cat > "$TMP/bin/git" <<'FAKE'
+#!/usr/bin/env bash
+echo "git $*" >> git.log
+case "$1" in
+  ls-remote) printf 'abc123\trefs/heads/dolt/checkpoint\n' ;;
+  *) exit 0 ;;
+esac
+FAKE
+chmod +x "$TMP/bin/git"
+
+mkdir -p .beads && printf 'dolt_mode: embedded\nsync.remote: "git+ssh://example-beads"\n' > .beads/config.yaml && printf '{}\n' > .beads/metadata.json
 out=$(PATH="$TMP/bin:$PATH" bash "$SCRIPT")
 for s in versions beads-dir config db dolt-remote; do
   echo "$out" | grep -q "== $s ==" || { echo "FAIL: section $s missing"; exit 1; }
 done
 
+# diagnose must probe the configured sync.remote (not just hardcoded git origin)
+grep -q 'ls-remote git+ssh://example-beads' git.log || { echo "FAIL: diagnose did not probe configured sync.remote"; exit 1; }
+
+# regression check: dolt refs on the CODE origin -> visible WARNING referencing ADR-0057
+echo "$out" | grep -q "WARNING" || { echo "FAIL: no WARNING for dolt refs on git origin"; exit 1; }
+echo "$out" | grep -q "ADR-0057" || { echo "FAIL: WARNING missing ADR-0057 reference"; exit 1; }
+
 # bd absent: visible UNAVAILABLE, still exits 0
+# reset config.yaml so this scenario (no PATH stub) doesn't drive a real git
+# network call against the fake sync.remote host from the block above.
+printf 'dolt_mode: embedded\n' > .beads/config.yaml
 out2=$(PATH="/usr/bin:/bin" bash "$SCRIPT")
 echo "$out2" | grep -q "UNAVAILABLE" || { echo "FAIL: no UNAVAILABLE hint without bd"; exit 1; }
 echo "PASS: diagnose.sh"

@@ -28,7 +28,17 @@ b bd list -n 5 || echo "bd list: UNAVAILABLE (db unreadable or absent)"
 b bd vc status || echo "bd vc status: UNAVAILABLE"
 
 echo "== dolt-remote =="
-git ls-remote origin 2>/dev/null | grep -i dolt | head -5 || echo "git origin dolt refs: NONE FOUND"
 b bd dolt remote list || echo "bd dolt remote: UNAVAILABLE"
+CFG_REMOTE=$(sed -n 's/^[[:space:]]*sync.remote:[[:space:]]*"\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' .beads/config.yaml 2>/dev/null | head -1)
+if [ -n "$CFG_REMOTE" ]; then
+  git ls-remote "$CFG_REMOTE" 2>/dev/null | grep -i dolt | head -3 || echo "configured beads remote: unreachable or no dolt refs"
+else
+  echo "configured beads remote: NONE (sync.remote unset)"
+fi
+if git ls-remote origin 2>/dev/null | grep -qi dolt; then
+  echo "WARNING: dolt refs on git origin (code repo) - beads data belongs on the dedicated beads remote (ADR-0057)"
+else
+  echo "git origin: clean (no dolt refs)"
+fi
 
 exit 0
