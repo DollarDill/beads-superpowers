@@ -78,7 +78,29 @@ main() {
     "docs/workflow.md docs/workflow.zh.md yes"
     "docs/tips.md docs/tips.zh.md yes"
   )
-  local pair en zh banner
+
+  # Completeness assertion: every top-level docs/*.md page (excluding *.zh.md,
+  # no recursion — docs/assets/ etc. out of scope) must be registered as the
+  # EN member of a pair above, else a new page silently escapes zh-parity
+  # checking entirely. README.zh-CN.md stays handled separately (not under docs/).
+  local registered=" " pair page
+  for pair in "${pairs[@]}"; do
+    # shellcheck disable=SC2086
+    set -- $pair
+    registered="$registered$1 "
+  done
+  for page in docs/*.md; do
+    [ -e "$page" ] || continue
+    case "$page" in
+      *.zh.md) continue ;;
+    esac
+    case "$registered" in
+      *" $page "*) ;;
+      *) echo "FAIL: $page not registered for zh-parity"; fail=1 ;;
+    esac
+  done
+
+  local en zh banner
   for pair in "${pairs[@]}"; do
     # shellcheck disable=SC2086
     set -- $pair; en="$1"; zh="$2"; banner="$3"

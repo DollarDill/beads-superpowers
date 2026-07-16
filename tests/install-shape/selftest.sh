@@ -269,4 +269,44 @@ else
 fi
 rm -rf "$SB10"
 
+
+# Mutation 11: check-zh-docs.sh's completeness assertion (Task 8) — every
+# docs/*.md page must be registered as the EN member of a pair, else it
+# silently escapes zh-parity checking. Rig mirrors Mutation 1 (copy real
+# artifacts into a scratch tree, run the REAL script from its copied
+# location) rather than an env-var override: check-zh-docs.sh resolves its
+# repo root via `cd "$(dirname "$0")/.."`, so copying the actual script to
+# $SB11/scripts/ and invoking it from there makes that cd land in $SB11 with
+# no code changes needed. The pairs array is hardcoded text in the copied
+# script itself, so the scratch docs/ dir only needs the files under test —
+# no need to replicate all 6 real doc pages. Setup failures are rig
+# breakage, NOT a caught mutation — never let them masquerade as red.
+SB11=$(mktemp -d)
+if ! mkdir -p "$SB11/scripts" "$SB11/docs"; then
+  echo "SELFTEST FAIL: mutation-11 setup 'mkdir scripts docs' failed (rig broken, not a caught mutation)"; rc=1
+elif ! cp -f "$REPO_ROOT/scripts/check-zh-docs.sh" "$SB11/scripts/check-zh-docs.sh"; then
+  echo "SELFTEST FAIL: mutation-11 setup 'cp check-zh-docs.sh' failed (rig broken, not a caught mutation)"; rc=1
+elif ! echo "# orphan docs page" > "$SB11/docs/orphan-page.md"; then
+  echo "SELFTEST FAIL: mutation-11 setup 'write orphan-page.md' failed (rig broken, not a caught mutation)"; rc=1
+else
+  out11=$(bash "$SB11/scripts/check-zh-docs.sh" 2>&1); ec11=$?
+  if [ "$ec11" -eq 0 ]; then
+    echo "SELFTEST FAIL: 'zh-parity completeness: unregistered page' should have gone RED but passed"; rc=1
+  elif ! printf '%s\n' "$out11" | grep -qF "docs/orphan-page.md not registered for zh-parity"; then
+    echo "SELFTEST FAIL: 'zh-parity completeness: unregistered page' failed for the wrong reason (no message naming docs/orphan-page.md)"; rc=1
+  else
+    echo "SELFTEST ok: 'zh-parity completeness: unregistered page' correctly fails, naming the page"
+  fi
+  # GREEN control, same scratch dir: swap the orphan for a stand-in filename
+  # that IS registered (docs/index.md) — proves the assertion discriminates
+  # rather than always-failing.
+  if ! { rm -f "$SB11/docs/orphan-page.md" && echo "# stand-in for a registered page" > "$SB11/docs/index.md"; }; then
+    echo "SELFTEST FAIL: mutation-11 setup 'swap in docs/index.md stand-in' failed (rig broken, not a caught mutation)"; rc=1
+  else
+    expect_green "zh-parity completeness: registered page needs no fix" \
+      bash "$SB11/scripts/check-zh-docs.sh"
+  fi
+fi
+rm -rf "$SB11"
+
 exit "$rc"
