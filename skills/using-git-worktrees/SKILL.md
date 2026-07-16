@@ -28,9 +28,9 @@ Raw `git worktree add` misses `.gitignore` setup and safety checks — while bea
 
 | Action | Use This | NOT This |
 |--------|----------|----------|
-| Create worktree | `bd worktree create <name>` | ~~`git worktree add`~~ |
+| Create worktree | `bd worktree create .worktrees/<name>` | ~~`git worktree add`~~ |
 | List worktrees | `bd worktree list` | ~~`git worktree list`~~ |
-| Remove worktree | `bd worktree remove <name>` | ~~`git worktree remove`~~ |
+| Remove worktree | `bd worktree remove .worktrees/<name>` (if the safety check flags the local-only branch as unpushed, verify the merge landed, then add --force) | ~~`git worktree remove`~~ |
 | Worktree info | `bd worktree info` | ~~(no equivalent)~~ |
 
 > **Note:** Claude Code provides a native `EnterWorktree` tool for worktree management. For non-beads projects, this is a viable alternative. For beads-integrated projects, `bd worktree create` remains mandatory — it handles database sharing and `.gitignore` management that `EnterWorktree` does not provide.
@@ -39,13 +39,11 @@ Raw `git worktree add` misses `.gitignore` setup and safety checks — while bea
 
 ## Directory Selection
 
-`bd worktree create <name>` handles directory selection automatically:
+Always create worktrees under `.worktrees/` in the project root:
 
-- Creates the worktree at `./<name>` (e.g., `bd worktree create auth` → `./auth`)
-- Adds the path to `.gitignore` automatically
-- To use a specific location: `bd worktree create .worktrees/<name>`
-
-If your project has a preferred worktree directory in CLAUDE.md, pass the full path.
+- `bd worktree create .worktrees/<name>` — creates the worktree at `.worktrees/<name>` and adds the path to `.gitignore` automatically
+- **Trap:** the bare-name form (`bd worktree create <name>`) creates at `./<name>`, cluttering the repo root — always pass the full path
+- If your project's CLAUDE.md names a different preferred worktree directory, pass that path instead
 
 ## Safety Verification
 
@@ -108,17 +106,14 @@ bd update <issue-id> --claim
 ### 1. Create Worktree with `bd worktree create`
 
 ```bash
-# Simple — creates worktree at ./<name> with matching branch
-bd worktree create <feature-name>
-
-# With explicit branch name
-bd worktree create <feature-name> --branch <branch-name>
-
-# At a specific path (e.g., project worktrees directory)
+# Standard — creates worktree at .worktrees/<name> with matching branch
 bd worktree create .worktrees/<feature-name>
 
+# With explicit branch name
+bd worktree create .worktrees/<feature-name> --branch <branch-name>
+
 # Then cd into it
-cd <worktree-path>
+cd .worktrees/<feature-name>
 ```
 
 **What `bd worktree create` does automatically:**
@@ -180,18 +175,19 @@ When Subagent-Driven Development runs independent tasks in parallel, the **orche
 
 ```bash
 # 1. Orchestrator creates epic worktree (once)
-bd worktree create <epic-name>
+bd worktree create .worktrees/<epic-name>
 
 # 2. For each parallel task (max 5 concurrent):
-bd worktree create <task-name> --branch feature/<epic>/<task>
+bd worktree create .worktrees/<task-name> --branch feature/<epic>/<task>
 
 # 3. Subagent receives path in its prompt:
 #    "Work from: <task-worktree-path>"
 
 # 4. After task passes review — orchestrator merges and cleans up:
-cd <epic-worktree-path>
+cd .worktrees/<epic-name>
 git merge feature/<epic>/<task>
-bd worktree remove <task-name>
+bd worktree remove .worktrees/<task-name>
+# (if the safety check flags the local-only branch as unpushed, verify the merge landed, then add --force)
 ```
 
 **Constraints:**
@@ -206,8 +202,8 @@ bd worktree remove <task-name>
 
 | Situation | Action |
 |-----------|--------|
-| Creating a worktree | `bd worktree create <name>` — handles path + .gitignore |
-| Custom location needed | `bd worktree create .worktrees/<name>` or path from CLAUDE.md |
+| Creating a worktree | `bd worktree create .worktrees/<name>` — handles path + .gitignore |
+| Different directory preferred by project CLAUDE.md | pass that path the same way |
 | Directory not ignored | Add to .gitignore + commit (edge case) |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
@@ -226,10 +222,10 @@ bd worktree remove <task-name>
 - **Problem:** Worktree contents get tracked, pollute git status
 - **Fix:** Verify with `git check-ignore` after creation (`bd worktree create` handles this automatically, but verify as a safety net)
 
-### Overriding `bd worktree create` path logic
+### Bare-name worktree paths
 
-- **Problem:** Manually picking directories when `bd worktree create` handles it
-- **Fix:** Just run `bd worktree create <name>` — it creates at `./<name>` and handles `.gitignore`
+- **Problem:** `bd worktree create <name>` creates at `./<name>`, cluttering the repo root
+- **Fix:** Always pass the full path: `bd worktree create .worktrees/<name>` — location + `.gitignore` handled in one step
 
 ### Proceeding with failing tests
 
@@ -246,15 +242,15 @@ bd worktree remove <task-name>
 ```
 You: I'm using the using-git-worktrees skill to set up an isolated workspace.
 
-[Create worktree: bd worktree create auth --branch feature/auth]
-  ✓ Created worktree at ./auth
+[Create worktree: bd worktree create .worktrees/auth --branch feature/auth]
+  ✓ Created worktree at .worktrees/auth
   ✓ Beads database shared via git common directory
   ✓ Added to .gitignore
-[cd auth]
+[cd .worktrees/auth]
 [Run npm install]
 [Run npm test - 47 passing]
 
-Worktree ready at /Users/jesse/myproject/auth
+Worktree ready at /Users/jesse/myproject/.worktrees/auth
 Tests passing (47 tests, 0 failures)
 Ready to implement auth feature
 ```
