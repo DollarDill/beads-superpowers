@@ -160,7 +160,7 @@ digraph parallel_batch {
 
 ```
 1. Orchestrator creates epic worktree (once, at the start):
-     bd worktree create <epic-name>
+     bd worktree create .worktrees/<epic-name>
 
 2. Analyze the work graph before dispatching:
      bd swarm validate <epic-id>
@@ -175,7 +175,7 @@ digraph parallel_batch {
 
 4. If N > 1 (parallel batch, cap at 5 per batch):
    For each task in the batch:
-     bd worktree create <task-name> --branch feature/<epic>/<task>
+     bd worktree create .worktrees/<task-name> --branch feature/<epic>/<task>
 
 5. Dispatch all subagents in parallel:
    Read ./implementer-prompt.md, then one Agent tool call per task, ALL in the same message:
@@ -193,7 +193,7 @@ digraph parallel_batch {
 7. For each task that passes review:
      cd <epic-worktree-path>
      git merge feature/<epic>/<task>
-     bd worktree remove <task-name>
+     bd worktree remove .worktrees/<task-name>
      bd close <task-id> --reason "Completed: reviews passed"
 
 8. Run full test suite on epic worktree (integration check):
@@ -216,7 +216,7 @@ When a parallel task fails review:
 
 1. **Do not merge** its task branch into the epic branch.
 2. **Option A — Re-dispatch:** Keep the task worktree. Re-dispatch a fix subagent with reviewer feedback. Re-review after fix.
-3. **Option B — Discard:** `bd worktree remove <task-name>` discards the branch. Task bead stays open and will appear in the next `bd ready --parent` batch.
+3. **Option B — Discard:** `bd worktree remove .worktrees/<task-name>` discards the branch. Task bead stays open and will appear in the next `bd ready --parent` batch.
 4. Other parallel tasks that passed review are still merged independently — one failure does not block the batch.
 
 ### Mode Selection

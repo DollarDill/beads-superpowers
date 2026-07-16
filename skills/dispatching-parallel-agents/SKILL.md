@@ -173,9 +173,9 @@ Orchestrator identifies 3 unblocked tasks (no deps between them):
   Task C: Update API docs (touches docs/api.md)
 
 Orchestrator creates per-task worktrees:
-  bd worktree create task-a --branch feature/epic/task-a
-  bd worktree create task-b --branch feature/epic/task-b
-  bd worktree create task-c --branch feature/epic/task-c
+  bd worktree create .worktrees/task-a --branch feature/epic/task-a
+  bd worktree create .worktrees/task-b --branch feature/epic/task-b
+  bd worktree create .worktrees/task-c --branch feature/epic/task-c
 
 Dispatches 3 subagents in parallel (one Agent call each, same message):
   Agent 1 → "Work from: .worktrees/task-a" → implements validation
@@ -186,7 +186,7 @@ After all 3 pass review:
   git merge feature/epic/task-a (in epic worktree)
   git merge feature/epic/task-b
   git merge feature/epic/task-c
-  bd worktree remove task-a task-b task-c
+  bd worktree remove .worktrees/task-a .worktrees/task-b .worktrees/task-c
   Run full test suite → integration check
 ```
 
