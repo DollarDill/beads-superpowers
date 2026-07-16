@@ -2,7 +2,7 @@
 # tests/hooks/test-kb-retrieval-contract.sh — pins the bd behaviors the beads-native
 # KB store (ADR-0056) depends on. Runs against a SCRATCH bd DB (mktemp -d, outside the
 # repo tree) — never the real, Dolt-synced store. A future `bd` upgrade that regresses
-# any of the 5 pinned behaviors below must fail THIS test, not silently break the store.
+# any of the 9 pinned behaviors below must fail THIS test, not silently break the store.
 set -euo pipefail
 
 # Visible SKIP when bd is absent (matches the node/shellcheck SKIP convention) —
@@ -25,6 +25,10 @@ BDVER=$(bd version)
 
 # --- fixture: one deferred knowledge-bead, labeled kb + a topic label ---
 id=$(bde create "positioning decision sample" -t decision -l kb,positioning --defer 2099-01-01 --silent)
+
+# body-carrying fixture for behaviors 6-8: keyword exists ONLY in the description
+bodyid=$(printf '%s' "distilled summary with body-only marker zzqxprobe for retrieval pinning" \
+  | bde create "flatlong fixture sample" -t decision -l kb,retrieval --defer 2099-01-01 --body-file - --silent)
 
 # 1. Label query: `bd list --label <topic> --status all` returns the deferred bead.
 bde list --label positioning --status all | grep -q "$id" \
@@ -109,4 +113,37 @@ bde search "positioning decision" --status all | grep -q "$id" \
   || { echo "FAIL: search did not find $id"; exit 1; }
 echo "PASS (5/5): search finds knowledge-bead by keyword"
 
-echo "PASS: KB retrieval contract — all 5 behaviors pinned [$BDVER]"
+# 6. Fused read: `bd list --flat --long` prints the description body inline
+# (tree mode suppresses --long — the skills document the --flat form).
+bde list --label retrieval --status all --flat --long | grep -q "zzqxprobe" \
+  || { echo "FAIL: list --flat --long did not print the description body"; exit 1; }
+echo "PASS (6/9): list --flat --long emits full bodies"
+
+# 7. Body recall two-sided: list --desc-contains finds a body-only keyword;
+# search (title-only) must NOT — if search becomes body-aware, simplify the
+# skill text and re-pin.
+bde list --label kb --status all --desc-contains "zzqxprobe" | grep -q "$bodyid" \
+  || { echo "FAIL: list --desc-contains missed the body-only keyword"; exit 1; }
+if bde search "zzqxprobe" --status all | grep -q "$bodyid"; then
+  echo "FAIL: bd search matched a body-only keyword — search is no longer title-only; update skill text + this pin"; exit 1
+fi
+echo "PASS (7/9): --desc-contains body recall + search title-only limitation"
+
+# 8. Batch read: multi-id `bd show` returns both bodies in one call.
+shown=$(bde show "$id" "$bodyid")
+printf '%s' "$shown" | grep -q "positioning decision sample" \
+  || { echo "FAIL: multi-id bd show missing first bead"; exit 1; }
+printf '%s' "$shown" | grep -q "zzqxprobe" \
+  || { echo "FAIL: multi-id bd show missing second bead's body"; exit 1; }
+echo "PASS (8/9): multi-id bd show returns all requested bodies"
+
+# 9. Memory round-trip: `bd remember` -> `bd recall <key>` returns FULL text
+# (bd memories prints truncated previews; recall is the read path skills document).
+memout=$(bde remember "lesson probe: recall-roundtrip-full-text zzqxmem end-marker" 2>&1)
+memkey=$(printf '%s' "$memout" | grep -oE '\[[^]]+\]' | head -1 | tr -d '[]')
+[ -n "$memkey" ] || { echo "FAIL: could not parse memory key from bd remember output: $memout"; exit 1; }
+bde recall "$memkey" | grep -q "zzqxmem end-marker" \
+  || { echo "FAIL: bd recall did not return the full memory text"; exit 1; }
+echo "PASS (9/9): bd remember -> bd recall full-text round-trip"
+
+echo "PASS: KB retrieval contract — all 9 behaviors pinned [$BDVER]"
