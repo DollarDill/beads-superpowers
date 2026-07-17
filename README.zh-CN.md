@@ -40,25 +40,31 @@ bd init                               # 2. Bootstrap the Dolt database for this 
 
 ## 基本工作流
 
-1. **brainstorming** — 在任何代码编写前启动。通过一次一个问题的设计对话打磨想法，检查知识库中先前的决策，并以你批准的规格说明收尾——记录在 `bd` 中，从而在会话之间留存。
+1. **research-driven-development** — 当任务需要先行研究时：并行研究智能体展开调查，并在任何设计开始前产出一份经过验证的知识库文档。
 
-2. **using-git-worktrees** — 在设计获批后启动。在全新分支上创建一个隔离的 worktree，确保实现工作不会触碰你的主工作区。
+2. **brainstorming** — 通过一次一个问题的设计对话打磨想法，检查知识库中先前的决策，并以你批准的规格说明收尾——记录在 `bd` 中，从而在会话之间留存。
 
-3. **writing-plans** — 将获批的规格说明转化为带有确切文件、代码和验证步骤的小任务。每项任务都成为一个 `bd` bead。
+3. **stress-test** — 对已批准的规格说明逐个决策分支进行对抗性审问（每次规格评审时都会提供），让缺陷在规划前暴露。
 
-4. **subagent-driven-development** 或 **executing-plans** — 为每项任务派遣全新子智能体，在任务之间进行规格与质量审查；或分批执行并设置人工检查点。
+4. **writing-plans** — 将规格说明转化为带有确切文件、代码和验证步骤的小任务。每项任务都成为一个 `bd` bead。
 
-5. **test-driven-development** — 强制执行 RED-GREEN-REFACTOR：先写失败的测试，写最少的代码使其通过，再重构。没有失败的测试就不写实现代码。
+5. **stress-test**（再次） — 对计划本身进行同样的对抗性审查：任务边界、并行安全性、失败模式。
 
-6. **requesting-code-review** — 在集成前对照计划审查工作成果。严重问题会阻塞进度。
+6. **subagent-driven-development** 或 **executing-plans** — 为每项任务派遣全新子智能体，各自在独立的 worktree 中工作（实现者遵循 **test-driven-development**）；或分批执行并设置人工检查点。
 
-7. **finishing-a-development-branch** — 验证测试、审计文档、给出合并/PR 选项，并执行 Land the Plane：关闭 beads、同步、推送。
+7. **requesting-code-review** — 任务级与整分支的对照计划审查。严重问题会阻塞进度。
+
+8. **verification-before-completion** — 没有命令证明就不算完成——证据把守每一次收尾。
+
+9. **document-release** — 在分支合并前，对照实际交付内容审计项目文档。
+
+10. **finishing-a-development-branch** — 给出合并/PR 选项，并执行 Land the Plane：关闭 beads、同步、推送。
 
 智能体会在执行任何任务前检查相关技能——这些是强制性工作流，而非建议。并且因为每项任务、决策和经验都保存在 `bd` 的 Dolt 数据库中，下一次会话会从上一次结束的地方开始：输入 "where are we"，智能体就会接续之前的工作。
 
 ## 功能概览
 
-<!-- 收录规则：基本工作流中提及的每一项技能都会出现在此处；beads 差异化技能同样收录；条目上限约 14-15 条。完整参考位于文档站点——不要让本表格重新膨胀为详尽清单。 -->
+<!-- 收录规则：基本工作流中提及的每一项技能都会出现在此处；beads 差异化技能同样收录；条目上限约 16 条。完整参考位于文档站点——不要让本表格重新膨胀为详尽清单。 -->
 
 ### 测试
 
@@ -89,6 +95,7 @@ bd init                               # 2. Bootstrap the Dolt database for this 
 | `executing-plans` | 在单次会话内批量执行计划，并设置检查点 |
 | `using-git-worktrees` | 每个功能使用独立的开发分支 |
 | `requesting-code-review` | 按结构化标准派遣代码审查子智能体 |
+| `document-release` | 交付后的文档审计——让文档与实际交付内容保持一致 |
 | `finishing-a-development-branch` | 合并/PR 流程 + Land the Plane（关闭 beads、同步、推送） |
 
 ### 记忆与定向

@@ -38,25 +38,31 @@ Using a different agent? Jump to install for [Codex CLI](#codex-cli), [OpenCode]
 
 ## The Basic Workflow
 
-1. **brainstorming** - Activates before any code. Refines the idea through one-question-at-a-time design dialogue, checks prior decisions in the knowledge store, and ends with a spec you approved - tracked in `bd` so it survives the session.
+1. **research-driven-development** - When the task needs understanding first: parallel research agents investigate and write a verified knowledge-base document before any design happens.
 
-2. **using-git-worktrees** - Activates after design approval. Creates an isolated worktree on a fresh branch so implementation never touches your main checkout.
+2. **brainstorming** - Refines the idea through one-question-at-a-time design dialogue, checks prior decisions in the knowledge store, and ends with a spec you approved - tracked in `bd` so it survives the session.
 
-3. **writing-plans** - Turns the approved spec into bite-sized tasks with exact files, code, and verification steps. Every task becomes a `bd` bead.
+3. **stress-test** - Adversarially interrogates the approved spec branch by branch (offered at every spec review), so flaws surface before planning.
 
-4. **subagent-driven-development** or **executing-plans** - Dispatches a fresh subagent per task with spec and quality review between tasks, or executes in batches with human checkpoints.
+4. **writing-plans** - Turns the spec into bite-sized tasks with exact files, code, and verification steps. Every task becomes a `bd` bead.
 
-5. **test-driven-development** - Enforces RED-GREEN-REFACTOR: failing test first, minimal code to pass, then refactor. No implementation without a failing test.
+5. **stress-test** (again) - The same adversarial pass against the plan itself: task boundaries, parallel-safety, failure modes.
 
-6. **requesting-code-review** - Reviews the work against the plan before integration. Critical findings block progress.
+6. **subagent-driven-development** or **executing-plans** - Dispatches a fresh subagent per task, each in its own isolated worktree (implementers follow **test-driven-development**), or executes in batches with human checkpoints.
 
-7. **finishing-a-development-branch** - Verifies tests, audits the docs, presents merge/PR options, and lands the plane: close the beads, sync, push.
+7. **requesting-code-review** - Task-level and whole-branch reviews against the plan. Critical findings block progress.
+
+8. **verification-before-completion** - Nothing is called done without a command that proves it - evidence gates every close.
+
+9. **document-release** - Audits the project docs against what actually shipped, before the branch merges.
+
+10. **finishing-a-development-branch** - Presents merge/PR options and lands the plane: close the beads, sync, push.
 
 The agent checks for relevant skills before any task - these are mandatory workflows, not suggestions. And because every task, decision, and lesson lives in `bd`'s Dolt database, the next session starts where this one ended: type "where are we" and the agent picks the thread back up.
 
 ## What's Inside
 
-<!-- Curation rule: every skill named in The Basic Workflow appears here; the beads-differentiators are in; cap ~14-15 entries. The full reference lives on the docs site - do not grow this back into an inventory. -->
+<!-- Curation rule: every skill named in The Basic Workflow appears here; the beads-differentiators are in; cap ~16 entries. The full reference lives on the docs site - do not grow this back into an inventory. -->
 
 ### Testing
 
@@ -87,6 +93,7 @@ The agent checks for relevant skills before any task - these are mandatory workf
 | `executing-plans` | Batch plan execution in a single session with checkpoints |
 | `using-git-worktrees` | Isolated development branches per feature |
 | `requesting-code-review` | Dispatches a code-reviewer subagent with structured criteria |
+| `document-release` | Post-ship documentation audit - keeps the docs matching what actually shipped |
 | `finishing-a-development-branch` | Merge/PR flow + land the plane (close beads, sync, push) |
 
 ### Memory & orientation
