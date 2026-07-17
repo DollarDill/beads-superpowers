@@ -20,7 +20,7 @@ description: 快速参考 bd 命令速查表、技能路由表、常见问题故
 | `bd show <id>` | 某个 bead 的完整详情 |
 | `bd query "status=open AND priority<=1"` | 复合查询——替代 `bd list` + jq |
 | `bd count --by-status` | 分组计数（`--by-priority` / `--by-type`） |
-| `bd epic status` / `--eligible-only` | 所有 epic 的完成状态 / 仅显示可关闭的 epic |
+| `bd epic status <id>` / `--eligible-only` | 该 epic 的完成状态 / 仅显示可关闭的 epic |
 | `bd create "Epic: name" -t epic -p 2` | 新建优先级为 2 的 epic |
 | `bd create "Task: title" -t task --parent <epic>` | 在 epic 下创建任务 |
 | `bd worktree create .worktrees/<name>` | 在指定路径创建 worktree——裸 `<name>` 会落在 `./<name>`，与你的项目文件同级。路径相对于当前目录解析，因此请在仓库根目录下运行 |
@@ -31,7 +31,7 @@ description: 快速参考 bd 命令速查表、技能路由表、常见问题故
 | `bd dep add <child> <depends-on>` | 添加依赖关系 |
 | `bd note <id> "context"` | 向 bead 追加证据 |
 | `bd remember "insight"` / `bd memories <kw>` / `bd forget <id>` | 持久化 / 搜索 / 删除学习内容 |
-| `bd list --label <topic> --all` / `bd search "<kw>" --status all` | 搜索知识库——已标记 `kb` 标签的延迟 `research`/`design`/`decision` beads（正文词条：`--desc-contains "<kw>"`；然后用 `bd show <id1> <id2>` 或 `--flat --long -n 10` 读取命中）。要把已有文档搬进来而不是从空仓库开始？请见[迁移指南](migration.md) |
+| `bd list --label <topic> --status all` / `bd search "<kw>" --status all` | 搜索知识库——已标记 `kb` 标签的延迟 `research`/`design`/`decision` beads（正文词条：`--desc-contains "<kw>"`；然后用 `bd show <id1> <id2>` 或 `--flat --long -n 10` 读取命中）。要把已有文档搬进来而不是从空仓库开始？请见[迁移指南](migration.md) |
 | `bd dolt push` / `pull` | 将 beads 数据库同步到/从你的 beads 远端 |
 
 !!! info "深入了解 — 上游 Beads 文档"

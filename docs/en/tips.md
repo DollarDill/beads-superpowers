@@ -18,7 +18,7 @@ recovery, coordination - lives in the upstream reference linked below.
 | `bd show <id>` | Full details for one bead |
 | `bd query "status=open AND priority<=1"` | Compound query - replaces `bd list` + jq |
 | `bd count --by-status` | Grouped counts (`--by-priority` / `--by-type`) |
-| `bd epic status` / `--eligible-only` | Completion status for every epic / only epics eligible to close |
+| `bd epic status <id>` / `--eligible-only` | Completion status for that epic / only epics eligible to close |
 | `bd create "Epic: name" -t epic -p 2` | New epic at priority 2 |
 | `bd create "Task: title" -t task --parent <epic>` | Task under an epic |
 | `bd worktree create .worktrees/<name>` | Worktree at a set path - a bare `<name>` lands at `./<name>`, sibling to your files. Resolves relative to your current directory, so run it from the repo root |
@@ -29,7 +29,7 @@ recovery, coordination - lives in the upstream reference linked below.
 | `bd dep add <child> <depends-on>` | Add dependency |
 | `bd note <id> "context"` | Append evidence to a bead |
 | `bd remember "insight"` / `bd memories <kw>` / `bd forget <id>` | Persist / search / remove learnings |
-| `bd list --label <topic> --all` / `bd search "<kw>" --status all` | Search the knowledge base - deferred `research`/`design`/`decision` beads labeled `kb` (body terms: `--desc-contains "<kw>"`; then read hits with `bd show <id1> <id2>` or `--flat --long -n 10`). Bringing in existing docs instead of starting empty? See the [migration guide](migration.md) |
+| `bd list --label <topic> --status all` / `bd search "<kw>" --status all` | Search the knowledge base - deferred `research`/`design`/`decision` beads labeled `kb` (body terms: `--desc-contains "<kw>"`; then read hits with `bd show <id1> <id2>` or `--flat --long -n 10`). Bringing in existing docs instead of starting empty? See the [migration guide](migration.md) |
 | `bd dolt push` / `pull` | Sync beads DB to/from your beads remote |
 
 !!! info "Go deeper - upstream Beads docs"
