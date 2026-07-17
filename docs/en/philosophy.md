@@ -1,3 +1,7 @@
+---
+description: Why beads-superpowers behaves the way it does - the design decisions as an adopter's mental model.
+---
+
 <!-- Role: why the system behaves as it does - the design decisions as an adopter's mental model. Does NOT belong here: the evidence detail (research.md) or the mechanism (methodology.md). -->
 
 # Philosophy

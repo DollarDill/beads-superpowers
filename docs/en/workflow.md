@@ -123,7 +123,7 @@ After every task passes its own [review gate](#review-gate), the orchestrator di
 
 ### Finish
 
-`finishing-a-development-branch` ([skills.md](skills.md#finishing-a-development-branch)) detects the environment - normal repo, named-branch worktree, or detached HEAD - and presents context-aware options: four choices for normal and worktree contexts, three for detached HEAD, where merging is unavailable. Before the options appear, a docs-audit gate checks that `document-release` ([skills.md](skills.md#document-release)) has run on the branch, invoking it on the spot if not (doc-irrelevant diffs exit cheaply). Provenance-based cleanup only removes worktrees inside `.worktrees/`. It ends with the Land the Plane protocol: close beads, push to the remotes, verify a clean tree. Branch work isn't done until both `bd dolt push` and `git push` succeed.
+`finishing-a-development-branch` ([skills.md](skills.md#finishing-a-development-branch)) closes out the branch: it presents merge/PR options fitted to the environment it detects, but only after a docs-audit gate confirms `document-release` ([skills.md](skills.md#document-release)) has run on the branch, invoking it on the spot if not (doc-irrelevant diffs exit cheaply). It ends with the Land the Plane protocol: close beads, push to the remotes, verify a clean tree. Branch work isn't done until both `bd dolt push` and `git push` succeed.
 
 ### Session close
 

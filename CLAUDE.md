@@ -277,7 +277,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 
 ### Key Anti-Patterns
 
-- Putting workflow descriptions in skill `description` fields (causes Claude to follow description instead of reading full skill — see SDO in docs/en/methodology.md)
+- Putting workflow descriptions in skill `description` fields (causes Claude to follow description instead of reading full skill — the skill-discovery finding in docs/en/research.md; mechanism note in docs/en/methodology.md)
 - Softening bright-line rules ("consider" instead of "MUST")
 - Adding platform-specific code to skills (skills are pure Markdown)
 

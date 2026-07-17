@@ -1,4 +1,5 @@
 ---
+description: 记忆在一次会话生命周期中的流转——会话启动注入、整理、知识库与会话循环。
 machine_translated: true
 ---
 !!! warning "机器翻译"

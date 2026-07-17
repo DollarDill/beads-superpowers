@@ -1,3 +1,7 @@
+---
+description: The evidence behind the design - external literature and this project's own measurements.
+---
+
 <!-- Role: the evidence behind the design - external literature and our own measurements. Does NOT belong here: the decisions themselves (philosophy.md) or the mechanism (methodology.md). -->
 
 # Research

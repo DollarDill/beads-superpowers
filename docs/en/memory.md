@@ -1,3 +1,7 @@
+---
+description: What happens to memory across a session's life - injection at session start, curation, the knowledge store, and the session loop.
+---
+
 <!-- Role: what the machinery does with memory across a session's life - injection, curation, the knowledge store, the session loop. Does NOT belong here: why these designs were chosen (philosophy.md) or bd command reference (upstream Beads docs). -->
 
 # Memory & Sessions
