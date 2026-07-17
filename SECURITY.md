@@ -7,10 +7,8 @@ latest released version.
 
 | Version | Supported |
 |---------|-----------|
-| 0.8.x   | ✅        |
-| 0.7.x   | ❌        |
-| 0.6.x   | ❌        |
-| < 0.6   | ❌        |
+| 0.14.x  | ✅        |
+| < 0.14  | ❌        |
 
 ## Reporting a vulnerability
 
@@ -46,7 +44,7 @@ at <dillon@algocents.com>.
 This policy covers:
 
 - The `beads-superpowers` plugin code (skills, hooks, scripts)
-- The `.github/` automation (CI workflow, Dependabot, templates)
+- The `.github/` automation (Dependabot, issue/PR templates)
 - The plugin manifests (`.claude-plugin/plugin.json`, `marketplace.json`)
 
 This policy does **not** cover:

@@ -103,6 +103,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harn
 - **Three-layer architecture for example workflow** — `CLAUDE.md` (behavioral principles + project context) + `agents/yegge.md` (orchestration — triage + skill routing) + prompt templates (subagent dispatch). Each layer has a distinct responsibility. (See: ADR-0003, ADR-0032)
 - **MkDocs Material for docs site** — HashiCorp/Terraform-style sidebar, dark theme, Mermaid diagrams. Template variables via macros plugin avoid hardcoded counts; the config and macros now live in the-factory-website repo, not here. (See: ADR-0001, ADR-0050)
 - **Per-task worktree isolation for parallel SDD** — Independent plan tasks execute in parallel (max 5), each in its own `bd worktree`. Prevents merge conflicts between concurrent subagents. (See: ADR-0002)
+- **Dev-branch integration model** — All work lands on `dev`; `main` is released-only and advances exclusively via `git merge --ff-only dev` at release cut (hotfixes ride dev as patch releases — drift is self-detecting). `main` and `gh-pages` carry force-push/deletion protection. (See: ADR-0060)
 
 ## Common Gotchas
 
@@ -236,7 +237,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 - Never guess bd syntax — on first use of a command or flag this session, read `bd <cmd> --help` (the binary is SSOT)
 - Only the orchestrating agent manages beads — subagents do NOT touch beads
 - Include bead IDs in commit messages: `git commit -m "Add feature (bd-a1b2)"`
-- Every session ends with Land the Plane: `bd close` → `bd dolt push` → `git push`
+- Every session ends with Land the Plane: `bd close` → `bd dolt push` → `git push` (work lands on `dev`; `main` only advances at release cut)
 - Beads *policy* is embedded where it's read — using-superpowers' Beads section plus inline own-operation kernels (no dedicated policy skill); bd *commands* defer to `bd human` — don't restate command tables in skills
 
 ## Skills
@@ -316,13 +317,15 @@ For a quick, no-Docker installer smoke test outside the `just` surface: `bash in
 Skill *behavior* testing (the 4 LLM suites under tests/) is deprecated in place —
 successor: the external eval-harness project. See tests/*/DEPRECATED.md.
 
-**Release process (no GHA):** run the `document-release` docs audit first (release cuts from main bypass the finishing-branch Step 3.5 docs gate) → `./scripts/bump-version.sh <ver>` → update CHANGELOG →
-tag `v<ver>` → `git push --tags` → **publish the GitHub Release**:
-`gh release create v<ver> --title "v<ver>" --latest --notes-file <changelog-section> checksums.txt`.
-The last step is NOT optional — `install.sh` resolves its default version from `releases/latest`,
+**Release process (no GHA):** run the `document-release` docs audit **on dev** (release cuts bypass the finishing-branch Step 3.5 docs gate) → `./scripts/bump-version.sh <ver>` + update CHANGELOG, committed **on dev** →
+`git switch main && git merge --ff-only dev` (fails loudly if anything ever landed on main directly — that's the invariant working) → tag `v<ver>` on main → `git push --tags` → **publish the GitHub Release**:
+`gh release create v<ver> --title "v<ver>" --latest --notes-file <changelog-section> checksums.txt` → `git switch dev`.
+Publishing the GitHub Release is NOT optional — `install.sh` resolves its default version from `releases/latest`,
 so a pushed tag without a published Release leaves installers on the previous version. Attach
 `checksums.txt` (`sha256sum` of the tag tarball `archive/refs/tags/v<ver>.tar.gz`) or
 `verify_checksum` silently skips. Docs deploy is no longer part of this repo's release process — the site publishes from the private the-factory-website repo (ADR-0050).
+
+Fixes on dev reach installers only at release — cut patch releases promptly. main receives nothing except ff-only merges from dev; hotfixes ride dev as patch releases.
 
 ### Running Skill Tests
 
@@ -363,5 +366,9 @@ The `example-workflow/` directory provides a ready-to-use development workflow:
 | --------------------------------------------------------- | ----------------- | ------------------------------------------- |
 | [obra/superpowers](https://github.com/obra/superpowers)   | v6.1.1 (baseline) | Skill content, new skills, hook changes     |
 | [gastownhall/beads](https://github.com/gastownhall/beads) | v1.1.0 (baseline) | CLI commands, new features, bd prime format |
+| [garrytan/gstack](https://github.com/garrytan/gstack) `document-release` | snapshot 2026-07-17 | document-release skill lineage |
+| [mattpocock/skills](https://github.com/mattpocock/skills) `productivity/grilling` | snapshot 2026-07-17 | stress-test skill lineage |
+| [mattpocock/skills](https://github.com/mattpocock/skills) `productivity/handoff` | snapshot 2026-07-17 | session-handoff skill lineage |
+| [Anbeeld/WRITING.md](https://github.com/Anbeeld/WRITING.md) | v1.3.1 (verified current 2026-06-26) | write-documentation writing system |
 
 Use the `auditing-upstream-drift` skill (maintainer-only — `.claude/skills/auditing-upstream-drift/SKILL.md`, not distributed) to check for staleness.
