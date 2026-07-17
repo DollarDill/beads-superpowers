@@ -5,6 +5,8 @@ description: 通过原生插件系统、curl 或 npx 为 Claude Code、Codex 和
 !!! warning "机器翻译"
     本页面由 AI 自动翻译，可能存在术语或语义偏差。如有疑问，请以[英文原文](getting-started.md)为准。
 
+<!-- Role: install + first-session setup, per harness. Does NOT belong here: how the workflow runs (workflow.md) or what the machinery does with memory (memory.md). -->
+
 # 快速开始
 
 ## 前提条件
@@ -19,7 +21,7 @@ npm install -g @beads/bd    # any platform
 
 使用 `bd version` 验证安装。然后安装插件（见下文），再在每个项目中运行 `bd init`。
 
-**注意：** 原生插件安装（第 1 层）会自动安装技能和钩子。它不会运行 `bd init`——您必须在每个项目中自行完成。
+**注意：** 原生插件安装（第 1 层）会为三者自动安装技能。Claude Code 和 OpenCode 会随之自动获得钩子；Codex 则需要使用脚本安装程序来接线其 SessionStart 钩子（见下文 Codex CLI）。三者都不会运行 `bd init`——您必须在每个项目中自行完成。
 
 **可选：** 如果您需要通过 `bd dolt push/pull` 实现跨会话同步，则需要一个 [DoltHub](https://dolthub.com) 账户。没有它，Beads 仍然可以在本地正常工作。
 
@@ -135,16 +137,20 @@ bd init
 
 这将创建 `.beads/`（配置、元数据、git 钩子）、`CLAUDE.md` 和 `AGENTS.md`。插件的 session-start 钩子会自动检测 `bd setup claude` 钩子是否已存在，并跳过自身的 beads 上下文部分，因此无需手动清理。
 
-### Dolt 远端（可选）
+### 添加专属的 beads 远端
 
-用于跨会话同步任务历史记录，请添加一个**专属的 beads 远端**——与代码分开的独立仓库：
+请在运行 `bd init` 的同一时间完成这一步，不要把它当作事后补充：添加一个**专属的 beads 远端**——与代码分开的独立仓库——让你的任务历史能跨会话、跨设备同步。
 
 ```bash
 bd dolt remote add origin git@github.com:your-org/your-repo-beads.git
 bd dolt push    # test the connection
 ```
 
+全新的空仓库需要先有一次初始提交，首次推送才能成功——先用 README 创建仓库，再添加远端并推送。
+
 Dolt 历史会保留已删除的行，因此若远端与你的代码仓库相同，会连带把这整段历史一并公开。一个专属的私有仓库能让 issue 数据保持鉴权访问，同时代码仍可保持公开。v1.1.0 之后的 bd 版本通过一道碰撞防护来强制这一点：如果 URL 与你的 git origin 相同，`bd dolt remote add` 会拒绝执行，除非你传入 `--allow-git-origin`。同仓库同步在该参数之后仍然可用——它是一个显式的可选项，而非默认行为。
+
+没有远端时，beads 仍然可以完全在本地正常工作。
 
 !!! info "深入了解 — 上游 Beads 文档"
     - [核心概念](https://gastownhall.github.io/beads/core-concepts) — Dolt 数据库与同步模型的工作原理
@@ -193,9 +199,15 @@ npx skills add DollarDill/beads-superpowers -g --copy -y
 
 如果技能未显示，则该插件可能未为您的 CLI 安装。如果 `bd ready` 失败，则 Beads 尚未在此项目中初始化（运行 `bd init`）。
 
+## 你的第一次会话
+
+当该会话启动时，SessionStart 钩子会自动触发：它会在注入技能引导内容的同时，组合出一份 beads 上下文——包含精选的核心记忆，以及指向知识库的指引——让智能体从一开始就有方向，而不是一片空白。你无需自己触发这一切；它会在智能体首次回复之前完成。
+
+关于哪些内容会被精选、知识库如何跨会话保持，请参阅[记忆与会话](memory.md)。
+
 ## 钩子的工作原理
 
-Claude Code 和 Codex 共用一个钩子脚本——**SessionStart**——通过 `hooks/hooks.json` 为 Claude Code 注册，由 `install.sh` 为 Codex 接线。它在每次会话启动、清除和压缩时触发，读取 `using-superpowers` 技能（该技能路由到所有其他技能），然后组合出一份精简的 beads 上下文：一个简短的 `bd` 命令指引，加上按显著度精选的核心记忆（salience ≥ 4 及最新的 continuation，在 8 KB 硬性字节上限内选取），并附带一行披露说明，注明记忆库中有多少条被注入。合并后的上下文约 3–4k tokens——钩子不再运行 `bd prime`。如果 `bd prime` 已在其他地方注册为钩子，则 beads 部分会自动跳过。
+Claude Code 和 Codex 共用一个钩子脚本——**SessionStart**——通过 `hooks/hooks.json` 为 Claude Code 注册，由 `install.sh` 为 Codex 接线。它在每次会话启动、清除和压缩时触发：读取 `using-superpowers` 技能，然后组合出上文所述的 beads 上下文。如果 `bd prime` 已在其他地方注册为钩子，则 beads 部分会自动跳过，以避免重复注入。
 
 ```mermaid
 sequenceDiagram
@@ -211,6 +223,8 @@ sequenceDiagram
 ```
 
 OpenCode 使用自己的 JavaScript 插件（`.opencode/plugins/beads-superpowers.js`），而非 `hooks/hooks.json`，包含三个进程内钩子：`config` 钩子自动注册技能，`experimental.chat.messages.transform` 钩子在每次会话中仅首次将相同的引导内容注入首条用户消息，`experimental.session.compacting` 钩子在上下文窗口压缩后重新注入 beads 上下文。
+
+关于该上下文背后的整理规则——显著度阈值、字节预算、哪些内容会被丢弃——请参阅[记忆与会话](memory.md)。
 
 ## 配置
 
@@ -248,6 +262,6 @@ ln -s ~/workplace/beads-superpowers \
 
 **钩子未触发** — 检查钩子是否可执行：`chmod +x hooks/session-start`。
 
-**从 ≤0.8.2 版本升级后残留的提醒钩子** — 早期版本注册了一个每次提示都会触发的 `superpowers-reminder.sh` 钩子，现已不再随插件提供。请参阅 README [npx 部分](https://github.com/DollarDill/beads-superpowers#universal-fallback-npx)中的迁移一行命令。
+**从 ≤0.8.2 版本升级后残留的提醒钩子** — 早期版本注册了一个每次提示都会触发的 `superpowers-reminder.sh` 钩子，现已不再随插件提供。重新运行脚本安装程序（`install.sh`）——它会自动检测并移除残留的 `UserPromptSubmit` 条目。如果系统没有 `python3`，它会打印出需要手动删除的配置项。
 
 **`bd dolt push` 失败** — 您需要先配置一个 beads 远端：`bd dolt remote add origin <url>`（请使用专属的 beads 远端，而非代码仓库的 URL——v1.1.0 之后的 bd 版本会在 URL 与 git origin 相同时拒绝执行，除非传入 `--allow-git-origin`）。如果您不需要远程同步，此失败无害——Beads 在本地可以正常工作。
