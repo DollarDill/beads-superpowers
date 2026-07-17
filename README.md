@@ -6,77 +6,15 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.14.0-4f46e5.svg"></a>
+  <a href="https://github.com/DollarDill/beads-superpowers/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/DollarDill/beads-superpowers?color=4f46e5"></a>
   <a href="https://github.com/DollarDill/beads-superpowers/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/DollarDill/beads-superpowers?style=social"></a>
+  <a href="CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
+  <a href="https://algocents.com/beads-superpowers/"><img alt="Docs" src="https://img.shields.io/badge/docs-algocents.com-0ea5e9.svg"></a>
 </p>
 
 ---
 
 A plugin for Claude Code, Codex, OpenCode, and 6 more AI coding agents that makes your agent write tests before code, debug systematically instead of guessing, and remember what it worked on yesterday. Composable skills enforce the practices; a Dolt-backed issue tracker keeps context across sessions.
-
-## How it works
-
-When you start a task, the agent runs **brainstorming** to nail down requirements before touching code, then **writing-plans** to break the work into `bd`-tracked steps that survive session restarts. During implementation it follows **test-driven-development** (failing test first, always) and can fan out to parallel subagents via **subagent-driven-development** — each agent working in its own git worktree. `bd` stores every task, decision, and note in a local Dolt database, so the agent picks up exactly where it left off next session without relying on chat history.
-
-Underneath all of it is a production-grade standard: the agent treats every task as if real users depend on it, so it won't quietly cut a corner, drop a requirement, or weaken a security control to move faster.
-
-## What's Inside
-
-### Testing
-
-| Skill | What it does |
-|-------|-------------|
-| `test-driven-development` | RED-GREEN-REFACTOR loop — Iron Law: no implementation without a failing test |
-| `verification-before-completion` | Evidence before claims — requires proof before marking anything done |
-
-### Debugging
-
-| Skill | What it does |
-|-------|-------------|
-| `systematic-debugging` | 4-phase root-cause analysis before proposing any fix |
-
-### Collaboration
-
-| Skill | What it does |
-|-------|-------------|
-| `requesting-code-review` | Dispatches a code-reviewer subagent with structured criteria |
-| `receiving-code-review` | Anti-sycophancy reception — evaluates each finding on its merits |
-| `subagent-driven-development` | Fresh agent per task with spec + quality review; parallel batch mode for independent tasks |
-| `dispatching-parallel-agents` | Fan-out to 2+ independent agents without shared state |
-
-### Project management
-
-| Skill | What it does |
-|-------|-------------|
-| `brainstorming` | Socratic design session before any code — produces a spec bead |
-| `stress-test` | Adversarial interrogation of plans with recommended answers |
-| `writing-plans` | Breaks work into bite-sized tasks, each tracked as a `bd` bead |
-| `executing-plans` | Batch plan execution in a single session |
-| `using-git-worktrees` | Isolated development branches per task |
-| `finishing-a-development-branch` | Merge/PR flow + Land the Plane (close beads, push) |
-| `document-release` | Post-ship doc audit — keeps README, CHANGELOG, and ARCHITECTURE in sync |
-| `project-init` | Beads/Dolt DB setup, bootstrap, and recovery |
-| `getting-up-to-speed` | Session orientation — reads the latest session-handoff doc, loads `bd` context, and produces a current-state summary |
-| `memory-curator` | Session-close/on-demand memory consolidation — deduplicates and prunes the `bd` memory store |
-| `session-handoff` | Human-invoked — writes a grounded handoff doc + continuation memory to resume in-progress work |
-| `research-driven-development` | Parallel research agents → synthesized knowledge-base document |
-| `write-documentation` | Human-quality prose — 14-rule writing system with context-first drafting |
-
-### Meta
-
-| Skill | What it does |
-|-------|-------------|
-| `using-superpowers` | Bootstrap — injected at session start, routes to the right skill |
-
-## Docs
-
-**[algocents.com/beads-superpowers](https://algocents.com/beads-superpowers/)** — getting started, methodology, skills reference, example workflow, and tips.
-
-- [Example Workflow docs](https://algocents.com/beads-superpowers/workflow/) — Full walkthrough with diagrams
-- [Skills Reference](https://algocents.com/beads-superpowers/skills/) — All skills explained
-- [Methodology](https://algocents.com/beads-superpowers/methodology/) — Why this workflow exists
-
-Docs *content* lives in this repo (`docs/` — PRs welcome); the site is built and published from a separate deployment repo.
 
 ## Quickstart
 
@@ -96,23 +34,75 @@ bd init                               # 2. Bootstrap the Dolt database for this 
 
 Start a new Claude Code session and type "where are we" — the agent will load your `bd` context and pick up where you left off.
 
-Using a different agent? See [Installation](#installation) for native install on Codex, OpenCode, Cursor, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi.
+Using a different agent? Jump to install for [Codex CLI](#codex-cli), [OpenCode](#opencode), [Cursor](#cursor), [GitHub Copilot CLI](#github-copilot-cli), [Kimi Code](#kimi-code), [Antigravity](#antigravity), [Factory Droid](#factory-droid), or [Pi](#pi).
 
-## Prerequisites
+## The Basic Workflow
 
-**Install `bd` before the plugin.** Its hooks call `bd` on every session start; without it they fail silently and you lose persistent memory. The Quickstart above uses Homebrew, or `npm install -g @beads/bd` on any platform. Verify with `bd version`.
+1. **brainstorming** — Activates before any code. Refines the idea through one-question-at-a-time design dialogue, checks prior decisions in the knowledge store, and ends with a spec you approved — tracked in `bd` so it survives the session.
 
-**Note:** Native plugin install (Tier 1) installs skills and hooks, but not `bd init` — run that yourself per project.
+2. **using-git-worktrees** — Activates after design approval. Creates an isolated worktree on a fresh branch so implementation never touches your main checkout.
+
+3. **writing-plans** — Turns the approved spec into bite-sized tasks with exact files, code, and verification steps. Every task becomes a `bd` bead.
+
+4. **subagent-driven-development** or **executing-plans** — Dispatches a fresh subagent per task with spec and quality review between tasks, or executes in batches with human checkpoints.
+
+5. **test-driven-development** — Enforces RED-GREEN-REFACTOR: failing test first, minimal code to pass, then refactor. No implementation without a failing test.
+
+6. **requesting-code-review** — Reviews the work against the plan before integration. Critical findings block progress.
+
+7. **finishing-a-development-branch** — Verifies tests, audits the docs, presents merge/PR options, and lands the plane: close the beads, sync, push.
+
+The agent checks for relevant skills before any task — these are mandatory workflows, not suggestions. And because every task, decision, and lesson lives in `bd`'s Dolt database, the next session starts where this one ended: type "where are we" and the agent picks the thread back up.
+
+## What's Inside
+
+<!-- Curation rule: every skill named in The Basic Workflow appears here; the beads-differentiators are in; cap ~14–15 entries. The full reference lives on the docs site — do not grow this back into an inventory. -->
+
+**Testing:**
+
+- **test-driven-development** — RED-GREEN-REFACTOR loop; Iron Law: no implementation without a failing test
+
+**Debugging:**
+
+- **systematic-debugging** — 4-phase root-cause analysis before proposing any fix
+- **verification-before-completion** — evidence before claims; nothing is "done" until a command proved it
+
+**Design & planning:**
+
+- **brainstorming** — Socratic design session before any code — produces an approved spec
+- **stress-test** — adversarial interrogation of designs and plans, with recommended answers
+- **writing-plans** — bite-sized task plans; every task tracked as a `bd` bead
+
+**Execution:**
+
+- **subagent-driven-development** — fresh agent per task with spec + quality review; parallel batch mode
+- **executing-plans** — batch plan execution in a single session with checkpoints
+- **using-git-worktrees** — isolated development branches per feature
+- **requesting-code-review** — dispatches a code-reviewer subagent with structured criteria
+- **finishing-a-development-branch** — merge/PR flow + land the plane (close beads, sync, push)
+
+**Memory & orientation:**
+
+- **getting-up-to-speed** — session orientation: loads `bd` context and produces a current-state summary
+- **memory-curator** — consolidates, deduplicates, and prunes the persistent memory store
+- **session-handoff** — writes a grounded handoff doc so the next session resumes mid-flight work
+- **research-driven-development** — parallel research agents → verified, persistent knowledge base
+
+**[Full skills reference →](https://algocents.com/beads-superpowers/skills/)**
 
 ## Installation
 
+**Tested end-to-end:** Claude Code, Codex CLI, and OpenCode. The other harnesses ship validated configs we don't E2E-test.
+
 > **⚠️ Coexistence warning:** Do not install alongside [obra/superpowers](https://github.com/obra/superpowers). Skill names collide — pick one or the other.
 
-### Tier 1 — Verified
+### Prerequisites
 
-These paths are tested end-to-end. Prefer them.
+**Install `bd` before the plugin.** Its hooks call `bd` on every session start; without it they fail silently and you lose persistent memory. Use Homebrew (`brew install beads`) or `npm install -g @beads/bd` on any platform. Verify with `bd version`.
 
-#### Claude Code
+**Note:** Native plugin install installs skills and hooks, but not `bd init` — run that yourself per project.
+
+### Claude Code
 
 ```bash
 claude plugin marketplace add DollarDill/beads-superpowers
@@ -121,7 +111,7 @@ claude plugin install beads-superpowers@beads-superpowers-marketplace
 
 Or as slash commands inside a Claude Code session: `/plugin marketplace add DollarDill/beads-superpowers` then `/plugin install beads-superpowers@beads-superpowers-marketplace`.
 
-#### Codex CLI
+### Codex CLI
 
 ```bash
 codex plugin marketplace add DollarDill/beads-superpowers
@@ -137,7 +127,7 @@ codex_hooks = true
 
 To get the SessionStart hook under Codex, use the scripted installer (`install.sh`) rather than the plugin channel — the plugin channel installs the skills but does not wire the hook.
 
-#### OpenCode
+### OpenCode
 
 Add to the `plugin` array in your `opencode.json` (global or project-level):
 
@@ -149,11 +139,7 @@ Add to the `plugin` array in your `opencode.json` (global or project-level):
 
 Skills auto-register and the session bootstrap + beads context inject automatically — no other steps. Details, version pinning, migration from pre-0.12 installer copies, and troubleshooting: [.opencode/INSTALL.md](.opencode/INSTALL.md).
 
-### Tier 2 — Best-effort
-
-Config validated; not E2E-tested by us. Use with that in mind.
-
-#### Cursor
+### Cursor
 
 ```text
 /add-plugin beads-superpowers
@@ -161,7 +147,7 @@ Config validated; not E2E-tested by us. Use with that in mind.
 
 Run this command inside Cursor Agent. Update via the Marketplace UI.
 
-#### GitHub Copilot CLI
+### GitHub Copilot CLI
 
 ```bash
 copilot plugin marketplace add DollarDill/beads-superpowers
@@ -176,7 +162,7 @@ copilot plugin update beads-superpowers
 
 Note: rides the Claude-plugin fallback (skills + session-start via the shared `hooks/hooks.json`), the same mechanism upstream ships; requires Copilot CLI v1.0.11+ for session-start context injection.
 
-#### Kimi Code
+### Kimi Code
 
 ```text
 /plugins install https://github.com/DollarDill/beads-superpowers
@@ -184,7 +170,7 @@ Note: rides the Claude-plugin fallback (skills + session-start via the shared `h
 
 Run `/new` after install to start a fresh session with the plugin active.
 
-#### Antigravity
+### Antigravity
 
 ```bash
 agy plugin install https://github.com/DollarDill/beads-superpowers
@@ -192,7 +178,7 @@ agy plugin install https://github.com/DollarDill/beads-superpowers
 
 Note: reuses the Claude plugin manifest — the same mechanism upstream verified.
 
-#### Factory Droid
+### Factory Droid
 
 ```bash
 droid plugin marketplace add https://github.com/DollarDill/beads-superpowers
@@ -201,13 +187,13 @@ droid plugin install beads-superpowers@beads-superpowers-marketplace
 
 Note: reuses the Claude plugin manifest — the same mechanism upstream verified.
 
-#### Pi
+### Pi
 
 ```bash
 pi install git:github.com/DollarDill/beads-superpowers
 ```
 
-#### Universal fallback (npx)
+### npx (any harness)
 
 > **Updating from ≤0.8.2:** earlier versions registered a per-prompt reminder hook that no longer ships. If your `~/.claude/settings.json` still references `superpowers-reminder.sh`, back it up, then remove the entry:
 >
@@ -240,15 +226,55 @@ The script's role is broader than just copying files. Use it when you need any o
 
 Supports: `--yes` (skip prompts), `--version X.Y.Z`, `--with-yegge`, `--dry-run`, `--skip-checksum`, `--uninstall`.
 
+Updates: rerun your install command — plugin channels update via their marketplace, npx and the script by rerunning.
+
+## How it works
+
+When you start a task, the agent runs **brainstorming** to nail down requirements before touching code, then **writing-plans** to break the work into `bd`-tracked steps that survive session restarts. During implementation it follows **test-driven-development** (failing test first, always) and can fan out to parallel subagents via **subagent-driven-development** — each agent working in its own git worktree. `bd` stores every task, decision, and note in a local Dolt database, so the agent picks up exactly where it left off next session without relying on chat history.
+
+Underneath all of it is a production-grade standard: the agent treats every task as if real users depend on it, so it won't quietly cut a corner, drop a requirement, or weaken a security control to move faster.
+
+## Philosophy
+
+- **Design before code** — every feature starts as a spec a human approved, not a guess
+- **TDD is an Iron Law** — no implementation without a failing test
+- **Systematic over ad-hoc** — debugging follows a root-cause process, never guess-and-check
+- **Evidence before claims** — "done" requires a command that proves it
+- **Memory over chat history** — tasks, decisions, and lessons persist in `bd`, not in a scroll buffer
+
+The long form lives in [Methodology](https://algocents.com/beads-superpowers/methodology/).
+
+## Docs
+
+**[algocents.com/beads-superpowers](https://algocents.com/beads-superpowers/)** — getting started, methodology, skills reference, example workflow, and tips.
+
+- [Example Workflow docs](https://algocents.com/beads-superpowers/workflow/) — Full walkthrough with diagrams
+- [Skills Reference](https://algocents.com/beads-superpowers/skills/) — All skills explained
+- [Methodology](https://algocents.com/beads-superpowers/methodology/) — Why this workflow exists
+
+Docs *content* lives in this repo (`docs/` — PRs welcome); the site is built and published from a separate deployment repo.
+
+## Contributing
+
+Contributions are welcome — see [`CONTRIBUTING.md`](CONTRIBUTING.md). PRs target the **`dev`** branch (`main` is the released branch). Ideas and questions live in [Discussions](https://github.com/DollarDill/beads-superpowers/discussions).
+
 ## Built on
 
 - **[Superpowers](https://github.com/obra/superpowers)** by Jesse Vincent — the skill system and development practices
 - **[Beads](https://github.com/gastownhall/beads)** by Steve Yegge — persistent issue tracking with cross-session memory
 
-## Contributing
+Individual skills adapted from:
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md). Ideas welcome in **[Discussions](https://github.com/DollarDill/beads-superpowers/discussions/27)**.
+- **Garry Tan** — `document-release`, adapted from [garrytan/gstack](https://github.com/garrytan/gstack/tree/main/document-release)
+- **Matt Pocock** — `stress-test`, from [skills/grilling](https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md); `session-handoff`, from [skills/handoff](https://github.com/mattpocock/skills/blob/main/skills/productivity/handoff/SKILL.md)
+- **Ivan Neustroev ("Anbeeld")** — the writing system behind `write-documentation`, adapted from [WRITING.md](https://github.com/Anbeeld/WRITING.md) (MIT)
 
 ## License
 
 [MIT](LICENSE)
+
+## Community
+
+- **Ideas & questions:** [GitHub Discussions](https://github.com/DollarDill/beads-superpowers/discussions) — the pinned post is the front door
+- **Bugs:** [Issues](https://github.com/DollarDill/beads-superpowers/issues)
+- **Contact:** <dillon@algocents.com>
