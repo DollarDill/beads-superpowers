@@ -154,7 +154,10 @@ echo "PASS (8/9): multi-id bd show returns all requested bodies"
 # 9. Memory round-trip: `bd remember` -> `bd recall <key>` returns FULL text
 # (bd memories prints truncated previews; recall is the read path skills document).
 memout=$(bde remember "lesson probe: recall-roundtrip-full-text zzqxmem end-marker" 2>&1)
-memkey=$(printf '%s' "$memout" | grep -oE '\[[^]]+\]' | head -1 | tr -d '[]')
+# Capture-first parse (same idiom, same reason): a zero-match grep must reach the
+# FAIL diagnostic below, not abort the script via pipefail before it fires.
+memtoks=$(printf '%s' "$memout" | grep -oE '\[[^]]+\]') || memtoks=""
+memkey=$(printf '%s\n' "$memtoks" | head -1 | tr -d '[]')
 [ -n "$memkey" ] || { echo "FAIL: could not parse memory key from bd remember output: $memout"; exit 1; }
 out9=$(bde recall "$memkey")
 printf '%s' "$out9" | grep -q "zzqxmem end-marker" \
