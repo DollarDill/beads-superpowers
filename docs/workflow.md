@@ -157,6 +157,6 @@ Two interrupts can fire at any point. They suspend the current step, handle the 
 
 ## Session protocol
 
-**Start:** The SessionStart hook fires automatically, injecting skill context plus a composed beads context — a `bd` command pointer and the highest-salience persistent memories. Run `bd ready` to surface unblocked beads and in-progress work from previous sessions. Orient before claiming; claim before implementing.
+**Start:** The SessionStart hook fires automatically, injecting skill context plus a composed beads context — a `bd` command pointer and the highest-salience persistent memories. Run `bd ready` to surface unblocked beads and in-progress work from previous sessions. Orient before claiming; claim before implementing. When starting work on a bead, process skills come first — brainstorming and planning before any implementation skill; a bead with an existing spec or plan proceeds straight to its planned skill.
 
 **End:** Finish for code paths, Session close for non-branch paths. Close every bead with evidence; if the session produced several new memories, offer a `memory-curator` pass before the push. Push the beads remote, push git, verify a clean tree. A session with uncommitted work or unpushed commits hasn't landed — the push is what completion means.
