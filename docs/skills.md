@@ -196,11 +196,11 @@ Creates and manages isolated git worktrees via `bd worktree`. Pre-flight checks 
 
 **Trigger:** Implementation complete, tests pass, ready to integrate.
 
-Detects environment (normal repo, named-branch worktree, or detached HEAD) and adapts options — 4 choices for normal/worktree, 3 for detached HEAD (no merge). Provenance-based cleanup only removes `.worktrees/` paths. Ends with the mandatory Land the Plane sequence: `bd close` → `bd dolt push` → `git push`.
+Detects environment (normal repo, named-branch worktree, or detached HEAD) and adapts options — 4 choices for normal/worktree, 3 for detached HEAD (no merge). A docs-audit gate runs before the options: `document-release` must have run on the branch, or is invoked on the spot (doc-irrelevant diffs exit cheaply). Provenance-based cleanup only removes `.worktrees/` paths. Ends with the mandatory Land the Plane sequence: `bd close` → `bd dolt push` → `git push`.
 
 ### document-release
 
-**Trigger:** After code changes are committed, before PR merge.
+**Trigger:** Branch complete and about to merge or PR — including via finishing-a-development-branch's docs-audit gate — after code changes are committed.
 
 Walks through README, CHANGELOG, CLAUDE.md, CONTRIBUTING, and other docs to find and fix drift against shipped code. A coverage map catches docs that are missing entirely — a new flag or command with no reference page — not only stale ones, and each CHANGELOG entry is scored against a what-changed, why-care, how-to-use test.
 

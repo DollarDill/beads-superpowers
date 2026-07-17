@@ -111,7 +111,7 @@ graph TD
 
 ### 完成（Finish）
 
-`finishing-a-development-branch` 检测环境——普通仓库、命名分支 worktree 或分离 HEAD——并提供上下文感知的选项：普通和 worktree 上下文提供四个选项，分离 HEAD 提供三个（合并不可用）。基于来源的清理仅移除 `.worktrees/` 内的 worktree。最后执行 Land the Plane 协议：关闭 bead，推送到远程，验证干净的工作树。在 `bd dolt push` 和 `git push` 都成功之前，分支工作未完成。
+`finishing-a-development-branch` 检测环境——普通仓库、命名分支 worktree 或分离 HEAD——并提供上下文感知的选项：普通和 worktree 上下文提供四个选项，分离 HEAD 提供三个（合并不可用）。在呈现选项之前，文档审计门（docs-audit gate）会检查 `document-release` 是否已在该分支上运行——若没有则当场调用它（与文档无关的 diff 会低成本提前退出）。基于来源的清理仅移除 `.worktrees/` 内的 worktree。最后执行 Land the Plane 协议：关闭 bead，推送到远程，验证干净的工作树。在 `bd dolt push` 和 `git push` 都成功之前，分支工作未完成。
 
 ### 会话关闭（Session close）
 

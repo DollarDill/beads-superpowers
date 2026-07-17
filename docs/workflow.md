@@ -108,7 +108,7 @@ When several tasks are unblocked, **parallel batch mode** runs up to five concur
 
 ### Finish
 
-`finishing-a-development-branch` detects the environment — normal repo, named-branch worktree, or detached HEAD — and presents context-aware options: four choices for normal and worktree contexts, three for detached HEAD, where merging is unavailable. Provenance-based cleanup only removes worktrees inside `.worktrees/`. It ends with the Land the Plane protocol: close beads, push to the remotes, verify a clean tree. Branch work isn't done until both `bd dolt push` and `git push` succeed.
+`finishing-a-development-branch` detects the environment — normal repo, named-branch worktree, or detached HEAD — and presents context-aware options: four choices for normal and worktree contexts, three for detached HEAD, where merging is unavailable. Before the options appear, a docs-audit gate checks that `document-release` has run on the branch — and invokes it on the spot if not (doc-irrelevant diffs exit cheaply). Provenance-based cleanup only removes worktrees inside `.worktrees/`. It ends with the Land the Plane protocol: close beads, push to the remotes, verify a clean tree. Branch work isn't done until both `bd dolt push` and `git push` succeed.
 
 ### Session close
 

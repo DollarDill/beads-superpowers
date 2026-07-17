@@ -55,11 +55,13 @@ graph LR
 
 ### 标签是唯一的查询轴
 
-你按主题标签或关键词检索，此外没有其他可靠方式：
+你按主题标签、关键词或正文子串检索，此外没有其他可靠方式：
 
 ```bash
 bd list --label <topic> --status all      # 按主题
-bd search "<keyword>" --status all        # 按关键词
+bd search "<keyword>" --status all        # 按关键词（仅匹配标题）
+bd list --label kb --status all --desc-contains "<term>"   # 按正文词条
+bd show <id1> <id2>                       # 然后读取命中——正文，而不是标题
 ```
 
 Bead 元数据仅供显示——按 `metadata` 字段过滤返回零结果——所以主题标签*就是*索引。这就是为什么你在阶段 1 里编写的词表分量如此之重，也是为什么标签在阶段 3 里要接受最重的人工审查。
@@ -225,8 +227,8 @@ printf '%s' "$desc" | bd update <id> --body-file -
 ```bash
 # 捕获冒烟测试——一个新知识 bead 带着真实正文落地
 printf '%s' "Smoke: <two-sentence real finding>" | bd create "Smoke: retrieval works" -t research -l kb,<topic> --defer 2099-01-01 --body-file - --silent
-# 检索冒烟测试——主题查询浮现出它
-bd list --label <topic> --status all
+# 检索冒烟测试——主题查询浮现出它，并且正文可以读回
+bd list --label <topic> --status all --flat --long -n 5
 ```
 
 有了阶段 1 的守卫在你的测试面里，漏掉的捕获或越出词表的标签现在会在发生的那一刻就让构建失败。

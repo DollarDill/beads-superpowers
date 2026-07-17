@@ -52,11 +52,13 @@ Each reference item is one bead, held in a shape chosen to persist quietly and n
 
 ### Labels are the only query axis
 
-You retrieve by topic label or by keyword, and nothing else is reliable:
+You retrieve by topic label, by keyword, or by body substring — and nothing else is reliable:
 
 ```bash
 bd list --label <topic> --status all      # by topic
-bd search "<keyword>" --status all        # by keyword
+bd search "<keyword>" --status all        # by keyword (titles only)
+bd list --label kb --status all --desc-contains "<term>"   # by body term
+bd show <id1> <id2>                       # then read the hits — bodies, not titles
 ```
 
 Bead metadata is display-only — filtering on a `metadata` field returns nothing — so the topic labels *are* the index. That is why the vocabulary you author in Phase 1 carries so much weight, and why labels get the heaviest human review in Phase 3.
@@ -222,8 +224,8 @@ Prove capture writes a real description and retrieval finds it by topic:
 ```bash
 # capture smoke test — a fresh knowledge-bead lands with a real body
 printf '%s' "Smoke: <two-sentence real finding>" | bd create "Smoke: retrieval works" -t research -l kb,<topic> --defer 2099-01-01 --body-file - --silent
-# retrieval smoke test — the topic query surfaces it
-bd list --label <topic> --status all
+# retrieval smoke test — the topic query surfaces it, and the body reads back
+bd list --label <topic> --status all --flat --long -n 5
 ```
 
 With the guards from Phase 1 in your test surface, a skipped capture or an off-vocabulary label now fails the build the moment it happens.

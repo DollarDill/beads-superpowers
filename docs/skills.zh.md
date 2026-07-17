@@ -198,11 +198,11 @@ graph TD
 
 **触发条件：** 实现完成、测试通过、准备集成。
 
-检测环境（普通仓库、命名分支 worktree 或游离 HEAD），并调整选项——普通/worktree 模式 4 个选项，游离 HEAD 模式 3 个选项（无合并）。基于来源的清理仅移除 `.worktrees/` 路径。以强制性的 Land the Plane 序列结束：`bd close` → `bd dolt push` → `git push`。
+检测环境（普通仓库、命名分支 worktree 或游离 HEAD），并调整选项——普通/worktree 模式 4 个选项，游离 HEAD 模式 3 个选项（无合并）。呈现选项之前先运行文档审计门（docs-audit gate）：`document-release` 必须已在该分支上运行，否则当场调用（与文档无关的 diff 会低成本提前退出）。基于来源的清理仅移除 `.worktrees/` 路径。以强制性的 Land the Plane 序列结束：`bd close` → `bd dolt push` → `git push`。
 
 ### document-release
 
-**触发条件：** 代码变更提交后、PR 合并前。
+**触发条件：** 分支完成、即将合并或提 PR——包括经由 finishing-a-development-branch 的文档审计门——且代码变更已提交。
 
 遍历 README、CHANGELOG、CLAUDE.md、CONTRIBUTING 及其他文档，查找并修复与已发布代码之间的偏差。覆盖率地图不仅能捕获过时的文档，还能发现完全缺失的文档——例如没有参考页面的新标志或命令——并对每条 CHANGELOG 条目按"变更了什么、为何值得关注、如何使用"进行评分。
 
