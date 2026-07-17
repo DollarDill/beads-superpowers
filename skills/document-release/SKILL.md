@@ -5,7 +5,7 @@ description: Use when implementation on a branch is complete and it is about to 
 
 # Document Release: Post-Ship Documentation Update
 
-> **Source:** Adapted from [garrytan/gstack](https://github.com/garrytan/gstack/tree/main/document-release) (Garry Tan)
+<!-- Adapted from garrytan/gstack document-release (MIT). Attribution: README "Built on". -->
 
 **Announce at start:** "I'm using the document-release skill to audit and update project documentation."
 
@@ -88,6 +88,7 @@ Read each documentation file and cross-reference against the diff:
 | File | What to Check |
 |------|--------------|
 | **README** | Features, install steps, examples, troubleshooting still valid? |
+| Pinned Discussions post | Front-door claims (contribute/contact/links) still true? Body stays evergreen — no versions or counts. |
 | **ARCHITECTURE** | Diagrams, component descriptions, design rationale still accurate? |
 | **CONTRIBUTING** | Setup instructions work? Test tiers match reality? |
 | **CLAUDE.md** | Project structure tree, commands, build/test steps current? |

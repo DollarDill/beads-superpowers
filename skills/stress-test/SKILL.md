@@ -5,7 +5,7 @@ description: Use when a design, plan, or decision needs adversarial scrutiny bef
 
 # Stress Test: Adversarial Design Interrogation
 
-> **Source:** Inspired by [mattpocock/skills grilling](https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md)
+<!-- Inspired by mattpocock/skills grilling (MIT). Attribution: README "Built on". -->
 
 **Announce at start:** "I'm using the stress-test skill to interrogate this design."
 
