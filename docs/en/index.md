@@ -1,37 +1,22 @@
 ---
-title: beads-superpowers — Process Discipline and Persistent Memory for AI Coding Agents
-description: Composable skills enforce TDD, debugging, and code review for AI agents. Dolt-backed task memory persists across sessions. Verified on Claude Code, Codex, and OpenCode; best-effort on Cursor, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi.
+description: What beads-superpowers is, and where to go next for install, workflow, design rationale, and reference.
 ---
+
+<!-- Role: landing - orient and route in under a minute. Does NOT belong here: any fact that can rot (counts, versions, capability lists) - every claim lives on the page that owns it. -->
 
 # beads-superpowers
 
-A plugin for AI coding agents with **{{ skill_count }}** skills that enforce development practices — TDD, systematic debugging, design-before-code, code review — and a persistent issue tracker that remembers context across sessions.
-
-The skills come from [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent; the tracker from [Beads](https://github.com/gastownhall/beads) by Steve Yegge. This plugin wires them together so skills create and close issues as they run, and the tracker feeds context back into each new session.
-
-**Verified** on Claude Code, Codex CLI, and OpenCode. **Best-effort** native support for Cursor, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi. See [Getting Started](getting-started.md#supported-platforms) for install paths by platform.
-
-!!! info "New to Beads itself?"
-    The upstream [Beads documentation](https://gastownhall.github.io/beads/) covers the tool in depth — concepts, CLI reference, recovery. This site documents the merged workflow built on top of it.
-
-**Current version:** v{{ version }} · {{ skill_count }} skills
+beads-superpowers gives AI coding agents composable skills that enforce process discipline - TDD, systematic debugging, design before code, code review - plus a persistent issue tracker that carries context across sessions. The skills come from [Superpowers](https://github.com/obra/superpowers); the tracker from [Beads](https://github.com/gastownhall/beads).
 
 ## Where to start
 
-**[Getting Started](getting-started.md)** if you want to install and configure the plugin.
+- **[Getting Started](getting-started.md)** - install the plugin and `bd`, per harness, then run your first session.
+- **[Example Workflow](workflow.md)** - the orchestrator that routes a request through the pipeline, from triage to finish.
+- **[Philosophy](philosophy.md)** - why the plugin behaves the way it does: the design decisions behind it, not the day-to-day mechanics.
+- **[Memory & Sessions](memory.md)** - what happens to memory across a session's life: injection, curation, the knowledge store.
+- **[Methodology](methodology.md)** - the problem each upstream project solved, and how the two combine into one mechanism.
+- **[Skills Reference](skills.md)** - the full per-skill reference: what each skill does and when it triggers.
+- **[Research](research.md)** - the literature and the project's own measurements behind each design choice.
+- **[Tips & Tricks](tips.md)** - day-to-day operational tips: the `bd` cheat sheet and fixes for common issues.
 
-**[Methodology](methodology.md)** if you want to understand the development lifecycle before installing.
-
-**[Skills Reference](skills.md)** if you already have it installed and want to know what each skill does.
-
-**[Example Workflow](workflow.md)** if you want a ready-to-use orchestrator agent that ties everything together.
-
-**[Tips & Tricks](tips.md)** for the cheat sheet and common issues.
-
-## Install
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
-```
-
-Then in any project: `bd init`. Run `/skills` in Claude Code to confirm.
+Ready to try it? [Getting Started](getting-started.md) covers install and your first `bd init`.
