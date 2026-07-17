@@ -2,6 +2,8 @@
 description: Bright-line rules and anti-rationalization tables enforce agent discipline. Dolt-backed beads track every task across sessions through a 10-state lifecycle.
 ---
 
+<!-- Role: how the discipline is engineered - the mechanism story (Iron Laws, red-flag tables, skill anatomy, the lifecycle). Does NOT belong here: why decisions were made (philosophy.md), the evidence (research.md), or the memory machinery (memory.md). -->
+
 # Methodology
 
 ## The problem
@@ -12,7 +14,7 @@ Two projects attacked each half of this.
 
 ### Process discipline
 
-[Superpowers](https://github.com/obra/superpowers) (Jesse Vincent) shipped 14 skills that force agents to brainstorm before coding, write tests before implementation, investigate root causes before proposing fixes, and verify before claiming completion. The skills use bright-line rules — "NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST" — rather than hedged guidance like "consider writing tests", because compliance doubles from 33% to 72% when instructions are absolute rather than suggested (Meincke et al. 2025). Each skill includes an anti-rationalization table that preempts the excuses agents use to skip steps.
+[Superpowers](https://github.com/obra/superpowers) (Jesse Vincent) shipped 14 skills that force agents to brainstorm before coding, write tests before implementation, investigate root causes before proposing fixes, and verify before claiming completion. The skills use bright-line rules, like "NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST," instead of hedged guidance like "consider writing tests," because an agent left room to negotiate a suggestion usually finds a way to talk itself out of it; see [Research](research.md) for the evidence behind that choice. Each skill includes an anti-rationalization table that preempts the excuses agents use to skip steps.
 
 ### Persistent memory
 
@@ -67,7 +69,7 @@ The first change was mechanical: every `TodoWrite` call across the original 14 S
 | Mark task as completed | `bd close <task-id> --reason "Implemented login"` |
 | "More tasks remain?" | `bd ready --parent <epic-id>` |
 
-The replacement works at two levels. Execution skills track plan tasks as beads. Checklist-heavy skills like brainstorming (9 steps) create a bead for each internal step. Both levels persist, because if checklist tracking is ephemeral while task tracking is persistent, agents learn that some tracking is optional.
+The replacement works at two levels. Execution skills track plan tasks as beads. Checklist-heavy skills like brainstorming (10 steps) create a bead for each internal step. Both levels persist, because if checklist tracking is ephemeral while task tracking is persistent, agents learn that some tracking is optional.
 
 Subsequent changes went further:
 
@@ -78,6 +80,10 @@ Subsequent changes went further:
 **Parallel batch mode.** When `bd ready --parent` returns multiple unblocked tasks, `subagent-driven-development` executes them concurrently (max 5 per batch), each in its own `bd worktree`.
 
 **Orchestrator-only design.** Only the orchestrating agent creates, claims, and closes beads. Subagents focus on their job. The one exception is `implementer-prompt.md`, which is beads-aware by design — it includes bead lifecycle commands, mandatory skill invocations, and LSP-first code navigation.
+
+**Skill discovery.** Every skill's YAML `description` field states only a trigger condition, never a workflow summary: "use when task X happens," not "does Y then Z." A description that reads like a summary gets followed on its own, and the steps that live in the full skill body get skipped. See [Research](research.md) for how that was found.
+
+**Pressure-tested rules.** Before a rule ships, it runs through a RED/GREEN cycle: RED is a subagent facing the pressure scenario without the skill, violating the rule; GREEN is the same scenario with the skill present, and the agent complying. A loophole that survives GREEN gets the rule rewritten and tested again. See [Research](research.md) for how that testing works.
 
 ## The lifecycle
 
@@ -132,63 +138,15 @@ graph TD
 
 ## Agent memory
 
-Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow. Most of the {{ skill_count }} skills now prompt for `bd remember` at their natural completion points — root causes after debugging, design decisions after brainstorming, review insights after code review — so memory capture happens within the skill workflow, not as a separate step.
+Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow. Most of the {{ skill_count }} skills prompt for `bd remember` at their natural completion points: root causes after debugging, design decisions after brainstorming, review insights after code review. That keeps memory capture inside the skill workflow instead of a separate step.
 
-| Memory Type | Beads Feature | What it answers |
-|-------------|---------------|-----------------|
-| Working | `bd show --current` | What am I doing right now? |
-| Short-term | `bd list --status=in_progress` | What's active? |
-| Long-term | `bd remember` + curated injection + `bd memories` | What did I learn last week? |
-| Procedural | Skill checklists + `bd ready` | How do I do this kind of task? |
-| Episodic | `events` table | What happened and when? |
-| Semantic | `bd search`, `bd query` | Where's the related work? |
-| Prospective | `bd ready` | What should I do next? |
+See [Memory & Sessions](memory.md) for what gets injected at session start, how a raw note becomes a durable memory or a knowledge-bead, and how to query the store.
 
-The `memory-curator` skill consolidates, deduplicates, and prunes the memory store that `bd remember` builds up — offered at session-close when several new memories were captured, or on-demand anytime.
+The literature and measurements behind these design choices are collected in [Research](research.md).
 
-Not every memory belongs in the injected set. The curator classifies each note by `@type`, and the type *is* the routing decision: actionable rules you want surfaced unprompted (`lesson`, `pattern`, `root-cause`, `correction`) stay injected memories, while reference-class notes that merely point at a doc or ADR (`research`, `design`, `decision`) become **deferred knowledge-beads** — persisted and Dolt-synced, labeled `kb` plus topic labels, but never auto-injected. Retrieve those on demand with `bd list --label <topic> --status all` (by topic) or `bd search "<keyword>" --status all` (by keyword — titles only; body terms need `bd list --label kb --status all --desc-contains "<term>"`). A hit list is an index, not the knowledge: read the bodies with a multi-id `bd show <id1> <id2>` (or `--flat --long -n 10`) before relying on them. The injected context stays small and high-signal while nothing is lost.
-
-## Research basis
-
-### Cialdini (2021) — Influence principles
-
-Three principles from *Influence: The Psychology of Persuasion* shape how skills are written. Authority: Iron Laws use absolute phrasing because agents treat authoritative instructions as harder to override. Consistency: once an agent begins a skill's process, consistency pressure keeps it on track through the remaining steps. Scarcity: phrasing like "you cannot rationalize your way out of this" removes the sense that alternatives exist.
-
-### Meincke et al. (2025) — Absolute vs hedged instructions
-
-Compliance doubled from 33% to 72% when AI agents received absolute rules instead of hedged guidance. Pre-emptive rationalization counters outperformed reactive correction. Specific examples of non-compliance were more effective than generic warnings. These findings explain the structure of every discipline-enforcing skill: an Iron Law (absolute, no exceptions), a Red Flags table (anticipated rationalizations with counter-arguments), and bright-line rules (MUST/NEVER rather than "consider" or "prefer").
-
-### TDD applied recursively
-
-Upstream superpowers' writing-skills meta-skill (not shipped in this fork) revealed that TDD principles apply to process documentation itself:
-
-| TDD Concept | Skill Creation Equivalent |
-|-------------|--------------------------|
-| Test case | Pressure scenario with subagent |
-| Production code | Skill document (SKILL.md) |
-| RED | Agent violates rule without skill (baseline) |
-| GREEN | Agent complies with skill present |
-| Refactor | Close loopholes while maintaining compliance |
-
-Every rule in every skill has been verified through adversarial pressure testing, not designed from theory alone.
-
-### Skill Discovery Optimization (SDO)
-
-An empirical finding: when a skill's YAML `description` field summarized the workflow ("code review between tasks"), the agent followed the description instead of reading the full skill content and skipped steps the full skill specified. As a result, every skill's `description` is a trigger condition ("when to use this"), not a workflow summary ("what this does"), which forces the full content to be read.
-
-## Design decisions
-
-**Plugin subsumes beads hooks.** Beads' `bd setup claude` installs hooks that run `bd prime`. The plugin also needs to inject skill context. Rather than fire both and waste tokens on redundant context, the plugin's hook does both jobs — composing a salience-curated beads context under a hard 8 KB ceiling instead of injecting the full `bd prime` dump (measured −91.6% on a 218-memory store) — and yields its beads section, with a warning, if the standalone hooks are still installed.
-
-**Land the Plane in the branch skill.** The session close protocol lives in `finishing-a-development-branch` (Step 6) rather than a separate skill. Branch paths terminate at S10, which includes the full push ritual. Non-branch paths (research queries) use S11 (SESSION_CLOSE) for the same ritual without the branch decision tree.
-
-**Template-only agent dispatch.** Code review was the last subagent dispatched via a standalone agent file (`agents/code-reviewer.md`). In v0.6.0 the file was removed and the reviewer dispatches through its skill's prompt template, matching the implementer and researcher. All subagent definitions now live inside the skills that use them.
-
-**Skills are Markdown, not code.** Following Superpowers' zero-dependency philosophy, all skills are plain Markdown with YAML frontmatter. No build step. The only runtime dependency is `bd`, which is optional — skills still work without it, they just lose persistence.
+Why the plugin is built this way, not just how it runs, lives on [Philosophy](philosophy.md): the reasoning behind the session hook, the orchestrator-only rule, the prompt-template pattern, and keeping skills as plain Markdown. This page tracks the mechanism those choices produced, not the case for them.
 
 ## Sources
 
 - [obra/superpowers](https://github.com/obra/superpowers) v6.1.1 — composable skills for AI agents (MIT)
 - [gastownhall/beads](https://github.com/gastownhall/beads) v1.1.0 — Persistent issue tracker for AI agents (MIT)
-- Cialdini, R. B. (2021). *Influence: The Psychology of Persuasion* (New and Expanded Edition). Harper Business.
-- Meincke, L., et al. (2025). AI agent compliance with explicit vs hedged instructions. Referenced in upstream superpowers' writing-skills/persuasion-principles.md.
