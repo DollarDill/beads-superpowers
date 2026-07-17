@@ -64,7 +64,7 @@ bd init                               # 2. Bootstrap the Dolt database for this 
 
 ## 功能概览
 
-<!-- 收录规则：基本工作流中提及的每一项技能都会出现在此处；beads 差异化技能同样收录；条目上限约 16 条。完整参考位于文档站点——不要让本表格重新膨胀为详尽清单。 -->
+<!-- 收录规则：除 using-superpowers（会话引导技能，上游 README 同样未列出）外，每一项随插件分发的技能都收录于此。完整参考位于文档站点。 -->
 
 ### 测试
 
@@ -93,10 +93,18 @@ bd init                               # 2. Bootstrap the Dolt database for this 
 |------|------|
 | `subagent-driven-development` | 每项任务派遣全新智能体，含规格与质量审查；支持并行批处理模式 |
 | `executing-plans` | 在单次会话内批量执行计划，并设置检查点 |
+| `dispatching-parallel-agents` | 将 2 个以上相互独立的任务分派给并行智能体——彼此无共享状态 |
 | `using-git-worktrees` | 每个功能使用独立的开发分支 |
 | `requesting-code-review` | 按结构化标准派遣代码审查子智能体 |
-| `document-release` | 交付后的文档审计——让文档与实际交付内容保持一致 |
+| `receiving-code-review` | 实施前先对照代码核实审查反馈——不做条件反射式的附和 |
 | `finishing-a-development-branch` | 合并/PR 流程 + Land the Plane（关闭 beads、同步、推送） |
+
+### 文档撰写
+
+| 技能 | 作用 |
+|------|------|
+| `write-documentation` | 面向人类读者的 14 条规则写作体系——文档、指南、发布说明 |
+| `document-release` | 交付后的文档审计——让文档与实际交付内容保持一致 |
 
 ### 记忆与定向
 
@@ -106,6 +114,7 @@ bd init                               # 2. Bootstrap the Dolt database for this 
 | `memory-curator` | 整合、去重并清理持久记忆库 |
 | `session-handoff` | 生成有据可查的交接文档，让下一次会话接续进行中的工作 |
 | `research-driven-development` | 并行研究智能体 → 经过验证的持久知识库 |
+| `project-init` | 搭建、引导并修复支撑持久记忆的 beads/Dolt 数据库 |
 
 **[完整技能参考 →](https://algocents.com/beads-superpowers/skills/)**
 

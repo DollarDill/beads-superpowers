@@ -62,7 +62,7 @@ The agent checks for relevant skills before any task - these are mandatory workf
 
 ## What's Inside
 
-<!-- Curation rule: every skill named in The Basic Workflow appears here; the beads-differentiators are in; cap ~16 entries. The full reference lives on the docs site - do not grow this back into an inventory. -->
+<!-- Curation rule: every distributed skill appears here except using-superpowers - the session bootstrap, which upstream's README also leaves out. The full reference lives on the docs site. -->
 
 ### Testing
 
@@ -91,10 +91,18 @@ The agent checks for relevant skills before any task - these are mandatory workf
 |-------|-------------|
 | `subagent-driven-development` | Fresh agent per task with spec + quality review; parallel batch mode |
 | `executing-plans` | Batch plan execution in a single session with checkpoints |
+| `dispatching-parallel-agents` | Fans out 2+ independent tasks to parallel agents with no shared state |
 | `using-git-worktrees` | Isolated development branches per feature |
 | `requesting-code-review` | Dispatches a code-reviewer subagent with structured criteria |
-| `document-release` | Post-ship documentation audit - keeps the docs matching what actually shipped |
+| `receiving-code-review` | Verifies review feedback against the code before implementing it - no reflexive agreement |
 | `finishing-a-development-branch` | Merge/PR flow + land the plane (close beads, sync, push) |
+
+### Documentation
+
+| Skill | What it does |
+|-------|-------------|
+| `write-documentation` | 14-rule writing system for human-facing prose - READMEs, guides, release notes |
+| `document-release` | Post-ship documentation audit - keeps the docs matching what actually shipped |
 
 ### Memory & orientation
 
@@ -104,6 +112,7 @@ The agent checks for relevant skills before any task - these are mandatory workf
 | `memory-curator` | Consolidates, deduplicates, and prunes the persistent memory store |
 | `session-handoff` | Writes a grounded handoff doc so the next session resumes mid-flight work |
 | `research-driven-development` | Parallel research agents → verified, persistent knowledge base |
+| `project-init` | Sets up, bootstraps, and recovers the beads/Dolt database behind persistent memory |
 
 **[Full skills reference →](https://algocents.com/beads-superpowers/skills/)**
 
