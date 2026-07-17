@@ -30,6 +30,8 @@
     ".tmp/**",
     "decisions/**",
     // Dependencies (if added in future)
-    "node_modules/**"
+    "node_modules/**",
+    // Symlink alias of the already-linted CLAUDE.md — don't double-lint (ADR-0063)
+    "AGENTS.md"
   ]
 }
