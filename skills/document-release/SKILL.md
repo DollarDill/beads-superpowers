@@ -88,7 +88,7 @@ Read each documentation file and cross-reference against the diff:
 | File | What to Check |
 |------|--------------|
 | **README** | Features, install steps, examples, troubleshooting still valid? |
-| Pinned Discussions post | Front-door claims (contribute/contact/links) still true? Body stays evergreen — no versions or counts. |
+| **Pinned Discussions post** | Front-door claims (contribute/contact/links) still true? Body stays evergreen — no versions or counts. |
 | **ARCHITECTURE** | Diagrams, component descriptions, design rationale still accurate? |
 | **CONTRIBUTING** | Setup instructions work? Test tiers match reality? |
 | **CLAUDE.md** | Project structure tree, commands, build/test steps current? |
