@@ -9,6 +9,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- A platform-support issue template for new-harness requests, and a "Questions & Help" Discussions contact link on the issue chooser.
+- README sections: **The Basic Workflow** (numbered, skill-mapped pipeline), **Philosophy**, and **Community** (Discussions, Issues, and maintainer contact at <dillon@algocents.com>). EN + ZH.
+
+### Changed
+
+- README restructured to the upstream superpowers shape (EN + ZH): Quickstart first, curated skills list instead of exhaustive tables, flat per-CLI Installation with a single up-front line stating which harnesses are E2E-tested (tier headers removed), dynamic release badge plus PRs-welcome and docs badges, and an extended "Built on" credits section naming Garry Tan (document-release), Matt Pocock (stress-test, session-handoff), and Ivan Neustroev ("Anbeeld", the write-documentation writing system) alongside Jesse Vincent and Steve Yegge. The ZH README also gains the previously-missing Docs link list and Codex hook note.
+- Skill attribution centralized in the README: the visible per-skill Source lines are replaced with invisible license comments in the adapted skills, and upstream version pins move to CLAUDE.md's Upstream Sources table.
+- Contributor model switched to a dev-branch flow: all work (including maintainer sessions) lands on `dev`, `main` is released-only and advances by fast-forward merges at release cut, and `main`/`gh-pages` carry force-push and deletion protection. CONTRIBUTING.md, the PR template (now with agent-disclosure and human-review gates), and the release runbook follow suit.
+- SECURITY.md refreshed: supported-versions table matches the current release line; the stale CI-workflow scope claim is gone.
+- document-release now audits the pinned Discussions post alongside the file surfaces.
+
 ## [0.14.0] - 2026-07-17
 
 ### Added
