@@ -5,8 +5,7 @@ description: "Use when writing or substantially rewriting human-facing prose: do
 
 # Write Documentation
 
-> **Source:** Adapted from [Anbeeld/WRITING.md](https://github.com/Anbeeld/WRITING.md) v1.3.1 (MIT)
-> <!-- Upstream v1.3.1 verified current as of 2026-06-26 (repo static since 2026-04-29). -->
+<!-- Adapted from Anbeeld/WRITING.md v1.3.1 (MIT). Attribution: README "Built on"; version pin: CLAUDE.md Upstream Sources. -->
 
 **Announce at start:** "I'm using the write-documentation skill to write human-quality prose."
 
