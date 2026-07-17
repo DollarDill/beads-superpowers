@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Questions & Help
+    url: https://github.com/DollarDill/beads-superpowers/discussions
+    about: For usage questions, ideas, and general discussion, use Discussions instead of opening an issue.
   - name: Read the documentation first
     url: https://github.com/DollarDill/beads-superpowers#readme
     about: The README, METHODOLOGY, and SETUP-GUIDE answer most questions.
