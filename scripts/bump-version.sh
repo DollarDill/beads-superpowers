@@ -46,6 +46,34 @@ declared_files() {
   jq -r '.files[] | "\(.path)\t\(.key)"' "$CONFIG"
 }
 
+# Read the list of declared prose files from config.
+# Outputs lines of "path<TAB>prefix" — the version is the token immediately
+# after the literal prefix on the first line containing it.
+declared_prose() {
+  jq -r '.prose[]? | "\(.path)\t\(.prefix)"' "$CONFIG"
+}
+
+# Extract the version following a literal prefix in a prose file.
+read_prose_field() {
+  local file="$1" prefix="$2"
+  local line
+  line=$(grep -F -m1 "$prefix" "$file") || return 1
+  line="${line#*"$prefix"}"
+  echo "${line%%[[:space:]]*}"
+}
+
+# Replace prefix+<old-version> with prefix+<new-version> (first occurrence).
+write_prose_field() {
+  local file="$1" prefix="$2" new_version="$3"
+  local old
+  old=$(read_prose_field "$file" "$prefix") || return 1
+  local tmp="${file}.tmp"
+  awk -v s="${prefix}${old}" -v r="${prefix}${new_version}" '
+    !done { i = index($0, s); if (i) { $0 = substr($0, 1, i-1) r substr($0, i + length(s)); done = 1 } }
+    { print }
+  ' "$file" > "$tmp" && mv "$tmp" "$file"
+}
+
 # Read the audit exclude patterns from config.
 audit_excludes() {
   jq -r '.audit.exclude[]' "$CONFIG" 2>/dev/null
@@ -72,6 +100,23 @@ cmd_check() {
     printf "  %-45s  %s\n" "$path ($field)" "$ver"
     versions+=("$ver")
   done < <(declared_files)
+
+  while IFS=$'\t' read -r path prefix; do
+    local fullpath="$REPO_ROOT/$path"
+    if [[ ! -f "$fullpath" ]]; then
+      printf "  %-45s  MISSING\n" "$path (prose)"
+      has_drift=1
+      continue
+    fi
+    local ver
+    if ! ver=$(read_prose_field "$fullpath" "$prefix"); then
+      printf "  %-45s  NO MATCH for '%s'\n" "$path (prose)" "$prefix"
+      has_drift=1
+      continue
+    fi
+    printf "  %-45s  %s\n" "$path (prose)" "$ver"
+    versions+=("$ver")
+  done < <(declared_prose)
 
   echo ""
 
@@ -127,6 +172,9 @@ cmd_audit() {
   while IFS=$'\t' read -r path _field; do
     declared_paths+=("$path")
   done < <(declared_files)
+  while IFS=$'\t' read -r path _prefix; do
+    declared_paths+=("$path")
+  done < <(declared_prose)
 
   # Grep for the version string
   local found_undeclared=0
@@ -186,6 +234,21 @@ cmd_bump() {
     write_json_field "$fullpath" "$field" "$new_version"
     printf "  %-45s  %s -> %s\n" "$path ($field)" "$old_ver" "$new_version"
   done < <(declared_files)
+
+  while IFS=$'\t' read -r path prefix; do
+    local fullpath="$REPO_ROOT/$path"
+    if [[ ! -f "$fullpath" ]]; then
+      echo "  SKIP (missing): $path"
+      continue
+    fi
+    local old_ver
+    if ! old_ver=$(read_prose_field "$fullpath" "$prefix"); then
+      echo "  SKIP (no match for '$prefix'): $path"
+      continue
+    fi
+    write_prose_field "$fullpath" "$prefix" "$new_version"
+    printf "  %-45s  %s -> %s\n" "$path (prose)" "$old_ver" "$new_version"
+  done < <(declared_prose)
 
   echo ""
   echo "Done. Running audit to check for missed files..."

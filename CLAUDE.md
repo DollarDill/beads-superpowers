@@ -92,7 +92,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harn
 - `docs/decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs, `.internal/sdd/` (SDD scratch), and `.internal/brainstorm/` (brainstorm server sessions).
 - `tests/` — deterministic suites (hooks, manifests, skills contracts, install-shape, installer Docker E2E, brainstorm-server Node tests) run via the `just` surface; the LLM-driven suites (claude-code, explicit-skill-requests, skill-triggering, subagent-driven-dev) are deprecated in place — see `tests/*/DEPRECATED.md`.
-- `scripts/` — `bump-version.sh` (sync version across 7 files), `check-skill-count.sh` (guard: forbid hardcoded skill counts + structural self-consistency), `check-agent-bead-stamp.sh`, `check-zh-docs.sh`, `check-convention-sync.sh` (verify shared convention blocks are byte-identical across skills), `lint-shell.sh` (shellcheck gate over tracked `.sh` with committed baseline; visible SKIP when shellcheck absent), `check-askuser-genericization.sh` (guard: skills use generic question-tool phrasing — ADR-0041), `check-model-genericization.sh` (guard: no hardcoded Claude model names in harness-neutral content — capability tiers only).
+- `scripts/` — `bump-version.sh` (sync version across all surfaces declared in `.version-bump.json` — JSON manifests + prose), `check-skill-count.sh` (guard: forbid hardcoded skill counts + structural self-consistency), `check-agent-bead-stamp.sh`, `check-zh-docs.sh`, `check-convention-sync.sh` (verify shared convention blocks are byte-identical across skills), `lint-shell.sh` (shellcheck gate over tracked `.sh` with committed baseline; visible SKIP when shellcheck absent), `check-askuser-genericization.sh` (guard: skills use generic question-tool phrasing — ADR-0041), `check-model-genericization.sh` (guard: no hardcoded Claude model names in harness-neutral content — capability tiers only).
 - `install.sh` — curl installer with 3-tier fallback chain (plugin system → npx → tarball/git clone). SHA-256 checksum validation, atomic rollback via staging directory, lazy prerequisites. Auto-detects Claude Code, Codex, OpenCode, and 6 more CLIs (Cursor, Copilot, Droid, Antigravity, Kimi, Pi).
 
 ## Key Design Decisions
@@ -334,7 +334,7 @@ external eval-harness project. Each suite's `DEPRECATED.md` explains why it was 
 
 ## Version Management
 
-Version is declared in 7 files that must stay in sync:
+Version surfaces are declared in `.version-bump.json` and must stay in sync:
 
 - `package.json`
 - `.claude-plugin/plugin.json`
@@ -343,6 +343,9 @@ Version is declared in 7 files that must stay in sync:
 - `.codex-plugin/marketplace.json`
 - `.cursor-plugin/plugin.json`
 - `.kimi-plugin/plugin.json`
+- `CLAUDE.md` (`**Version:**` line — prose entry)
+
+README version badges are dynamic (shields.io release badge) — no hand-sync needed.
 
 Use `scripts/bump-version.sh` to update all at once:
 
