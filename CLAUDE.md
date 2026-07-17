@@ -88,7 +88,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harn
 - `hooks/` — `session-start` (SessionStart: injects `using-superpowers` + composed beads context — curated memories + a `bd prime` pointer), the single recurring hook. Multi-format output supports Claude Code, Codex, Cursor, and generic CLIs. Registered in `hooks/hooks.json` (Claude Code) and `hooks/codex-hooks.json` (Codex). Auto-discovered.
 - `.opencode/` — OpenCode plugin (`plugins/beads-superpowers.js`, upstream-parity base + beads graft) + `INSTALL.md`. Git-install only via the opencode.json plugin spec; `install.sh` no longer copies OpenCode artifacts (its `--uninstall` still cleans pre-0.12 copies).
 - `example-workflow/` — Ready-to-use project template: `CLAUDE.md` (Karpathy behavioral principles + beads integration) and `agents/yegge.md` (lean router — triages requests and routes to skills). `install.sh --with-yegge` installs `yegge.md` globally (opt-in; not installed by default).
-- `docs/` — Docs content only (6 EN + 6 ZH pages + assets): source of truth for the site's prose. The site itself is built and published from the private the-factory-website repo (`tenants/beads-superpowers/`), not from this repo (ADR-0050).
+- `docs/` — Docs content only, i18n folder layout: `docs/en/` (English pages) + `docs/zh/` (Chinese mirrors, 1:1 structural parity guard-enforced) + shared `docs/assets/`. Source of truth for the site's prose. The site itself is built and published from the private the-factory-website repo (`tenants/beads-superpowers/`), not from this repo (ADR-0050).
 - `docs/decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs, `.internal/sdd/` (SDD scratch), and `.internal/brainstorm/` (brainstorm server sessions).
 - `tests/` — deterministic suites (hooks, manifests, skills contracts, install-shape, installer Docker E2E, brainstorm-server Node tests) run via the `just` surface; the LLM-driven suites (claude-code, explicit-skill-requests, skill-triggering, subagent-driven-dev) are deprecated in place — see `tests/*/DEPRECATED.md`.
@@ -151,8 +151,8 @@ cp -rf source dest          # NOT: cp -r source dest
 agents/                    # Removed in v0.6.0 (code-reviewer consolidated to skill template)
 assets/                    # Banner SVG
 docs/                      # Docs content only — built/published by the-factory-website (ADR-0050)
-  index.md, getting-started.md, methodology.md, skills.md, workflow.md, tips.md
-  index.zh.md, getting-started.zh.md, methodology.zh.md, skills.zh.md, workflow.zh.md, tips.zh.md
+  en/                      # English pages (index, getting-started, methodology, skills, workflow, tips, ...)
+  zh/                      # Chinese mirrors — 1:1 with en/ (structural zh-parity guard)
   assets/                  # Banner SVG
 docs/decisions/            # Architecture Decision Records (gitignored, local-only)
 .internal/                 # Working docs (gitignored)
@@ -277,7 +277,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 
 ### Key Anti-Patterns
 
-- Putting workflow descriptions in skill `description` fields (causes Claude to follow description instead of reading full skill — see SDO in docs/methodology.md)
+- Putting workflow descriptions in skill `description` fields (causes Claude to follow description instead of reading full skill — see SDO in docs/en/methodology.md)
 - Softening bright-line rules ("consider" instead of "MUST")
 - Adding platform-specific code to skills (skills are pure Markdown)
 
