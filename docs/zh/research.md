@@ -34,7 +34,7 @@ machine_translated: true
 
 ### 单线程智能体的行业实践
 
-[Cognition](https://cognition.ai/blog/dont-build-multi-agents)（*Don't Build Multi-Agents*，Devin 编程智能体背后的团队）基于生产实践经验而非基准测试，反对并行子智能体架构。他们举的例子是：把"构建 Flappy Bird"任务拆分给两个子智能体，一个负责背景，一个负责小鸟，而两者都各自对美术风格做出了未言明的决定，且彼此看不到对方的工作。一个智能体构建了超级马里奥风格的背景；另一个画出了写实风格的小鸟。两者无法调和。Cognition 的建议是：默认保持一条拥有完整共享上下文的连续线程，把并行智能体保留给只读取和分析、不涉及改变状态的写操作的工作。beads-superpowers 的仅编排者规则遵循同样的思路：子智能体并行运行以实现相互独立的任务，但只有编排者接触 bead，每个子智能体的输出通过基于文件的交接返回，而不是与其同级智能体进行实时对话。
+[Cognition](https://cognition.ai/blog/dont-build-multi-agents)（*Don't Build Multi-Agents*，Devin 编程智能体背后的团队）基于生产实践经验而非基准测试，反对并行子智能体架构。他们举的例子是：把"构建 Flappy Bird"任务拆分给两个子智能体，一个负责背景，一个负责小鸟，而两者都各自对美术风格做出了未言明的决定，且彼此看不到对方的工作。一个智能体构建了超级马里奥风格的背景；另一个做出的小鸟看起来不像游戏素材，动作方式也和 Flappy Bird 里的那只完全不同。两者无法调和。Cognition 的建议是：默认保持一条拥有完整共享上下文的连续线程，总体上反对并行子智能体架构。beads-superpowers 的仅编排者规则遵循同样的思路：子智能体并行运行以实现相互独立的任务，但只有编排者接触 bead，每个子智能体的输出通过基于文件的交接返回，而不是与其同级智能体进行实时对话。
 
 ## 我们测量到的结果
 
@@ -53,7 +53,7 @@ machine_translated: true
 | 权威性、一致性和稀缺性的措辞框架提升智能体的顺从率（Cialdini；Meincke et al. 2025） | 铁律使用绝对的 MUST/NEVER 措辞，绝不使用模糊的建议 | 每个执行纪律的技能，例如 `test-driven-development`、`systematic-debugging` |
 | 一致性压力使智能体一旦开始就保持在流程之内 | 多步骤技能以有序检查表的形式运行，而非可选菜单 | `brainstorming`、`writing-plans` |
 | 系统设计与规格说明失败是一类主要的多智能体失败（MAST） | 设计与规划在任何代码编写之前由专门的技能完成 | `brainstorming`、`writing-plans` |
-| 智能体间失调是一类主要的多智能体失败（MAST）；单线程写操作从结构上避免了它（Cognition） | 只有编排者创建、认领或关闭 bead；子智能体通过文件而非实时对话进行交接 | 仅编排者设计、`subagent-driven-development` |
+| 智能体间失调是一类主要的多智能体失败（MAST）；单一连续线程从结构上避免了它（Cognition） | 只有编排者创建、认领或关闭 bead；子智能体通过文件而非实时对话进行交接 | 仅编排者设计、`subagent-driven-development` |
 | 任务验证失败是一类主要的多智能体失败（MAST） | 没有证据证明检查已执行，bead 就无法关闭 | `verification-before-completion` |
 | 总结工作流程的技能描述会被直接遵循，而非技能正文（本项目实测） | 描述只陈述触发条件 | 每个技能的 YAML 前置元数据 |
 | 完整的 `bd prime` 转储所占用的注入上下文远多于精选版本（本项目实测：在 218 条记忆的库上减少 91.6%） | 会话钩子在 8 KB 上限内组合出按显著度精选的上下文 | `session-start` 钩子 |
