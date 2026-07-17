@@ -1,39 +1,26 @@
 ---
 machine_translated: true
-description: 可组合技能为 AI 智能体强制执行 TDD、调试与代码审查；基于 Dolt 的任务记忆在会话间保持上下文。已在 Claude Code、Codex 和 OpenCode 上验证；在 Cursor、GitHub Copilot CLI、Kimi Code、Antigravity、Factory Droid 和 Pi 上为尽力支持。
+description: beads-superpowers 是什么，以及接下来该查看安装、工作流、设计理念还是参考文档。
 ---
+
+<!-- Role: landing - orient and route in under a minute. Does NOT belong here: any fact that can rot (counts, versions, capability lists) - every claim lives on the page that owns it. -->
+
 !!! warning "机器翻译"
     本页面由 AI 自动翻译，可能存在术语或语义偏差。如有疑问，请以[英文原文](index.md)为准。
 
 # beads-superpowers
 
-一个面向 AI 编码智能体的插件，内置 **{{ skill_count }}** 个技能，强制执行开发规范——TDD、系统性调试、先设计后编码、代码审查——以及一个跨会话持久保存上下文的任务追踪器。
-
-技能来自 Jesse Vincent 的 [Superpowers](https://github.com/obra/superpowers)；追踪器来自 Steve Yegge 的 [Beads](https://github.com/gastownhall/beads)。本插件将二者整合，使技能在运行时自动创建和关闭议题，追踪器则在每个新会话开始时回注上下文。
-
-**已验证**支持 Claude Code、Codex CLI 和 OpenCode。**尽力支持** Cursor、GitHub Copilot CLI、Kimi Code、Antigravity、Factory Droid 和 Pi 的原生集成。各平台安装路径请参阅[快速入门](getting-started.md)。
-
-!!! info "初次接触 Beads？"
-    上游 [Beads 文档](https://gastownhall.github.io/beads/) 深入介绍了该工具本身——概念、CLI 参考、恢复指南。本站点记录的是构建于其上的合并工作流。
-
-**当前版本：** v{{ version }} · {{ skill_count }} 个技能
+beads-superpowers 为 AI 编码智能体提供可组合的技能，强制执行流程纪律——TDD、系统性调试、先设计后编码、代码审查——并配备一个跨会话保留上下文的持久性议题追踪器。技能来自 [Superpowers](https://github.com/obra/superpowers)；追踪器来自 [Beads](https://github.com/gastownhall/beads)。
 
 ## 从哪里开始
 
-**[快速入门](getting-started.md)**：如需安装和配置插件。
+- **[快速开始](getting-started.md)** - 按平台安装插件和 `bd`，然后运行你的第一个会话。
+- **[示例工作流](workflow.md)** - 编排器如何把一次请求沿流水线路由，从分诊到收尾。
+- **[设计理念](philosophy.md)** - 插件为何如此运作：背后的设计决策，而非日常机制。
+- **[记忆与会话](memory.md)** - 会话生命周期中记忆发生了什么：注入、整理、知识库。
+- **[方法论](methodology.md)** - 两个上游项目各自解决的问题，以及二者如何合并为一套机制。
+- **[技能参考](skills.md)** - 完整的逐技能参考：每个技能做什么、何时触发。
+- **[研究](research.md)** - 每项设计决策背后的文献依据与项目自身的测量结果。
+- **[技巧与窍门](tips.md)** - 日常操作技巧：`bd` 速查表与常见问题的解决办法。
 
-**[方法论](methodology.md)**：如需在安装前了解开发生命周期。
-
-**[技能参考](skills.md)**：如已安装插件，想了解各技能的用途。
-
-**[示例工作流](workflow.md)**：如需一个现成的编排智能体将一切串联起来。
-
-**[技巧与窍门](tips.md)**：速查表与常见问题。
-
-## 安装
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
-```
-
-然后在任意项目中执行：`bd init`。在 Claude Code 中运行 `/skills` 以确认安装。
+准备好开始了吗？[快速开始](getting-started.md) 涵盖安装步骤与你的第一次 `bd init`。
