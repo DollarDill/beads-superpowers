@@ -29,11 +29,18 @@
       "key": "version"
     }
   ],
+  "prose": [
+    {
+      "path": "CLAUDE.md",
+      "prefix": "**Version:** "
+    }
+  ],
   "audit": {
     "exclude": [
       "node_modules",
       ".git",
       ".beads",
+      ".internal",
       "CHANGELOG.md",
       "docs/"
     ]
