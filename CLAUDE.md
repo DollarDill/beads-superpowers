@@ -1,6 +1,10 @@
-# beads-superpowers — Claude Code Plugin
+<!-- Based on https://github.com/forrestchang/andrej-karpathy-skills (MIT License) -->
+
+# beads-superpowers — Agent Instructions
 
 Behavioral guidelines to reduce common LLM coding mistakes, plus project-specific instructions.
+
+> **Canonical agent-instruction file for all harnesses.** `AGENTS.md` is a symlink to this file. Sections that name a specific harness (e.g. the Claude Code plugin cache, DCI in `SKILL.md`) apply only to that harness — other agents can skip them. **Windows note:** `AGENTS.md` is a git symlink; on Windows enable `git config core.symlinks true` (or Developer Mode) before cloning, or it checks out as a text file containing the path.
 
 **Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
