@@ -92,7 +92,7 @@ When a choice is hard to reverse, surprising without its context, and a real tra
 
 ### Plan
 
-`writing-plans` breaks the design into bite-sized tasks (2–5 minutes each) with exact file paths, code, and verification steps, and every task becomes a bead. The plan must be user-approved. There is no "TBD" or "as needed" - every step is concrete, or the plan isn't ready.
+`writing-plans` breaks the design into bite-sized tasks (2-5 minutes each) with exact file paths, code, and verification steps, and every task becomes a bead. The plan must be user-approved. There is no "TBD" or "as needed" - every step is concrete, or the plan isn't ready.
 
 ### Stress-test (plan gate)
 
