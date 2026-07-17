@@ -18,7 +18,7 @@ Two projects attacked each half of this.
 
 ### Persistent memory
 
-Superpowers tracked tasks with `TodoWrite`, which vanishes when a session ends. [Beads](https://github.com/gastownhall/beads) (Steve Yegge) replaced that with a Dolt-backed issue tracker where every task is a bead with a hash-based ID that survives session boundaries. Beads handles dependency tracking, cell-level merges for conflict-free multi-agent work, a full audit trail via the events table, and `bd remember` for persistent learnings. At every session start, the plugin's hook injects a composed beads context — a task-state pointer plus curated memories — so the agent picks up where it left off.
+Superpowers tracked tasks with `TodoWrite`, which vanishes when a session ends. [Beads](https://github.com/gastownhall/beads) (Steve Yegge) replaced that with a Dolt-backed issue tracker where every task is a bead with a hash-based ID that survives session boundaries. Beads handles dependency tracking, cell-level merges for conflict-free multi-agent work, a full audit trail via the events table, and `bd remember` for persistent learnings. At every session start, the plugin's hook injects a composed beads context — a task-state pointer plus curated memories — so the agent picks up where it left off. The hook does that job in the same pass as injecting the skills bootstrap, because firing beads' own standalone `bd setup claude` hook alongside it would inject duplicate context and waste tokens; if that standalone hook is already registered, this hook skips its own beads section instead of injecting a second copy.
 
 !!! info "Go deeper — upstream Beads docs"
     - [Core concepts](https://gastownhall.github.io/beads/core-concepts) — issues, dependencies, hash IDs, and the memory model
@@ -75,7 +75,7 @@ Subsequent changes went further:
 
 **Production-grade doctrine.** Every session now carries a standing instruction to treat the work as production-facing with real users, no matter how small the task looks — the rationalization that ships the worst defects is "it's just a script." On its own initiative the agent does not take shortcuts, quietly drop a requirement, or accept a consequential trade-off, and it never weakens or removes a security control. A warranted exception is surfaced for the user to decide; a security regression is refused outright. The rule lives once in `using-superpowers`, which the session-start hook injects in full every session, and the gate skills — brainstorming, stress-test, code review, and the completion check — reference it where those decisions actually get made.
 
-**Prompt template pattern.** Subagent definitions moved from standalone agent files into prompt templates owned by the skills that dispatch them (`implementer-prompt.md`, `researcher-prompt.md`). One source of truth per subagent role — no drift between the skill's expectations and the subagent's instructions.
+**Prompt template pattern.** Subagent definitions moved from standalone agent files into prompt templates owned by the skills that dispatch them (`implementer-prompt.md`, `researcher-prompt.md`). One source of truth per subagent role — no drift between the skill's expectations and the subagent's instructions. A standalone agent file and its skill drift apart from each other over time as one changes without the other; keeping the prompt inside the skill closes that gap by construction.
 
 **Parallel batch mode.** When `bd ready --parent` returns multiple unblocked tasks, `subagent-driven-development` executes them concurrently (max 5 per batch), each in its own `bd worktree`.
 
@@ -132,7 +132,7 @@ graph TD
 
 **Step 9 — Documentation.** `document-release` scans the diff against existing docs for stale references, missing entries, and outdated examples. When the audit flags sections needing major prose rewrites, `write-documentation` fires for those sections.
 
-**Step 10 — Close branch.** `finishing-a-development-branch` detects the current environment — normal repository, named-branch worktree, or detached HEAD — and presents context-aware options: 4 choices for normal and worktree contexts, 3 for detached HEAD where merge is unavailable. Provenance-based cleanup only removes worktrees inside `.worktrees/`, leaving externally created worktrees alone. The skill ends with the Land the Plane protocol: if the session produced several new memories, offer a `memory-curator` pass before `bd dolt push`; then `bd close` → `bd dolt push` → `git push` → `git status`. Branch paths terminate here — work is not done until both task state and code reach the remote.
+**Step 10 — Close branch.** `finishing-a-development-branch` detects the current environment — normal repository, named-branch worktree, or detached HEAD — and presents context-aware options: 4 choices for normal and worktree contexts, 3 for detached HEAD where merge is unavailable. Provenance-based cleanup only removes worktrees inside `.worktrees/`, leaving externally created worktrees alone. The skill ends with the Land the Plane protocol: if the session produced several new memories, offer a `memory-curator` pass before `bd dolt push`; then `bd close` → `bd dolt push` → `git push` → `git status`. Branch paths terminate here — work is not done until both task state and code reach the remote. The ritual lives inside this skill rather than a separate one so every branch path ends here structurally, instead of depending on a router remembering to invoke a second skill; non-branch sessions reach the same ritual through Step 11's session-close path below.
 
 **Step 11 — Session close.** Fires only on non-branch paths (research queries, quick tasks that didn't create a branch). Runs the same close ritual as Step 10's Land the Plane: close beads, offer a `memory-curator` pass if the session produced several new memories, push to remotes, verify clean state. The next session's start-hook injection restores the full picture.
 
@@ -142,9 +142,11 @@ Because beads tracks every process step, the memory types agents need are popula
 
 See [Memory & Sessions](memory.md) for what gets injected at session start, how a raw note becomes a durable memory or a knowledge-bead, and how to query the store.
 
-The literature and measurements behind these design choices are collected in [Research](research.md).
+## Where the rest lives
 
-Why the plugin is built this way, not just how it runs, lives on [Philosophy](philosophy.md): the reasoning behind the session hook, the orchestrator-only rule, the prompt-template pattern, and keeping skills as plain Markdown. This page tracks the mechanism those choices produced, not the case for them.
+The literature and measurements behind the choices on this page are collected in [Research](research.md).
+
+Why the plugin is built this way, not just how it runs, lives on [Philosophy](philosophy.md): the design-before-code gate, evidence before claims, the orchestrator-only rule, curated injection instead of context dumps, and keeping skills as plain Markdown. This page tracks the mechanism those choices produced, not the case for them.
 
 ## Sources
 
