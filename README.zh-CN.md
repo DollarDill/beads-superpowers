@@ -3,7 +3,7 @@
 <p align="center"><em>⚠️ 本文档由 AI 机器翻译，可能存在术语或语义偏差。如有疑问，请以<a href="README.md">英文原文</a>为准。</em></p>
 
 <p align="center">
-  <img src="assets/banner.svg" alt="beads-superpowers — Process discipline and persistent memory for AI coding agents" width="100%" />
+  <img src="assets/banner.svg" alt="beads-superpowers - Process discipline and persistent memory for AI coding agents" width="100%" />
 </p>
 
 <p align="center">
@@ -58,43 +58,77 @@ bd init                               # 2. Bootstrap the Dolt database for this 
 
 ## 功能概览
 
-<!-- 收录规则：基本工作流中提及的每一项技能都会出现在此处；beads 差异化技能同样收录；条目上限约 14–15 条。完整参考位于文档站点——不要让本列表重新膨胀为详尽清单。 -->
+<!-- 收录规则：基本工作流中提及的每一项技能都会出现在此处；beads 差异化技能同样收录；条目上限约 14-15 条。完整参考位于文档站点——不要让本表格重新膨胀为详尽清单。 -->
 
-**测试：**
+### 测试
 
-- **test-driven-development** — RED-GREEN-REFACTOR 循环；铁律：没有失败的测试就不写实现代码
+| 技能 | 作用 |
+|------|------|
+| `test-driven-development` | RED-GREEN-REFACTOR 循环——铁律：没有失败的测试就不写实现代码 |
 
-**调试：**
+### 调试
 
-- **systematic-debugging** — 在提出任何修复方案前进行 4 阶段根因分析
-- **verification-before-completion** — 主张之前先有证据；除非有命令证明，否则任务不算"完成"
+| 技能 | 作用 |
+|------|------|
+| `systematic-debugging` | 在提出任何修复方案前进行 4 阶段根因分析 |
+| `verification-before-completion` | 主张之前先有证据——除非有命令证明，否则任务不算"完成" |
 
-**设计与规划：**
+### 设计与规划
 
-- **brainstorming** — 写代码前的苏格拉底式设计会话——产出一份已获批准的规格说明
-- **stress-test** — 对设计与计划进行对抗性审问，并提供推荐答案
-- **writing-plans** — 拆解为小任务的计划；每项任务都作为 `bd` bead 追踪
+| 技能 | 作用 |
+|------|------|
+| `brainstorming` | 写代码前的苏格拉底式设计会话——产出一份已获批准的规格说明 |
+| `stress-test` | 对设计与计划进行对抗性审问，并提供推荐答案 |
+| `writing-plans` | 拆解为小任务的计划——每项任务都作为 `bd` bead 追踪 |
 
-**执行：**
+### 执行
 
-- **subagent-driven-development** — 每项任务派遣全新智能体，含规格与质量审查；支持并行批处理模式
-- **executing-plans** — 在单次会话内批量执行计划，并设置检查点
-- **using-git-worktrees** — 每个功能使用独立的开发分支
-- **requesting-code-review** — 按结构化标准派遣代码审查子智能体
-- **finishing-a-development-branch** — 合并/PR 流程 + Land the Plane（关闭 beads、同步、推送）
+| 技能 | 作用 |
+|------|------|
+| `subagent-driven-development` | 每项任务派遣全新智能体，含规格与质量审查；支持并行批处理模式 |
+| `executing-plans` | 在单次会话内批量执行计划，并设置检查点 |
+| `using-git-worktrees` | 每个功能使用独立的开发分支 |
+| `requesting-code-review` | 按结构化标准派遣代码审查子智能体 |
+| `finishing-a-development-branch` | 合并/PR 流程 + Land the Plane（关闭 beads、同步、推送） |
 
-**记忆与定向：**
+### 记忆与定向
 
-- **getting-up-to-speed** — 会话定向：加载 `bd` 上下文并生成当前状态摘要
-- **memory-curator** — 整合、去重并清理持久记忆库
-- **session-handoff** — 生成有据可查的交接文档，让下一次会话接续进行中的工作
-- **research-driven-development** — 并行研究智能体 → 经过验证的持久知识库
+| 技能 | 作用 |
+|------|------|
+| `getting-up-to-speed` | 会话定向——加载 `bd` 上下文并生成当前状态摘要 |
+| `memory-curator` | 整合、去重并清理持久记忆库 |
+| `session-handoff` | 生成有据可查的交接文档，让下一次会话接续进行中的工作 |
+| `research-driven-development` | 并行研究智能体 → 经过验证的持久知识库 |
 
 **[完整技能参考 →](https://algocents.com/beads-superpowers/skills/)**
 
-## 安装
+## 工作原理
 
-**端到端测试：** Claude Code、Codex CLI 和 OpenCode。其余智能体提供的是经过验证的配置，但我们未对其进行端到端测试。
+开始任务时，智能体先运行 **brainstorming** 以在触碰代码前明确需求，再通过 **writing-plans** 将工作拆解为 `bd` 追踪的步骤——这些步骤在会话重启后仍然保留。实现阶段遵循 **test-driven-development**（始终先写失败的测试），并可通过 **subagent-driven-development** 扇出到并行子智能体——每个智能体在各自的 git worktree 中工作。`bd` 将每项任务、决策和备注存储在本地 Dolt 数据库中，因此智能体在下次会话时能从上次中断处精确接续，无需依赖聊天记录。
+
+这一切之下是生产级标准：智能体将每项任务视为真实用户依赖的事项，因此它不会为了速度偷偷走捷径、遗漏需求或削弱安全控制。
+
+## 理念
+
+- **设计先于代码** — 每个功能都始于一份经过人工批准的规格说明，而非猜测
+- **TDD 是铁律** — 没有失败的测试就不能实现代码
+- **系统化优于临时应对** — 调试遵循根因分析流程，绝不靠猜测和试错
+- **有证据才有主张** — "完成"需要一条命令来证明
+- **记忆优于聊天记录** — 任务、决策和经验教训持久保存在 `bd` 中，而非保存在滚动的对话缓冲区里
+
+完整版本参见[方法论](https://algocents.com/beads-superpowers/methodology/)。
+
+## 文档
+
+**[algocents.com/beads-superpowers](https://algocents.com/beads-superpowers/)** — 快速入门、方法论、技能参考、示例工作流与使用技巧。
+
+- [示例工作流文档](https://algocents.com/beads-superpowers/workflow/) — 含图示的完整演练
+- [技能参考](https://algocents.com/beads-superpowers/skills/) — 所有技能详解
+- [方法论](https://algocents.com/beads-superpowers/methodology/) — 为何采用此工作流
+
+文档*内容*存放在本仓库中（`docs/` ——欢迎提交 PR）；网站则由另一个独立的部署仓库构建并发布。
+
+## 安装
 
 > **⚠️ 共存警告：** 请勿与 [obra/superpowers](https://github.com/obra/superpowers) 同时安装。技能名称存在冲突——请二选一。
 
@@ -197,20 +231,11 @@ pi install git:github.com/DollarDill/beads-superpowers
 
 ### npx（任意智能体）
 
-> **从 ≤0.8.2 版本升级：** 早期版本注册了一个每次提示都会触发的提醒钩子，现已不再随插件提供。如果你的 `~/.claude/settings.json` 中仍引用 `superpowers-reminder.sh`，请先备份，然后移除该条目：
->
-> ```bash
-> cp ~/.claude/settings.json ~/.claude/settings.json.bak
-> python3 -c "import json,os;p=os.path.expanduser('~/.claude/settings.json');d=json.load(open(p));H=d.get('hooks',{});U=H.get('UserPromptSubmit',[]);[m.update({'hooks':[h for h in m.get('hooks',[]) if 'superpowers-reminder' not in h.get('command','')]}) for m in U];U=[m for m in U if m.get('hooks')];(H.update({'UserPromptSubmit':U}) if U else H.pop('UserPromptSubmit',None));json.dump(d,open(p,'w'),indent=2)"
-> ```
-
 仅安装技能——不包含钩子。技能激活依赖于你所用智能体自身的原生技能发现机制。
 
 ```bash
 npx skills add DollarDill/beads-superpowers -g --copy -y
 ```
-
-如需完整体验（会话启动时注入技能上下文 + 组合式 beads 上下文），请使用插件安装方式（上文的 Claude Code / Codex / OpenCode）或脚本安装。若要在 npx 安装中获取 beads 上下文，运行 `bd setup claude`（beads 自带的钩子安装器）。
 
 ### 替代方案：脚本安装（`curl | bash`）
 
@@ -229,32 +254,6 @@ curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/i
 支持：`--yes`（跳过提示）、`--version X.Y.Z`、`--with-yegge`、`--dry-run`、`--skip-checksum`、`--uninstall`。
 
 更新：重新运行你的安装命令——插件渠道通过其市场更新，npx 与脚本安装通过重新运行完成更新。
-
-## 工作原理
-
-开始任务时，智能体先运行 **brainstorming** 以在触碰代码前明确需求，再通过 **writing-plans** 将工作拆解为 `bd` 追踪的步骤——这些步骤在会话重启后仍然保留。实现阶段遵循 **test-driven-development**（始终先写失败的测试），并可通过 **subagent-driven-development** 扇出到并行子智能体——每个智能体在各自的 git worktree 中工作。`bd` 将每项任务、决策和备注存储在本地 Dolt 数据库中，因此智能体在下次会话时能从上次中断处精确接续，无需依赖聊天记录。
-
-这一切之下是生产级标准：智能体将每项任务视为真实用户依赖的事项，因此它不会为了速度偷偷走捷径、遗漏需求或削弱安全控制。
-
-## 理念
-
-- **设计先于代码** — 每个功能都始于一份经过人工批准的规格说明，而非猜测
-- **TDD 是铁律** — 没有失败的测试就不能实现代码
-- **系统化优于临时应对** — 调试遵循根因分析流程，绝不靠猜测和试错
-- **有证据才有主张** — "完成"需要一条命令来证明
-- **记忆优于聊天记录** — 任务、决策和经验教训持久保存在 `bd` 中，而非保存在滚动的对话缓冲区里
-
-完整版本参见[方法论](https://algocents.com/beads-superpowers/methodology/)。
-
-## 文档
-
-**[algocents.com/beads-superpowers](https://algocents.com/beads-superpowers/)** — 快速入门、方法论、技能参考、示例工作流与使用技巧。
-
-- [示例工作流文档](https://algocents.com/beads-superpowers/workflow/) — 含图示的完整演练
-- [技能参考](https://algocents.com/beads-superpowers/skills/) — 所有技能详解
-- [方法论](https://algocents.com/beads-superpowers/methodology/) — 为何采用此工作流
-
-文档*内容*存放在本仓库中（`docs/` ——欢迎提交 PR）；网站则由另一个独立的部署仓库构建并发布。
 
 ## 贡献
 
