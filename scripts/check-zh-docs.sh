@@ -68,45 +68,25 @@ main() {
     self_test; exit $?
   fi
   local fail=0
-  # pairs: "<english-source> <zh-translation> <require_banner>"
-  local pairs=(
-    "README.md README.zh-CN.md no"
-    "docs/index.md docs/index.zh.md yes"
-    "docs/getting-started.md docs/getting-started.zh.md yes"
-    "docs/methodology.md docs/methodology.zh.md yes"
-    "docs/skills.md docs/skills.zh.md yes"
-    "docs/workflow.md docs/workflow.zh.md yes"
-    "docs/tips.md docs/tips.zh.md yes"
-    "docs/migration.md docs/migration.zh.md yes"
-  )
+  # README pair — outside docs/, banner-exempt, kept explicit.
+  if check_pair README.md README.zh-CN.md no; then echo "ok: README.zh-CN.md"; else fail=1; fi
 
-  # Completeness assertion: every top-level docs/*.md page (excluding *.zh.md,
-  # no recursion — docs/assets/ etc. out of scope) must be registered as the
-  # EN member of a pair above, else a new page silently escapes zh-parity
-  # checking entirely. README.zh-CN.md stays handled separately (not under docs/).
-  local registered=" " pair page
-  for pair in "${pairs[@]}"; do
-    # shellcheck disable=SC2086
-    set -- $pair
-    registered="$registered$1 "
+  # STRUCTURAL docs pairing (self-registering): docs/en/X.md <-> docs/zh/X.md,
+  # asserted 1:1 in BOTH directions. Adding a page pair needs no guard edit;
+  # an EN page without its ZH twin fails, and an orphan ZH page fails too.
+  # docs/assets/ and docs/decisions/ are locale-independent and out of scope.
+  local en zh base
+  for en in docs/en/*.md; do
+    [ -e "$en" ] || continue
+    base=$(basename "$en")
+    zh="docs/zh/$base"
+    if [ ! -f "$zh" ]; then echo "FAIL: $zh missing (no ZH twin for $en)"; fail=1; continue; fi
+    if check_pair "$en" "$zh" yes; then echo "ok: $zh"; else fail=1; fi
   done
-  for page in docs/*.md; do
-    [ -e "$page" ] || continue
-    case "$page" in
-      *.zh.md) continue ;;
-    esac
-    case "$registered" in
-      *" $page "*) ;;
-      *) echo "FAIL: $page not registered for zh-parity"; fail=1 ;;
-    esac
-  done
-
-  local en zh banner
-  for pair in "${pairs[@]}"; do
-    # shellcheck disable=SC2086
-    set -- $pair; en="$1"; zh="$2"; banner="$3"
-    if [ ! -f "$zh" ]; then echo "SKIP (not yet translated): $zh"; continue; fi
-    if check_pair "$en" "$zh" "$banner"; then echo "ok: $zh"; else fail=1; fi
+  for zh in docs/zh/*.md; do
+    [ -e "$zh" ] || continue
+    base=$(basename "$zh")
+    if [ ! -f "docs/en/$base" ]; then echo "FAIL: docs/en/$base missing (orphan ZH page $zh)"; fail=1; fi
   done
   if [ "$fail" = 0 ]; then echo "check-zh-docs: PASS"; else echo "check-zh-docs: FAIL"; fi
   exit $fail

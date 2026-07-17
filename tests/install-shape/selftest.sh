@@ -282,28 +282,30 @@ rm -rf "$SB10"
 # no need to replicate all 6 real doc pages. Setup failures are rig
 # breakage, NOT a caught mutation — never let them masquerade as red.
 SB11=$(mktemp -d)
-if ! mkdir -p "$SB11/scripts" "$SB11/docs"; then
-  echo "SELFTEST FAIL: mutation-11 setup 'mkdir scripts docs' failed (rig broken, not a caught mutation)"; rc=1
+if ! mkdir -p "$SB11/scripts" "$SB11/docs/en" "$SB11/docs/zh"; then
+  echo "SELFTEST FAIL: mutation-11 setup 'mkdir scripts docs/en docs/zh' failed (rig broken, not a caught mutation)"; rc=1
 elif ! cp -f "$REPO_ROOT/scripts/check-zh-docs.sh" "$SB11/scripts/check-zh-docs.sh"; then
   echo "SELFTEST FAIL: mutation-11 setup 'cp check-zh-docs.sh' failed (rig broken, not a caught mutation)"; rc=1
-elif ! echo "# orphan docs page" > "$SB11/docs/orphan-page.md"; then
+elif ! { printf '# readme\n' > "$SB11/README.md" && printf '# 说明\n' > "$SB11/README.zh-CN.md"; }; then
+  echo "SELFTEST FAIL: mutation-11 setup 'write README fixtures' failed (rig broken, not a caught mutation)"; rc=1
+elif ! echo "# orphan docs page" > "$SB11/docs/en/orphan-page.md"; then
   echo "SELFTEST FAIL: mutation-11 setup 'write orphan-page.md' failed (rig broken, not a caught mutation)"; rc=1
 else
   out11=$(bash "$SB11/scripts/check-zh-docs.sh" 2>&1); ec11=$?
   if [ "$ec11" -eq 0 ]; then
-    echo "SELFTEST FAIL: 'zh-parity completeness: unregistered page' should have gone RED but passed"; rc=1
-  elif ! printf '%s\n' "$out11" | grep -qF "docs/orphan-page.md not registered for zh-parity"; then
-    echo "SELFTEST FAIL: 'zh-parity completeness: unregistered page' failed for the wrong reason (no message naming docs/orphan-page.md)"; rc=1
+    echo "SELFTEST FAIL: 'zh-parity structural: EN page without ZH twin' should have gone RED but passed"; rc=1
+  elif ! printf '%s\n' "$out11" | grep -qF "docs/zh/orphan-page.md missing"; then
+    echo "SELFTEST FAIL: 'zh-parity structural: EN page without ZH twin' failed for the wrong reason (no message naming docs/zh/orphan-page.md)"; rc=1
   else
-    echo "SELFTEST ok: 'zh-parity completeness: unregistered page' correctly fails, naming the page"
+    echo "SELFTEST ok: 'zh-parity structural: EN page without ZH twin' correctly fails, naming the missing twin"
   fi
-  # GREEN control, same scratch dir: swap the orphan for a stand-in filename
-  # that IS registered (docs/index.md) — proves the assertion discriminates
-  # rather than always-failing.
-  if ! { rm -f "$SB11/docs/orphan-page.md" && echo "# stand-in for a registered page" > "$SB11/docs/index.md"; }; then
-    echo "SELFTEST FAIL: mutation-11 setup 'swap in docs/index.md stand-in' failed (rig broken, not a caught mutation)"; rc=1
+  # GREEN control, same scratch dir: provide a valid ZH twin (MT frontmatter +
+  # banner) — proves the structural assertion discriminates rather than
+  # always-failing.
+  if ! printf -- '---\nmachine_translated: true\n---\n!!! warning "机器翻译"\n\n# 孤页\n' > "$SB11/docs/zh/orphan-page.md"; then
+    echo "SELFTEST FAIL: mutation-11 setup 'write ZH twin' failed (rig broken, not a caught mutation)"; rc=1
   else
-    expect_green "zh-parity completeness: registered page needs no fix" \
+    expect_green "zh-parity structural: paired page needs no fix" \
       bash "$SB11/scripts/check-zh-docs.sh"
   fi
 fi
