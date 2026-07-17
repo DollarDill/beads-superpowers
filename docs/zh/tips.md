@@ -5,6 +5,8 @@ description: 快速参考 bd 命令速查表、技能路由表、常见问题故
 !!! warning "机器翻译"
     本页面由 AI 自动翻译，可能存在术语或语义偏差。如有疑问，请以[英文原文](tips.md)为准。
 
+<!-- Role: 插件与 bd 日常工作的操作性技巧。不属于本页范畴：安装步骤（getting-started.md）或工作流管线（workflow.md）。 -->
+
 # 技巧与窍门
 
 ## Beads 速查表
@@ -18,17 +20,18 @@ description: 快速参考 bd 命令速查表、技能路由表、常见问题故
 | `bd show <id>` | 某个 bead 的完整详情 |
 | `bd query "status=open AND priority<=1"` | 复合查询——替代 `bd list` + jq |
 | `bd count --by-status` | 分组计数（`--by-priority` / `--by-type`） |
-| `bd epic status <id>` | Epic 进度摘要 |
+| `bd epic status <id>` / `--eligible-only` | 该 epic 的完成状态 / 仅显示可关闭的 epic |
 | `bd create "Epic: name" -t epic -p 2` | 新建优先级为 2 的 epic |
 | `bd create "Task: title" -t task --parent <epic>` | 在 epic 下创建任务 |
-| `bd create` epic + `bd import` 任务 | 原子化富任务创建（schema 见 `bd export`） |
-| `bd q "quick title"` | 快速捕获 |
+| `bd worktree create .worktrees/<name>` | 在指定路径创建 worktree——裸 `<name>` 会落在 `./<name>`，与你的项目文件同级。路径相对于当前目录解析，因此请在仓库根目录下运行 |
+| `bd import -` | 从标准输入的 JSONL 一次性原子创建多个富任务——与 `bd export` 互为往返，格式始终可查 |
+| `bd q "quick title"` | 快速捕获——不打断当前思路，随手记下一个想法 |
 | `bd update <id> --claim` | 认领为进行中 |
 | `bd close <id> --reason "..."` | 附带证据完成任务 |
 | `bd dep add <child> <depends-on>` | 添加依赖关系 |
 | `bd note <id> "context"` | 向 bead 追加证据 |
 | `bd remember "insight"` / `bd memories <kw>` / `bd forget <id>` | 持久化 / 搜索 / 删除学习内容 |
-| `bd list --label <topic> --status all` / `bd search "<kw>" --status all` | 搜索知识库——已标记 `kb` 标签的延迟 `research`/`design`/`decision` beads（正文词条：`--desc-contains "<kw>"`；然后用 `bd show <id1> <id2>` 或 `--flat --long -n 10` 读取命中） |
+| `bd list --label <topic> --status all` / `bd search "<kw>" --status all` | 搜索知识库——已标记 `kb` 标签的延迟 `research`/`design`/`decision` beads（正文词条：`--desc-contains "<kw>"`；然后用 `bd show <id1> <id2>` 或 `--flat --long -n 10` 读取命中）。要把已有文档搬进来而不是从空仓库开始？请见[迁移指南](migration.md) |
 | `bd dolt push` / `pull` | 将 beads 数据库同步到/从你的 beads 远端 |
 
 !!! info "深入了解 — 上游 Beads 文档"
@@ -63,7 +66,7 @@ description: 快速参考 bd 命令速查表、技能路由表、常见问题故
 
 ## 常见问题
 
-安装和配置问题，请参阅[入门指南——故障排查](getting-started.md)。以下是最常见问题的快速解决方法：
+安装和配置问题，请参阅[入门指南——故障排查](getting-started.md#troubleshooting)。以下是最常见问题的快速解决方法：
 
 **技能未加载** — `/plugins` 应列出 beads-superpowers，`/skills` 应显示 {{ skill_count }} 个技能。若未显示，请重新安装。
 
@@ -75,7 +78,7 @@ description: 快速参考 bd 命令速查表、技能路由表、常见问题故
 
 ## Windows
 
-SessionStart hook（`hooks/session-start`）是 bash 脚本。在 Windows 上，多格式包装器 `hooks/run-hook.cmd` 通过 Git Bash 调用它。该 `.cmd` 文件同时是有效的批处理文件和 bash 脚本——在 Windows 上，`cmd.exe` 找到 Git Bash 并重新执行；在 Unix 上，`:` 命令是空操作，bash 运行其余部分。只要安装了 Git for Windows，无需 WSL 即可正常工作。
+SessionStart hook（`hooks/session-start`）是 bash 脚本。在 Windows 上，多格式包装器 `hooks/run-hook.cmd` 通过 Git Bash 调用它。该 `.cmd` 文件同时是有效的批处理文件和 bash 脚本：在 Windows 上，`cmd.exe` 找到 Git Bash 并重新执行；在 Unix 上，`:` 命令是空操作，bash 运行其余部分。只要安装了 Git for Windows，无需 WSL 即可正常工作。
 
 技能是纯 Markdown，不含任何平台特定代码。只有 hook 包装器处理平台差异。
 
