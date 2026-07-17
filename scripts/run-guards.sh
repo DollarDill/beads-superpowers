@@ -23,6 +23,7 @@ run "skill ref namespacing"  bash scripts/check-skill-ref-namespace.sh
 run "skill ref namespacing (.claude)" bash scripts/check-skill-ref-namespace.sh .claude/skills
 run "install hook no-fork"  bash scripts/check-install-hook-fork.sh
 run "adr gitignored"        bash scripts/check-adr-gitignored.sh
+run "agents symlink"        bash scripts/check-agents-symlink.sh
 run "kb label vocab"        bash scripts/check-kb-labels.sh
 run "kb doc reconciliation" bash scripts/check-kb-doc-reconciliation.sh
 exit "$rc"
