@@ -8,75 +8,15 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.14.0-4f46e5.svg"></a>
+  <a href="https://github.com/DollarDill/beads-superpowers/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/DollarDill/beads-superpowers?color=4f46e5"></a>
   <a href="https://github.com/DollarDill/beads-superpowers/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/DollarDill/beads-superpowers?style=social"></a>
+  <a href="CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
+  <a href="https://algocents.com/beads-superpowers/"><img alt="Docs" src="https://img.shields.io/badge/docs-algocents.com-0ea5e9.svg"></a>
 </p>
 
 ---
 
 一款适用于 Claude Code、Codex、OpenCode 及另外 6 款 AI 编程智能体的插件，让你的智能体在编写代码前先写测试、有条不紊地调试而非盲目猜测，并记住昨天做了什么。可组合技能强制执行这些实践；基于 Dolt 的问题追踪器在会话间保持上下文。
-
-## 工作原理
-
-开始任务时，智能体先运行 **brainstorming** 以在触碰代码前明确需求，再通过 **writing-plans** 将工作拆解为 `bd` 追踪的步骤——这些步骤在会话重启后仍然保留。
-
-实现阶段遵循 **test-driven-development**（始终先写失败的测试），并可通过 **subagent-driven-development** 扇出到并行子智能体——每个智能体在各自的 git worktree 中工作。
-
-`bd` 将每项任务、决策和备注存储在本地 Dolt 数据库中，因此智能体在下次会话时能从上次中断处精确接续，无需依赖聊天记录。
-
-这一切之下是生产级标准：智能体将每项任务视为真实用户依赖的事项，因此它不会为了速度偷偷走捷径、遗漏需求或削弱安全控制。
-
-## 功能概览
-
-### 测试
-
-| 技能 | 功能说明 |
-|------|---------|
-| `test-driven-development` | RED-GREEN-REFACTOR 循环——铁律：没有失败的测试，不写实现代码 |
-| `verification-before-completion` | 主张之前先有证据——标记完成前必须提供证明 |
-
-### 调试
-
-| 技能 | 功能说明 |
-|------|---------|
-| `systematic-debugging` | 提出任何修复方案前进行 4 阶段根因分析 |
-
-### 协作
-
-| 技能 | 功能说明 |
-|------|---------|
-| `requesting-code-review` | 按结构化标准派遣代码审查子智能体 |
-| `receiving-code-review` | 抗谄媚式接收——按实际价值评估每项发现 |
-| `subagent-driven-development` | 每项任务启用全新智能体，含规格说明与质量审查；独立任务支持并行批处理模式 |
-| `dispatching-parallel-agents` | 扇出到 2 个以上无共享状态的独立智能体 |
-
-### 项目管理
-
-| 技能 | 功能说明 |
-|------|---------|
-| `brainstorming` | 写代码前进行苏格拉底式设计讨论——生成规格说明 bead |
-| `stress-test` | 对计划进行对抗性审问并提供推荐答案 |
-| `writing-plans` | 将工作拆解为可执行的小任务，每项均作为 `bd` bead 追踪 |
-| `executing-plans` | 在单次会话内批量执行计划 |
-| `using-git-worktrees` | 每项任务使用独立的开发分支 |
-| `finishing-a-development-branch` | 合并/PR 流程 + Land the Plane（关闭 beads，推送） |
-| `document-release` | 发布后文档审计——保持 README、CHANGELOG 和 ARCHITECTURE 同步 |
-| `project-init` | Beads/Dolt 数据库设置、初始化与恢复 |
-| `getting-up-to-speed` | 会话定向——加载 `bd` 上下文并生成当前状态摘要 |
-| `memory-curator` | 会话结束/按需的记忆整合——对 `bd` 记忆库去重并清理过时记忆 |
-| `session-handoff` | 人工调用 —— 生成有据可查的交接文档 + 续接记忆，以恢复进行中的工作 |
-| `research-driven-development` | 并行研究智能体 → 综合知识库文档 |
-| `write-documentation` | 人类品质的文档——14 条规则写作体系，以上下文优先起草 |
-
-### 元技能
-
-| 技能 | 功能说明 |
-|------|---------|
-| `using-superpowers` | 引导程序——在会话开始时注入，路由到正确的技能 |
-
-## 文档
-
-**[algocents.com/beads-superpowers](https://algocents.com/beads-superpowers/)** — 快速入门、方法论、技能参考、示例工作流与使用技巧。
 
 ## 快速开始
 
@@ -94,25 +34,77 @@ claude plugin install beads-superpowers@beads-superpowers-marketplace
 bd init                               # 2. Bootstrap the Dolt database for this project
 ```
 
-开启新的 Claude Code 会话，输入"where are we"——智能体将加载你的 `bd` 上下文，从上次中断处继续。
+开启新的 Claude Code 会话，输入 "where are we"——智能体将加载你的 `bd` 上下文，从上次中断处继续。
 
-使用其他智能体？请参阅[安装](#安装)，了解在 Codex、OpenCode、Cursor、GitHub Copilot CLI、Kimi Code、Antigravity、Factory Droid 和 Pi 上的原生安装方法。
+使用其他智能体？跳转至 [Codex CLI](#codex-cli)、[OpenCode](#opencode)、[Cursor](#cursor)、[GitHub Copilot CLI](#github-copilot-cli)、[Kimi Code](#kimi-code)、[Antigravity](#antigravity)、[Factory Droid](#factory-droid) 或 [Pi](#pi) 的安装说明。
 
-## 前提条件
+## 基本工作流
 
-**先安装 `bd`，再安装插件。** 其钩子在每次会话启动时调用 `bd`；若未安装，钩子将静默失败，导致丢失持久记忆。上方快速开始使用 Homebrew，任何平台也可使用 `npm install -g @beads/bd`。通过 `bd version` 验证安装。
+1. **brainstorming** — 在任何代码编写前启动。通过一次一个问题的设计对话打磨想法，检查知识库中先前的决策，并以你批准的规格说明收尾——记录在 `bd` 中，从而在会话之间留存。
 
-**注意：** 原生插件安装（第 1 层）会安装技能和钩子，但不会执行 `bd init`——请在每个项目中手动运行。
+2. **using-git-worktrees** — 在设计获批后启动。在全新分支上创建一个隔离的 worktree，确保实现工作不会触碰你的主工作区。
+
+3. **writing-plans** — 将获批的规格说明转化为带有确切文件、代码和验证步骤的小任务。每项任务都成为一个 `bd` bead。
+
+4. **subagent-driven-development** 或 **executing-plans** — 为每项任务派遣全新子智能体，在任务之间进行规格与质量审查；或分批执行并设置人工检查点。
+
+5. **test-driven-development** — 强制执行 RED-GREEN-REFACTOR：先写失败的测试，写最少的代码使其通过，再重构。没有失败的测试就不写实现代码。
+
+6. **requesting-code-review** — 在集成前对照计划审查工作成果。严重问题会阻塞进度。
+
+7. **finishing-a-development-branch** — 验证测试、审计文档、给出合并/PR 选项，并执行 Land the Plane：关闭 beads、同步、推送。
+
+智能体会在执行任何任务前检查相关技能——这些是强制性工作流，而非建议。并且因为每项任务、决策和经验都保存在 `bd` 的 Dolt 数据库中，下一次会话会从上一次结束的地方开始：输入 "where are we"，智能体就会接续之前的工作。
+
+## 功能概览
+
+<!-- 收录规则：基本工作流中提及的每一项技能都会出现在此处；beads 差异化技能同样收录；条目上限约 14–15 条。完整参考位于文档站点——不要让本列表重新膨胀为详尽清单。 -->
+
+**测试：**
+
+- **test-driven-development** — RED-GREEN-REFACTOR 循环；铁律：没有失败的测试就不写实现代码
+
+**调试：**
+
+- **systematic-debugging** — 在提出任何修复方案前进行 4 阶段根因分析
+- **verification-before-completion** — 主张之前先有证据；除非有命令证明，否则任务不算"完成"
+
+**设计与规划：**
+
+- **brainstorming** — 写代码前的苏格拉底式设计会话——产出一份已获批准的规格说明
+- **stress-test** — 对设计与计划进行对抗性审问，并提供推荐答案
+- **writing-plans** — 拆解为小任务的计划；每项任务都作为 `bd` bead 追踪
+
+**执行：**
+
+- **subagent-driven-development** — 每项任务派遣全新智能体，含规格与质量审查；支持并行批处理模式
+- **executing-plans** — 在单次会话内批量执行计划，并设置检查点
+- **using-git-worktrees** — 每个功能使用独立的开发分支
+- **requesting-code-review** — 按结构化标准派遣代码审查子智能体
+- **finishing-a-development-branch** — 合并/PR 流程 + Land the Plane（关闭 beads、同步、推送）
+
+**记忆与定向：**
+
+- **getting-up-to-speed** — 会话定向：加载 `bd` 上下文并生成当前状态摘要
+- **memory-curator** — 整合、去重并清理持久记忆库
+- **session-handoff** — 生成有据可查的交接文档，让下一次会话接续进行中的工作
+- **research-driven-development** — 并行研究智能体 → 经过验证的持久知识库
+
+**[完整技能参考 →](https://algocents.com/beads-superpowers/skills/)**
 
 ## 安装
 
+**端到端测试：** Claude Code、Codex CLI 和 OpenCode。其余智能体提供的是经过验证的配置，但我们未对其进行端到端测试。
+
 > **⚠️ 共存警告：** 请勿与 [obra/superpowers](https://github.com/obra/superpowers) 同时安装。技能名称存在冲突——请二选一。
 
-### 第 1 层——已验证
+### 前提条件
 
-这些路径经过端到端测试。优先使用。
+**先安装 `bd`，再安装插件。** 其钩子在每次会话启动时调用 `bd`；若未安装，钩子将静默失败，导致丢失持久记忆。可使用 Homebrew（`brew install beads`），或在任何平台上使用 `npm install -g @beads/bd`。通过 `bd version` 验证安装。
 
-#### Claude Code
+**注意：** 原生插件安装会安装技能和钩子，但不会执行 `bd init`——请在每个项目中手动运行。
+
+### Claude Code
 
 ```bash
 claude plugin marketplace add DollarDill/beads-superpowers
@@ -121,7 +113,7 @@ claude plugin install beads-superpowers@beads-superpowers-marketplace
 
 或在 Claude Code 会话内通过斜杠命令执行：`/plugin marketplace add DollarDill/beads-superpowers`，然后 `/plugin install beads-superpowers@beads-superpowers-marketplace`。
 
-#### Codex CLI
+### Codex CLI
 
 ```bash
 codex plugin marketplace add DollarDill/beads-superpowers
@@ -135,9 +127,11 @@ codex plugin install beads-superpowers@beads-superpowers-marketplace
 codex_hooks = true
 ```
 
-#### OpenCode
+要在 Codex 下获得 SessionStart hook，请使用脚本安装器（`install.sh`）而不是插件渠道——插件渠道只安装 skills，不会接线 hook。
 
-将其添加到您的 `opencode.json`（全局或项目级）的 `plugin` 数组中：
+### OpenCode
+
+将其添加到你的 `opencode.json`（全局或项目级）的 `plugin` 数组中：
 
 ```json
 {
@@ -147,11 +141,7 @@ codex_hooks = true
 
 技能会自动注册，会话引导 + beads 上下文也会自动注入——无需其他步骤。详情、版本固定、从 pre-0.12 安装程序副本迁移及故障排除，请参阅 [.opencode/INSTALL.md](.opencode/INSTALL.md)。
 
-### 第 2 层——尽力支持
-
-配置已验证；未经我们端到端测试。请知悉后使用。
-
-#### Cursor
+### Cursor
 
 ```text
 /add-plugin beads-superpowers
@@ -159,7 +149,7 @@ codex_hooks = true
 
 在 Cursor 智能体内运行此命令。通过 Marketplace UI 更新。
 
-#### GitHub Copilot CLI
+### GitHub Copilot CLI
 
 ```bash
 copilot plugin marketplace add DollarDill/beads-superpowers
@@ -174,7 +164,7 @@ copilot plugin update beads-superpowers
 
 注意：使用 Claude 插件回退方案（通过共享的 `hooks/hooks.json` 加载技能和 session-start），与上游相同机制；会话启动上下文注入需要 Copilot CLI v1.0.11+。
 
-#### Kimi Code
+### Kimi Code
 
 ```text
 /plugins install https://github.com/DollarDill/beads-superpowers
@@ -182,7 +172,7 @@ copilot plugin update beads-superpowers
 
 安装后运行 `/new` 以启动含插件的新会话。
 
-#### Antigravity
+### Antigravity
 
 ```bash
 agy plugin install https://github.com/DollarDill/beads-superpowers
@@ -190,7 +180,7 @@ agy plugin install https://github.com/DollarDill/beads-superpowers
 
 注意：复用 Claude 插件清单——与上游验证的机制相同。
 
-#### Factory Droid
+### Factory Droid
 
 ```bash
 droid plugin marketplace add https://github.com/DollarDill/beads-superpowers
@@ -199,13 +189,13 @@ droid plugin install beads-superpowers@beads-superpowers-marketplace
 
 注意：复用 Claude 插件清单——与上游验证的机制相同。
 
-#### Pi
+### Pi
 
 ```bash
 pi install git:github.com/DollarDill/beads-superpowers
 ```
 
-#### 通用回退（npx）
+### npx（任意智能体）
 
 > **从 ≤0.8.2 版本升级：** 早期版本注册了一个每次提示都会触发的提醒钩子，现已不再随插件提供。如果你的 `~/.claude/settings.json` 中仍引用 `superpowers-reminder.sh`，请先备份，然后移除该条目：
 >
@@ -238,15 +228,55 @@ curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/i
 
 支持：`--yes`（跳过提示）、`--version X.Y.Z`、`--with-yegge`、`--dry-run`、`--skip-checksum`、`--uninstall`。
 
+更新：重新运行你的安装命令——插件渠道通过其市场更新，npx 与脚本安装通过重新运行完成更新。
+
+## 工作原理
+
+开始任务时，智能体先运行 **brainstorming** 以在触碰代码前明确需求，再通过 **writing-plans** 将工作拆解为 `bd` 追踪的步骤——这些步骤在会话重启后仍然保留。实现阶段遵循 **test-driven-development**（始终先写失败的测试），并可通过 **subagent-driven-development** 扇出到并行子智能体——每个智能体在各自的 git worktree 中工作。`bd` 将每项任务、决策和备注存储在本地 Dolt 数据库中，因此智能体在下次会话时能从上次中断处精确接续，无需依赖聊天记录。
+
+这一切之下是生产级标准：智能体将每项任务视为真实用户依赖的事项，因此它不会为了速度偷偷走捷径、遗漏需求或削弱安全控制。
+
+## 理念
+
+- **设计先于代码** — 每个功能都始于一份经过人工批准的规格说明，而非猜测
+- **TDD 是铁律** — 没有失败的测试就不能实现代码
+- **系统化优于临时应对** — 调试遵循根因分析流程，绝不靠猜测和试错
+- **有证据才有主张** — "完成"需要一条命令来证明
+- **记忆优于聊天记录** — 任务、决策和经验教训持久保存在 `bd` 中，而非保存在滚动的对话缓冲区里
+
+完整版本参见[方法论](https://algocents.com/beads-superpowers/methodology/)。
+
+## 文档
+
+**[algocents.com/beads-superpowers](https://algocents.com/beads-superpowers/)** — 快速入门、方法论、技能参考、示例工作流与使用技巧。
+
+- [示例工作流文档](https://algocents.com/beads-superpowers/workflow/) — 含图示的完整演练
+- [技能参考](https://algocents.com/beads-superpowers/skills/) — 所有技能详解
+- [方法论](https://algocents.com/beads-superpowers/methodology/) — 为何采用此工作流
+
+文档*内容*存放在本仓库中（`docs/` ——欢迎提交 PR）；网站则由另一个独立的部署仓库构建并发布。
+
+## 贡献
+
+欢迎贡献——参见 [`CONTRIBUTING.md`](CONTRIBUTING.md)。PR 请提交至 **`dev`** 分支（`main` 为已发布分支）。想法与问题请前往 [Discussions](https://github.com/DollarDill/beads-superpowers/discussions)。
+
 ## 基于
 
 - **[Superpowers](https://github.com/obra/superpowers)** by Jesse Vincent — 技能体系与开发实践
 - **[Beads](https://github.com/gastownhall/beads)** by Steve Yegge — 跨会话记忆的持久化问题追踪
 
-## 贡献
+部分技能改编自：
 
-参见 [`CONTRIBUTING.md`](CONTRIBUTING.md)。欢迎在 **[Discussions](https://github.com/DollarDill/beads-superpowers/discussions/27)** 提出想法。
+- **Garry Tan** — `document-release`，改编自 [garrytan/gstack](https://github.com/garrytan/gstack/tree/main/document-release)
+- **Matt Pocock** — `stress-test`，源自 [skills/grilling](https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md)；`session-handoff`，源自 [skills/handoff](https://github.com/mattpocock/skills/blob/main/skills/productivity/handoff/SKILL.md)
+- **Ivan Neustroev（"Anbeeld"）** — `write-documentation` 背后的写作体系，改编自 [WRITING.md](https://github.com/Anbeeld/WRITING.md)（MIT）
 
 ## 许可证
 
 [MIT](LICENSE)
+
+## 社区
+
+- **想法与问题：** [GitHub Discussions](https://github.com/DollarDill/beads-superpowers/discussions) — 置顶帖是入口
+- **Bug：** [Issues](https://github.com/DollarDill/beads-superpowers/issues)
+- **联系方式：** <dillon@algocents.com>
