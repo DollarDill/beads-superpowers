@@ -316,7 +316,7 @@ For a quick, no-Docker installer smoke test outside the `just` surface: `bash in
 Skill *behavior* testing (the 4 LLM suites under tests/) is deprecated in place —
 successor: the external eval-harness project. See tests/*/DEPRECATED.md.
 
-**Release process (no GHA):** `./scripts/bump-version.sh <ver>` → update CHANGELOG →
+**Release process (no GHA):** run the `document-release` docs audit first (release cuts from main bypass the finishing-branch Step 3.5 docs gate) → `./scripts/bump-version.sh <ver>` → update CHANGELOG →
 tag `v<ver>` → `git push --tags` → **publish the GitHub Release**:
 `gh release create v<ver> --title "v<ver>" --latest --notes-file <changelog-section> checksums.txt`.
 The last step is NOT optional — `install.sh` resolves its default version from `releases/latest`,
