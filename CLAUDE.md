@@ -91,7 +91,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harn
 - `docs/` — Docs content only, i18n folder layout: `docs/en/` (English pages) + `docs/zh/` (Chinese mirrors, 1:1 structural parity guard-enforced) + shared `docs/assets/`. Source of truth for the site's prose. The site itself is built and published from the private the-factory-website repo (`tenants/beads-superpowers/`), not from this repo (ADR-0050).
 - `docs/decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs, `.internal/sdd/` (SDD scratch), and `.internal/brainstorm/` (brainstorm server sessions).
-- `tests/` — deterministic suites (hooks, manifests, skills contracts, install-shape, installer Docker E2E, brainstorm-server Node tests) run via the `just` surface; the LLM-driven suites (claude-code, explicit-skill-requests, skill-triggering, subagent-driven-dev) are deprecated in place — see `tests/*/DEPRECATED.md`.
+- `tests/` — deterministic suites (hooks, manifests, skills contracts, install-shape, installer Docker E2E, brainstorm-server Node tests) run via the `just` surface. (The 4 LLM-driven suites were removed in the 2026-07 fat audit — successor: the external eval-harness project.)
 - `scripts/` — `bump-version.sh` (sync version across all surfaces declared in `.version-bump.json` — JSON manifests + prose), `check-skill-count.sh` (guard: forbid hardcoded skill counts + structural self-consistency), `check-agent-bead-stamp.sh`, `check-zh-docs.sh`, `check-convention-sync.sh` (verify shared convention blocks are byte-identical across skills), `lint-shell.sh` (shellcheck gate over tracked `.sh` with committed baseline; visible SKIP when shellcheck absent), `check-askuser-genericization.sh` (guard: skills use generic question-tool phrasing — ADR-0041), `check-model-genericization.sh` (guard: no hardcoded Claude model names in harness-neutral content — capability tiers only).
 - `install.sh` — curl installer with 3-tier fallback chain (plugin system → npx → tarball/git clone). SHA-256 checksum validation, atomic rollback via staging directory, lazy prerequisites. Auto-detects Claude Code, Codex, OpenCode, and 6 more CLIs (Cursor, Copilot, Droid, Antigravity, Kimi, Pi).
 
@@ -184,9 +184,7 @@ scripts/
   lint-shell-baseline.txt    # Committed lint baseline (empty at adoption — repo is clean)
   check-askuser-genericization.sh  # Guard: literal AskUserQuestion only under using-superpowers/references/ (ADR-0041)
   check-model-genericization.sh   # Guard: no hardcoded model names in harness-neutral content (bd-1f5w)
-  generate-ghpages-stubs.sh        # ADR-0050: regenerate gh-pages redirect stubs from ghpages-stub-titles.tsv
-  ghpages-stub-titles.tsv          # Stub slug→title map (input to the generator)
-  verify-ghpages-stubs.sh          # Battery: verify the gh-pages redirect bridge (worktree or `live` mode)
+  verify-ghpages-stubs.sh          # Battery: verify the gh-pages redirect bridge (worktree or `live` mode; regen tooling lives in git history)
 skills/                    # beads-native skills (auto-discovered, each has SKILL.md;
                            #   branch-only reference files in per-skill references/ subdirs)
 .claude/skills/            # maintainer-only skills (git-tracked, NOT distributed — ADR-0044)
@@ -314,8 +312,8 @@ grep -r "bd create\|bd close\|bd ready" skills/ | wc -l
 For a quick, no-Docker installer smoke test outside the `just` surface: `bash install.sh --test`
 (installs to `/tmp`, verifies, cleans up).
 
-Skill *behavior* testing (the 4 LLM suites under tests/) is deprecated in place —
-successor: the external eval-harness project. See tests/*/DEPRECATED.md.
+Skill *behavior* testing lives in the external eval-harness project (the in-repo LLM suites
+were removed in the 2026-07 fat audit).
 
 **Release process (no GHA):** run the `document-release` docs audit **on dev** (release cuts bypass the finishing-branch Step 3.5 docs gate) → `./scripts/bump-version.sh <ver>` + update CHANGELOG, committed **on dev** →
 `git switch main && git merge --ff-only dev` (fails loudly if anything ever landed on main directly — that's the invariant working) → tag `v<ver>` on main → `git push --tags` → **publish the GitHub Release**:
@@ -326,11 +324,6 @@ so a pushed tag without a published Release leaves installers on the previous ve
 `verify_checksum` silently skips. Docs deploy is no longer part of this repo's release process — the site publishes from the private the-factory-website repo (ADR-0050).
 
 Fixes on dev reach installers only at release — cut patch releases promptly. main receives nothing except ff-only merges from dev; hotfixes ride dev as patch releases.
-
-### Running Skill Tests
-
-Deprecated in place (see "Validation" above) — skill *behavior* measurement now lives in the
-external eval-harness project. Each suite's `DEPRECATED.md` explains why it was pulled out of `just check`.
 
 ## Version Management
 

@@ -29,7 +29,7 @@ recovery, coordination - lives in the upstream reference linked below.
 | `bd dep add <child> <depends-on>` | Add dependency |
 | `bd note <id> "context"` | Append evidence to a bead |
 | `bd remember "insight"` / `bd memories <kw>` / `bd forget <id>` | Persist / search / remove learnings |
-| `bd list --label <topic> --status all` / `bd search "<kw>" --status all` | Search the knowledge base - deferred `research`/`design`/`decision` beads labeled `kb` (body terms: `--desc-contains "<kw>"`; then read hits with `bd show <id1> <id2>` or `--flat --long -n 10`). Bringing in existing docs instead of starting empty? See the [migration guide](migration.md) |
+| `bd list --label <topic> --status all` / `bd search "<kw>" --status all` | Search the knowledge base - deferred `research`/`design`/`decision` beads labeled `kb` (body terms: `--desc-contains "<kw>"`; then read hits with `bd show <id1> <id2>` or `--flat --long -n 10`). |
 | `bd dolt push` / `pull` | Sync beads DB to/from your beads remote |
 
 !!! info "Go deeper - upstream Beads docs"

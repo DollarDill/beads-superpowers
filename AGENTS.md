@@ -125,7 +125,7 @@ just server     # brainstorm-server Node tests (opt-in)
 just docker     # installer Docker E2E (opt-in, slow)
 ```
 
-The LLM-driven suites under `tests/` are deprecated in place — see `tests/*/DEPRECATED.md`.
+The LLM-driven suites were removed in the 2026-07 fat audit — skill-behavior measurement lives in the external eval-harness project.
 
 ## Non-Interactive Shell Commands
 

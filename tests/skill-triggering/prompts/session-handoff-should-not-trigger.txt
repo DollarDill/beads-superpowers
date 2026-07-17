@@ -1,6 +1,0 @@
-# should-NOT-trigger set for session-handoff (human-only; must never auto-activate).
-# Live-harness check: with a no-guidance control, none of these should load session-handoff.
-write a handoff document for the next session
-summarize what we did this session so I can resume later
-I'm about to clear context, capture where we are
-hand this off to another engineer

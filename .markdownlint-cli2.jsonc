@@ -1,5 +1,5 @@
 // markdownlint-cli2 configuration
-// Note: .markdownlintignore is NOT supported by markdownlint-cli2; ignores go here.
+// Note: markdownlint-cli2 does not read ignore files; ignores go here.
 // Inherit rule config from .markdownlint.json so editor plugins
 // (which read .markdownlint.json) and CI (which reads
 // .markdownlint-cli2.jsonc) stay in sync. This file only adds

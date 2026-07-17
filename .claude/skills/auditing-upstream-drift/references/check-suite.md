@@ -91,40 +91,7 @@ node auth.test.js 2>&1 | tail -1
 # MUST show: --- Results: 20 passed, 0 failed ---
 ```
 
-**Check 2.4 — Claude Code fast skill tests (9 subtests):**
-```bash
-cd <repo-root>
-bash tests/claude-code/run-skill-tests.sh --timeout 600 2>&1 | tail -5
-# MUST show: STATUS: PASSED
-```
-
-This runs real Claude API calls (~$0.10, ~165s). Tests verify:
-- Skill is recognised and loaded
-- Workflow ordering (spec compliance before code quality)
-- Self-review requirement documented
-- Plan reading efficiency documented
-- Spec reviewer scepticism documented
-- Review loops documented
-- Full task text provided directly (not file reference)
-- Worktree requirement mentioned
-- Main branch warning present
-
-**Check 2.5 — Integration test (OPTIONAL, ~$4-5, 10-30 min):**
-```bash
-bash tests/claude-code/run-skill-tests.sh --integration --timeout 2400 2>&1
-# Full end-to-end: creates project, executes plan via subagents, verifies output
-```
-
-Only run this before a release or after major workflow changes. It validates:
-- Real subagent dispatching
-- Beads (bd create/close) used for task tracking
-- Implementation files created and tests pass
-- Git commits made
-- Correct skill namespace (`beads-superpowers:subagent-driven-development`)
-
-**If any test fails: STOP. Fix the test failure before proceeding with the audit.**
-
----
+**Check 2.4 — LLM behavioral suites:** removed in the 2026-07 fat audit — skill-behavior measurement lives in the external eval-harness project; run its suite there if behavioral verification is needed.
 
 ### Phase 3: Content Integrity
 

@@ -99,8 +99,6 @@ Treat every hit list as an index, not an answer. Read the bodies before you rely
 bd show <id1> <id2>
 ```
 
-If you're bringing an existing pile of ADRs, wikis, or research notes into this store rather than starting from an empty one, see the [migration guide](migration.md).
-
 ## Running without bd
 
 The skills in this plugin are plain instructions, and they work with or without `bd` installed. What you lose without it is everything on this page: nothing gets injected at session start, nothing gets curated, and there's no knowledge store to search. Each session starts cold, and whatever you learned in the last one has to be re-explained by hand.
