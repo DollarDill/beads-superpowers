@@ -133,8 +133,6 @@ bd init                               # 2. Bootstrap the Dolt database for this 
 - [技能参考](https://algocents.com/beads-superpowers/skills/) — 所有技能详解
 - [方法论](https://algocents.com/beads-superpowers/methodology/) — 为何采用此工作流
 
-文档*内容*存放在本仓库中（`docs/` ——欢迎提交 PR）；网站则由另一个独立的部署仓库构建并发布。
-
 ## 安装
 
 > **⚠️ 共存警告：** 请勿与 [obra/superpowers](https://github.com/obra/superpowers) 同时安装。技能名称存在冲突——请二选一。

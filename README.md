@@ -131,8 +131,6 @@ The long form lives in [Methodology](https://algocents.com/beads-superpowers/met
 - [Skills Reference](https://algocents.com/beads-superpowers/skills/) - All skills explained
 - [Methodology](https://algocents.com/beads-superpowers/methodology/) - Why this workflow exists
 
-Docs *content* lives in this repo (`docs/` - PRs welcome); the site is built and published from a separate deployment repo.
-
 ## Installation
 
 > **⚠️ Coexistence warning:** Do not install alongside [obra/superpowers](https://github.com/obra/superpowers). Skill names collide - pick one or the other.
