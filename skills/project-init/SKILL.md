@@ -5,7 +5,7 @@ description: Use when beads/Dolt database initialization fails, when bd commands
 
 # Project Init: Beads/Dolt Database Setup and Recovery
 
-> **Source:** Based on [gastownhall/beads SYNC_SETUP.md](https://github.com/gastownhall/beads/blob/main/docs/SYNC_SETUP.md)
+<!-- Based on gastownhall/beads docs/SYNC_SETUP.md (MIT). Attribution: README "Built on". -->
 
 **Announce at start:** "I'm using the project-init skill to set up or recover the beads database."
 
