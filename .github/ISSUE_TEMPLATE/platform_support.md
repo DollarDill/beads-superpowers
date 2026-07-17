@@ -2,7 +2,7 @@
 name: Platform support request
 about: Request support for a new coding agent / harness
 title: "[platform] "
-labels: harness-parity
+labels: ["harness-parity", "needs-triage"]
 ---
 
 ## Harness
