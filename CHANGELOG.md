@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The stale npx "Updating from ≤0.8.2" migration callout (the `superpowers-reminder.sh` cleanup snippet) and the plugin-vs-npx "full experience" comparison paragraph, from both READMEs.
 - **Fat audit (repo-wide, evidence-based):** 54 tracked files cut after a 10-zone reference-mapped audit with per-file verdicts and user review. Gone: the four deprecated LLM test suites (`tests/claude-code`, `tests/explicit-skill-requests`, `tests/skill-triggering`, `tests/subagent-driven-dev` — successor: the external eval-harness project), the completed kv→beads migration tooling (`scripts/migrate-kv-to-beads.sh` + its selftest suite), the gh-pages stub regeneration pair (`generate-ghpages-stubs.sh` + `ghpages-stub-titles.tsv` — the live bridge and its verify script remain; regen lives in git history), the unlisted docs migration guide (`docs/en+zh/migration.md`), `assets/README.md`, `assets/social-preview.png`, `example-workflow/README.md`, the archived pre-overhaul `yegge-old.md`, and the dead `.markdownlintignore`. All references cleaned (CLAUDE.md, AGENTS.md, pre-commit shellcheck arg, docs cross-links, maintainer audit skill).
+- The vestigial `github-actions` block in `.github/dependabot.yml` — no `.github/workflows/` exist and the release process is explicitly no-GHA, so it scanned zero targets. The `npm` block remains. (Fat-audit Phase 3.)
 
 ## [0.14.0] - 2026-07-17
 

@@ -3,27 +3,6 @@
 
 version: 2
 updates:
-  # GitHub Actions ecosystem — keeps CI workflow actions current
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "07:00"
-      timezone: "Australia/Melbourne"
-    open-pull-requests-limit: 5
-    groups:
-      actions-minor-and-patch:
-        update-types:
-          - "minor"
-          - "patch"
-    commit-message:
-      prefix: "ci"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "github-actions"
-
   # npm ecosystem — pre-registered for future-proofing (currently zero deps)
   - package-ecosystem: "npm"
     directory: "/"
