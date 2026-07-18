@@ -208,18 +208,18 @@ Done when: the one self-critique pass has run and its coverage, depth, and misse
 bd close <id> --reason "Stress-test complete: N branches resolved, M changes made, confidence: <level>"
 ```
 
-After the work is settled, present the Capture gate (you MUST present it; the user picks Skip if nothing is worth keeping):
+After the work is settled, present the Capture gate — mandatory every time; Skip is the default (most work clears nothing durable):
 
 ```json
 {
   "questions": [{
-    "question": "This produced something worth preserving — what should I capture?",
+    "question": "Did this clear the capture bar?",
     "header": "Capture",
     "options": [
-      {"label": "ADR + memory", "description": "Record an ADR for the decision AND a durable bd-remember memory"},
-      {"label": "ADR only", "description": "Record an ADR for the architecturally-significant decision"},
-      {"label": "Memory only", "description": "Capture a durable lesson/insight via bd remember"},
-      {"label": "Skip", "description": "Nothing here is durable enough to preserve"}
+      {"label": "Skip", "description": "No durable output beyond the artifact (the usual outcome)"},
+      {"label": "ADR + memory", "description": "Clears all 3 ADR marks (hard-to-reverse + surprising-without-context + genuine trade-off) and a durable lesson"},
+      {"label": "ADR only", "description": "Clears all 3 ADR marks (hard-to-reverse + surprising-without-context + genuine trade-off)"},
+      {"label": "Memory only", "description": "A durable, evidence-backed lesson beyond the artifact itself"}
     ],
     "multiSelect": false
   }]

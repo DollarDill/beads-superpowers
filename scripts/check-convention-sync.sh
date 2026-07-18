@@ -15,7 +15,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT" || exit 1
 
 # ASCII-only signature slices (no em-dash) so the patterns are shell/grep-safe.
-CB3_SIG="what should I capture?"
+CB3_SIG="clear the capture bar"
 CB4_SIG="or secrets (tokens, keys, PII"
 
 CB3_SITES=(
