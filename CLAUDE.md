@@ -121,7 +121,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harn
 - **Never chain `open` after `bd` commands** — `open <file>` hangs when chained in the same Bash invocation with `bd` commands. Always run `open` as a standalone call.
 - **Worktree path default** — `bd worktree create <name>` creates at `./<name>` (sibling to repo files), NOT `.worktrees/<name>`. Pass the full path: `bd worktree create .worktrees/<name>`.
 - **Worktree detection** — Use `git rev-parse --is-inside-work-tree`, NOT `[ -d .git ]`. In a worktree, `.git` is a file, not a directory.
-- **Plugin cache goes stale** — After modifying skills, the installed plugin cache is outdated. Symlink the cache to this repo (see "Syncing Source" section below). `claude plugin update` has a [cache bug](https://github.com/anthropics/claude-code/issues/14061).
+- **Plugin cache goes stale** — After modifying skills, the installed plugin cache is outdated. Symlink the cache to this repo. `claude plugin update` has a [cache bug](https://github.com/anthropics/claude-code/issues/14061).
 - **Skill `description` field trap** — Putting workflow descriptions in skill `description` frontmatter causes Claude to follow the description instead of reading the full skill body (SDO problem). Descriptions should state trigger conditions only.
 - **Codex plugin channel doesn't register hooks** — codex-cli (verified 0.142.5) rejects a populated `hooks` object in the plugin manifest ("ignoring hooks: … found object") and auto-discovers nothing usable, so plugin/marketplace installs get skills but NO SessionStart hook. `install.sh` wires the hook explicitly — it is the supported Codex hook path.
 - **`gh-pages` is a frozen SEO redirect bridge (ADR-0050)** — 1:1 instant-meta-refresh stubs → algocents.com, live until the sunset-gate bead (≥ 2027-07) closes. NEVER delete the branch, disable GitHub Pages, or "clean up" the stale-looking branch. Verify anytime: `bash scripts/verify-ghpages-stubs.sh live`.
@@ -138,99 +138,15 @@ rm -rf directory            # NOT: rm -r directory
 cp -rf source dest          # NOT: cp -r source dest
 ```
 
-## Plugin Structure
-
-```text
-.agents/plugins/
-  marketplace.json         # Codex marketplace source manifest (version-less by design)
-.claude-plugin/
-  plugin.json              # Claude Code plugin manifest (auto-discovered)
-  marketplace.json         # Claude Code marketplace config
-.codex-plugin/
-  plugin.json              # Codex CLI plugin manifest (mirrors .claude-plugin/)
-  marketplace.json         # Codex CLI marketplace config
-.opencode/
-  plugins/beads-superpowers.js  # OpenCode plugin (upstream-parity base + beads graft)
-  INSTALL.md               # Version pinning, migration, troubleshooting
-agents/                    # Removed in v0.6.0 (code-reviewer consolidated to skill template)
-assets/                    # Banner SVG
-docs/                      # Docs content only — built/published by the-factory-website (ADR-0050)
-  en/                      # English pages (index, getting-started, methodology, skills, workflow, tips, ...)
-  zh/                      # Chinese mirrors — 1:1 with en/ (structural zh-parity guard)
-  assets/                  # Banner SVG
-docs/decisions/            # Architecture Decision Records (gitignored, local-only)
-.internal/                 # Working docs (gitignored)
-  specs/                   # Design specs from brainstorming
-  plans/                   # Implementation plans from writing-plans
-  research/                # Research output from research-driven-development
-  audits/                  # Upstream drift audit reports
-  reference/               # Upstream design docs
-  sdd/                     # SDD scratch — briefs, reports, diffs
-  brainstorm/              # Brainstorm server sessions
-  windows/                 # Windows polyglot hook docs
-  SETUP-GUIDE.md           # Installation and setup guide
-  testing.md               # Test infrastructure docs
-example-workflow/
-  agents/yegge.md          # Orchestrator agent — lean router (triage + skill routing)
-hooks/
-  hooks.json               # Claude Code hook registration
-  codex-hooks.json         # Codex CLI hook registration (refs same scripts)
-  session-start            # Bash: injects using-superpowers + composed beads context (multi-format output)
-  run-hook.cmd             # Windows polyglot wrapper
-scripts/
-  bump-version.sh          # Sync version across package.json + plugin manifests
-  check-skill-count.sh     # Guard: forbid hardcoded skill counts + structural self-consistency
-  check-agent-bead-stamp.sh  # Verify agent-filed bead discipline convention
-  check-zh-docs.sh           # Verify zh docs structure/term parity
-  check-convention-sync.sh   # Verify shared convention blocks are byte-identical across skills
-  lint-shell.sh              # Shellcheck gate over tracked .sh (baseline + visible-SKIP)
-  lint-shell-baseline.txt    # Committed lint baseline (empty at adoption — repo is clean)
-  check-askuser-genericization.sh  # Guard: literal AskUserQuestion only under using-superpowers/references/ (ADR-0041)
-  check-model-genericization.sh   # Guard: no hardcoded model names in harness-neutral content (bd-1f5w)
-  verify-ghpages-stubs.sh          # Battery: verify the gh-pages redirect bridge (worktree or `live` mode; regen tooling lives in git history)
-skills/                    # beads-native skills (auto-discovered, each has SKILL.md;
-                           #   branch-only reference files in per-skill references/ subdirs)
-.claude/skills/            # maintainer-only skills (git-tracked, NOT distributed — ADR-0044)
-tests/                     # Test infrastructure (deterministic suites via `just`; 4 LLM suites deprecated in place)
-install.sh                 # curl installer — 3-tier fallback (plugin → npx → tarball/git), checksums, atomic rollback
-```
-
-**Important:** Claude Code auto-discovers `skills/`, `agents/`, and `hooks/` directories by convention. Do NOT declare these paths in `plugin.json` — it causes validation failures.
+> **Note:** Claude Code auto-discovers `skills/`, `agents/`, and `hooks/` by convention — do NOT declare these paths in `plugin.json` (it causes validation failures). The directory layout is documented in the **Architecture** section above.
 
 ## Beads Integration
 
 This plugin uses `bd` (beads) for ALL task tracking.
 
-### Commands Used in Skills
+### Commands
 
-| Action                            | Command                                                 |
-| --------------------------------- | ------------------------------------------------------- |
-| Create epic                       | `bd create "Epic: name" -t epic -p 2`                   |
-| Create task                       | `bd create "Task: title" -t task --parent <epic-id>`    |
-| Quick capture                     | `bd q "title"`                                          |
-| Claim work                        | `bd update <id> --claim`                                |
-| Complete work                     | `bd close <id> --reason "description"`                  |
-| Check remaining                   | `bd ready --parent <epic-id>`                           |
-| Explain ready/blocked             | `bd ready --explain`                                    |
-| Show blocked                      | `bd blocked`                                            |
-| Compound query (replaces list+jq) | `bd query "status=open AND priority<=1"`                |
-| Count, grouped                    | `bd count --by-status` (or `--by-priority`/`--by-type`) |
-| Epic status                       | `bd epic status <id>`                                   |
-| Add dependency                    | `bd dep add <child> <depends-on>`                       |
-| Store learning                    | `bd remember "insight"`                                 |
-| Remove stale memory               | `bd forget <id>`                                        |
-| Search memories                   | `bd memories <keyword>`                                 |
-| Search knowledge base             | `bd list --label <topic> --status all` / `bd search "<kw>" --status all` · body terms: `bd list --label kb --status all --desc-contains "<kw>"` · read hits: `bd show <id1> <id2>` or `--flat --long -n 10` |
-| Append note to bead               | `bd note <id> "context"`                                |
-| Find duplicate beads              | `bd find-duplicates`                                    |
-| Lint issue sections               | `bd lint [id...]`                                       |
-| Defer work                        | `bd defer <id> --until="<date>"`                        |
-| Flag for human decision           | `bd label add <id> human`                               |
-| Validate parallel readiness       | `bd swarm validate <epic-id>`                           |
-| Atomic batch operations           | `bd batch` (stdin or `-f file`)                         |
-| Run in another directory          | `bd -C <path> <command>`                                |
-| Sync beads                        | `bd dolt push`                                          |
-| Sync to GitHub Issues             | `bd github push`                                        |
+`bd human` is the SSOT for bd commands and flags (read `bd <cmd> --help` on first use). Command tables are not restated here.
 
 ### Rules
 
