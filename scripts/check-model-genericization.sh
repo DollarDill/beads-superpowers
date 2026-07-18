@@ -9,7 +9,7 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT" || exit 1
-if [ "$#" -gt 0 ]; then ROOTS=("$@"); else ROOTS=(skills hooks example-workflow/CLAUDE.md); fi
+if [ "$#" -gt 0 ]; then ROOTS=("$@"); else ROOTS=(skills hooks); fi
 ALLOW_RE='^[^:]*(skills/using-superpowers/references/|example-workflow/agents/yegge\.md)'   # path-field anchored
 VIOLATIONS="$(grep -rniE '\b(haiku|sonnet|opus|fable)\b' "${ROOTS[@]}" 2>/dev/null | grep -Ev "$ALLOW_RE" || true)"
 if [ -n "$VIOLATIONS" ]; then

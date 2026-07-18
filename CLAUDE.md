@@ -91,7 +91,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harn
 - `agents/` — Removed in v0.6.0. Code-reviewer is now dispatched via `skills/requesting-code-review/code-reviewer.md` prompt template. Subagents (implementer, researcher) use prompt templates inside their skills, not standalone agent files.
 - `hooks/` — `session-start` (SessionStart: injects `using-superpowers` + composed beads context — curated memories + a `bd prime` pointer), the single recurring hook. Multi-format output supports Claude Code, Codex, Cursor, and generic CLIs. Registered in `hooks/hooks.json` (Claude Code) and `hooks/codex-hooks.json` (Codex). Auto-discovered.
 - `.opencode/` — OpenCode plugin (`plugins/beads-superpowers.js`, upstream-parity base + beads graft) + `INSTALL.md`. Git-install only via the opencode.json plugin spec; `install.sh` no longer copies OpenCode artifacts (its `--uninstall` still cleans pre-0.12 copies).
-- `example-workflow/` — Ready-to-use project template: `CLAUDE.md` (Karpathy behavioral principles + beads integration) and `agents/yegge.md` (lean router — triages requests and routes to skills). `install.sh --with-yegge` installs `yegge.md` globally (opt-in; not installed by default).
+- `example-workflow/` — Ready-to-use project template: `agents/yegge.md` (lean router — triages requests and routes to skills). `install.sh --with-yegge` installs `yegge.md` globally (opt-in; not installed by default).
 - `docs/` — Docs content only, i18n folder layout: `docs/en/` (English pages) + `docs/zh/` (Chinese mirrors, 1:1 structural parity guard-enforced) + shared `docs/assets/`. Source of truth for the site's prose. The site itself is built and published from the private the-factory-website repo (`tenants/beads-superpowers/`), not from this repo (ADR-0050).
 - `docs/decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs, `.internal/sdd/` (SDD scratch), and `.internal/brainstorm/` (brainstorm server sessions).
@@ -171,7 +171,6 @@ docs/decisions/            # Architecture Decision Records (gitignored, local-on
   SETUP-GUIDE.md           # Installation and setup guide
   testing.md               # Test infrastructure docs
 example-workflow/
-  CLAUDE.md                # Karpathy behavioral principles + beads integration (generic project template)
   agents/yegge.md          # Orchestrator agent — lean router (triage + skill routing)
 hooks/
   hooks.json               # Claude Code hook registration
@@ -357,7 +356,6 @@ The `example-workflow/` directory provides a ready-to-use development workflow:
 
 | File              | Purpose                                                                                                                                                                              |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `CLAUDE.md`       | Karpathy's 4 behavioral principles + beads integration (generic template for any project)                                                                                            |
 | `agents/yegge.md` | Orchestrator agent — lean router: triage table, full-flow routing, always-true rules, session protocol. Named after Steve Yegge (beads creator). Optional add-on — installed globally only via `install.sh --with-yegge`. |
 
 ## Upstream Sources
