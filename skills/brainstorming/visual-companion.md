@@ -270,13 +270,6 @@ If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser 
 - **Use real content when it matters** — for a photography portfolio, use actual images (Unsplash). Placeholder content obscures design issues.
 - **Keep mockups simple** — focus on layout and structure, not pixel-perfect design
 
-## File Naming
-
-- Use semantic names: `platform.html`, `visual-style.html`, `layout.html`
-- Never reuse filenames — each screen must be a new file
-- For iterations: append version suffix like `layout-v2.html`, `layout-v3.html`
-- Server serves newest file by modification time
-
 ## Cleaning Up
 
 ```bash
