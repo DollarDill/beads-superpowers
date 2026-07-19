@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - A platform-support issue template for new-harness requests, and a "Questions & Help" Discussions contact link on the issue chooser.
 - README sections: **The Basic Workflow** (numbered, skill-mapped pipeline), **Philosophy**, and **Community** (Discussions, Issues, and maintainer contact at <dillon@algocents.com>). EN + ZH.
 - `bump-version.sh` now covers prose version surfaces: `.version-bump.json` gains a `prose` entry type (`{path, prefix}` — the version is the token after a literal prefix), with CLAUDE.md's `**Version:**` line as the first entry. `.internal` is audit-excluded, and the behavior is pinned by a sandboxed round-trip test in the contracts suite. README badges need no sync — they've been dynamic since the redesign.
+- Manifest validation now covers the marketplace manifests and the Pi extension. All three `marketplace.json` files are JSON-validated (and the two versioned ones checked against `package.json`), the version-less `.agents/plugins/` Codex *source* manifest is asserted distinct from the versioned `.codex-plugin/` distributable so the two can't silently converge, and `.pi/extensions/superpowers.ts` gets structural validation — it exports an extension and its bootstrap skill resolves on disk. A new `tests/manifests/selftest.sh` (wired into `just selftest`) mutates each new check to prove it fires. (Fat-audit Phase 3.)
 
 ### Changed
 
