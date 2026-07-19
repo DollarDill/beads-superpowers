@@ -214,25 +214,25 @@ You MUST complete each phase before proceeding to the next.
 
    This is NOT a failed hypothesis - this is a wrong architecture.
 
-After the work is settled, present the Capture gate — mandatory every time; Skip is the default (most work clears nothing durable):
+After the work is settled, present the Capture gate — mandatory every time; Skip is the default (most work leaves nothing worth keeping):
 
 ```json
 {
   "questions": [{
-    "question": "Did this clear the capture bar?",
+    "question": "Worth keeping anything from this?",
     "header": "Capture",
     "options": [
-      {"label": "Skip", "description": "No durable output beyond the artifact (the usual outcome)"},
-      {"label": "ADR + memory", "description": "Clears all 3 ADR marks (hard-to-reverse + surprising-without-context + genuine trade-off) and a durable lesson"},
-      {"label": "ADR only", "description": "Clears all 3 ADR marks (hard-to-reverse + surprising-without-context + genuine trade-off)"},
-      {"label": "Memory only", "description": "A durable, evidence-backed lesson beyond the artifact itself"}
+      {"label": "Skip", "description": "Nothing here outlasts the work itself (usually the case)"},
+      {"label": "Record the decision", "description": "Pick this if the choice is hard to undo, non-obvious in hindsight, and had real trade-offs — so future-you knows why"},
+      {"label": "Remember the lesson", "description": "A specific, evidence-backed lesson worth reusing in later sessions"},
+      {"label": "Both", "description": "A lasting decision and a lesson worth reusing"}
     ],
     "multiSelect": false
   }]
 }
 ```
 
-Route: **ADR / ADR+memory** → write the ADR per the 3-mark gate (`docs/decisions/ADR-NNNN-<kebab>.md`, sections Context/Decision/Rationale/Consequences, update `docs/decisions/INDEX.md`), then file a `type=decision` knowledge-bead so the decision stays retrievable: `printf '%s' "<distilled 0.5-2.5KB decision summary — context, decision, consequences>" | bd create "<one-line summary>" -t decision -l kb,adr-process,<topic> --defer 2099-01-01 --metadata "$(jq -nc --arg d "<ADR-path>" '{doc:$d}')" --body-file - --silent` (run the secret/PII scan on the summary first — flag for removal, never write a secret into a bead). **Memory / ADR+memory** → `bd remember "<kind>: <durable, evidence-backed insight>"`. **Skip** → nothing.
+Route on the answer. **Record the decision / Both** → this writes an ADR, so first confirm it clears the bar (hard-to-reverse AND surprising-without-context AND genuine trade-off); if it doesn't, say so and capture it as a memory instead (the lighter record) — unless the user confirms they want the full ADR. Write the ADR (`docs/decisions/ADR-NNNN-<kebab>.md`, sections Context/Decision/Rationale/Consequences, update `docs/decisions/INDEX.md`), then file a `type=decision` knowledge-bead so the decision stays retrievable: `printf '%s' "<distilled 0.5-2.5KB decision summary — context, decision, consequences>" | bd create "<one-line summary>" -t decision -l kb,adr-process,<topic> --defer 2099-01-01 --metadata "$(jq -nc --arg d "<ADR-path>" '{doc:$d}')" --body-file - --silent` (run the secret/PII scan on the summary first — flag for removal, never write a secret into a bead). **Remember the lesson / Both** → `bd remember "<kind>: <durable, evidence-backed insight>"`. **Skip** → nothing.
 
 ## Red Flags - STOP and Follow Process
 
