@@ -88,6 +88,29 @@ check_block() {
   done
 }
 
+# assert_line_identical <label> <sig> <site>...
+# Single-line canonical blocks (CB-4): the WHOLE signature-containing line must be
+# byte-identical across sites. grep -F locates the line; diff pins the full line.
+# The first present-and-unique site is the reference (handles a missing site #1).
+assert_line_identical() {
+  local label="$1" sig="$2"; shift 2
+  local tmp; tmp="$(mktemp -d)" || { echo "SETUP FAIL: mktemp ($label)"; FAIL=1; return; }
+  local ref="" f n i=0
+  for f in "$@"; do
+    if [ ! -f "$f" ]; then echo "MISSING FILE: $f"; FAIL=1; i=$((i+1)); continue; fi
+    grep -F -- "$sig" "$f" > "$tmp/line.$i"
+    n=$(wc -l < "$tmp/line.$i")
+    if [ "$n" -eq 0 ]; then echo "DRIFT: [$label] signature missing in $f"; FAIL=1; i=$((i+1)); continue; fi
+    if [ "$n" -gt 1 ]; then echo "DRIFT: [$label] signature on $n lines in $f (expected 1)"; FAIL=1; i=$((i+1)); continue; fi
+    if [ -z "$ref" ]; then ref="$tmp/line.$i"
+    elif ! diff -q "$ref" "$tmp/line.$i" >/dev/null; then
+      echo "DRIFT: [$label] line diverges in $f"; FAIL=1
+    fi
+    i=$((i+1))
+  done
+  rm -rf "$tmp"
+}
+
 check_kernels() {
   local entry f sig
   for entry in "${KERNEL_MAP[@]}"; do
@@ -149,6 +172,7 @@ fi
 
 check_block "CB-3 Capture gate"    "$CB3_SIG" "${CB3_SITES[@]}"
 check_block "CB-4 memory convention" "$CB4_SIG" "${CB4_SITES[@]}"
+assert_line_identical "CB-4 memory convention (byte-identity)" "$CB4_SIG" "${CB4_SITES[@]}"
 check_block "KB read-depth fragment" "$KB_SIG" "${KB_SITES[@]}"
 check_kernels
 

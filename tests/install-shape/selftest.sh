@@ -351,4 +351,28 @@ else
 fi
 rm -rf "$SB13"
 
+# Mutation 14: CB-4 memory-convention line — a NON-signature clause reworded at one site
+# must fail RED (proves assert_line_identical catches full-line drift, not just the signature
+# slice). Same fixture-isolation as Mutation 13; the real tree is never touched.
+SB14=$(mktemp -d)
+if ! (cd "$REPO_ROOT" && git ls-files -z skills .claude/skills hooks CLAUDE.md scripts/check-convention-sync.sh | xargs -0 -I{} cp --parents {} "$SB14"/); then
+  echo "SELFTEST FAIL: mutation-14 setup copy failed (rig broken, not a caught mutation)"; rc=1
+else
+  # Reword the non-signature 'near-duplicate' tail of the CB-4 line at ONE site.
+  sed 's/adding a near-duplicate/adding a duplicate/' \
+    "$SB14/skills/test-driven-development/SKILL.md" > "$SB14/skills/test-driven-development/SKILL.md.tmp" \
+    && mv -f "$SB14/skills/test-driven-development/SKILL.md.tmp" "$SB14/skills/test-driven-development/SKILL.md"
+  # Rig-broken guard (stress-test P2): the sed MUST have changed the file; a stale target
+  # string would silently no-op and masquerade as a guard regression.
+  if cmp -s "$SB14/skills/test-driven-development/SKILL.md" "$REPO_ROOT/skills/test-driven-development/SKILL.md"; then
+    echo "SELFTEST FAIL: mutation-14 changed nothing (stale fixture, not a caught mutation)"; rc=1
+  fi
+  expect_red "convention-sync: CB-4 non-signature clause reworded at one site" \
+    bash "$SB14/scripts/check-convention-sync.sh"
+  cp -f "$REPO_ROOT/skills/test-driven-development/SKILL.md" "$SB14/skills/test-driven-development/SKILL.md"
+  expect_green "convention-sync: CB-4 unmutated copy (control)" \
+    bash "$SB14/scripts/check-convention-sync.sh"
+fi
+rm -rf "$SB14"
+
 exit "$rc"
