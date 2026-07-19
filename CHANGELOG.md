@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-07-19
+
 ### Added
 
 - Three new docs-site pages, each in English and Chinese: **Philosophy** (why the system behaves the way it does - the design decisions as an adopter's mental model, with citations into the research page), **Research** (the evidence behind the design - external literature verified against primary sources, plus this project's own measurements), and **Memory & Sessions** (what happens to memory across a session's life, with sequence, lifecycle, and session-loop diagrams).
