@@ -375,4 +375,46 @@ else
 fi
 rm -rf "$SB14"
 
+# Mutation 15: CB-3 Capture-gate block — a NON-signature line reworded at one site must fail
+# RED (proves assert_block_identical catches block drift beyond the signature line).
+SB15=$(mktemp -d)
+if ! (cd "$REPO_ROOT" && git ls-files -z skills .claude/skills hooks CLAUDE.md scripts/check-convention-sync.sh | xargs -0 -I{} cp --parents {} "$SB15"/); then
+  echo "SELFTEST FAIL: mutation-15 setup copy failed (rig broken, not a caught mutation)"; rc=1
+else
+  # Reword the non-signature 'Both' option description inside the Capture-gate JSON at ONE site.
+  sed 's/A lasting decision and a lesson worth reusing/A lasting decision plus a reusable lesson/' \
+    "$SB15/skills/writing-plans/SKILL.md" > "$SB15/skills/writing-plans/SKILL.md.tmp" \
+    && mv -f "$SB15/skills/writing-plans/SKILL.md.tmp" "$SB15/skills/writing-plans/SKILL.md"
+  # Rig-broken guard (stress-test P2): confirm the mutation actually landed inside the block.
+  if cmp -s "$SB15/skills/writing-plans/SKILL.md" "$REPO_ROOT/skills/writing-plans/SKILL.md"; then
+    echo "SELFTEST FAIL: mutation-15 changed nothing (stale fixture, not a caught mutation)"; rc=1
+  fi
+  expect_red "convention-sync: CB-3 non-signature line reworded at one site" \
+    bash "$SB15/scripts/check-convention-sync.sh"
+  cp -f "$REPO_ROOT/skills/writing-plans/SKILL.md" "$SB15/skills/writing-plans/SKILL.md"
+  expect_green "convention-sync: CB-3 unmutated copy (control)" \
+    bash "$SB15/scripts/check-convention-sync.sh"
+fi
+rm -rf "$SB15"
+
+# Mutation 16: strip the CB-3 start-anchor line at ALL CB-3 sites — extraction yields empty at
+# every site; the guard must NOT pass vacuously. Must fail RED (anti-vacuous guard).
+SB16=$(mktemp -d)
+if ! (cd "$REPO_ROOT" && git ls-files -z skills .claude/skills hooks CLAUDE.md scripts/check-convention-sync.sh | xargs -0 -I{} cp --parents {} "$SB16"/); then
+  echo "SELFTEST FAIL: mutation-16 setup copy failed (rig broken, not a caught mutation)"; rc=1
+else
+  for s in brainstorming writing-plans stress-test systematic-debugging; do
+    grep -v -- "present the Capture gate" "$SB16/skills/$s/SKILL.md" > "$SB16/skills/$s/SKILL.md.tmp" \
+      && mv -f "$SB16/skills/$s/SKILL.md.tmp" "$SB16/skills/$s/SKILL.md"
+  done
+  # Rig-broken guard (stress-test P2): confirm the anchor strip actually landed at a
+  # representative site; a renamed anchor would silently no-op.
+  if cmp -s "$SB16/skills/brainstorming/SKILL.md" "$REPO_ROOT/skills/brainstorming/SKILL.md"; then
+    echo "SELFTEST FAIL: mutation-16 changed nothing (stale anchor, not a caught mutation)"; rc=1
+  fi
+  expect_red "convention-sync: CB-3 anchor stripped at all sites (anti-vacuous)" \
+    bash "$SB16/scripts/check-convention-sync.sh"
+fi
+rm -rf "$SB16"
+
 exit "$rc"

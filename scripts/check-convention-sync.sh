@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 #
-# check-convention-sync.sh — assert the verbatim cross-cutting convention blocks
-# are byte-identical across every site that carries them. Free-form duplication
-# rots (bd-6814 ADR-strip missed skills/; the TodoWrite gate drifted across 4
-# sites), so each canonical block is matched by an ASCII signature slice via
-# `grep -qF` at all its declared sites; any missing/divergent copy is DRIFT.
+# check-convention-sync.sh — keep the cross-cutting convention blocks in sync across every
+# site that carries them. Free-form duplication rots (bd-6814 ADR-strip missed skills/; the
+# TodoWrite gate drifted across 4 sites). Two tiers:
+#   * Canonical BLOCKS — CB-3 (Capture gate) and CB-4 (memory convention) must be
+#     BYTE-IDENTICAL at every site: enforced by extract-and-diff (assert_block_identical /
+#     assert_line_identical), backstopped by an ASCII signature-presence grep.
+#   * Per-site FRAGMENT (KB read-depth) and KERNELS — only a fixed sentence / per-skill line
+#     is shared, so signature-presence (`grep -qF`) is the correct check (the fragment IS the
+#     whole shared unit; kernels are per-site by design).
+# Any missing/divergent copy is DRIFT. Guard-the-guards: tests/install-shape/selftest.sh
+# (Mutations 13-16).
 #
 # Usage:
 #   scripts/check-convention-sync.sh            # verify all sites (exit 1 on drift)
@@ -16,6 +22,7 @@ cd "$ROOT" || exit 1
 
 # ASCII-only signature slices (no em-dash) so the patterns are shell/grep-safe.
 CB3_SIG="Worth keeping anything"
+CB3_ANCHOR="present the Capture gate"
 CB4_SIG="or secrets (tokens, keys, PII"
 
 CB3_SITES=(
@@ -111,6 +118,30 @@ assert_line_identical() {
   rm -rf "$tmp"
 }
 
+# assert_block_identical <label> <start_anchor> <end_regex> <site>...
+# Multi-line canonical blocks (CB-3): extract from the first line containing the fixed
+# start_anchor through the first line matching end_regex (inclusive); the extracted BLOCK must
+# be byte-identical across sites. ANY empty extract => FAIL (anti-vacuous: a uniformly-lost
+# anchor must not diff clean as all-empty). First non-empty site is the reference.
+assert_block_identical() {
+  local label="$1" anchor="$2" endre="$3"; shift 3
+  local tmp; tmp="$(mktemp -d)" || { echo "SETUP FAIL: mktemp ($label)"; FAIL=1; return; }
+  local ref="" f i=0
+  for f in "$@"; do
+    if [ ! -f "$f" ]; then echo "MISSING FILE: $f"; FAIL=1; i=$((i+1)); continue; fi
+    awk -v a="$anchor" -v e="$endre" 'index($0,a){f=1} f{print} f && $0 ~ e {exit}' "$f" > "$tmp/blk.$i"
+    if [ ! -s "$tmp/blk.$i" ]; then
+      echo "DRIFT: [$label] block anchor not found (empty extract) in $f"; FAIL=1; i=$((i+1)); continue
+    fi
+    if [ -z "$ref" ]; then ref="$tmp/blk.$i"
+    elif ! diff -q "$ref" "$tmp/blk.$i" >/dev/null; then
+      echo "DRIFT: [$label] block diverges in $f"; FAIL=1
+    fi
+    i=$((i+1))
+  done
+  rm -rf "$tmp"
+}
+
 check_kernels() {
   local entry f sig
   for entry in "${KERNEL_MAP[@]}"; do
@@ -173,6 +204,7 @@ fi
 check_block "CB-3 Capture gate"    "$CB3_SIG" "${CB3_SITES[@]}"
 check_block "CB-4 memory convention" "$CB4_SIG" "${CB4_SITES[@]}"
 assert_line_identical "CB-4 memory convention (byte-identity)" "$CB4_SIG" "${CB4_SITES[@]}"
+assert_block_identical "CB-3 Capture gate (byte-identity)" "$CB3_ANCHOR" '^```$' "${CB3_SITES[@]}"
 check_block "KB read-depth fragment" "$KB_SIG" "${KB_SITES[@]}"
 check_kernels
 
