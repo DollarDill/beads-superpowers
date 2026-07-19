@@ -26,6 +26,7 @@ shape HARNESS="all":
 # Guard-the-guards: mutations that must FAIL (added in Task 7)
 selftest:
     bash tests/install-shape/selftest.sh
+    bash tests/manifests/selftest.sh
 
 # Shellcheck gate over tracked .sh with baseline + visible-SKIP
 lint:
