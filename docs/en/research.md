@@ -1,4 +1,6 @@
 ---
+sidebar:
+  order: 8
 description: The evidence behind the design - external literature and this project's own measurements.
 ---
 

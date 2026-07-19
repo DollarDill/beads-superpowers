@@ -1,4 +1,6 @@
 ---
+sidebar:
+  order: 9
 machine_translated: true
 description: 快速参考 bd 命令速查表、技能路由表、常见问题故障排查指南以及 superpowers 和 beads 的上游版本跟踪。
 ---

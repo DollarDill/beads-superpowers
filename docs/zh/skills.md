@@ -1,4 +1,6 @@
 ---
+sidebar:
+  order: 7
 machine_translated: true
 description: 可组合技能的完整参考，包含触发映射、分类说明、bd 命令用法，以及展示技能相互调用关系的链式图。
 ---

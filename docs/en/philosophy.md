@@ -1,4 +1,6 @@
 ---
+sidebar:
+  order: 4
 description: Why beads-superpowers behaves the way it does - the design decisions as an adopter's mental model.
 ---
 

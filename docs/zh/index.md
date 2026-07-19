@@ -1,4 +1,6 @@
 ---
+sidebar:
+  order: 1
 machine_translated: true
 description: beads-superpowers 是什么，以及接下来该查看安装、工作流、设计理念还是参考文档。
 ---

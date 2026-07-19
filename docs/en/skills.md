@@ -1,4 +1,6 @@
 ---
+sidebar:
+  order: 7
 description: Complete reference for the composable skills with trigger map, category breakdown, bd command usage, and chaining diagrams showing how skills invoke each other.
 ---
 

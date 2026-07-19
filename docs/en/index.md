@@ -1,4 +1,6 @@
 ---
+sidebar:
+  order: 1
 description: What beads-superpowers is, and where to go next for install, workflow, design rationale, and reference.
 ---
 

@@ -1,4 +1,6 @@
 ---
+sidebar:
+  order: 2
 machine_translated: true
 description: 通过原生插件系统、curl 或 npx 为 Claude Code、Codex 和 OpenCode 安装 beads-superpowers。在 5 分钟内使用 bd init 设置您的第一个项目。
 ---
@@ -237,6 +239,8 @@ OpenCode 使用自己的 JavaScript 插件（`.opencode/plugins/beads-superpower
 要覆盖某个技能的行为，请在您项目的 `CLAUDE.md` 中添加指令——无需 fork 插件。
 
 **Beads 项目配置** 位于 `.beads/config.yaml`。默认值适用于大多数项目。
+
+<a id="troubleshooting"></a>
 
 ## 故障排除
 

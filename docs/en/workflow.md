@@ -1,4 +1,6 @@
 ---
+sidebar:
+  order: 3
 description: A lean orchestrator triages each request and routes it to the skills that own each step - research, planning, TDD implementation, a review gate, and parallel batch mode - instead of a rigid state machine.
 ---
 

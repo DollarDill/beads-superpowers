@@ -1,4 +1,6 @@
 ---
+sidebar:
+  order: 4
 description: beads-superpowers 为什么如此设计——面向使用者的设计决策思维模型。
 machine_translated: true
 ---

@@ -1,4 +1,6 @@
 ---
+sidebar:
+  order: 3
 machine_translated: true
 description: 一个精简的编排器对每个请求进行分类，并将其路由到负责每个步骤的技能——研究、计划、TDD 实现、审查门控和并行批处理模式——而不是一个僵化的状态机。
 ---

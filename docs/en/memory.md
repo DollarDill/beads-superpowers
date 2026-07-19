@@ -1,4 +1,6 @@
 ---
+sidebar:
+  order: 5
 description: What happens to memory across a session's life - injection at session start, curation, the knowledge store, and the session loop.
 ---
 

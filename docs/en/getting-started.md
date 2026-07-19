@@ -1,4 +1,6 @@
 ---
+sidebar:
+  order: 2
 description: Install beads-superpowers via the native plugin system, curl, or npx for Claude Code, Codex, and OpenCode. Set up your first project with bd init in under 5 minutes.
 ---
 

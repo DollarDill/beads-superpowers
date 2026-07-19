@@ -1,4 +1,6 @@
 ---
+sidebar:
+  order: 6
 machine_translated: true
 description: 通过严格规则和反合理化表格强制实施智能体纪律。Dolt 支持的 beads 跨会话跟踪每个任务，实现10个状态的完整生命周期。
 ---
