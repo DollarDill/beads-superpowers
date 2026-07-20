@@ -35,7 +35,7 @@ Run `just check` before opening a PR that touches harness plumbing (hooks/, inst
 just check      # deterministic set: guards + hooks + manifests + contracts + install-shape
 just lint       # shellcheck gate over tracked .sh
 just selftest   # guard-the-guards: mutations that must fail
-just docker     # installer E2E (requires Docker, slow)
+just docker     # installer E2E (requires docker or podman, slow)
 ```
 
 ## Before you open a PR

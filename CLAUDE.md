@@ -95,7 +95,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harn
 - `docs/` — Docs content only, i18n folder layout: `docs/en/` (English pages) + `docs/zh/` (Chinese mirrors, 1:1 structural parity guard-enforced) + shared `docs/assets/`. Source of truth for the site's prose. The site itself is built and published from the private the-factory-website repo (`tenants/beads-superpowers/`), not from this repo (ADR-0050).
 - `docs/decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs, `.internal/sdd/` (SDD scratch), and `.internal/brainstorm/` (brainstorm server sessions).
-- `tests/` — deterministic suites (hooks, manifests, skills contracts, install-shape, installer Docker E2E, brainstorm-server Node tests) run via the `just` surface. (The 4 LLM-driven suites were removed in the 2026-07 fat audit — successor: the external eval-harness project.)
+- `tests/` — deterministic suites (hooks, manifests, skills contracts, install-shape, installer docker/podman E2E, brainstorm-server Node tests) run via the `just` surface. (The 4 LLM-driven suites were removed in the 2026-07 fat audit — successor: the external eval-harness project.)
 - `scripts/` — `bump-version.sh` (sync version across all surfaces declared in `.version-bump.json` — JSON manifests + prose), `check-skill-count.sh` (guard: forbid hardcoded skill counts + structural self-consistency), `check-agent-bead-stamp.sh`, `check-zh-docs.sh`, `check-convention-sync.sh` (verify shared convention blocks are byte-identical across skills), `lint-shell.sh` (shellcheck gate over tracked `.sh` with committed baseline; visible SKIP when shellcheck absent), `check-askuser-genericization.sh` (guard: skills use generic question-tool phrasing — ADR-0041), `check-model-genericization.sh` (guard: no hardcoded Claude model names in harness-neutral content — capability tiers only).
 - `install.sh` — curl installer with 3-tier fallback chain (plugin system → npx → tarball/git clone). SHA-256 checksum validation, atomic rollback via staging directory, lazy prerequisites. Auto-detects Claude Code, Codex, OpenCode, and 6 more CLIs (Cursor, Copilot, Droid, Antigravity, Kimi, Pi).
 
@@ -218,7 +218,7 @@ just shape      # install-shape: 9 harnesses (Tier A full artifacts; Tier B hint
 just shape codex  # one harness
 just selftest   # guard-the-guards: mutations that must fail
 just server     # brainstorm-server Node tests (opt-in)
-just docker     # installer Docker E2E (opt-in, slow)
+just docker     # installer E2E under docker or podman (opt-in, slow)
 ```
 
 docs preview: from the-factory-website repo (tenants/beads-superpowers)
