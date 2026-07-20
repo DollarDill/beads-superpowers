@@ -8,4 +8,9 @@ for t in tests/skills/*.sh; do
   echo "── $t"
   if bash "$t"; then echo "   PASS"; else echo "   FAIL"; rc=1; fi
 done
+
+# Installer runtime-detection unit test (stubbed — no container needed).
+t=tests/installer/test-select-runtime.sh
+echo "── $t"
+if bash "$t"; then echo "   PASS"; else echo "   FAIL"; rc=1; fi
 exit "$rc"
