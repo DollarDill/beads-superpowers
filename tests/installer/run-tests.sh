@@ -2,10 +2,10 @@
 # E2E installer test — host-side wrapper
 # Usage: ./tests/installer/run-tests.sh
 #
-# Prerequisites: Docker must be installed and running.
+# Prerequisites: docker OR podman must be installed and running.
 # What it does:
 #   1. Builds a local tarball from the repo checkout
-#   2. Builds the Docker test image
+#   2. Builds the test image with the selected runtime
 #   3. Runs the container with install.sh + tarball volume-mounted
 #   4. Reports pass/fail from the container
 set -euo pipefail
@@ -24,17 +24,28 @@ info()    { printf "${BLUE}info${NC}  %s\n" "$1"; }
 error()   { printf "${RED}error${NC} %s\n" "$1" >&2; }
 success() { printf "${GREEN}✓${NC} %s\n" "$1"; }
 
-# --- Preflight checks ---
-if ! command -v docker >/dev/null 2>&1; then
-    error "Docker is not installed or not in PATH."
-    echo "  Install Docker: https://docs.docker.com/get-docker/"
-    echo "  Or use the built-in test mode: bash install.sh --test"
-    exit 1
+# --- Select container runtime ---
+# shellcheck source=tests/installer/runtime-detect.sh
+source "$SCRIPT_DIR/runtime-detect.sh"
+RUNTIME=$(select_runtime) || exit 1
+info "Using runtime: $RUNTIME"
+
+# Podman needs SELinux confinement disabled for the read-only bind mounts
+# (avoids relabeling host source files); empty for docker.
+RUN_OPTS=()
+if [ "$RUNTIME" = "podman" ]; then
+    RUN_OPTS=(--security-opt label=disable)
 fi
 
-if ! docker info >/dev/null 2>&1; then
-    error "Docker daemon is not running."
-    echo "  Start Docker Desktop or run: sudo systemctl start docker"
+# --- Preflight checks ---
+if ! "$RUNTIME" info >/dev/null 2>&1; then
+    error "$RUNTIME is not functional (\`$RUNTIME info\` failed)."
+    if [ "$RUNTIME" = "docker" ]; then
+        echo "  Start Docker Desktop or run: sudo systemctl start docker"
+    else
+        echo "  Check your podman setup: podman info"
+    fi
+    echo "  Or use the built-in test mode: bash install.sh --test"
     exit 1
 fi
 
@@ -62,10 +73,10 @@ info "Checksums: $(cat "$checksums")"
 
 trap 'rm -f "$tarball" "$checksums"' EXIT
 
-# --- Build Docker image ---
-info "Building Docker image..."
-if ! docker build -t beads-installer-test "$SCRIPT_DIR" 2>&1; then
-    error "Docker image build failed."
+# --- Build test image ---
+info "Building image with $RUNTIME..."
+if ! "$RUNTIME" build -t beads-installer-test "$SCRIPT_DIR" 2>&1; then
+    error "$RUNTIME image build failed."
     exit 1
 fi
 
@@ -74,7 +85,7 @@ info "Running E2E tests in container..."
 echo
 
 exit_code=0
-docker run --rm \
+"$RUNTIME" run --rm ${RUN_OPTS[@]+"${RUN_OPTS[@]}"} \
     -v "$REPO_ROOT/install.sh:/src/install.sh:ro" \
     -v "$tarball:/src/release.tar.gz:ro" \
     -v "$checksums:/src/checksums.txt:ro" \
