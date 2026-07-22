@@ -107,7 +107,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harn
 - **Three-layer architecture for example workflow** — `CLAUDE.md` (behavioral principles + project context) + `agents/yegge.md` (orchestration — triage + skill routing) + prompt templates (subagent dispatch). Each layer has a distinct responsibility. (See: ADR-0003, ADR-0032)
 - **MkDocs Material for docs site** — HashiCorp/Terraform-style sidebar, dark theme, Mermaid diagrams. Template variables via macros plugin avoid hardcoded counts; the config and macros now live in the-factory-website repo, not here. (See: ADR-0001, ADR-0050)
 - **Per-task worktree isolation for parallel SDD** — Independent plan tasks execute in parallel (max 5), each in its own `bd worktree`. Prevents merge conflicts between concurrent subagents. (See: ADR-0002)
-- **Dev-branch integration model** — All work lands on `dev`; `main` is released-only and advances exclusively via `git merge --ff-only dev` at release cut (hotfixes ride dev as patch releases — drift is self-detecting). `main` and `gh-pages` carry force-push/deletion protection. (See: ADR-0060)
+- **Dev-branch integration model** — All work lands on `dev`; `main` is released-only and advances exclusively via `git merge --ff-only dev` at release cut (hotfixes ride dev as patch releases — drift is self-detecting). `main` carries force-push/deletion protection (`gh-pages` did too until its 2026-07-22 retirement). (See: ADR-0060)
 
 ## Common Gotchas
 
@@ -124,7 +124,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harn
 - **Plugin cache goes stale** — After modifying skills, the installed plugin cache is outdated. Symlink the cache to this repo. `claude plugin update` has a [cache bug](https://github.com/anthropics/claude-code/issues/14061).
 - **Skill `description` field trap** — Putting workflow descriptions in skill `description` frontmatter causes Claude to follow the description instead of reading the full skill body (SDO problem). Descriptions should state trigger conditions only.
 - **Codex plugin channel doesn't register hooks** — codex-cli (verified 0.142.5) rejects a populated `hooks` object in the plugin manifest ("ignoring hooks: … found object") and auto-discovers nothing usable, so plugin/marketplace installs get skills but NO SessionStart hook. `install.sh` wires the hook explicitly — it is the supported Codex hook path.
-- **`gh-pages` is a frozen SEO redirect bridge (ADR-0050)** — 1:1 instant-meta-refresh stubs → algocents.com, live until the sunset-gate bead (≥ 2027-07) closes. NEVER delete the branch, disable GitHub Pages, or "clean up" the stale-looking branch. Verify anytime: `bash scripts/verify-ghpages-stubs.sh live`.
+- **`gh-pages` is retired — do not recreate it (ADR-0050, 2nd amendment)** — the SEO redirect bridge was sunset early on 2026-07-22 (maintainer call: algocents.com had begun ranking for the target terms). GitHub Pages is unpublished, the branch and its protection are deleted, and `scripts/verify-ghpages-stubs.sh` is gone. The full pre-deletion history — stub tree plus the original MkDocs site at `2c2ebc5` — is preserved on the tag `archive/gh-pages-final`. `https://dollardill.github.io/beads-superpowers/*` now 404s permanently; the live site is algocents.com.
 
 ## Non-Interactive Shell Commands
 

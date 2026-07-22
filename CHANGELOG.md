@@ -13,6 +13,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The installer end-to-end test suite (`just docker`) now runs under **Podman** as well as Docker — it auto-detects whichever is installed (Docker first), or you can force one with `CONTAINER_RUNTIME=podman just docker`. Contributors on Podman-only machines can now run the full installer E2E.
 
+### Removed
+
+- The `gh-pages` SEO redirect bridge is retired. The old GitHub Pages site at `dollardill.github.io/beads-superpowers` was unpublished and its branch deleted now that [algocents.com](https://algocents.com/beads-superpowers/) — the docs home since v0.13.0 — ranks for the same terms. `scripts/verify-ghpages-stubs.sh`, which existed only to check those redirects, is removed with it. The old URLs no longer redirect; use algocents.com.
+
 ## [0.15.0] - 2026-07-19
 
 ### Added
