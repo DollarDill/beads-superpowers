@@ -38,7 +38,7 @@ NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
 
 Write code before the test? Delete it. Start over.
 
-TDD's Iron Law is one instance of the Production-Grade Doctrine — the no-shortcuts posture applied to tests.
+**Production-Grade Doctrine** — this Iron Law is the no-shortcuts posture applied to tests: make the code meet the test, NEVER the test meet the code. Loosening an assertion, narrowing a case, or mocking past a security control turns GREEN into a false report. If a test is genuinely wrong, say so and change it deliberately.
 
 **No exceptions:**
 - Don't keep it as "reference"

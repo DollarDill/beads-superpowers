@@ -27,6 +27,7 @@ shape HARNESS="all":
 selftest:
     bash tests/install-shape/selftest.sh
     bash tests/manifests/selftest.sh
+    bash tests/skills/selftest-doctrine-floor.sh
 
 # Shellcheck gate over tracked .sh with baseline + visible-SKIP
 lint:

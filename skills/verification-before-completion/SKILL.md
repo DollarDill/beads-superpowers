@@ -36,6 +36,8 @@ BEFORE claiming any status or expressing satisfaction:
 Skip any step = lying, not verifying
 ```
 
+**Production-Grade Doctrine:** a green command proves the check ran, not that the work is whole. Report what was traded away to get here — a requirement cut, an edge case left unhandled, a security control weakened — in the same breath as the evidence. Passing output is never evidence that nothing was descoped.
+
 ## Agent-Filed Bead Discipline
 
 When a skill **files a bead for discovered/follow-up work** (not planned work), stamp it so a human can triage risk at a glance.
