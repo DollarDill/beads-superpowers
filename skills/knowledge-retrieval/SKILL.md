@@ -17,14 +17,14 @@ A ranked list is not an answer. Completion is **every plausibly-relevant hit dis
 1. **Expand the query to 3–8 variants** — synonyms, abbreviations, compound splits. `bd` has no stemming,
    so `worktree` and `work tree` are different searches.
    Done when: the variant list exists and covers at least one synonym and one compound split.
-2. **Run `bash scripts/surface.sh <variants>`.** Read the coverage line first.
+2. **Run `bash <skill-base-dir>/scripts/surface.sh <variants>`.** Read the coverage line first.
    Done when: the coverage line is read and any degraded source is named.
 3. **Read the shortlist's hit bodies** — `bd show <ids>` / `bd recall <key>`, never truncated below 50 lines.
    Done when: every returned hit is read or explicitly ruled out from its sentence alone.
 4. **Emit dispositions** — one line per hit: folded in (what it changed) or ruled out (why).
    Done when: `KB check: N hits, K read` plus one disposition line per read hit.
 
-Bounded: at most 5 query rounds. Re-angle once before reporting none.
+Bounded: at most 5 query rounds (see `references/query-strategy.md` for why, and for re-angling).
 
 ## This skill asks nothing
 
@@ -39,5 +39,5 @@ re-queries — it never requests input, so it is safe in interactive, headless a
 - **Never print bodies without `python3`** — redaction lives in the ranker; print keys only. A floor with
   a bypass is not a floor.
 
-For keyword expansion technique, the topic-label vocabulary, and degraded modes, read
-`references/query-strategy.md`.
+Open `references/query-strategy.md` when a query returns nothing, returns more than you can
+disposition, or a source reports degraded in the coverage line.
