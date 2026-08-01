@@ -113,6 +113,7 @@ The agent checks for relevant skills before any task - these are mandatory workf
 | `session-handoff` | Writes a grounded handoff doc so the next session resumes mid-flight work |
 | `research-driven-development` | Parallel research agents → verified, persistent knowledge base |
 | `project-init` | Sets up, bootstraps, and recovers the beads/Dolt database behind persistent memory |
+| `knowledge-retrieval` | Retrieves prior memories and knowledge beads with BM25-ranked search |
 
 **[Full skills reference →](https://algocents.com/beads-superpowers/skills/)**
 

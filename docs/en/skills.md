@@ -238,7 +238,7 @@ Three paths: fresh init, bootstrap from remote, or recovery when Dolt history ha
 
 **Trigger:** "What do we know about X", prior decisions, or when another skill needs grounding before designing, planning, or debugging.
 
-BM25-ranked retrieval over the beads memory store and knowledge beads. Expands the query into 3-8 variants (synonyms, abbreviations, compound splits), then dispositions every plausibly-relevant hit - folded in or ruled out - rather than stopping at a hit count. Asks nothing itself: on an ambiguous query it returns candidate angles for the caller to re-query, keeping it safe to invoke from other skills, interactive sessions, and subagents alike.
+BM25-ranked retrieval over the beads memory store and knowledge beads. Expands the query into 3-8 variants (synonyms, abbreviations, compound splits), then dispositions every plausibly-relevant hit - folded in (what it changed) or ruled out (why) - rather than stopping at a hit count. Asks nothing itself: on an ambiguous query it returns candidate angles for the caller to re-query, keeping it safe to invoke from other skills, interactive sessions, and subagents alike.
 
 ## Beads commands
 
