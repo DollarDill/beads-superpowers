@@ -28,4 +28,11 @@ run "kb label vocab"        bash scripts/check-kb-labels.sh
 run "kb doc reconciliation" bash scripts/check-kb-doc-reconciliation.sh
 run "guardrail floor"       bash scripts/check-guardrail-floor.sh
 run "doctrine floor"        bash scripts/check-doctrine-floor.sh
+# knowledge-retrieval's two suites. Both SKIP visibly and exit 0 when a
+# prerequisite is missing — test-rank.sh on python3, test-surface-interface.sh on
+# bd or python3 — so a clone lacking those tools prints the SKIP line and the
+# runner stays green. `kb label vocab` above instead exits 2 with an ERROR when bd
+# is absent; that shape is a known wart, deliberately not copied here.
+run "rank invariants"       bash tests/skills/test-rank.sh
+run "surface interface"     bash tests/skills/test-surface-interface.sh
 exit "$rc"
