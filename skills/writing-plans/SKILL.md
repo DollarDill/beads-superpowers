@@ -24,7 +24,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 Before writing tasks, invoke the `knowledge-retrieval` skill with the plan's topic and why you are asking (task grounding).
 
-If the skill is unavailable: `bd list --label <topic> --status all` + `bd search "<keywords>" --status all` (body terms need `--desc-contains "<term>"` — search matches titles only) + `bd memories <keyword>` — hits are pointers, not knowledge; read hit bodies with `bd show <ids>` / `bd recall <key>` before relying on them. 0 relevant does not mean none exist — re-angle the query once before emitting `KB check: none`. Emit `KB check: N bead hits, M memory hits, K read` (or `KB check: none`) plus one disposition line per hit: folded into a task (which one) or ruled out (why). The check is complete when every plausibly-relevant hit is dispositioned, never when a count is reached.
+If the skill is unavailable: `bd list --label <topic> --status all` + `bd search "<keywords>" --status all` (body terms need `--desc-contains "<term>"` — search matches titles only; >10 hits: narrow the query, never triage truncated titles) + `bd memories <keyword>` — hits are pointers, not knowledge; read hit bodies with `bd show <ids>` / `bd recall <key>` before relying on them. 0 relevant does not mean none exist — re-angle the query once before emitting `KB check: none`. Emit `KB check: N bead hits, M memory hits, K read` (or `KB check: none`) plus one disposition line per hit: folded into a task (which one) or ruled out (why). The check is complete when every plausibly-relevant hit is dispositioned, never when a count is reached.
 
 ## Scope Check
 
