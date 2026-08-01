@@ -1,7 +1,7 @@
 # Query Strategy
 
-Supporting detail for the `knowledge-retrieval` skill's Steps 1–2. Read this when expanding a query or
-interpreting a degraded coverage line.
+Supporting detail for the `knowledge-retrieval` skill's Steps 1–2. Open this when a query returns
+nothing, returns more than you can disposition, or a source reports degraded in the coverage line.
 
 ## Topic-label vocabulary
 
