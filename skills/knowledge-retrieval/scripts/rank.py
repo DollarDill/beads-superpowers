@@ -177,7 +177,12 @@ if __name__ == "__main__":
     # .get throughout: an id-less bead must not raise before the coverage line
     # prints — a traceback where a coverage line belongs is the loudest possible
     # silent partial.
-    docs.update({b.get("id"): (b.get("description") or b.get("title", ""))
+    # Title AND description, not description-else-title: the old fallback
+    # indexed the title only when description was EMPTY, so on the live store
+    # (all 232 kb beads have a description) no bead title was ever searchable
+    # — e.g. querying "ADR-0049" never surfaced the bead titled "ADR-0049:
+    # pocock-composition model" (beads-superpowers-eo9z2, FR4).
+    docs.update({b.get("id"): ((b.get("title") or "") + " " + (b.get("description") or ""))
                  for b in beads if b.get("id")})
 
     print("searched: %s %s%s" % (

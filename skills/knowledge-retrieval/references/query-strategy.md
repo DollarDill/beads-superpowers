@@ -5,9 +5,12 @@ nothing, returns more than you can disposition, or a source reports degraded in 
 
 ## Topic-label vocabulary
 
-Knowledge beads are tagged with the `kb` label plus 1–3 topic labels from this fixed vocabulary
-(`scripts/kb-label-vocab.txt`, copied verbatim — do not retype from memory, `cat` the file if it may have
-changed):
+Knowledge beads are tagged with the `kb` label plus 1–3 topic labels. `surface.sh` derives the vocabulary
+from the live data (`rank.py`'s label-matching stage reads it off the beads actually returned, never from
+a file — a file path breaks once the skill is installed, since only `skills/*` gets promoted into
+`~/.claude/skills`). The **authoritative set** is whatever the coverage line's `label=` field discloses
+when a query's terms match a label. The list below is an example of *this repo's own* vocabulary, useful
+for orientation, not a source to `cat` or treat as current:
 
 ```
 kb
@@ -32,8 +35,8 @@ testing-guards
 release
 ```
 
-Use these labels to scope a search with `bd list --label <topic> --status all` when a query maps cleanly
-onto one of them — it's cheaper and more precise than free-text search.
+Use labels like these to scope a search with `bd list --label <topic> --status all` when a query maps
+cleanly onto one — it's cheaper and more precise than free-text search.
 
 ## Keyword expansion examples
 

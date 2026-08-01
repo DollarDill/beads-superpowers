@@ -57,7 +57,7 @@ if ! command -v python3 >/dev/null 2>&1; then
   # Keys indent 2, bodies 4 (verified against bd 1.1.2) — this anchor is what
   # withholds the bodies. sort -u unions the per-term result sets; sed, not head,
   # because head exits early and SIGPIPEs the upstream stage under pipefail.
-  keys="$(grep -E '^  [a-z0-9-]+$' <<<"$raw" | sort -u | sed -n '1,20p')" || true
+  keys="$(grep -E '^  [A-Za-z0-9._-]+$' <<<"$raw" | sort -u | sed -n '1,20p')" || true
   # The failure record built above is RENDERED here, not discarded: a coverage
   # line that reads identically whether bd answered or died is exactly the silent
   # partial this line exists to prevent, and this is the one path that never

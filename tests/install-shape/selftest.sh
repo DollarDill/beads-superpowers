@@ -528,4 +528,45 @@ fi
 # already run by then — would still clean up. Keep both when extending this file.
 rm -rf "$MUTR"
 
+# Mutations 22-24: the boost-wiring line in Corpus.search() (rank.py:118-120)
+# — salience/hazard/recency are computed AND asserted individually elsewhere,
+# but nothing pinned that `score += 0.5*(salience>=4) + 0.5*hazard +
+# _recency(...)` is actually reached. All three below left the pre-existing
+# 25/25 rank_invariants.py suite at exit 0 (beads-superpowers-eo9z2, FR3b) —
+# found only by hand-running a mutation matrix, same as 19-21 above. Same
+# RANK_DIR isolation as 19-21: rank.py copied into mktemp -d and mutated
+# THERE; the working tree is never written to.
+MUTR2=$(mktemp -d)
+trap 'rm -rf "$MUTR2"' EXIT
+if ! mkdir -p "$MUTR2/ctl" "$MUTR2/score0" "$MUTR2/hazF" "$MUTR2/salU" \
+   || ! cp -f "$REPO_ROOT/skills/knowledge-retrieval/scripts/rank.py" "$MUTR2/ctl/rank.py"; then
+  echo "SELFTEST FAIL: mutation-22/23/24 setup (mkdir/cp rank.py) failed (rig broken, not a caught mutation)"; rc=1
+else
+  sed 's/^            score += 0\.5 \* (salience >= 4) + 0\.5 \* hazard + _recency(header, today or datetime\.date\.today())$/            score += 0.0/' \
+    "$MUTR2/ctl/rank.py" > "$MUTR2/score0/rank.py"
+  sed 's/^            hazard = bool(_HAZARD\.search(self\.bodies\[key\]))$/            hazard = False/' \
+    "$MUTR2/ctl/rank.py" > "$MUTR2/hazF/rank.py"
+  sed 's/^            salience = int(m\.group(1)) if m else SALIENCE_UNSET$/            salience = SALIENCE_UNSET/' \
+    "$MUTR2/ctl/rank.py" > "$MUTR2/salU/rank.py"
+  # Rig-broken guard (stress-test P2, as in mutations 14-16/19-21): a
+  # reformatted line makes the matching sed a silent no-op — this check
+  # genuinely short-circuits the expect_red calls below rather than merely
+  # reporting alongside a misleading "should have gone RED but passed".
+  if cmp -s "$MUTR2/score0/rank.py" "$MUTR2/ctl/rank.py" \
+     || cmp -s "$MUTR2/hazF/rank.py" "$MUTR2/ctl/rank.py" \
+     || cmp -s "$MUTR2/salU/rank.py" "$MUTR2/ctl/rank.py"; then
+    echo "SELFTEST FAIL: mutation-22/23/24 changed nothing (stale 'score +=' / 'hazard =' / 'salience =' line, not a caught mutation)"; rc=1
+  else
+    expect_green "rank invariants: boost-wiring unmutated copy through RANK_DIR (control)" \
+      env RANK_DIR="$MUTR2/ctl" python3 "$REPO_ROOT/tests/skills/rank_invariants.py"
+    expect_red "rank invariants: boost line zeroed (score += 0.0)" \
+      env RANK_DIR="$MUTR2/score0" python3 "$REPO_ROOT/tests/skills/rank_invariants.py"
+    expect_red "rank invariants: hazard forced False" \
+      env RANK_DIR="$MUTR2/hazF" python3 "$REPO_ROOT/tests/skills/rank_invariants.py"
+    expect_red "rank invariants: salience forced SALIENCE_UNSET" \
+      env RANK_DIR="$MUTR2/salU" python3 "$REPO_ROOT/tests/skills/rank_invariants.py"
+  fi
+fi
+rm -rf "$MUTR2"
+
 exit "$rc"

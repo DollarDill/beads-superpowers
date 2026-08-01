@@ -151,14 +151,22 @@ def main():
                 score("mortise", "sat-many") > 2 * score("mortise", "sat-one"))
 
     # Hit.salience must never be invented. Either it is the disclosed
-    # not-yet-populated sentinel, or it is the entry's own @salience. The
-    # spread check keeps this honest: the sample must span more than one
-    # header value, so no single hardcoded constant can satisfy it.
+    # not-yet-populated sentinel (only when the entry's OWN header carries no
+    # @salience), or it is that entry's own @salience value. Checked against
+    # `got` per row, not just `hdr`'s spread: `all(got in (SALIENCE_UNSET, hdr)
+    # for got, hdr in sal)` is satisfied when got == SALIENCE_UNSET for EVERY
+    # row, because SALIENCE_UNSET is always a member of that tuple regardless
+    # of hdr — verified by mutation: hardcoding `salience = SALIENCE_UNSET`
+    # left this exact line at exit 0 (beads-superpowers-eo9z2, FR3a). The
+    # spread requirement is kept (a single hardcoded got value must fail
+    # against more than one distinct hdr), but it is no longer what does the
+    # catching — the per-row equality is.
     sal = [(h.salience, header_salience(FIXTURE[h.key]))
            for h in c.search("bd", top_n=len(FIXTURE))]
-    ok &= check("salience is never fabricated (unset sentinel or the entry's own header value)",
+    ok &= check("salience is never fabricated (matches the entry's own header value, or the disclosed sentinel when that entry's header truly has none)",
                 len({hdr for _, hdr in sal}) > 1
-                and all(got in (SALIENCE_UNSET, hdr) for got, hdr in sal))
+                and all((got == hdr) if hdr is not None else got == SALIENCE_UNSET
+                        for got, hdr in sal))
     ok = extra_checks(ok)
     sys.exit(0 if ok else 1)
 
@@ -289,6 +297,41 @@ def extra_checks(ok):
     ok &= check("a redundant variant is demoted below a distinct lower-scoring hit",
                 keys4.index("distinct")
                 < max(keys4.index("variant-a"), keys4.index("variant-b")))
+
+    # Boost wiring (FR3b, beads-superpowers-eo9z2): nothing in the suite above
+    # asserts that search()'s score += 0.5*(salience>=4) + 0.5*hazard +
+    # _recency(...) line is actually REACHED — _recency is asserted as a pure
+    # helper and _bm25 as a raw core, but the wiring between them (the design's
+    # central claim: "signals are tiebreaks, never gates") had zero coverage.
+    # Verified by mutation (before writing this): all three of `score += 0.0`,
+    # `hazard = False`, and `salience = SALIENCE_UNSET` left the pre-existing
+    # 25/25 suite at exit 0.
+    #
+    # Each pair below has an IDENTICAL raw BM25 for the query term — same tf,
+    # same dl (padded to match), same idf (the term appears in ONLY these two
+    # docs) — so ONLY a live boost can separate them. The plain variant is
+    # inserted FIRST in the dict: Corpus.search()'s hits.sort() is stable, so a
+    # zeroed boost leaves them tied and the stable sort keeps the
+    # first-inserted (plain) doc on top, flipping "boosted ranks first" to
+    # false. This tests the WIRING, not the magnitude — see rank.py:120.
+    salw = {"noise%d" % i: "@salience=1 bd staging directory notes" for i in range(4)}
+    salw["plain-salience"] = "@salience=1 zeolite pad pad pad pad"      # dl 6, no boost
+    salw["boosted-salience"] = "@salience=5 zeolite pad pad pad pad"    # dl 6, salience>=4
+    keys5 = [h.key for h in Corpus(salw).search("zeolite", top_n=2)]
+    # Kills BOTH `score += 0.0` (boost never added, tie -> plain stays first)
+    # and `salience = SALIENCE_UNSET` (salience>=4 never true for either doc).
+    ok &= check("salience>=4 boost is wired into the score, not just computed",
+                bool(keys5) and keys5[0] == "boosted-salience")
+
+    hazw = {"noise%d" % i: "@salience=1 bd staging directory notes" for i in range(4)}
+    hazw["plain-hazard"] = "@salience=1 tourmaline pad pad pad pad"       # dl 6, no hazard word
+    hazw["hazard-hazard"] = "@salience=1 tourmaline never pad pad pad"    # dl 6, one pad -> "never"
+    keys6 = [h.key for h in Corpus(hazw).search("tourmaline", top_n=2)]
+    # Kills BOTH `score += 0.0` and `hazard = False` (hazard boost never true
+    # for either doc). Salience is equal (both 1, both < 4) so this pair is
+    # blind to the salience mutation, by design — isolates the hazard wiring.
+    ok &= check("hazard boost is wired into the score, not just computed",
+                bool(keys6) and keys6[0] == "hazard-hazard")
     return ok
 
 main()

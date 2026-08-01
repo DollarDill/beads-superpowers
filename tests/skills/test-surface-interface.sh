@@ -61,6 +61,17 @@ Never chain open after bd commands in one invocation — it hangs." \
   "The docs site publishes from the-factory-website repo, not from this repo." \
   | bd create "ADR-0050 docs publishing" -t decision -l kb,docs \
       --defer 2099-01-01 --body-file - --silent >/dev/null )
+# Title carries the ONLY occurrence of "xenolith" — the description below never
+# repeats it. Beads index title+description together (FR4, beads-superpowers-
+# eo9z2): a title-only term must still be retrievable, not silently dropped
+# the way `description or title` drops the title whenever description is
+# non-empty (the real live store: all 232 kb beads have a description, so no
+# bead title was ever searchable before this fix). Labelled adr-process, NOT
+# docs/sdd-process, so it doesn't shift the label-count assertions below.
+( cd "$TMP" && printf '%s' \
+  "This decision covers an unrelated labelling convention with no repeated marker word." \
+  | bd create "ADR-0099 xenolith retrieval marker decision" -t decision -l kb,adr-process \
+      --defer 2099-01-01 --body-file - --silent >/dev/null )
 
 # ── 1. coverage line opens every result set
 out="$( cd "$TMP" && bash "$SURFACE" "worktree gotchas" )"
@@ -156,6 +167,25 @@ grep -q 'terms=worktree,gotchas' <<<"$deg" \
 grep -q '\.worktrees/name' <<<"$deg" \
   && { echo "FAIL: degraded path printed an unredacted body"; printf '%s\n' "$deg"; exit 1; }
 
+# ── 11b. degraded path: a KEY containing uppercase, underscore, or a dot must
+# not be silently dropped by the withholding anchor — the real live-store shape
+# (lesson-grep-E-alternation-bug) has an uppercase letter, and the anchor's
+# charset was [a-z0-9-] only (FR1, beads-superpowers-eo9z2). The security floor
+# this touches — full-line anchor, 2-space indent, bodies withheld without
+# python3 — must still hold: the multi-word body below must NOT appear.
+( cd "$TMP" && bd remember \
+  "an unredacted alternation pattern must never leak across a truncation boundary in this body" \
+  --key "lesson-Grep_E.alternation-bug" >/dev/null )
+set +e
+deg2="$( cd "$TMP" && PATH="$TMP/nopy" bash "$SURFACE" "alternation" )"
+deg2_rc=$?
+set -e
+[ "$deg2_rc" -eq 0 ] || { echo "FAIL: degraded path (mixed-charset key) exited $deg2_rc, must be 0"; printf '%s\n' "$deg2"; exit 1; }
+grep -q 'lesson-Grep_E.alternation-bug' <<<"$deg2" \
+  || { echo "FAIL: degraded path drops a key containing uppercase/underscore/dot"; printf '%s\n' "$deg2"; exit 1; }
+grep -q 'unredacted alternation pattern' <<<"$deg2" \
+  && { echo "FAIL: degraded path printed body text for a mixed-charset key (security floor breach)"; printf '%s\n' "$deg2"; exit 1; }
+
 # ── 12. python3 absent AND bd broken: the coverage line NAMES the dead source.
 # Rendering it as a fixed "memories(DEGRADED)" makes "bd is broken" and "nothing
 # matched" identical — the silent partial the coverage line exists to prevent.
@@ -173,5 +203,13 @@ set +e
 usage_rc=$?
 set -e
 [ "$usage_rc" -eq 2 ] || { echo "FAIL: no-argument invocation exited $usage_rc, expected 2"; exit 1; }
+
+# ── 14. a term appearing ONLY in a bead's TITLE (never its description) must
+# still be retrievable — FR4, beads-superpowers-eo9z2. Query has no label match
+# (adr-process isn't a token of "xenolith"), so this exercises the docs.update()
+# title/description combine directly, not the label-recall stage.
+title_only="$( cd "$TMP" && bash "$SURFACE" xenolith )"
+grep -qi 'xenolith' <<<"$title_only" \
+  || { echo "FAIL: title-only term not retrievable (bead title not indexed)"; printf '%s\n' "$title_only"; exit 1; }
 
 echo "PASS: surface.sh — coverage line, counts, salience rendering, untruncated keys, hyphenated label filter, injection-inert, bd-error visible, degradation"

@@ -27,7 +27,7 @@ for q in "bd worktree gotchas" "memory salience"; do
   # traceback, a bd failure) must be reported as a crash, not misread as a
   # zero-hit retrieval regression.
   if out="$(bash "$S" "$q")"; then
-    n="$(printf '%s\n' "$out" | grep -c '^  [a-z0-9]' || true)"
+    n="$(printf '%s\n' "$out" | grep -c '^  [A-Za-z0-9._-]' || true)"
     echo "multi-word '$q' -> $n hits"
     [ "$n" -gt 0 ] || { echo "FAIL: multi-word query '$q' returned zero hits"; fail=1; }
   else

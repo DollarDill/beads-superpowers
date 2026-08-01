@@ -15,7 +15,7 @@ if command -v bd >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1 && bd mem
   # traceback, a bd failure inside it) must be reported as a crash, not
   # misattributed to a zero-hit retrieval regression.
   if out="$(bash skills/knowledge-retrieval/scripts/surface.sh "bd worktree gotchas")"; then
-    n="$(printf '%s\n' "$out" | grep -c '^  [a-z0-9]' || true)"
+    n="$(printf '%s\n' "$out" | grep -c '^  [A-Za-z0-9._-]' || true)"
     if [ "$n" -gt 0 ]; then
       echo "live-store retrieval: OK (multi-word query returned $n hits)"
     else
