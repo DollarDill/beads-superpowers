@@ -55,11 +55,24 @@ def _recency(header, today):
     return min(1.0, max(0.0, (60 - age) / 60))
 
 def _diversify(hits, toks):
-    """Demote a hit sharing >50% of its top terms with a higher-ranked hit."""
+    """Demote a hit sharing >70% of its top terms with a higher-ranked hit.
+
+    Measured against the live 171-memory store (2026-08-01): most_common(8) has
+    no stopword filter, so two real-world documents about the same command
+    ('the', 'bd', 'it', 'a', 'worktree') can share 5 of 8 top terms on function
+    words alone with unrelated content — that pushed a genuine top-5 hit
+    (lesson-bd-worktree-creation-gotchas, salience 3) to rank 14 against a
+    higher-scoring hit it shares no topical content with, at the >50% threshold
+    the fixture invariant alone would never catch (its vocabulary is
+    deliberately stopword-free — see rank_invariants.py's diversity fixture
+    comment). The invariant fixture's genuine near-duplicate pair shares 3 of 4
+    top terms (75%); the live-store false-positive pair shares 5 of 8 (62.5%).
+    0.7 sits strictly between them, so raising the bar preserves the demotion
+    the fixture requires while no longer misfiring on stopword overlap alone."""
     kept, seen = [], []
     for h in hits:
         top = {t for t, _ in collections.Counter(toks[h.key]).most_common(8)}
-        if any(len(top & prev) > len(top) / 2 for prev in seen):
+        if any(len(top & prev) > len(top) * 0.7 for prev in seen):
             h.score *= 0.5
         seen.append(top)
         kept.append(h)
