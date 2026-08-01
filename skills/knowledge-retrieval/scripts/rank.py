@@ -3,9 +3,13 @@ No I/O, no bd calls, no third-party packages — see surface.sh for the bd inter
 import re, math, collections
 from dataclasses import dataclass
 
-_HEADER = re.compile(r'^((?:@\w+=\S+\s+)+)', re.S)
+_HEADER = re.compile(r'^((?:@\w+=\S+(?:\s+|$))+)', re.S)
 _WORD = re.compile(r'[a-z0-9]+')
 K1, B = 1.5, 0.75
+# Hit.salience is not populated yet — Task 3 parses it from the @salience header.
+# Until then it carries this sentinel rather than a plausible-looking number, so
+# an unpopulated field can never be mistaken for real data.
+SALIENCE_UNSET = -1
 
 def strip_header(value):
     """Return the body with the leading @key=value block removed.
@@ -54,6 +58,7 @@ class Corpus:
             score = self._bm25(key, qterms)
             if score <= 0:
                 continue
-            hits.append(Hit(key=key, score=score, sentence="", salience=3, hazard=False))
+            hits.append(Hit(key=key, score=score, sentence="",
+                            salience=SALIENCE_UNSET, hazard=False))
         hits.sort(key=lambda h: -h.score)
         return hits[:top_n]
