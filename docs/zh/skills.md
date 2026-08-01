@@ -29,6 +29,7 @@ beads-superpowers 附带 {{ skill_count }} 个可组合技能，通过 `Skill` �
 | 编写计划 | `writing-plans` |
 | 执行计划 | `subagent-driven-development` / `executing-plans` |
 | 研究性问题 | `research-driven-development` |
+| 需要先了解已有知识或决策 | `knowledge-retrieval` |
 | 需要隔离的工作区 | `using-git-worktrees` |
 | 即将声明完成 | `verification-before-completion` |
 | 需要代码审查 | `requesting-code-review` |
@@ -50,7 +51,7 @@ beads-superpowers 附带 {{ skill_count }} 个可组合技能，通过 `Skill` �
 | **设计与规划** | [brainstorming](#brainstorming), [stress-test](#stress-test), [writing-plans](#writing-plans) |
 | **执行** | [subagent-driven-development](#subagent-driven-development), [executing-plans](#executing-plans), [dispatching-parallel-agents](#dispatching-parallel-agents), [using-git-worktrees](#using-git-worktrees), [requesting-code-review](#requesting-code-review), [receiving-code-review](#receiving-code-review), [finishing-a-development-branch](#finishing-a-development-branch) |
 | **文档撰写** | [write-documentation](#write-documentation), [document-release](#document-release) |
-| **记忆与定向** | [getting-up-to-speed](#getting-up-to-speed), [memory-curator](#memory-curator), [session-handoff](#session-handoff), [research-driven-development](#research-driven-development), [project-init](#project-init) |
+| **记忆与定向** | [getting-up-to-speed](#getting-up-to-speed), [memory-curator](#memory-curator), [session-handoff](#session-handoff), [research-driven-development](#research-driven-development), [project-init](#project-init), [knowledge-retrieval](#knowledge-retrieval) |
 
 ```mermaid
 ---
@@ -94,6 +95,7 @@ graph TD
     SH["session-handoff"]
     RDD["research-driven-dev"]
     PI["project-init"]
+    KR["knowledge-retrieval"]
   end
 
   Meta --> Testing
@@ -235,6 +237,12 @@ graph TD
 **触发条件：** 当 `bd` 命令失败、在新项目中设置 Beads，或从分叉的 Dolt 历史中恢复时。
 
 三条路径：全新初始化、从远端引导，或在 Dolt 历史分叉时进行恢复。
+
+### knowledge-retrieval
+
+**触发条件：** "What do we know about X"、既往决策，或其他技能在设计、规划或调试之前需要先获得依据支持时。
+
+基于 BM25 算法，对 beads 记忆库和知识 bead 进行排序检索。将查询扩展为 3-8 个变体（同义词、缩写、复合词拆分），然后对每一条可能相关的结果进行处置——采纳（说明其带来的变化）或排除（说明排除的理由）——而不是仅凭命中数量判断是否完成。它本身不提出任何问题：当查询存在歧义时，会返回候选检索角度供调用方重新查询，这使其可以安全地被其他技能、交互式会话及子智能体调用。
 
 ## Beads 命令
 

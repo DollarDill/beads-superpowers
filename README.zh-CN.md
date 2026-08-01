@@ -115,6 +115,7 @@ bd init                               # 2. Bootstrap the Dolt database for this 
 | `session-handoff` | 生成有据可查的交接文档，让下一次会话接续进行中的工作 |
 | `research-driven-development` | 并行研究智能体 → 经过验证的持久知识库 |
 | `project-init` | 搭建、引导并修复支撑持久记忆的 beads/Dolt 数据库 |
+| `knowledge-retrieval` | 基于 BM25 排序检索既往记忆与知识 bead |
 
 **[完整技能参考 →](https://algocents.com/beads-superpowers/skills/)**
 
