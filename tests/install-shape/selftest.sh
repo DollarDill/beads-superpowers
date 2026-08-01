@@ -467,4 +467,65 @@ else
 fi
 rm -rf "$SB18"
 
+# Mutations 19-21: the BM25 weight constants K1 and B, plus IDF.
+# tests/skills/rank_invariants.py is what stops a later edit from quietly turning
+# the ranker into a bag-of-words scorer, and the WEIGHT class is the one that has
+# actually regressed here — twice. Task 3's score() wiring left B=0.0 and K1=0.5
+# alive because the five bracket assertions were then read through search(), where
+# the diversity halving fakes the expected order (rank_invariants.py:109-114
+# records that reproduction); Task 3's boosts left idf=1.0 alive the same way. All
+# three were found only by re-running a mutation matrix by hand. A header-strip
+# mutation is killed too, but it has never regressed here — these three make the
+# matrix mechanical for the class that has. B=0.0 is caught by the
+# length-normalisation bracket, K1=0.5 by the term-frequency-saturation bracket,
+# and idf=1.0 by the raw-BM25 rare-vs-ubiquitous assertion at
+# rank_invariants.py:125-126, so the trio pins all three brackets rather than
+# reusing one.
+#
+# Isolation: rank.py is copied into mktemp -d and mutated THERE, and RANK_DIR
+# points rank_invariants.py's sys.path at the copy (a bare PYTHONPATH cannot beat
+# that module's own sys.path.insert — which is why the override exists). The
+# working tree is never written to, and the trap cleans up on every exit path. A
+# mutation confined to a temp dir cannot create ambient state at all, which is
+# stronger than asserting about it afterwards.
+MUTR=$(mktemp -d)
+trap 'rm -rf "$MUTR"' EXIT
+if ! mkdir -p "$MUTR/ctl" "$MUTR/b0" "$MUTR/k1" "$MUTR/idf" \
+   || ! cp -f "$REPO_ROOT/skills/knowledge-retrieval/scripts/rank.py" "$MUTR/ctl/rank.py"; then
+  echo "SELFTEST FAIL: mutation-19/20/21 setup (mkdir/cp rank.py) failed (rig broken, not a caught mutation)"; rc=1
+else
+  sed 's/^K1, B = 1\.5, 0\.75$/K1, B = 1.5, 0.0/'  "$MUTR/ctl/rank.py" > "$MUTR/b0/rank.py"
+  sed 's/^K1, B = 1\.5, 0\.75$/K1, B = 0.5, 0.75/' "$MUTR/ctl/rank.py" > "$MUTR/k1/rank.py"
+  sed 's/^            idf = math\.log(1 + (self\.N - self\.df\[term\] + 0\.5) \/ (self\.df\[term\] + 0\.5))$/            idf = 1.0/' \
+    "$MUTR/ctl/rank.py" > "$MUTR/idf/rank.py"
+  # Rig-broken guard (stress-test P2, as in mutations 14-16): a reformatted constant
+  # line, or a reformatted idf= computation line, makes the matching sed a no-op.
+  # This check genuinely short-circuits the expect_red calls below (unlike the
+  # cmp -s checks in mutations 14-16, which only report alongside them) — a
+  # stale-fixture run reports exactly this one diagnostic, not this diagnostic
+  # PLUS two or three misleading "should have gone RED but passed" lines from
+  # unmutated copies passing where RED was expected.
+  if cmp -s "$MUTR/b0/rank.py" "$MUTR/ctl/rank.py" \
+     || cmp -s "$MUTR/k1/rank.py" "$MUTR/ctl/rank.py" \
+     || cmp -s "$MUTR/idf/rank.py" "$MUTR/ctl/rank.py"; then
+    echo "SELFTEST FAIL: mutation-19/20/21 changed nothing (stale 'K1, B =' or 'idf =' line, not a caught mutation)"; rc=1
+  else
+    # GREEN control first: the UNMUTATED copy must pass through the very same
+    # RANK_DIR rig, so a RED below can only come from the mutation. Without it, a copy
+    # that merely failed to import would satisfy the expect_red checks vacuously.
+    expect_green "rank invariants: unmutated copy through RANK_DIR (control)" \
+      env RANK_DIR="$MUTR/ctl" python3 "$REPO_ROOT/tests/skills/rank_invariants.py"
+    expect_red "rank invariants: length normalisation disabled (B=0.0)" \
+      env RANK_DIR="$MUTR/b0" python3 "$REPO_ROOT/tests/skills/rank_invariants.py"
+    expect_red "rank invariants: term-frequency saturation crushed (K1=0.5)" \
+      env RANK_DIR="$MUTR/k1" python3 "$REPO_ROOT/tests/skills/rank_invariants.py"
+    expect_red "rank invariants: IDF flattened to a constant (idf=1.0)" \
+      env RANK_DIR="$MUTR/idf" python3 "$REPO_ROOT/tests/skills/rank_invariants.py"
+  fi
+fi
+# Both the trap AND this rm, deliberately: a mutation-22 appended below with its own
+# EXIT trap would silently replace this one, and only the explicit rm — which has
+# already run by then — would still clean up. Keep both when extending this file.
+rm -rf "$MUTR"
+
 exit "$rc"
