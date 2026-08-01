@@ -1,5 +1,9 @@
-"""Pure BM25F ranker over beads memories and knowledge-bead bodies.
-No I/O, no bd calls, no third-party packages — see surface.sh for the bd interface."""
+"""BM25F ranker over beads memories and knowledge-bead bodies.
+
+The module body is pure: no I/O, no bd calls, no third-party packages. The
+__main__ block at the bottom is the CLI entry point — it reads the corpus from
+stdin and prints the coverage line and the ranked hits. All bd I/O lives in
+surface.sh; nothing here shells out."""
 import re, math, collections, datetime, os
 from dataclasses import dataclass
 
@@ -150,8 +154,16 @@ if __name__ == "__main__":
     # relative to __file__ resolves to ~/.claude/scripts/... once installed and
     # would silently disable label filtering for every real user. Deriving also
     # makes the skill portable to projects with their own label sets.
+    # SUBSET match, not set intersection: tokenize() splits on hyphens, so
+    # comparing whole label strings against query tokens can never fire for a
+    # hyphenated label — 10 of the live store's 19 labels, including its four
+    # largest buckets (skills-arch 61, beads-tooling 44, harness-parity 41,
+    # adr-process 20). A label fires when its own tokens all appear in the query,
+    # so `skills-arch` and `skills arch` both reach the same bucket, and
+    # single-token labels behave exactly as before.
     vocab = {l for b in beads for l in b.get("labels", []) if l != "kb"}
-    named = set(tokenize(query)) & vocab
+    qtok = set(tokenize(query))
+    named = {l for l in vocab if set(tokenize(l)) <= qtok}
     if named:
         beads = [b for b in beads if named & set(b.get("labels", []))]
 
@@ -161,7 +173,11 @@ if __name__ == "__main__":
     # whose job is to make coverage checkable.
     docs = {k: v for k, v in mem.items() if isinstance(v, str) and k != "schema_version"}
     mem_count = len(docs)
-    docs.update({b["id"]: (b.get("description") or b.get("title", "")) for b in beads})
+    # .get throughout: an id-less bead must not raise before the coverage line
+    # prints — a traceback where a coverage line belongs is the loudest possible
+    # silent partial.
+    docs.update({b.get("id"): (b.get("description") or b.get("title", ""))
+                 for b in beads if b.get("id")})
 
     print("searched: %s %s%s" % (
         _store("memories", mem_count, "memories" in failed),
@@ -174,6 +190,11 @@ if __name__ == "__main__":
         # eo9z2.2 finding closed inside the ranker. Two-char field either way,
         # so the column stays scannable.
         sal = "?" if h.salience == SALIENCE_UNSET else str(h.salience)
-        print("  %-42s s%-2s %s %s" % (h.key[:42], sal, "HAZ" if h.hazard else "   ", h.sentence))
+        # %-42s PADS, it does not truncate. The key is the actionable payload —
+        # the agent's next move is `bd recall <key>` — and 61% of the live store's
+        # keys exceed 42 chars, so h.key[:42] would print an identifier that
+        # resolves to nothing for the majority of results. A ragged column for
+        # long keys is the correct trade.
+        print("  %-42s s%-2s%s  %s" % (h.key, sal, " HAZ" if h.hazard else "    ", h.sentence))
     if not hits:
         print("  (no hits — re-angle the query once before reporting none)")

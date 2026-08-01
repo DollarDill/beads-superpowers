@@ -6,6 +6,16 @@
 # test used a fixture with keys at column 0 while bd indents by 2, so the shipped
 # grep anchor matched nothing and the test still passed. Interface layers see
 # genuine tool output or they prove nothing.
+#
+# Assertions read captured output from HERE-STRINGS, never `printf … | grep -q`:
+# under `set -o pipefail` an early-exiting consumer SIGPIPEs the producer and the
+# pipeline returns 141, flipping a passing assertion to a spurious FAIL.
+#
+# Inputs are chosen to be the HARDEST shape the interface accepts, not the one
+# that happens to work: the degraded path is exercised with a multi-word phrase,
+# the label filter with a hyphenated label, and the key column with a key longer
+# than its pad width. Four defects shipped because earlier assertions picked the
+# single easy shape in each of those three classes.
 set -euo pipefail
 command -v bd >/dev/null 2>&1 || { echo "SKIP: test-surface-interface (bd absent)"; exit 0; }
 command -v python3 >/dev/null 2>&1 || { echo "SKIP: test-surface-interface (python3 absent)"; exit 0; }
@@ -21,6 +31,10 @@ TMP="$(mktemp -d)"
 NODB="$(mktemp -d)"          # sibling of TMP, so no .beads is reachable by walking up
 trap 'rm -rf "$TMP" "$NODB"' EXIT
 
+# 64 chars — longer than the 42-column key pad. 61% of the live store's keys
+# exceed 42, and a cut key does not resolve through `bd recall`.
+LONGKEY=lesson-a-retrieval-contract-test-must-exercise-the-real-interface
+
 # ── read-only guard: the retriever never mutates a store (design: "Reads only")
 grep -nE 'bd (create|close|update|remember|forget|init|delete|import)|bd dolt (push|pull)' "$SURFACE" \
   && { echo "FAIL: mutating bd command in surface.sh"; exit 1; }
@@ -35,6 +49,10 @@ grep -nE 'bd (create|close|update|remember|forget|init|delete|import)|bd dolt (p
 ( cd "$TMP" && bd remember "@type=lesson @salience=4
 Never chain open after bd commands in one invocation — it hangs." \
   --key lesson-open-after-bd >/dev/null )
+# Over-length key: the printed key is the agent's next command, so it must survive.
+( cd "$TMP" && bd remember \
+  "retrieval contract tests must exercise the real interface, never a hand-authored fixture" \
+  --key "$LONGKEY" >/dev/null )
 ( cd "$TMP" && printf '%s' \
   "Worktree isolation gives each parallel plan task its own bd worktree, preventing merge conflicts between concurrent subagents." \
   | bd create "ADR-0002 per-task worktree isolation" -t decision -l kb,sdd-process \
@@ -46,39 +64,59 @@ Never chain open after bd commands in one invocation — it hangs." \
 
 # ── 1. coverage line opens every result set
 out="$( cd "$TMP" && bash "$SURFACE" "worktree gotchas" )"
-printf '%s\n' "$out" | head -1 | grep -qE '^searched: memories\([0-9][0-9]*\) beads\([0-9][0-9]*\)' \
+grep -qE '^searched: memories\([0-9][0-9]*\) beads\([0-9][0-9]*\)' <<<"${out%%$'\n'*}" \
   || { echo "FAIL: coverage line absent or not first"; printf '%s\n' "$out"; exit 1; }
 
 # ── 2. the count is what was SEARCHED. bd memories --json wraps the map in a
-# "schema_version" envelope key; counting raw map entries reports memories(3)
-# for a 2-memory store — a miscount inside the line that exists to prevent one.
-printf '%s\n' "$out" | grep -q 'memories(2)' \
+# "schema_version" envelope key; counting raw map entries reports memories(4)
+# for a 3-memory store — a miscount inside the line that exists to prevent one.
+grep -q 'memories(3)' <<<"$out" \
   || { echo "FAIL: memory count wrong (bd's schema_version envelope key counted?)"; printf '%s\n' "$out"; exit 1; }
 
 # ── 3. a multi-word query returns its known-correct hit (bd itself returns zero
 # here: it substring-matches the whole phrase)
-printf '%s\n' "$out" | grep -q 'lesson-worktree-path-gotchas' \
+grep -q 'lesson-worktree-path-gotchas' <<<"$out" \
   || { echo "FAIL: multi-word query returned no known hit"; printf '%s\n' "$out"; exit 1; }
 
 # ── 4. unset salience renders visibly unset, never a plausible-looking number.
 # SALIENCE_UNSET is -1; printing it as "s-1" reads like real data — the same
 # fabrication the eo9z2.2 finding closed inside the ranker.
-printf '%s\n' "$out" | grep -qE '^  lesson-worktree-path-gotchas +s[?] ' \
+grep -qE '^  lesson-worktree-path-gotchas +s[?] ' <<<"$out" \
   || { echo "FAIL: unset salience not rendered as s?"; printf '%s\n' "$out"; exit 1; }
-printf '%s\n' "$out" | grep -q 's-1' \
+grep -q 's-1' <<<"$out" \
   && { echo "FAIL: SALIENCE_UNSET leaked to the display layer as s-1"; exit 1; }
 
 # ── 5. a populated salience still renders its real value, with the hazard flag
 haz="$( cd "$TMP" && bash "$SURFACE" "never chain open" )"
-printf '%s\n' "$haz" | grep -qE '^  lesson-open-after-bd +s4 +HAZ ' \
+grep -qE '^  lesson-open-after-bd +s4 +HAZ ' <<<"$haz" \
   || { echo "FAIL: explicit salience/hazard not rendered"; printf '%s\n' "$haz"; exit 1; }
 
-# ── 6. label filter is stage-1 recall for beads (ADR-0056), and it is disclosed
+# ── 6. the printed key is the ACTIONABLE PAYLOAD — `bd recall <key>` is the
+# agent's next move, so the key column pads but never truncates. Asserted by
+# round-tripping whatever was printed back through bd: a cut key resolves to
+# nothing, which no text assertion on a short key would ever catch.
+lng="$( cd "$TMP" && bash "$SURFACE" "retrieval contract" )"
+lkey="$(awk '$1 ~ /^lesson-a-retrieval-contract/ {print $1; exit}' <<<"$lng")"
+[ -n "$lkey" ] || { echo "FAIL: over-length-key memory not returned at all"; printf '%s\n' "$lng"; exit 1; }
+rec="$( cd "$TMP" && bd recall "$lkey" 2>&1 )" || true   # an unresolvable key exits non-zero
+grep -q 'hand-authored fixture' <<<"$rec" \
+  || { echo "FAIL: printed key does not resolve (truncated?): bd recall '$lkey' -> $rec"; exit 1; }
+
+# ── 7. label filter is stage-1 recall for beads (ADR-0056), and it is disclosed
 lab="$( cd "$TMP" && bash "$SURFACE" docs )"
-printf '%s\n' "$lab" | head -1 | grep -qE '^searched: memories\([0-9][0-9]*\) beads\(1\) label=docs' \
+grep -qE '^searched: memories\([0-9][0-9]*\) beads\(1\) label=docs' <<<"${lab%%$'\n'*}" \
   || { echo "FAIL: label filter absent or undisclosed"; printf '%s\n' "$lab"; exit 1; }
 
-# ── 7. injection: metacharacter queries are one argument and execute nothing
+# ── 8. …including HYPHENATED labels, in both the hyphenated and the spaced form.
+# tokenize() splits on hyphens, so a whole-string label comparison can never fire
+# for these — 10 of the live store's 19 labels, its four largest buckets included.
+for q in sdd-process "sdd process"; do
+  hyp="$( cd "$TMP" && bash "$SURFACE" "$q" )"
+  grep -qE '^searched: memories\([0-9][0-9]*\) beads\(1\) label=sdd-process' <<<"${hyp%%$'\n'*}" \
+    || { echo "FAIL: hyphenated label filter never fires for query '$q'"; printf '%s\n' "$hyp"; exit 1; }
+done
+
+# ── 9. injection: metacharacter queries are one argument and execute nothing
 # shellcheck disable=SC2016  # the un-expanded $(...) and backticks ARE the payload
 for payload in 'x"; touch INJECTED; echo "' '$(touch PWNED)' '`touch BACKTICKED`'; do
   ( cd "$TMP" && bash "$SURFACE" "$payload" ) >/dev/null 2>&1 || true
@@ -87,38 +125,53 @@ for canary in INJECTED PWNED BACKTICKED; do
   [ -e "$TMP/$canary" ] && { echo "FAIL: query reached a shell ($canary created)"; exit 1; }
 done
 
-# ── 8. bd failing is reported, never rendered as an empty store
+# ── 10. bd failing is reported, never rendered as an empty store
 err="$( cd "$NODB" && bash "$SURFACE" worktree )"
-printf '%s\n' "$err" | grep -q 'UNAVAILABLE' \
+grep -q 'UNAVAILABLE' <<<"$err" \
   || { echo "FAIL: bd error reported as an empty corpus"; printf '%s\n' "$err"; exit 1; }
 
-# ── 9. python3 absent: visible notice, coverage line, keys only, clean exit.
+# ── 11. python3 absent: visible notice, coverage line, keys only, clean exit —
+# driven by the MULTI-WORD phrase SKILL.md documents, because bd substring-matches
+# the whole argument and that is the shape that returns nothing when unhandled.
 # Bodies are withheld because redact() lives in rank.py — a floor with a bypass
 # is not a floor (orient.sh:29-33 is the precedent for the visible notice).
 mkdir -p "$TMP/nopy"
-for b in bd bash grep head sed dirname; do
+for b in bd bash grep head sed sort dirname; do
   p="$(command -v "$b" || true)"
   case "$p" in /*) ln -sf "$p" "$TMP/nopy/$b" ;; esac
 done
 set +e
-deg="$( cd "$TMP" && PATH="$TMP/nopy" bash "$SURFACE" worktree )"
+deg="$( cd "$TMP" && PATH="$TMP/nopy" bash "$SURFACE" "worktree gotchas" )"
 deg_rc=$?
 set -e
 [ "$deg_rc" -eq 0 ] || { echo "FAIL: degraded path exited $deg_rc, must be 0"; printf '%s\n' "$deg"; exit 1; }
-printf '%s\n' "$deg" | grep -q "requires python3" \
+grep -q "requires python3" <<<"$deg" \
   || { echo "FAIL: python3-absent degradation is silent"; printf '%s\n' "$deg"; exit 1; }
-printf '%s\n' "$deg" | head -1 | grep -q '^searched:' \
+grep -q '^searched:' <<<"${deg%%$'\n'*}" \
   || { echo "FAIL: degraded path emits no coverage line"; printf '%s\n' "$deg"; exit 1; }
-printf '%s\n' "$deg" | grep -q 'lesson-worktree-path-gotchas' \
-  || { echo "FAIL: degraded path surfaced no matching key"; printf '%s\n' "$deg"; exit 1; }
-printf '%s\n' "$deg" | grep -q '\.worktrees/name' \
+grep -q 'lesson-worktree-path-gotchas' <<<"$deg" \
+  || { echo "FAIL: degraded path surfaced no matching key for a multi-word query"; printf '%s\n' "$deg"; exit 1; }
+grep -q 'terms=worktree,gotchas' <<<"$deg" \
+  || { echo "FAIL: degraded path does not disclose which terms it searched"; printf '%s\n' "$deg"; exit 1; }
+grep -q '\.worktrees/name' <<<"$deg" \
   && { echo "FAIL: degraded path printed an unredacted body"; printf '%s\n' "$deg"; exit 1; }
 
-# ── 10. no query is a usage error, not an empty search
+# ── 12. python3 absent AND bd broken: the coverage line NAMES the dead source.
+# Rendering it as a fixed "memories(DEGRADED)" makes "bd is broken" and "nothing
+# matched" identical — the silent partial the coverage line exists to prevent.
+set +e
+degerr="$( cd "$NODB" && PATH="$TMP/nopy" bash "$SURFACE" worktree )"
+degerr_rc=$?
+set -e
+[ "$degerr_rc" -eq 0 ] || { echo "FAIL: degraded+bd-error path exited $degerr_rc, must be 0"; printf '%s\n' "$degerr"; exit 1; }
+grep -q 'UNAVAILABLE' <<<"${degerr%%$'\n'*}" \
+  || { echo "FAIL: degraded coverage line hides the bd failure"; printf '%s\n' "$degerr"; exit 1; }
+
+# ── 13. no query is a usage error, not an empty search
 set +e
 ( cd "$TMP" && bash "$SURFACE" >/dev/null 2>&1 )
 usage_rc=$?
 set -e
 [ "$usage_rc" -eq 2 ] || { echo "FAIL: no-argument invocation exited $usage_rc, expected 2"; exit 1; }
 
-echo "PASS: surface.sh — coverage line, counts, salience rendering, label filter, injection-inert, bd-error visible, degradation"
+echo "PASS: surface.sh — coverage line, counts, salience rendering, untruncated keys, hyphenated label filter, injection-inert, bd-error visible, degradation"
