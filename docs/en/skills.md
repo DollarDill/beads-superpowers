@@ -25,6 +25,7 @@ The `using-superpowers` bootstrap, injected at session start, tells the agent wh
 | Writing a plan | `writing-plans` |
 | Executing a plan | `subagent-driven-development` / `executing-plans` |
 | Research question | `research-driven-development` |
+| Need prior knowledge or decisions | `knowledge-retrieval` |
 | Isolated workspace needed | `using-git-worktrees` |
 | About to claim done | `verification-before-completion` |
 | Code review needed | `requesting-code-review` |
@@ -46,7 +47,7 @@ Also available: `document-release`, `getting-up-to-speed`, `dispatching-parallel
 | **Design & planning** | [brainstorming](#brainstorming), [stress-test](#stress-test), [writing-plans](#writing-plans) |
 | **Execution** | [subagent-driven-development](#subagent-driven-development), [executing-plans](#executing-plans), [dispatching-parallel-agents](#dispatching-parallel-agents), [using-git-worktrees](#using-git-worktrees), [requesting-code-review](#requesting-code-review), [receiving-code-review](#receiving-code-review), [finishing-a-development-branch](#finishing-a-development-branch) |
 | **Documentation** | [write-documentation](#write-documentation), [document-release](#document-release) |
-| **Memory & orientation** | [getting-up-to-speed](#getting-up-to-speed), [memory-curator](#memory-curator), [session-handoff](#session-handoff), [research-driven-development](#research-driven-development), [project-init](#project-init) |
+| **Memory & orientation** | [getting-up-to-speed](#getting-up-to-speed), [memory-curator](#memory-curator), [session-handoff](#session-handoff), [research-driven-development](#research-driven-development), [project-init](#project-init), [knowledge-retrieval](#knowledge-retrieval) |
 
 ```mermaid
 ---
@@ -90,6 +91,7 @@ graph TD
     SH["session-handoff"]
     RDD["research-driven-dev"]
     PI["project-init"]
+    KR["knowledge-retrieval"]
   end
 
   Meta --> Testing
@@ -231,6 +233,12 @@ Decomposes the topic into sub-questions, dispatches one researcher per sub-quest
 **Trigger:** When `bd` commands fail, setting up beads in a new project, or recovering from diverged Dolt history.
 
 Three paths: fresh init, bootstrap from remote, or recovery when Dolt history has diverged.
+
+### knowledge-retrieval
+
+**Trigger:** "What do we know about X", prior decisions, or when another skill needs grounding before designing, planning, or debugging.
+
+BM25-ranked retrieval over the beads memory store and knowledge beads. Expands the query into 3-8 variants (synonyms, abbreviations, compound splits), then dispositions every plausibly-relevant hit - folded in or ruled out - rather than stopping at a hit count. Asks nothing itself: on an ambiguous query it returns candidate angles for the caller to re-query, keeping it safe to invoke from other skills, interactive sessions, and subagents alike.
 
 ## Beads commands
 
