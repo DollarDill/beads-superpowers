@@ -115,6 +115,16 @@ def main():
     def score(q, key):
         return c._bm25(key, tokenize(q))
 
+    # IDF is real. Same document, same term frequency (1), same length, so the
+    # tf/length factor cancels exactly and ONLY IDF can move this: "worktree"
+    # sits in 2 of the 15 documents, "bd" in 14. Asserted on the raw core for
+    # the same reason as the brackets below — read through search(), a flat
+    # idf=1.0 passes the whole suite green: ubiquitous does take the raw top
+    # spot, but hit-gotcha's +0.5 salience boost overtakes it and the existing
+    # "rare term outranks ubiquitous term" check never notices.
+    ok &= check("a rare term scores higher than a ubiquitous one in the same document",
+                score("worktree", "hit-worktree") > score("bd", "hit-worktree"))
+
     # B > 0 — length normalisation is on. At B=0 length is ignored entirely and
     # these two score exactly the same.
     ok &= check("shorter document outranks longer one at equal term frequency",
@@ -200,6 +210,35 @@ def extra_checks(ok):
     ok &= check("no partial secret survives the truncation boundary",
                 "ghp_B" not in hit2.sentence)
 
+    # The excerpt must anchor on a query term the document ACTUALLY contains.
+    # _bm25 returns a hit when ANY term matches, so a document that matched only
+    # a LATER term has no qterms[0] to find: anchoring on qterms[0] alone gives
+    # idx == -1, start == 0, and exactly the fixed-length prefix acceptance
+    # criterion 3 rejects. The main FIXTURE cannot catch this — its design note
+    # deliberately puts "bd" in every bodied document, so qterms[0] always hits.
+    # "late-match" carries no "bd" at all and matches only the second term.
+    later = {"noise%d" % i: "@salience=1 bd staging directory notes" for i in range(5)}
+    later["late-match"] = "@salience=1 " + " ".join(["alpha"] * 40) + " worktree tail"
+    sent3 = next(h.sentence for h in Corpus(later).search("bd worktree", top_n=10)
+                 if h.key == "late-match")
+    ok &= check("excerpt anchors on the query term the document actually matched",
+                "worktree" in sent3.lower())
+
+    # Criterion 3's other half: "not a fixed-length prefix of the body". Every
+    # other fixture puts its match within the first few characters, where
+    # start = max(0, idx - 60) and a constant start = 0 are observationally
+    # identical — mutating the centring to 0 left the entire suite green, which
+    # is exactly why the qterms[0] anchoring defect above went undetected.
+    # "preamble" sits at offset 0 and "mortise" at offset 169: a body-prefix
+    # excerpt necessarily contains preamble and misses mortise, a centred one
+    # necessarily does the reverse.
+    far = {"noise%d" % i: "@salience=1 bd staging directory notes" for i in range(5)}
+    far["far-match"] = "@salience=1 preamble " + " ".join(["pad"] * 40) + " mortise tail"
+    sent4 = next(h.sentence for h in Corpus(far).search("mortise", top_n=10)
+                 if h.key == "far-match")
+    ok &= check("excerpt is centred on the match, not a fixed-length body prefix",
+                "preamble" not in sent4.lower() and "mortise" in sent4.lower())
+
     # Recency is asserted on the pure helper, not through search(): inside
     # search() the diversity demotion moves scores too, so a corpus-level
     # comparison cannot show WHICH of the two moved a hit. A separate import
@@ -217,6 +256,15 @@ def extra_checks(ok):
     ok &= check("an entry with no parseable @created is old, never new",
                 _recency("@salience=3 ", day) == 0.0
                 and _recency("@created=2026-13-45 ", day) == 0.0)
+    # A future @created must never out-earn today. The three probes above all sit
+    # on the clamped side of the floor, so they say nothing about the ceiling:
+    # unclamped, (60 - age) / 60 at a negative age is unbounded — 31 days out
+    # yields 1.52 and 2099-01-01 yields 441.85. @created is store-supplied text,
+    # so one typo'd entry would pin itself to rank 1 on scores of 15-48. The spec
+    # allows these signals only as a tiebreak, never as a gate.
+    ok &= check("a future @created is clamped to today's boost, never above it",
+                _recency("@created=2026-09-01 ", day) == 1.0
+                and _recency("@created=2099-01-01 ", day) == 1.0)
 
     # Diversity. Fourth corpus for the same reason as the third — the main
     # FIXTURE's measured B/K1 brackets must not move. variant-b shares 3 of its
@@ -228,9 +276,19 @@ def extra_checks(ok):
     lesson["variant-b"] = "@salience=1 bd zephyr harness clamp"     # BM25 0.958
     lesson["distinct"] = "@salience=1 bd zephyr alpha beta gamma"   # BM25 0.862
     c4 = Corpus(lesson)
+    # The invariant the name states, NOT a golden top-N ordering. Full-list
+    # equality against a hand-measured order encodes the weights: every tune to
+    # K1, B, the 0.5 halving or most_common(8) breaks it, and the cheap repair is
+    # to paste in the new output — a test that ratifies rather than constrains.
+    # It also pinned WHICH of the two variants is demoted, and they tie exactly
+    # at 0.958, so that rested on dict insertion order plus sort stability rather
+    # than on anything the ranker promises. max() of the two indices asserts the
+    # actual promise: whichever variant is the redundant one lands below
+    # "distinct", even though distinct scores lower than both on raw BM25.
+    keys4 = [h.key for h in c4.search("zephyr", top_n=3)]
     ok &= check("a redundant variant is demoted below a distinct lower-scoring hit",
-                [h.key for h in c4.search("zephyr", top_n=3)]
-                == ["variant-a", "distinct", "variant-b"])
+                keys4.index("distinct")
+                < max(keys4.index("variant-a"), keys4.index("variant-b")))
     return ok
 
 main()

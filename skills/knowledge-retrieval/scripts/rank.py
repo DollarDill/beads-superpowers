@@ -35,8 +35,12 @@ def redact(text):
     return _SECRET.sub("[REDACTED]", text)
 
 def _recency(header, today):
-    """1.0 today, decaying linearly to 0.0 at 60 days. No parseable date == old
-    (0.0), never new — an unparsed field must not silently promote an entry."""
+    """1.0 today, decaying linearly to 0.0 at 60 days, clamped at BOTH ends.
+    A future @created clamps to 1.0: unclamped, (60 - age) / 60 at a negative
+    age is unbounded (2099-01-01 scores 441.85), so one typo'd store-supplied
+    date becomes a gate on scores of 15-48 instead of the tiebreak the spec
+    allows. No parseable date == old (0.0), never new — an unparsed field must
+    not silently promote an entry."""
     m = _CREATED.search(header)
     if not m:
         return 0.0
@@ -44,7 +48,7 @@ def _recency(header, today):
         age = (today - datetime.date(*map(int, m.groups()))).days
     except ValueError:
         return 0.0
-    return max(0.0, (60 - age) / 60)
+    return min(1.0, max(0.0, (60 - age) / 60))
 
 def _diversify(hits, toks):
     """Demote a hit sharing >50% of its top terms with a higher-ranked hit."""
@@ -95,7 +99,12 @@ class Corpus:
             score = self._bm25(key, qterms)
             if score <= 0:
                 continue
-            header = self.raw[key][:len(self.raw[key]) - len(self.bodies[key])]
+            # _HEADER.match, not length arithmetic against the body: the two
+            # agree only because strip_header's .replace("\n", " ") preserves
+            # length. A plausible future tidy there (adding .strip()) would shift
+            # the boundary and let _SALIENCE / _CREATED read body text as header.
+            hm = _HEADER.match(self.raw[key])
+            header = hm.group(1) if hm else ""
             m = _SALIENCE.search(header)
             # else SALIENCE_UNSET, never a plausible-looking default: an entry with
             # no @salience header must stay visibly unpopulated. Defaulting to 3
@@ -105,7 +114,12 @@ class Corpus:
             hazard = bool(_HAZARD.search(self.bodies[key]))
             score += 0.5 * (salience >= 4) + 0.5 * hazard + _recency(header, today or datetime.date.today())
             body_r = redact(self.bodies[key])          # redact BEFORE cutting
-            idx = body_r.lower().find(qterms[0]) if qterms else -1
+            # First query term that ACTUALLY occurs, not qterms[0]: _bm25 returns
+            # a hit when ANY term matches, so a document matched by a later term
+            # has no qterms[0] to find and would fall back to a fixed-length
+            # prefix containing no match at all. Computed on body_r, the redacted
+            # string, so the slice below can never cut a secret.
+            idx = next((i for i in (body_r.lower().find(t) for t in qterms) if i >= 0), -1)
             start = max(0, idx - 60) if idx >= 0 else 0
             hits.append(Hit(key=key, score=score, sentence=body_r[start:start + 150].strip(),
                             salience=salience, hazard=hazard))
