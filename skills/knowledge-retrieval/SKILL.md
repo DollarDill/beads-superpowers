@@ -33,11 +33,11 @@ re-queries — it never requests input, so it is safe in interactive, headless a
 
 ## Floor (never moved, never compressed)
 
-- **Redact before truncating.** Secrets are redacted on the full body before any cutting; a redacted
-  excerpt cut afterwards can print a partial secret.
-- **Queries are passed as arguments, never built into a command string.** Queries are model-generated.
-- **Without `python3`, bodies are withheld** — redaction lives in the ranker, and a floor with a bypass
-  is not a floor.
+- **Never truncate before redacting.** Redact the full body first; a redacted excerpt cut afterwards can
+  print a partial secret.
+- **Never build a query into a command string** — pass it as an argument. Queries are model-generated.
+- **Never print bodies without `python3`** — redaction lives in the ranker; print keys only. A floor with
+  a bypass is not a floor.
 
 For keyword expansion technique, the topic-label vocabulary, and degraded modes, read
 `references/query-strategy.md`.
