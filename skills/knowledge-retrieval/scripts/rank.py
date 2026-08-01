@@ -1,6 +1,6 @@
 """Pure BM25F ranker over beads memories and knowledge-bead bodies.
 No I/O, no bd calls, no third-party packages — see surface.sh for the bd interface."""
-import re, math, collections, datetime
+import re, math, collections, datetime, os
 from dataclasses import dataclass
 
 _HEADER = re.compile(r'^((?:@\w+=\S+(?:\s+|$))+)', re.S)
@@ -125,3 +125,55 @@ class Corpus:
                             salience=salience, hazard=hazard))
         hits.sort(key=lambda h: -h.score)
         return _diversify(hits, self.toks)[:top_n]
+
+
+def _store(name, count, failed):
+    """Coverage-line term for one store. A bd failure is NAMED, never rendered
+    as a count of zero — 'beads(0)' and 'bd errored' must not look identical."""
+    return "%s UNAVAILABLE(bd error)" % name if failed else "%s(%d)" % (name, count)
+
+
+if __name__ == "__main__":
+    import json, sys
+
+    args = [a for a in sys.argv[1:] if a != "--stdin"]
+    raw = sys.stdin.read().split("\0")
+    mem = json.loads(raw[0] or "{}")
+    beads = json.loads((raw[1] if len(raw) > 1 else "") or "[]")
+    failed = {s for s in (raw[2] if len(raw) > 2 else "").split(",") if s}
+    query = " ".join(args)
+
+    # Stage 1 recall. Memories: whole corpus. Beads: label filter when the query
+    # names a label, else all kb beads (ADR-0056's axis is recall, not ranking —
+    # 12 of 19 buckets exceed 10 entries, so ranking still runs).
+    # The vocabulary is DERIVED FROM THE DATA, never read from a file: a path
+    # relative to __file__ resolves to ~/.claude/scripts/... once installed and
+    # would silently disable label filtering for every real user. Deriving also
+    # makes the skill portable to projects with their own label sets.
+    vocab = {l for b in beads for l in b.get("labels", []) if l != "kb"}
+    named = set(tokenize(query)) & vocab
+    if named:
+        beads = [b for b in beads if named & set(b.get("labels", []))]
+
+    # `bd memories --json` wraps the {key: body} map in a "schema_version"
+    # envelope key (verified against bd 1.1.2). It is not a memory: counting it
+    # reports memories(3) for a 2-memory store, a miscount inside the one line
+    # whose job is to make coverage checkable.
+    docs = {k: v for k, v in mem.items() if isinstance(v, str) and k != "schema_version"}
+    mem_count = len(docs)
+    docs.update({b["id"]: (b.get("description") or b.get("title", "")) for b in beads})
+
+    print("searched: %s %s%s" % (
+        _store("memories", mem_count, "memories" in failed),
+        _store("beads", len(beads), "beads" in failed),
+        " label=%s" % ",".join(sorted(named)) if named else ""))
+    hits = Corpus(docs).search(query, top_n=int(os.environ.get("BSP_TOP_N", "5")))
+    for h in hits:
+        # SALIENCE_UNSET prints as "?", never as its -1 sentinel: "s-1" reads
+        # like real data, which is the fabricated-plausible-value failure the
+        # eo9z2.2 finding closed inside the ranker. Two-char field either way,
+        # so the column stays scannable.
+        sal = "?" if h.salience == SALIENCE_UNSET else str(h.salience)
+        print("  %-42s s%-2s %s %s" % (h.key[:42], sal, "HAZ" if h.hazard else "   ", h.sentence))
+    if not hits:
+        print("  (no hits — re-angle the query once before reporting none)")
