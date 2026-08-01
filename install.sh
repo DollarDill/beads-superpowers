@@ -31,7 +31,7 @@ VERSION_FILE="$SKILLS_DIR/.beads-superpowers-version"
 KNOWN_SKILLS=(
   brainstorming dispatching-parallel-agents
   document-release executing-plans finishing-a-development-branch
-  getting-up-to-speed memory-curator project-init
+  getting-up-to-speed knowledge-retrieval memory-curator project-init
   receiving-code-review requesting-code-review research-driven-development
   session-handoff stress-test subagent-driven-development
   systematic-debugging test-driven-development using-git-worktrees
