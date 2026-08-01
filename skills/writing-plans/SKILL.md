@@ -22,7 +22,9 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 ## Knowledge Check
 
-Before writing tasks, query the knowledge store: `bd list --label <topic> --status all` + `bd search "<keywords>" --status all` + `bd memories <keyword>` (the memory half — lessons, patterns, root-causes; knowledge-beads alone miss it entirely). Then read — hits are pointers, not knowledge: `bd show <id1> <id2> ...` / `bd recall <key>` for every hit that plausibly bears on this plan. Emit `KB check: N bead hits, M memory hits, K read` plus a one-line disposition per read hit — folded into a task (which one) or ruled out (why).
+Before writing tasks, invoke the `knowledge-retrieval` skill with the plan's topic and why you are asking (task grounding).
+
+If the skill is unavailable: `bd list --label <topic> --status all` + `bd search "<keywords>" --status all` + `bd memories <keyword>` — hits are pointers, not knowledge; read hit bodies before relying on them, and emit one disposition line per hit: folded into a task (which one) or ruled out (why). The check is complete when every plausibly-relevant hit is dispositioned, never when a count is reached.
 
 ## Scope Check
 
