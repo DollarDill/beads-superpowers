@@ -70,6 +70,23 @@ KB_SITES=(
   skills/writing-plans/SKILL.md
   hooks/session-start
 )
+# KB pointer signature: sites already converted to invoke the knowledge-retrieval
+# skill instead of inlining the protocol. ADDITIVE to KB_SITES, not a split of it --
+# every site above still gets the KB_SIG check (splitting the list into "converted"
+# and "legacy" would have dropped hooks/session-start, which is a KB site but not a
+# skill and is not converting).
+# What this pins: the primary path. KB_SIG alone cannot tell a converted site from
+# one whose pointer was deleted while the bare-bd fallback survived -- that site
+# still contains "hits are pointers, not knowledge" and passes. This signature is
+# absent from all six legacy sites (verified), so it discriminates the two shapes.
+# What it does NOT pin: block identity. Like KB_SIG, this is presence-only.
+# Move a path here as it converts.
+# shellcheck disable=SC2016  # the backticks are markdown code-span text, not an expansion
+KB_POINTER_SIG='invoke the `knowledge-retrieval` skill'
+KB_POINTER_SITES=(
+  skills/brainstorming/SKILL.md
+  skills/writing-plans/SKILL.md
+)
 # --- Per-site kernel map (ADR-0049): each redesigned skill pins ONE ASCII invariant
 # line phrased for its own operation. site|signature pairs; grep -qF per site.
 KERNEL_MAP=(
@@ -219,6 +236,7 @@ check_block "CB-4 memory convention" "$CB4_SIG" "${CB4_SITES[@]}"
 assert_line_identical "CB-4 memory convention (byte-identity)" "$CB4_SIG" "${CB4_SITES[@]}"
 assert_block_identical "CB-3 Capture gate (byte-identity)" "$CB3_ANCHOR" '^```$' "${CB3_SITES[@]}"
 check_block "KB read-depth fragment" "$KB_SIG" "${KB_SITES[@]}"
+check_block "KB retrieval pointer" "$KB_POINTER_SIG" "${KB_POINTER_SITES[@]}"
 check_block "CB-5 Reviewer security floor" "$CB5_SIG" "${CB5_SITES[@]}"
 assert_block_identical "CB-5 Reviewer security floor (byte-identity)" "$CB5_ANCHOR" "$CB5_ENDRE" "${CB5_SITES[@]}"
 check_kernels
