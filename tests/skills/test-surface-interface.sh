@@ -283,4 +283,43 @@ title_only="$( cd "$TMP" && bash "$SURFACE" xenolith )"
 grep -qi 'xenolith' <<<"$title_only" \
   || { echo "FAIL: title-only term not retrievable (bead title not indexed)"; printf '%s\n' "$title_only"; exit 1; }
 
-echo "PASS: surface.sh — coverage line, counts, salience rendering, untruncated keys, hyphenated label filter, injection-inert, bd-error visible, degradation"
+# ── 15. the degraded path DISCLOSES truncation (beads-superpowers-eo9z2.9).
+# 20 keys shown out of a larger set must say so; a silent cut is the exact
+# "visible degradation, never a silent partial" violation the coverage line prevents.
+#
+# Seed past the cut IN THE SCRATCH STORE — the base corpus is 8 entries, so without
+# this the >20 branch is unreachable and the assertion could never fail.
+#
+# THE KEY PREFIX IS LOAD-BEARING, NOT COSMETIC. Keys are `sort -u`'d then cut at 20.
+# A prefix sorting BEFORE "lesson-" (e.g. "fixture-") fills all 20 slots and pushes
+# every security-floor fixture out of the window, leaving assertions 11/11b passing
+# VACUOUSLY — a body cannot leak from a key that was never rendered. Measured:
+# "fixture-*" => 0 of 3 floor fixtures survive; "zz-*" => 3 of 3. This block also runs
+# AFTER assertions 11/11b for the same reason.
+for i in $(seq -w 1 25); do
+  ( cd "$TMP" && bd remember "degraded truncation fixture number $i" \
+      --key "zz-truncation-$i" >/dev/null )
+done
+
+deg_trunc="$( cd "$TMP" && PATH="$TMP/nopy" bash "$SURFACE" "zz truncation" 2>&1 )"
+grep -qF -e 'showing 20 of' <<<"$deg_trunc" \
+  || { echo "FAIL: degraded path truncated to 20 keys without disclosing the total"; printf '%s\n' "$deg_trunc"; exit 1; }
+disclosed="$( grep -oE 'showing 20 of [0-9]+ keys' <<<"$deg_trunc" | grep -oE '[0-9]+ keys' | grep -oE '[0-9]+' )"
+[ "${disclosed:-0}" -ge 25 ] \
+  || { echo "FAIL: disclosed total ${disclosed:-0} is below the 25 seeded fixtures"; exit 1; }
+
+# FLOOR LIVENESS: prove the seeding did not displace the floor fixtures. Without this,
+# a future change to the key prefix silently re-defangs the two body-leak assertions.
+deg_floor="$( cd "$TMP" && PATH="$TMP/nopy" bash "$SURFACE" "worktree hangs" 2>&1 )"
+grep -q 'lesson-worktree-path-gotchas' <<<"$deg_floor" \
+  || { echo "FAIL: seeding displaced the floor fixture from the degraded window — the body-leak assertions are now vacuous"; printf '%s\n' "$deg_floor"; exit 1; }
+
+# ── 16. a HEALTHY EMPTY result is not a pipeline error (beads-superpowers-eo9z2.28).
+# grep exits 1 on no-match, which is normal; under pipefail a bare `if !` conflated
+# that with real breakage, so an empty store read as a broken toolchain — eo9z2.23's
+# fix inverted. Query a term the scratch corpus cannot contain.
+deg_empty="$( cd "$TMP" && PATH="$TMP/nopy" bash "$SURFACE" "zzzznomatchzzzz" 2>&1 )"
+grep -q 'keys UNAVAILABLE(pipeline error)' <<<"$deg_empty" \
+  && { echo "FAIL: healthy-but-empty degraded result reported as a pipeline error"; printf '%s\n' "$deg_empty"; exit 1; }
+
+echo "PASS: surface.sh — coverage line, counts, salience rendering, untruncated keys, hyphenated label filter, injection-inert, bd-error visible, degradation, truncation disclosure, empty-vs-error"

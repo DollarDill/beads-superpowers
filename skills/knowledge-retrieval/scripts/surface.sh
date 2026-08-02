@@ -69,8 +69,26 @@ if ! command -v python3 >/dev/null 2>&1; then
   # (beads-superpowers-eo9z2.23). Runs under `set -o pipefail`, so a failure in
   # any stage propagates here.
   keys_status=""
-  if ! keys="$(grep -E '^  [A-Za-z0-9._-]+$' <<<"$raw" | sort -u | sed -n '1,20p')"; then
+  # Capture the FULL key set BEFORE truncating, so the cut can be disclosed
+  # (beads-superpowers-eo9z2.9): cutting inside the pipeline made 20-of-20
+  # indistinguishable from 20-of-200 on a line carrying no total.
+  #
+  # Branch on the STATUS, not on truthiness (beads-superpowers-eo9z2.28). grep exits 1
+  # for "no match" — normal — and >=2 for a real error. Under `set -o pipefail` a bare
+  # `if !` conflated the two, so a healthy-but-empty result reported a pipeline error:
+  # eo9z2.23's fix inverted into its own mirror image. BOTH directions must hold — a
+  # broken pipeline never reads as zero hits, and zero hits never read as broken.
+  set +e
+  all_keys="$(grep -E '^  [A-Za-z0-9._-]+$' <<<"$raw" | sort -u)"; keys_rc=$?
+  set -e
+  if [ "$keys_rc" -gt 1 ]; then
     keys=""; keys_status=" keys UNAVAILABLE(pipeline error)"
+  else
+    if [ -z "$all_keys" ]; then key_total=0; else key_total="$(grep -c '' <<<"$all_keys")"; fi
+    keys="$(sed -n '1,20p' <<<"$all_keys")"
+    # `if/fi`, never a trailing `[ cond ] && ...`: a false trailing conditional makes
+    # the enclosing block's status 1, which `set -e` can act on.
+    if [ "$key_total" -gt 20 ]; then keys_status=" showing 20 of ${key_total} keys"; fi
   fi
   # The failure record built above is RENDERED here, not discarded: a coverage
   # line that reads identically whether bd answered or died is exactly the silent
