@@ -38,7 +38,8 @@ re-queries — it never requests input, so it is safe in interactive, headless a
   print a partial secret.
 - **Never build a query into a command string** — pass it as an argument. Queries are model-generated.
 - **Never print bodies without `python3`** — redaction lives in the ranker; print keys only. A floor with
-  a bypass is not a floor.
+  a bypass is not a floor. With no ranker there is also no bound: if the output discloses
+  `showing 20 of N keys`, narrow the query, never triage truncated titles.
 
 Open `references/query-strategy.md` when a query returns nothing, returns more than you can
 disposition, or a source reports degraded in the coverage line.

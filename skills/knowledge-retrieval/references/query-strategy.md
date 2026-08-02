@@ -63,6 +63,26 @@ At most 5 query rounds per retrieval task. If round 5 still returns nothing plau
 the query once (a genuinely different framing — not a rephrase) before reporting "none found." Do not keep
 grinding past that; a bounded "none" is a valid, complete answer.
 
+## When a query returns more than you can disposition
+
+More than 10 hits means the query is too broad, not that you should skim. A title is not evidence
+and a hit count is not a done-state, so
+**narrow the query, never triage truncated titles**.
+
+Narrow in this order:
+
+1. **Add a discriminating term**, not a general one. (Measured on this repo's store: `guard` matches
+   26 memories; `guard skip` matches 1.)
+2. **Drop the near-zero-signal words.** A term carried by most entries discriminates nothing; a term
+   carried by a handful carries most of the signal. (Here: `lesson` appears in 117 of 180 memories,
+   `shellcheck` in 5.)
+3. **Split a compound.** `worktree` and `work tree` are different searches — `bd` has no stemming.
+4. Only then re-run.
+
+**On the degraded path (no `python3`) nothing bounds the set but the query.** Keys come back in
+alphabetical order, never relevance order, cut at 20 with a `showing 20 of N keys` disclosure. Do
+not disposition 20 unranked keys — narrow until the disclosure disappears, or install `python3`.
+
 ## Degradation matrix
 
 | Condition | Behavior |

@@ -341,4 +341,17 @@ grep -q 'backlog not indexed' <<<"$cov" \
 grep -qE 'UNAVAILABLE|DEGRADED|SKIPPED' <<<"$cov" \
   && { echo "FAIL: boundary disclosure must not read as a degraded source: $cov"; exit 1; }
 
-echo "PASS: surface.sh — coverage line, counts, salience rendering, untruncated keys, hyphenated label filter, injection-inert, bd-error visible, degradation, truncation disclosure, empty-vs-error, boundary disclosure"
+# ── 18. the too-many-hits branch exists where the pointer promises it
+# (beads-superpowers-eo9z2.12). SKILL.md's closing pointer offers help when a query
+# "returns more than you can disposition", but the target file only ever handled the
+# zero-result case — a pointer promising a branch that is not there.
+QS="$REPO/skills/knowledge-retrieval/references/query-strategy.md"
+grep -qF -e 'narrow the query, never triage truncated titles' "$QS" \
+  || { echo "FAIL: query-strategy.md promises a too-many-hits branch it does not deliver"; exit 1; }
+# The degraded path is where the bound matters most: with no ranker, nothing bounds
+# the returned set except the query itself.
+grep -qF -e 'narrow the query, never triage truncated titles' \
+     "$REPO/skills/knowledge-retrieval/SKILL.md" \
+  || { echo "FAIL: SKILL.md carries no narrowing clause for the degraded path"; exit 1; }
+
+echo "PASS: surface.sh — coverage line, counts, salience rendering, untruncated keys, hyphenated label filter, injection-inert, bd-error visible, degradation, truncation disclosure, empty-vs-error, boundary disclosure, too-many-hits branch"
