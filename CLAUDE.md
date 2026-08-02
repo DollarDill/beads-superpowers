@@ -109,6 +109,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 7 best-effort harn
 - **MkDocs Material for docs site** — HashiCorp/Terraform-style sidebar, dark theme, Mermaid diagrams. Template variables via macros plugin avoid hardcoded counts; the config and macros now live in the-factory-website repo, not here. (See: ADR-0001, ADR-0050)
 - **Per-task worktree isolation for parallel SDD** — Independent plan tasks execute in parallel (max 5), each in its own `bd worktree`. Prevents merge conflicts between concurrent subagents. (See: ADR-0002)
 - **Dev-branch integration model** — All work lands on `dev`; `main` is released-only and advances exclusively via `git merge --ff-only dev` at release cut (hotfixes ride dev as patch releases — drift is self-detecting). `main` carries force-push/deletion protection (`gh-pages` did too until its 2026-07-22 retirement). (See: ADR-0060)
+- **Multi-release epics develop on a long-lived `feature/<topic>` branch, not on `dev`** — they merge to `dev` **once**, complete. `dev` must stay releasable (the release cut is `--ff-only dev`) and safe to branch from, since it is also the contributor PR target; a half-finished epic on `dev` breaks both. Test: would `dev` be un-releasable for more than a session or two if this landed incrementally? Ordinary multi-session work still lands on `dev`. (See: ADR-0066, amending ADR-0060 item 1)
 
 ## Common Gotchas
 
