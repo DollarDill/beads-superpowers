@@ -683,6 +683,12 @@ rm -rf "$SB28"
 # coupling the fix removes. The scratch store also proves portability directly:
 # it contains none of this repo's lore and the control still passes.
 #
+# The fixture's KEY deliberately shares NO token with its BODY ("aaa-zqx-marker"
+# vs "totally unrelated content about deployment pipelines"). That is the realistic
+# contributor case, and it is load-bearing: an earlier fixture whose key and body
+# overlapped made the control pass for the wrong reason and hid a real defect --
+# the probe was being derived from the key, which rank.py never indexes.
+#
 # NOTE: a `git ls-files` sandbox alone cannot test this guard — .beads is untracked,
 # so bd finds no store there and the guard SKIPs, which would make the mutation
 # report a false result. The scratch `bd init` is what makes the rig valid.
@@ -691,7 +697,7 @@ if ! (cd "$REPO_ROOT" && git ls-files -z skills scripts | xargs -0 -I{} cp --par
   echo "SELFTEST FAIL: mutation-29 setup copy failed (rig broken, not a caught mutation)"; rc=1
 elif ! (cd "$SB29" && bd init --non-interactive >/dev/null 2>&1); then
   echo "SELFTEST FAIL: mutation-29 setup 'bd init' failed (rig broken, not a caught mutation)"; rc=1
-elif ! (cd "$SB29" && bd remember "alpha beta gamma scratch probe body" --key "zz-alpha-beta" >/dev/null 2>&1); then
+elif ! (cd "$SB29" && bd remember "totally unrelated content about deployment pipelines" --key "aaa-zqx-marker" >/dev/null 2>&1); then
   echo "SELFTEST FAIL: mutation-29 setup 'bd remember' failed (rig broken, not a caught mutation)"; rc=1
 elif ! grep -qF -- 'return _diversify(hits, self.toks, self._idf)[:top_n]' "$SB29/skills/knowledge-retrieval/scripts/rank.py"; then
   echo "SELFTEST FAIL: mutation-29 anchor absent from rank.py (rig broken, sed would be inert)"; rc=1

@@ -69,19 +69,26 @@ More than 10 hits means the query is too broad, not that you should skim. A titl
 and a hit count is not a done-state, so
 **narrow the query, never triage truncated titles**.
 
-Narrow in this order:
+**Terms are OR-ed, not AND-ed** — by `surface.sh` on the degraded path and by BM25 in the ranker.
+Adding a term therefore *widens* the candidate set. Narrowing means **replacing** terms, never
+appending them:
 
-1. **Add a discriminating term**, not a general one. (Measured on this repo's store: `guard` matches
-   26 memories; `guard skip` matches 1.)
-2. **Drop the near-zero-signal words.** A term carried by most entries discriminates nothing; a term
-   carried by a handful carries most of the signal. (Here: `lesson` appears in 117 of 180 memories,
-   `shellcheck` in 5.)
-3. **Split a compound.** `worktree` and `work tree` are different searches — `bd` has no stemming.
-4. Only then re-run.
+1. **Replace a low-signal term with a high-signal one.** Signal is rarity: a term carried by most
+   entries discriminates nothing. (Measured on this repo's store, as counts of memories whose body
+   contains the term: `lesson` 117 of 180, `shellcheck` 5. Swapping `lesson` for `shellcheck`
+   collapses the set; adding it to `lesson` enlarges it — `lesson` returns 136 keys on the degraded
+   path, `lesson guard` returns 144.)
+2. **Drop terms rather than add them.** Every extra term is more results, not fewer.
+3. Only then re-run.
 
-**On the degraded path (no `python3`) nothing bounds the set but the query.** Keys come back in
+If a compound may be spelled two ways, `worktree` and `work tree` are different searches — `bd` has
+no stemming. That is a *recall* fix for the zero-hits case above, not a narrowing move; it widens.
+
+**On the degraded path (no `python3`) nothing bounds the set but the query** — and that is the only
+path where more than 10 hits can reach you, since the ranker caps its shortlist. Keys come back in
 alphabetical order, never relevance order, cut at 20 with a `showing 20 of N keys` disclosure. Do
-not disposition 20 unranked keys — narrow until the disclosure disappears, or install `python3`.
+not disposition 20 unranked keys — replace terms until the disclosure disappears, or install
+`python3` so the shortlist is ranked and bounded.
 
 ## Degradation matrix
 

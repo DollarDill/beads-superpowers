@@ -103,6 +103,7 @@ KB_NARROW_SITES=(
   skills/research-driven-development/SKILL.md
   skills/research-driven-development/researcher-prompt.md
   skills/knowledge-retrieval/SKILL.md
+  skills/knowledge-retrieval/references/query-strategy.md
 )
 # KB evidence anchor: the retriever path's completion criterion is "reproduce the
 # code-emitted coverage line verbatim" -- the ONE sentence that makes the marker fix

@@ -17,14 +17,24 @@ if command -v bd >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1 && bd mem
   # A store-derived probe asserts the real property instead: the ranker works on
   # whatever this store holds.
   #
+  # Derived from a BODY, never from a key. rank.py's Corpus tokenizes the stripped
+  # body only — keys are map keys, never indexed — so a key-derived probe asserts
+  # that this store's key-naming echoes its prose, which is just the original
+  # maintainer-specific assumption in a new costume. Verified: a store whose key
+  # shares no token with its body went red under the key-derived probe while the
+  # ranker was perfectly healthy.
+  #
+  # The leading @k=v header is stripped because rank.py strips it too: probing on
+  # @type= or @salience= would query terms the corpus does not contain.
+  #
   # The MULTI-WORD shape is the point, not incidental — it is the exact case
   # `bd memories` and `bd search` return zero for, so the probe still exercises
   # the ranker's reason to exist.
   #
   # `sed -n '1p'`, never `head -1`: head exits early and SIGPIPEs the upstream
   # stage under pipefail (same reason surface.sh gives at its key-extraction step).
-  first_key="$(bd memories 2>/dev/null | grep -oE '^  [A-Za-z0-9._-]+' | sed -n '1p' | tr -d ' ')"
-  read -r probe_a probe_b _ <<<"$(printf '%s' "$first_key" | tr '-' ' ')"
+  first_body="$(bd memories 2>/dev/null | grep -E '^    [^ ]' | sed -n '1p')"
+  read -r probe_a probe_b _ <<<"$(printf '%s' "$first_body" | sed -E 's/^ *(@[A-Za-z_]+=[^ ]+ +)*//')"
   if [ -z "${probe_b:-}" ]; then
     # No two-token probe derivable — nothing to assert, so say so rather than
     # inventing a query. This SKIP widens the old conditions, which is exactly how
@@ -52,9 +62,10 @@ if command -v bd >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1 && bd mem
       if [ "${mem_n:-0}" -eq 0 ]; then
         echo "SKIP: live-store retrieval check (store empty or memories unavailable)"
       else
-        # Zero hits for a probe built from the store's OWN first key is a real
-        # ranker defect, not a foreign-store artifact — the queried terms are
-        # provably present in at least that one entry.
+        # Zero hits for a probe built from the store's OWN indexed text is a real
+        # ranker defect, not a foreign-store artifact: the queried terms came out
+        # of a body the corpus contains, so a healthy ranker must return at least
+        # that entry.
         echo "FAIL: multi-word query '$probe_a $probe_b' returned zero against the live store"
         exit 1
       fi
