@@ -24,7 +24,8 @@ A ranked list is not an answer. Completion is **every plausibly-relevant hit dis
 4. **Emit dispositions** — one line per hit: folded in (what it changed) or ruled out (why).
    Done when: `KB check: N hits, K read` plus one disposition line per read hit.
 
-Bounded: query rounds are capped — see `references/query-strategy.md` for the bound and for re-angling.
+Bounded: query rounds are capped. Open `references/query-strategy.md` before starting a third
+round, or before reporting that nothing was found.
 
 ## This skill asks nothing
 

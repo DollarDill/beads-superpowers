@@ -9,7 +9,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 [ "$#" -gt 0 ] || { echo "usage: surface.sh <query...>" >&2; exit 2; }
 
 if ! command -v bd >/dev/null 2>&1; then
-  echo "searched: memories(SKIP) beads(SKIP) — bd absent"; exit 0
+  echo "searched: memories(SKIP) kb-beads(SKIP) — bd absent"; exit 0
 fi
 
 # Each bd call's exit status is captured separately. Falling back to an empty
@@ -69,8 +69,26 @@ if ! command -v python3 >/dev/null 2>&1; then
   # (beads-superpowers-eo9z2.23). Runs under `set -o pipefail`, so a failure in
   # any stage propagates here.
   keys_status=""
-  if ! keys="$(grep -E '^  [A-Za-z0-9._-]+$' <<<"$raw" | sort -u | sed -n '1,20p')"; then
+  # Capture the FULL key set BEFORE truncating, so the cut can be disclosed
+  # (beads-superpowers-eo9z2.9): cutting inside the pipeline made 20-of-20
+  # indistinguishable from 20-of-200 on a line carrying no total.
+  #
+  # Branch on the STATUS, not on truthiness (beads-superpowers-eo9z2.28). grep exits 1
+  # for "no match" — normal — and >=2 for a real error. Under `set -o pipefail` a bare
+  # `if !` conflated the two, so a healthy-but-empty result reported a pipeline error:
+  # eo9z2.23's fix inverted into its own mirror image. BOTH directions must hold — a
+  # broken pipeline never reads as zero hits, and zero hits never read as broken.
+  set +e
+  all_keys="$(grep -E '^  [A-Za-z0-9._-]+$' <<<"$raw" | sort -u)"; keys_rc=$?
+  set -e
+  if [ "$keys_rc" -gt 1 ]; then
     keys=""; keys_status=" keys UNAVAILABLE(pipeline error)"
+  else
+    if [ -z "$all_keys" ]; then key_total=0; else key_total="$(grep -c '' <<<"$all_keys")"; fi
+    keys="$(sed -n '1,20p' <<<"$all_keys")"
+    # `if/fi`, never a trailing `[ cond ] && ...`: a false trailing conditional makes
+    # the enclosing block's status 1, which `set -e` can act on.
+    if [ "$key_total" -gt 20 ]; then keys_status=" showing 20 of ${key_total} keys"; fi
   fi
   # The failure record built above is RENDERED here, not discarded: a coverage
   # line that reads identically whether bd answered or died is exactly the silent
@@ -80,7 +98,10 @@ if ! command -v python3 >/dev/null 2>&1; then
     *,memories,*) searched="memories UNAVAILABLE(bd error)" ;;
     *)            searched="memories(DEGRADED)" ;;
   esac
-  printf 'searched: %s beads(SKIPPED)%s terms=%s\n' "$searched" "$keys_status" "$joined"
+  # "kb-beads" matches rank.py's healthy line (beads-superpowers-eo9z2.27). No
+  # boundary clause here: on this path beads are not searched AT ALL, so disclosing a
+  # scope filter would imply something ran that never did.
+  printf 'searched: %s kb-beads(SKIPPED)%s terms=%s\n' "$searched" "$keys_status" "$joined"
   echo "ranking requires python3 — matching keys only, bodies withheld (redaction unavailable)"
   if [ -n "$keys" ]; then
     printf '%s\n' "$keys"

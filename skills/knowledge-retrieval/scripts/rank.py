@@ -249,10 +249,18 @@ if __name__ == "__main__":
     docs.update({b.get("id"): ((b.get("title") or "") + " " + (b.get("description") or ""))
                  for b in beads if b.get("id")})
 
-    print("searched: %s %s%s" % (
+    # "kb-beads", not "beads": only kb-labelled knowledge beads are indexed, and the
+    # open backlog is outside the corpus BY DESIGN (spec D5 — this skill serves the
+    # *doing* moment; backlog query serves the *choosing* moment). "beads(N)" read as
+    # "all beads", which implied a completeness the tool never had
+    # (beads-superpowers-eo9z2.27). The scope is disclosed, never widened: widening
+    # would reintroduce the dilution ADR-0056 exists to fix.
+    # The `failed` set key stays "beads" — that is surface.sh's wire protocol, not a label.
+    print("searched: %s %s%s%s" % (
         _store("memories", mem_count, "memories" in failed),
-        _store("beads", len(beads), "beads" in failed),
-        " label=%s" % ",".join(sorted(named)) if named else ""))
+        _store("kb-beads", len(beads), "beads" in failed),
+        " label=%s" % ",".join(sorted(named)) if named else "",
+        " — open backlog not indexed (doing-moment scope)"))
     hits = Corpus(docs).search(query, top_n=int(os.environ.get("BSP_TOP_N", "5")))
     for h in hits:
         # SALIENCE_UNSET prints as "?", never as its -1 sentinel: "s-1" reads
