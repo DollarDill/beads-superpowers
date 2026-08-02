@@ -1,4 +1,18 @@
-"""BM25F ranker over beads memories and knowledge-bead bodies.
+"""BM25 ranker over beads memories and knowledge-bead bodies.
+
+Single-field BM25 over the stripped body. Field weighting (BM25F over key, tags
+and body) was specified but NEVER IMPLEMENTED: the corpus indexes the stripped
+body only, so @tags — which 56% of entries carry — and keys are not separately
+weighted (beads-superpowers-eo9z2.19). Every user-facing surface already says
+BM25; this docstring was the last place claiming otherwise, and it is the line a
+future implementer reads before touching the scorer.
+
+Label matching is an OR-union of every fired label, not the AND-narrowing the
+spec described. Kept deliberately (beads-superpowers-eo9z2.21): the label filter
+restricts the candidate pool BEFORE BM25 ranks it, beads carry 1-3 labels from a
+19-label vocabulary, and an AND across two fired labels demands a bead carrying
+both — frequently zero, turning a wide-recall tool into a zero-hit one. It is
+disclosed on the coverage line.
 
 The module body is pure: no I/O, no bd calls, no third-party packages. The
 __main__ block at the bottom is the CLI entry point — it reads the corpus from
