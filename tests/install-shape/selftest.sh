@@ -673,4 +673,38 @@ else
 fi
 rm -rf "$SB28"
 
+# Mutation 29: beads-superpowers-eo9z2.18 widened this guard's SKIP conditions so a
+# contributor whose store lacks THIS repo's lore is not handed a red guard. Widening
+# SKIP is precisely how a guard silently stops being a gate, so the FAIL path is
+# pinned here: a ranker that returns nothing MUST still go RED, never SKIP.
+#
+# Uses a SCRATCH store (bd init + one seeded memory), never the maintainer's — a
+# mutation that depends on this machine's memories would reintroduce the exact
+# coupling the fix removes. The scratch store also proves portability directly:
+# it contains none of this repo's lore and the control still passes.
+#
+# NOTE: a `git ls-files` sandbox alone cannot test this guard — .beads is untracked,
+# so bd finds no store there and the guard SKIPs, which would make the mutation
+# report a false result. The scratch `bd init` is what makes the rig valid.
+SB29=$(mktemp -d)
+if ! (cd "$REPO_ROOT" && git ls-files -z skills scripts | xargs -0 -I{} cp --parents {} "$SB29"/); then
+  echo "SELFTEST FAIL: mutation-29 setup copy failed (rig broken, not a caught mutation)"; rc=1
+elif ! (cd "$SB29" && bd init --non-interactive >/dev/null 2>&1); then
+  echo "SELFTEST FAIL: mutation-29 setup 'bd init' failed (rig broken, not a caught mutation)"; rc=1
+elif ! (cd "$SB29" && bd remember "alpha beta gamma scratch probe body" --key "zz-alpha-beta" >/dev/null 2>&1); then
+  echo "SELFTEST FAIL: mutation-29 setup 'bd remember' failed (rig broken, not a caught mutation)"; rc=1
+elif ! grep -qF -- 'return _diversify(hits, self.toks, self._idf)[:top_n]' "$SB29/skills/knowledge-retrieval/scripts/rank.py"; then
+  echo "SELFTEST FAIL: mutation-29 anchor absent from rank.py (rig broken, sed would be inert)"; rc=1
+else
+  # The control must be a real OK, not a SKIP — a SKIP also exits 0 and would make
+  # this whole mutation vacuous.
+  expect_green "live-store guard: unmutated ranker on a lore-free scratch store (control)" \
+    bash -c "cd '$SB29' && bash scripts/check-live-store-retrieval.sh | grep -q '^live-store retrieval: OK'"
+  sed -i 's/return _diversify(hits, self\.toks, self\._idf)\[:top_n\]/return []/' \
+    "$SB29/skills/knowledge-retrieval/scripts/rank.py"
+  expect_red "live-store guard: ranker returns nothing" \
+    bash -c "cd '$SB29' && bash scripts/check-live-store-retrieval.sh"
+fi
+rm -rf "$SB29"
+
 exit "$rc"

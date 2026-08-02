@@ -11,13 +11,36 @@
 set -uo pipefail
 
 if command -v bd >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1 && bd memories >/dev/null 2>&1; then
+  # Derive the probe FROM THE STORE (beads-superpowers-eo9z2.18). The old fixed
+  # phrase "bd worktree gotchas" asserted that THIS maintainer's lore exists, so
+  # every other contributor got a red guard in the shared run-guards.sh entrypoint.
+  # A store-derived probe asserts the real property instead: the ranker works on
+  # whatever this store holds.
+  #
+  # The MULTI-WORD shape is the point, not incidental — it is the exact case
+  # `bd memories` and `bd search` return zero for, so the probe still exercises
+  # the ranker's reason to exist.
+  #
+  # `sed -n '1p'`, never `head -1`: head exits early and SIGPIPEs the upstream
+  # stage under pipefail (same reason surface.sh gives at its key-extraction step).
+  first_key="$(bd memories 2>/dev/null | grep -oE '^  [A-Za-z0-9._-]+' | sed -n '1p' | tr -d ' ')"
+  read -r probe_a probe_b _ <<<"$(printf '%s' "$first_key" | tr '-' ' ')"
+  if [ -z "${probe_b:-}" ]; then
+    # No two-token probe derivable — nothing to assert, so say so rather than
+    # inventing a query. This SKIP widens the old conditions, which is exactly how
+    # a guard silently stops being a gate; the FAIL path below is unchanged and is
+    # pinned by a selftest mutation.
+    echo "SKIP: live-store retrieval check (no multi-word probe derivable from the store)"
+    exit 0
+  fi
+  # Passed as ARGV, never interpolated into a command string (security floor).
   # Captured, not piped straight into grep: a crashed surface.sh (Python
   # traceback, a bd failure inside it) must be reported as a crash, not
   # misattributed to a zero-hit retrieval regression.
-  if out="$(bash skills/knowledge-retrieval/scripts/surface.sh "bd worktree gotchas")"; then
+  if out="$(bash skills/knowledge-retrieval/scripts/surface.sh "$probe_a" "$probe_b")"; then
     n="$(printf '%s\n' "$out" | grep -c '^  [A-Za-z0-9._-]' || true)"
     if [ "$n" -gt 0 ]; then
-      echo "live-store retrieval: OK (multi-word query returned $n hits)"
+      echo "live-store retrieval: OK (multi-word query '$probe_a $probe_b' returned $n hits)"
     else
       # Zero hits is only a regression against a populated store. Read
       # emptiness off surface.sh's own coverage line (rank.py's _store())
@@ -29,7 +52,10 @@ if command -v bd >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1 && bd mem
       if [ "${mem_n:-0}" -eq 0 ]; then
         echo "SKIP: live-store retrieval check (store empty or memories unavailable)"
       else
-        echo "FAIL: multi-word query returned zero against the live store"
+        # Zero hits for a probe built from the store's OWN first key is a real
+        # ranker defect, not a foreign-store artifact — the queried terms are
+        # provably present in at least that one entry.
+        echo "FAIL: multi-word query '$probe_a $probe_b' returned zero against the live store"
         exit 1
       fi
     fi
