@@ -57,7 +57,21 @@ if ! command -v python3 >/dev/null 2>&1; then
   # Keys indent 2, bodies 4 (verified against bd 1.1.2) — this anchor is what
   # withholds the bodies. sort -u unions the per-term result sets; sed, not head,
   # because head exits early and SIGPIPEs the upstream stage under pipefail.
-  keys="$(grep -E '^  [A-Za-z0-9._-]+$' <<<"$raw" | sort -u | sed -n '1,20p')" || true
+  # SECURITY FLOOR — the '^  [A-Za-z0-9._-]+$' anchor IS the body-withholding
+  # control (keys indent 2, bodies 4), enforcing "never print bodies without
+  # python3". Only the surrounding status handling changes below; the anchor,
+  # the sort and the sed are untouched. Do NOT loosen the charset or drop the
+  # full-line anchors.
+  #
+  # Pipeline status is CAPTURED, never discarded: the previous `|| true` made a
+  # missing or erroring grep byte-identical to a genuine zero-hit result, so an
+  # agent reading stdout could not tell a broken toolchain from an empty store
+  # (beads-superpowers-eo9z2.23). Runs under `set -o pipefail`, so a failure in
+  # any stage propagates here.
+  keys_status=""
+  if ! keys="$(grep -E '^  [A-Za-z0-9._-]+$' <<<"$raw" | sort -u | sed -n '1,20p')"; then
+    keys=""; keys_status=" keys UNAVAILABLE(pipeline error)"
+  fi
   # The failure record built above is RENDERED here, not discarded: a coverage
   # line that reads identically whether bd answered or died is exactly the silent
   # partial this line exists to prevent, and this is the one path that never
@@ -66,7 +80,7 @@ if ! command -v python3 >/dev/null 2>&1; then
     *,memories,*) searched="memories UNAVAILABLE(bd error)" ;;
     *)            searched="memories(DEGRADED)" ;;
   esac
-  printf 'searched: %s beads(SKIPPED) terms=%s\n' "$searched" "$joined"
+  printf 'searched: %s beads(SKIPPED)%s terms=%s\n' "$searched" "$keys_status" "$joined"
   echo "ranking requires python3 — matching keys only, bodies withheld (redaction unavailable)"
   if [ -n "$keys" ]; then
     printf '%s\n' "$keys"

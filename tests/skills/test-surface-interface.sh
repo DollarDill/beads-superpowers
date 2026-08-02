@@ -223,6 +223,21 @@ set -e
 grep -q 'memories UNAVAILABLE' <<<"$onefail" \
   || { echo "FAIL: a per-term bd failure is not recorded on the coverage line"; printf '%s\n' "$onefail"; exit 1; }
 
+# ── 11d. a BROKEN degraded pipeline is DISCLOSED, never rendered as zero hits
+# (beads-superpowers-eo9z2.23). surface.sh runs under `set -o pipefail`, so a
+# missing/erroring grep genuinely propagates — the old `|| true` was what
+# swallowed it, leaving output byte-identical to a real empty result. The
+# reviewer hit this by accident while building a restricted PATH.
+mkdir -p "$TMP/nogrep"
+printf '#!/bin/sh\nexit 127\n' > "$TMP/nogrep/grep"; chmod 755 "$TMP/nogrep/grep"
+set +e
+brk="$( cd "$TMP" && PATH="$TMP/nogrep:$TMP/nopy" bash "$SURFACE" "worktree hangs" )"
+brk_rc=$?
+set -e
+[ "$brk_rc" -eq 0 ] || { echo "FAIL: broken-pipeline path exited $brk_rc, must be 0"; printf '%s\n' "$brk"; exit 1; }
+grep -q 'pipeline error' <<<"$brk" \
+  || { echo "FAIL: broken degraded pipeline rendered as a genuine zero-hit result"; printf '%s\n' "$brk"; exit 1; }
+
 # ── 12. python3 absent AND bd broken: the coverage line NAMES the dead source.
 # Rendering it as a fixed "memories(DEGRADED)" makes "bd is broken" and "nothing
 # matched" identical — the silent partial the coverage line exists to prevent.
