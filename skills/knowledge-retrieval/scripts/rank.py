@@ -54,17 +54,34 @@ def _recency(header, today):
         return 0.0
     return min(1.0, max(0.0, (60 - age) / 60))
 
-def _diversify(hits, toks):
-    """Demote a hit sharing >50% of its top terms with a higher-ranked KEPT hit.
+DIVERSIFY_FRACTION = 0.5   # mutated by tests/install-shape/selftest.sh (mutation 25)
+
+def _diversify(hits, toks, idf):
+    """Demote a hit sharing >DIVERSIFY_FRACTION of its top terms' IDF MASS with a
+    higher-ranked KEPT hit.
+
+    IDF-WEIGHTED, not counted: a count-based bar cannot separate stopword overlap
+    from topical overlap, because it counts terms while the discriminating signal
+    is WHICH terms. Measured on the live store, two unrelated entries about the
+    same command shared {the, worktree, bd, it, a} — 5 of 8 "top" terms, three of
+    them pure function words — and a genuine hit was demoted to rank 14
+    (beads-superpowers-eo9z2.14). IDF is already computed for BM25 and stopwords
+    carry almost none of it (measured: lesson 0.47, bd 1.09, worktree 2.37), so
+    weighting by mass makes term identity the signal with no word list to curate
+    and no language assumption — this repo ships Chinese docs.
+
+    Raising the threshold was tried (0.5 -> 0.7, 84ebd4a) and reverted: it was
+    fitted between two observed pairs and MASKS rather than fixes — one more
+    shared token re-fires the same false positive.
 
     Accepted properties (beads-superpowers-eo9z2.5, ruled 2026-08-02): the test is
     order-dependent — inherent to greedy diversification — and overlap is measured
     over whole-document terms rather than query-relevant ones."""
-    # Known: stopwords count as topical overlap and can demote a genuine hit — beads-superpowers-eo9z2.14
     kept, seen = [], []
     for h in hits:
         top = {t for t, _ in collections.Counter(toks[h.key]).most_common(8)}
-        if any(len(top & prev) > len(top) / 2 for prev in seen):
+        mass = sum(idf(t) for t in top) or 1.0
+        if any(sum(idf(t) for t in (top & prev)) > mass * DIVERSIFY_FRACTION for prev in seen):
             h.score *= 0.5
         else:
             # Only KEPT hits enter `seen`. A hit already judged redundant must not
@@ -100,6 +117,11 @@ class Corpus:
         for t in self.toks.values():
             self.df.update(set(t))
 
+    def _idf(self, term):
+        # Single source of the IDF formula: _bm25 scores with it and _diversify
+        # weights overlap with it, so the two can never drift apart.
+        return math.log(1 + (self.N - self.df[term] + 0.5) / (self.df[term] + 0.5))
+
     def _bm25(self, key, qterms):
         tf = collections.Counter(self.toks[key])
         dl = len(self.toks[key])
@@ -107,7 +129,7 @@ class Corpus:
         for term in qterms:
             if not tf[term]:
                 continue
-            idf = math.log(1 + (self.N - self.df[term] + 0.5) / (self.df[term] + 0.5))
+            idf = self._idf(term)
             score += idf * (tf[term] * (K1 + 1)) / (tf[term] + K1 * (1 - B + B * dl / self.avgdl))
         return score
 
@@ -143,7 +165,7 @@ class Corpus:
             hits.append(Hit(key=key, score=score, sentence=body_r[start:start + 150].strip(),
                             salience=salience, hazard=hazard))
         hits.sort(key=lambda h: -h.score)
-        return _diversify(hits, self.toks)[:top_n]
+        return _diversify(hits, self.toks, self._idf)[:top_n]
 
 
 def _store(name, count, failed):

@@ -367,11 +367,48 @@ def extra_checks(ok):
     _dhits = [Hit(key="a", score=3.0, sentence="", salience=3, hazard=False),
               Hit(key="b", score=2.0, sentence="", salience=3, hazard=False),
               Hit(key="c", score=1.0, sentence="", salience=3, hazard=False)]
-    _dout = {h.key: h.score for h in _dv(_dhits, _dtoks)}
+    # Flat IDF reproduces the original count-based bar exactly (mass == cardinality),
+    # so this assertion keeps testing property (2) and nothing else even after the
+    # overlap became IDF-weighted (eo9z2.14).
+    _dout = {h.key: h.score for h in _dv(_dhits, _dtoks, lambda t: 1.0)}
     ok &= check("a demoted hit does not poison later comparisons (eo9z2.5)",
                 abs(_dout["c"] - 1.0) < 1e-9)
     ok &= check("the genuinely redundant hit is still demoted",
                 abs(_dout["b"] - 1.0) < 1e-9)
+
+    # eo9z2.14: overlap must be weighted by IDF, not counted. The failing design
+    # criterion. A count-based bar cannot separate stopword overlap from topical
+    # overlap — the measured false positive shared {the, worktree, bd, it, a},
+    # three of which are function words. Asserted on SCORES through _diversify,
+    # never on presence through search(): _diversify DEMOTES rather than drops, so
+    # every hit is always present and a presence check can never fail.
+    _idf = lambda t: 0.05 if t in {"the", "it", "a", "bd", "worktree"} else 3.0
+    _mk = lambda k: Hit(key=k, score=2.0, sentence="", salience=3, hazard=False)
+    # shared mass 5x0.05=0.25 vs bar 9.25x0.5=4.625 -> NO demotion.
+    # Under the count-based bar this is 5 shared of 8 > 4 -> s2 halved to 1.0.
+    _stop = {"s1": ["the", "it", "a", "bd", "worktree", "alpha", "beta", "gamma"],
+             "s2": ["the", "it", "a", "bd", "worktree", "delta", "epsilon", "zeta"]}
+    _so = {h.key: h.score for h in _dv([_mk("s1"), _mk("s2")], _stop, _idf)}
+    ok &= check("function-word overlap does not demote (eo9z2.14)",
+                abs(_so["s2"] - 2.0) < 1e-9)
+    # shared mass 5x3.0=15.0 vs bar 24.0x0.5=12.0 -> DEMOTES. Stops "disable
+    # demotion entirely" from being a passing fix.
+    _cont = {"c1": ["shellcheck", "pipefail", "sigpipe", "mutation", "idf", "alpha", "beta", "gamma"],
+             "c2": ["shellcheck", "pipefail", "sigpipe", "mutation", "idf", "delta", "epsilon", "zeta"]}
+    _co = {h.key: h.score for h in _dv([_mk("c1"), _mk("c2")], _cont, _idf)}
+    ok &= check("content-word overlap still demotes (diversify still works)",
+                abs(_co["c2"] - 1.0) < 1e-9)
+    # Pins the LOWER bound of DIVERSIFY_FRACTION. Without this the sweep showed
+    # 0.3 and 0.5 behaving identically — any value below 0.625 passed, so the
+    # constant was only half-constrained, and .14's failure mode is OVER-demotion
+    # (a bar that is too low). Shared mass 3x3.0=9.0 against a total of 24.0 is a
+    # ratio of 0.375, which sits between the candidates: at 0.3 the bar is 7.2 and
+    # this pair demotes (RED); at 0.5 the bar is 12.0 and it does not (GREEN).
+    _mid = {"m1": ["shellcheck", "pipefail", "sigpipe", "aa", "bb", "cc", "dd", "ee"],
+            "m2": ["shellcheck", "pipefail", "sigpipe", "ff", "gg", "hh", "ii", "jj"]}
+    _mo = {h.key: h.score for h in _dv([_mk("m1"), _mk("m2")], _mid, _idf)}
+    ok &= check("a 0.375 mass-ratio overlap does NOT demote (pins the lower bound)",
+                abs(_mo["m2"] - 2.0) < 1e-9)
     return ok
 
 main()
