@@ -45,6 +45,7 @@ Agent tool (subagent_type: "general-purpose"):
        bd list --label <topic> --status all
        bd search "<keyword>" --status all
        ```
+       Bound the set first — >10 hits: narrow the query, never triage truncated titles.
        Check it before researching from scratch — hits are pointers, not knowledge:
        read the bodies (`bd show <id1> <id2> ...`, full) before deciding coverage
        exists. If comprehensive coverage already exists, reference it — do not
