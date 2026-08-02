@@ -76,7 +76,13 @@ class Hit:
     hazard: bool
 
 class Corpus:
-    def __init__(self, docs):
+    def __init__(self, docs, today=None):
+        # Frozen ONCE here, not read per search() call: the module docstring
+        # declares this body pure, and a per-call clock read lets a single Corpus
+        # straddle midnight — two searches on the same corpus disagreeing, and the
+        # suite going non-deterministic the moment a fixture carries @created
+        # (beads-superpowers-eo9z2.4). Callers may still override per call.
+        self.today = today or datetime.date.today()
         self.raw = docs
         self.bodies = {k: strip_header(v) for k, v in docs.items()}
         self.toks = {k: tokenize(v) for k, v in self.bodies.items()}
@@ -117,7 +123,7 @@ class Corpus:
             # the suite's "salience is never fabricated" assertion enforces it.
             salience = int(m.group(1)) if m else SALIENCE_UNSET
             hazard = bool(_HAZARD.search(self.bodies[key]))
-            score += 0.5 * (salience >= 4) + 0.5 * hazard + _recency(header, today or datetime.date.today())
+            score += 0.5 * (salience >= 4) + 0.5 * hazard + _recency(header, today or self.today)
             body_r = redact(self.bodies[key])          # redact BEFORE cutting
             # First query term that ACTUALLY occurs, not qterms[0]: _bm25 returns
             # a hit when ANY term matches, so a document matched by a later term

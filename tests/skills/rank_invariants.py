@@ -332,6 +332,24 @@ def extra_checks(ok):
     # blind to the salience mutation, by design — isolates the hazard wiring.
     ok &= check("hazard boost is wired into the score, not just computed",
                 bool(keys6) and keys6[0] == "hazard-hazard")
+
+    # eo9z2.4: the module docstring declares this body pure, but search() read the
+    # wall clock per call. Harmless while no FIXTURE entry carries @created, and
+    # non-deterministic the moment one does — a Corpus could straddle midnight and
+    # two calls would disagree. The date is now frozen once, at construction.
+    import datetime as _dt
+    _c = Corpus({"aged": "@created=2026-08-02\ntourmaline body text"},
+                today=_dt.date(2026, 8, 2))
+    ok &= check("date frozen at construction (today= honoured by __init__)",
+                _c.today == _dt.date(2026, 8, 2))
+    # Not a tautology: @created=2026-08-02 sits at age 0 against the frozen date
+    # (full recency boost) and ages out against an explicit far-future today=. A
+    # search() that ignored self.today and re-read the wall clock would drift with
+    # the calendar instead of tracking the frozen value.
+    _near = _c.search("tourmaline")[0].score
+    _far = _c.search("tourmaline", today=_dt.date(2027, 1, 1))[0].score
+    ok &= check("search() inherits the frozen date, and today= still overrides",
+                _near > _far)
     return ok
 
 main()

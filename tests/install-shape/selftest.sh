@@ -542,7 +542,12 @@ if ! mkdir -p "$MUTR2/ctl" "$MUTR2/score0" "$MUTR2/hazF" "$MUTR2/salU" \
    || ! cp -f "$REPO_ROOT/skills/knowledge-retrieval/scripts/rank.py" "$MUTR2/ctl/rank.py"; then
   echo "SELFTEST FAIL: mutation-22/23/24 setup (mkdir/cp rank.py) failed (rig broken, not a caught mutation)"; rc=1
 else
-  sed 's/^            score += 0\.5 \* (salience >= 4) + 0\.5 \* hazard + _recency(header, today or datetime\.date\.today())$/            score += 0.0/' \
+  # Anchor tracks rank.py: the per-call `today or datetime.date.today()` became
+  # `today or self.today` when the date was frozen at construction
+  # (beads-superpowers-eo9z2.4). A task that edits a mutation-anchored line MUST
+  # re-anchor its sed in the same commit, or the mutation silently stops testing
+  # anything — caught here by the `changed nothing` guard below.
+  sed 's/^            score += 0\.5 \* (salience >= 4) + 0\.5 \* hazard + _recency(header, today or self\.today)$/            score += 0.0/' \
     "$MUTR2/ctl/rank.py" > "$MUTR2/score0/rank.py"
   sed 's/^            hazard = bool(_HAZARD\.search(self\.bodies\[key\]))$/            hazard = False/' \
     "$MUTR2/ctl/rank.py" > "$MUTR2/hazF/rank.py"
