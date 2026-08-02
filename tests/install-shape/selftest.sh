@@ -710,6 +710,14 @@ else
     "$SB29/skills/knowledge-retrieval/scripts/rank.py"
   expect_red "live-store guard: ranker returns nothing" \
     bash -c "cd '$SB29' && bash scripts/check-live-store-retrieval.sh"
+  # Leak assertion, matching the assert_scratch_bead_absent discipline mutations 5-9
+  # use. selftest.sh never unsets BEADS_DIR, so an inherited one could route this
+  # `bd remember` into a real store; pin the check rather than trusting one manual run.
+  if (cd "$REPO_ROOT" && bd memories 2>/dev/null | grep -qF -- "aaa-zqx-marker"); then
+    echo "SELFTEST FAIL: mutation-29 leaked scratch memory 'aaa-zqx-marker' into the real store"; rc=1
+  else
+    echo "SELFTEST ok: 'mutation-29' scratch memory absent from real store (no leak)"
+  fi
 fi
 rm -rf "$SB29"
 
