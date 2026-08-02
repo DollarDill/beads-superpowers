@@ -22,7 +22,10 @@ A ranked list is not an answer. Completion is **every plausibly-relevant hit dis
 3. **Read the shortlist's hit bodies** — `bd show <ids>` / `bd recall <key>`, never truncated below 50 lines.
    Done when: every returned hit is read or explicitly ruled out from its sentence alone.
 4. **Emit dispositions** — one line per hit: folded in (what it changed) or ruled out (why).
-   Done when: `KB check: N hits, K read` plus one disposition line per read hit.
+   Done when: the coverage line from step 2 is reproduced **verbatim**, then
+   `KB check (retriever): N hits, K read`, then one disposition line per read hit.
+   The coverage line is the evidence — only the script prints it, and its counts are
+   checkable against the store. The marker is a human-readable cue, not proof.
 
 Bounded: query rounds are capped. Open `references/query-strategy.md` before starting a third
 round, or before reporting that nothing was found.
