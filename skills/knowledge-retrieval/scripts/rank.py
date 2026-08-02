@@ -55,14 +55,22 @@ def _recency(header, today):
     return min(1.0, max(0.0, (60 - age) / 60))
 
 def _diversify(hits, toks):
-    """Demote a hit sharing >50% of its top terms with a higher-ranked hit."""
+    """Demote a hit sharing >50% of its top terms with a higher-ranked KEPT hit.
+
+    Accepted properties (beads-superpowers-eo9z2.5, ruled 2026-08-02): the test is
+    order-dependent — inherent to greedy diversification — and overlap is measured
+    over whole-document terms rather than query-relevant ones."""
     # Known: stopwords count as topical overlap and can demote a genuine hit — beads-superpowers-eo9z2.14
     kept, seen = [], []
     for h in hits:
         top = {t for t, _ in collections.Counter(toks[h.key]).most_common(8)}
         if any(len(top & prev) > len(top) / 2 for prev in seen):
             h.score *= 0.5
-        seen.append(top)
+        else:
+            # Only KEPT hits enter `seen`. A hit already judged redundant must not
+            # be able to demote a third hit — MMR diversifies against the SELECTED
+            # set, not the rejected one (beads-superpowers-eo9z2.5 property 2).
+            seen.append(top)
         kept.append(h)
     kept.sort(key=lambda x: -x.score)
     return kept

@@ -350,6 +350,28 @@ def extra_checks(ok):
     _far = _c.search("tourmaline", today=_dt.date(2027, 1, 1))[0].score
     ok &= check("search() inherits the frozen date, and today= still overrides",
                 _near > _far)
+
+    # eo9z2.5 property (2): a hit ALREADY judged redundant must not be able to
+    # demote a third hit. Standard MMR diversifies against the SELECTED set, not
+    # the rejected one. Fixture is built so the distinction is the only thing that
+    # decides the outcome: each doc has exactly 8 distinct terms, so most_common(8)
+    # returns all of them and the threshold is >4.
+    #   a vs nothing        -> kept
+    #   b vs a: overlap 5   -> demoted
+    #   c vs a: overlap 2   -> NOT demoted by a
+    #   c vs b: overlap 5   -> demoted ONLY IF the rejected b is in `seen`
+    from rank import _diversify as _dv, Hit
+    _dtoks = {"a": ["p", "q", "r", "s", "t", "u", "v", "w"],
+              "b": ["p", "q", "r", "s", "t", "m", "n", "o"],
+              "c": ["m", "n", "o", "t", "q", "aa", "bb", "cc"]}
+    _dhits = [Hit(key="a", score=3.0, sentence="", salience=3, hazard=False),
+              Hit(key="b", score=2.0, sentence="", salience=3, hazard=False),
+              Hit(key="c", score=1.0, sentence="", salience=3, hazard=False)]
+    _dout = {h.key: h.score for h in _dv(_dhits, _dtoks)}
+    ok &= check("a demoted hit does not poison later comparisons (eo9z2.5)",
+                abs(_dout["c"] - 1.0) < 1e-9)
+    ok &= check("the genuinely redundant hit is still demoted",
+                abs(_dout["b"] - 1.0) < 1e-9)
     return ok
 
 main()
