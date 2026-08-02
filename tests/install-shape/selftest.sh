@@ -631,6 +631,46 @@ else
 fi
 rm -rf "$MUTR4"
 
+# Mutation 27: KB_NARROW_SIG pins ADR-0058's hit bound at its six carrying sites
+# (beads-superpowers-eo9z2.11). The clause is load-bearing prose that nothing
+# pinned, so a compression pass could delete it with every guard green. Verified
+# meaningful: this exact mutation exited 0 BEFORE the signature was wired.
+# Same fixture-isolation as Mutations 13-16; the real tree is never touched.
+SB27=$(mktemp -d)
+if ! (cd "$REPO_ROOT" && git ls-files -z skills .claude/skills hooks CLAUDE.md scripts/check-convention-sync.sh | xargs -0 -I{} cp --parents {} "$SB27"/); then
+  echo "SELFTEST FAIL: mutation-27 setup copy failed (rig broken, not a caught mutation)"; rc=1
+elif ! grep -qF -- "narrow the query, never triage truncated titles" "$SB27/skills/writing-plans/SKILL.md"; then
+  echo "SELFTEST FAIL: mutation-27 anchor absent from writing-plans (rig broken, sed would be inert)"; rc=1
+else
+  sed -i 's/narrow the query, never triage truncated titles/narrow the query/' \
+    "$SB27/skills/writing-plans/SKILL.md"
+  expect_red "convention-sync: KB narrowing clause deleted from one site" \
+    bash "$SB27/scripts/check-convention-sync.sh"
+  cp -f "$REPO_ROOT/skills/writing-plans/SKILL.md" "$SB27/skills/writing-plans/SKILL.md"
+  expect_green "convention-sync: unmutated copy (mutation-27 control)" \
+    bash "$SB27/scripts/check-convention-sync.sh"
+fi
+rm -rf "$SB27"
 
+# Mutation 28: KB_EVIDENCE_SIG pins the retriever path's completion criterion
+# (beads-superpowers-eo9z2.22) — "reproduce the coverage line verbatim" is the one
+# sentence that makes the marker fix work, because only surface.sh can print that
+# line. Unpinned, a compression pass deletes the evidence anchor and the marker
+# silently reverts to a self-report.
+SB28=$(mktemp -d)
+if ! (cd "$REPO_ROOT" && git ls-files -z skills .claude/skills hooks CLAUDE.md scripts/check-convention-sync.sh | xargs -0 -I{} cp --parents {} "$SB28"/); then
+  echo "SELFTEST FAIL: mutation-28 setup copy failed (rig broken, not a caught mutation)"; rc=1
+elif ! grep -qF -- "the coverage line from step 2 is reproduced" "$SB28/skills/knowledge-retrieval/SKILL.md"; then
+  echo "SELFTEST FAIL: mutation-28 anchor absent from knowledge-retrieval (rig broken, sed would be inert)"; rc=1
+else
+  sed -i 's/the coverage line from step 2 is reproduced/the coverage line is reproduced/' \
+    "$SB28/skills/knowledge-retrieval/SKILL.md"
+  expect_red "convention-sync: KB evidence anchor reworded" \
+    bash "$SB28/scripts/check-convention-sync.sh"
+  cp -f "$REPO_ROOT/skills/knowledge-retrieval/SKILL.md" "$SB28/skills/knowledge-retrieval/SKILL.md"
+  expect_green "convention-sync: unmutated copy (mutation-28 control)" \
+    bash "$SB28/scripts/check-convention-sync.sh"
+fi
+rm -rf "$SB28"
 
 exit "$rc"

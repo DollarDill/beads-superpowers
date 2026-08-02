@@ -87,6 +87,31 @@ KB_POINTER_SITES=(
   skills/brainstorming/SKILL.md
   skills/writing-plans/SKILL.md
 )
+# KB narrowing clause (ADR-0058 Decision item 2's hit bound). Load-bearing prose that
+# nothing pinned, so a compression pass could delete it with every guard green.
+# ADDITIVE, like KB_POINTER_SIG.
+# Per-site intent, NOT a uniform signature: hooks/session-start is envelope-budgeted
+# (ADR-0052) and getting-up-to-speed operates over a set orient.sh has already
+# gathered. Neither carries the clause, and a uniform check would force padding one
+# and mis-scope the other.
+# What this does NOT pin: block identity -- presence-only, like its siblings.
+KB_NARROW_SIG='narrow the query, never triage truncated titles'
+KB_NARROW_SITES=(
+  skills/brainstorming/SKILL.md
+  skills/writing-plans/SKILL.md
+  skills/systematic-debugging/SKILL.md
+  skills/research-driven-development/SKILL.md
+  skills/research-driven-development/researcher-prompt.md
+  skills/knowledge-retrieval/SKILL.md
+)
+# KB evidence anchor: the retriever path's completion criterion is "reproduce the
+# code-emitted coverage line verbatim" -- the ONE sentence that makes the marker fix
+# work, because only surface.sh can print that line and its counts are checkable
+# against the store. Nothing pinned it, so a compression pass would delete the
+# evidence anchor with every guard green -- the same defect KB_NARROW_SIG exists to
+# prevent, reproduced one task earlier in the same plan.
+# Single-site, so no array: the requirement lives once, in the skill that owns it.
+KB_EVIDENCE_SIG='the coverage line from step 2 is reproduced'
 # --- Per-site kernel map (ADR-0049): each redesigned skill pins ONE ASCII invariant
 # line phrased for its own operation. site|signature pairs; grep -qF per site.
 KERNEL_MAP=(
@@ -237,6 +262,8 @@ assert_line_identical "CB-4 memory convention (byte-identity)" "$CB4_SIG" "${CB4
 assert_block_identical "CB-3 Capture gate (byte-identity)" "$CB3_ANCHOR" '^```$' "${CB3_SITES[@]}"
 check_block "KB read-depth fragment" "$KB_SIG" "${KB_SITES[@]}"
 check_block "KB retrieval pointer" "$KB_POINTER_SIG" "${KB_POINTER_SITES[@]}"
+check_block "KB narrowing clause" "$KB_NARROW_SIG" "${KB_NARROW_SITES[@]}"
+check_block "KB evidence anchor"  "$KB_EVIDENCE_SIG" skills/knowledge-retrieval/SKILL.md
 check_block "CB-5 Reviewer security floor" "$CB5_SIG" "${CB5_SITES[@]}"
 assert_block_identical "CB-5 Reviewer security floor (byte-identity)" "$CB5_ANCHOR" "$CB5_ENDRE" "${CB5_SITES[@]}"
 check_kernels
