@@ -426,6 +426,31 @@ def extra_checks(ok):
                 "trailing sentence" not in _out_r and "MIIsecret" not in _out_r)
     ok &= check("text before an unterminated PEM survives redaction",
                 "intro text" in _out_r)
+
+    # beads-superpowers-eo9z2.16 — __main__ argument and BSP_TOP_N edges.
+    # The helpers are PURE: _resolve_top_n RETURNS its notice instead of printing
+    # it, so the module keeps the no-I/O contract its own docstring states, and
+    # the caller decides where the notice lands relative to the coverage line.
+    from rank import _parse_query, _resolve_top_n, _zero_reason
+    ok &= check("--stdin is consumed once as a mode flag",
+                _parse_query(["--stdin", "worktree"]) == ["worktree"])
+    ok &= check("a SECOND --stdin is a query term, not a repeated flag",
+                _parse_query(["--stdin", "--stdin"]) == ["--stdin"])
+    ok &= check("non-integer BSP_TOP_N falls back to 5 and says so",
+                _resolve_top_n("banana")[0] == 5
+                and _resolve_top_n("banana")[1] is not None)
+    ok &= check("negative BSP_TOP_N falls back to 5 and says so",
+                _resolve_top_n("-3")[0] == 5
+                and _resolve_top_n("-3")[1] is not None)
+    ok &= check("a valid BSP_TOP_N passes through silently",
+                _resolve_top_n("7") == (7, None))
+    # BSP_TOP_N is externally controlled and the notice flows into agent context,
+    # and from there into specs and commits. Bound what gets echoed onward.
+    ok &= check("an oversized BSP_TOP_N is not echoed whole into the notice",
+                len(_resolve_top_n("x" * 500)[1]) < 120)
+    ok &= check("BSP_TOP_N=0 does not report 'no hits' — it was told to return none",
+                _zero_reason(0) != _zero_reason(5)
+                and "not a search result" in _zero_reason(0))
     return ok
 
 main()

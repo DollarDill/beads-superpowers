@@ -63,12 +63,42 @@ At most 5 query rounds per retrieval task. If round 5 still returns nothing plau
 the query once (a genuinely different framing — not a rephrase) before reporting "none found." Do not keep
 grinding past that; a bounded "none" is a valid, complete answer.
 
+## When a query returns more than you can disposition
+
+More than 10 hits means the query is too broad, not that you should skim. A title is not evidence
+and a hit count is not a done-state, so
+**narrow the query, never triage truncated titles**.
+
+**Terms are OR-ed, not AND-ed** — by `surface.sh` on the degraded path and by BM25 in the ranker.
+Adding a term therefore *widens* the candidate set. Narrowing means **replacing** terms, never
+appending them:
+
+1. **Replace a low-signal term with a high-signal one.** Signal is rarity: a term carried by most
+   entries discriminates nothing. (Measured on this repo's store, as counts of memories whose
+   stripped body contains the term: `lesson` 117 of 180, `shellcheck` 5. On the degraded path
+   `lesson` returns 136 keys; *replacing* it — `shellcheck` alone — returns 5, while *appending*
+   it — `lesson shellcheck` — returns 137.)
+2. **Drop terms rather than add them.** On the degraded path every extra term is strictly more
+   results. On the ranked path it cannot add results, because the shortlist is capped — but it
+   re-ranks, and can evict the hit you wanted.
+3. Only then re-run.
+
+If a compound may be spelled two ways, `worktree` and `work tree` are different searches — `bd` has
+no stemming. That is a *recall* fix for the zero-hits case above, not a narrowing move; it widens.
+
+**On the degraded path (no `python3`) nothing bounds the set but the query** — and that is normally
+the only path where more than 10 hits reach you, since the ranker caps its shortlist (raise
+`BSP_TOP_N` and the ranked path can exceed it too). Keys come back in
+alphabetical order, never relevance order, cut at 20 with a `showing 20 of N keys` disclosure. Do
+not disposition 20 unranked keys — replace terms until the disclosure disappears, or install
+`python3` so the shortlist is ranked and bounded.
+
 ## Degradation matrix
 
 | Condition | Behavior |
 | --- | --- |
-| No `python3` on `PATH` | Keys/titles only are returned; hit **bodies are withheld** (redaction lives in the ranker — see SKILL.md Floor). |
+| No `python3` on `PATH` | Memory **keys only** — never titles, never bodies (redaction lives in the ranker — see SKILL.md Floor). Knowledge beads are not searched at all on this path; the coverage line reads `kb-beads(SKIPPED)`. Keys are cut at 20, and the cut is disclosed as `showing 20 of N keys`. |
 | No `bd` on `PATH` | Visible SKIP — the coverage line names `bd` as unavailable rather than silently returning zero hits. |
 | Empty store (no matching beads at all) | Reported as "none" — a legitimate empty result, not an error. |
 | Broken text-processing pipeline (`grep`/`sort`/`sed` missing or erroring, no `python3`) | Named on the coverage line as `keys UNAVAILABLE(pipeline error)`. Without this a broken toolchain printed output byte-identical to the row above, so "none" could not be trusted. |
-| Malformed entry (unparseable bead record) | Counted and named individually in the coverage line, not silently dropped from the total. |
+| Malformed entry (bead carrying no id) | **Counted but not searched** — it is included in `kb-beads(N)` yet excluded from the corpus, and nothing names it individually. This differs from the `schema_version` envelope key, which is excluded from the memory count precisely so that count reports what was *searched*. A known inconsistency, recorded rather than fixed here. |

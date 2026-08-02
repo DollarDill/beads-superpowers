@@ -198,10 +198,54 @@ def _store(name, count, failed):
     return "%s UNAVAILABLE(bd error)" % name if failed else "%s(%d)" % (name, count)
 
 
+def _parse_query(argv):
+    """Consume '--stdin' as a mode flag exactly once; later occurrences are terms.
+
+    A bare filter dropped EVERY '--stdin', so a query term literally equal to
+    '--stdin' vanished and the search ran on a silently shortened query
+    (beads-superpowers-eo9z2.16). surface.sh passes the flag first, then "$@",
+    so consuming only the first occurrence is the correct reading.
+    """
+    out, seen = [], False
+    for a in argv:
+        if a == "--stdin" and not seen:
+            seen = True
+            continue
+        out.append(a)
+    return out
+
+
+def _resolve_top_n(raw):
+    """BSP_TOP_N -> (non-negative int, notice or None). PURE — the caller prints.
+
+    Returns rather than prints so this module keeps the no-I/O contract stated in
+    its docstring, and so the caller can emit the notice BEFORE the coverage line:
+    int() raised mid-print, leaving a half-written result that still looked like a
+    real answer (beads-superpowers-eo9z2.16).
+    """
+    try:
+        n = int(raw)
+    except (TypeError, ValueError):
+        # BSP_TOP_N is externally controlled and this notice flows into agent
+        # context, and from there into specs and commits. Bound what is echoed
+        # onward: %r escapes it, the slice stops an unbounded value being pasted.
+        return 5, "notice: BSP_TOP_N=%r is not an integer — using 5" % (str(raw)[:20],)
+    if n < 0:
+        return 5, "notice: BSP_TOP_N=%d is negative — using 5" % n
+    return n, None
+
+
+def _zero_reason(top_n):
+    """Why the hit list is empty. 'Told to return nothing' is not 'found nothing'."""
+    if top_n == 0:
+        return "  (BSP_TOP_N=0 — no hits requested; this is not a search result)"
+    return "  (no hits — re-angle the query once before reporting none)"
+
+
 if __name__ == "__main__":
     import json, sys
 
-    args = [a for a in sys.argv[1:] if a != "--stdin"]
+    args = _parse_query(sys.argv[1:])
     raw = sys.stdin.read().split("\0")
     mem = json.loads(raw[0] or "{}")
     beads = json.loads((raw[1] if len(raw) > 1 else "") or "[]")
@@ -256,12 +300,17 @@ if __name__ == "__main__":
     # (beads-superpowers-eo9z2.27). The scope is disclosed, never widened: widening
     # would reintroduce the dilution ADR-0056 exists to fix.
     # The `failed` set key stays "beads" — that is surface.sh's wire protocol, not a label.
+    # Resolved BEFORE the coverage line prints: a traceback after it left the
+    # caller holding a half-written result that read like a real answer.
+    top_n, top_n_notice = _resolve_top_n(os.environ.get("BSP_TOP_N", "5"))
+    if top_n_notice:
+        print(top_n_notice, file=sys.stderr)
     print("searched: %s %s%s%s" % (
         _store("memories", mem_count, "memories" in failed),
         _store("kb-beads", len(beads), "beads" in failed),
         " label=%s" % ",".join(sorted(named)) if named else "",
         " — open backlog not indexed (doing-moment scope)"))
-    hits = Corpus(docs).search(query, top_n=int(os.environ.get("BSP_TOP_N", "5")))
+    hits = Corpus(docs).search(query, top_n=top_n)
     for h in hits:
         # SALIENCE_UNSET prints as "?", never as its -1 sentinel: "s-1" reads
         # like real data, which is the fabricated-plausible-value failure the
@@ -275,4 +324,4 @@ if __name__ == "__main__":
         # long keys is the correct trade.
         print("  %-42s s%-2s%s  %s" % (h.key, sal, " HAZ" if h.hazard else "    ", h.sentence))
     if not hits:
-        print("  (no hits — re-angle the query once before reporting none)")
+        print(_zero_reason(top_n))

@@ -631,6 +631,97 @@ else
 fi
 rm -rf "$MUTR4"
 
+# Mutation 27: KB_NARROW_SIG pins ADR-0058's hit bound at its seven carrying sites
+# (beads-superpowers-eo9z2.11). The clause is load-bearing prose that nothing
+# pinned, so a compression pass could delete it with every guard green. Verified
+# meaningful: this exact mutation exited 0 BEFORE the signature was wired.
+# Same fixture-isolation as Mutations 13-16; the real tree is never touched.
+SB27=$(mktemp -d)
+if ! (cd "$REPO_ROOT" && git ls-files -z skills .claude/skills hooks CLAUDE.md scripts/check-convention-sync.sh | xargs -0 -I{} cp --parents {} "$SB27"/); then
+  echo "SELFTEST FAIL: mutation-27 setup copy failed (rig broken, not a caught mutation)"; rc=1
+elif ! grep -qF -- "narrow the query, never triage truncated titles" "$SB27/skills/writing-plans/SKILL.md"; then
+  echo "SELFTEST FAIL: mutation-27 anchor absent from writing-plans (rig broken, sed would be inert)"; rc=1
+else
+  sed -i 's/narrow the query, never triage truncated titles/narrow the query/' \
+    "$SB27/skills/writing-plans/SKILL.md"
+  expect_red "convention-sync: KB narrowing clause deleted from one site" \
+    bash "$SB27/scripts/check-convention-sync.sh"
+  cp -f "$REPO_ROOT/skills/writing-plans/SKILL.md" "$SB27/skills/writing-plans/SKILL.md"
+  expect_green "convention-sync: unmutated copy (mutation-27 control)" \
+    bash "$SB27/scripts/check-convention-sync.sh"
+fi
+rm -rf "$SB27"
 
+# Mutation 28: KB_EVIDENCE_SIG pins the retriever path's completion criterion
+# (beads-superpowers-eo9z2.22) — "reproduce the coverage line verbatim" is the one
+# sentence that makes the marker fix work, because only surface.sh can print that
+# line. Unpinned, a compression pass deletes the evidence anchor and the marker
+# silently reverts to a self-report.
+SB28=$(mktemp -d)
+if ! (cd "$REPO_ROOT" && git ls-files -z skills .claude/skills hooks CLAUDE.md scripts/check-convention-sync.sh | xargs -0 -I{} cp --parents {} "$SB28"/); then
+  echo "SELFTEST FAIL: mutation-28 setup copy failed (rig broken, not a caught mutation)"; rc=1
+elif ! grep -qF -- "the coverage line from step 2 is reproduced" "$SB28/skills/knowledge-retrieval/SKILL.md"; then
+  echo "SELFTEST FAIL: mutation-28 anchor absent from knowledge-retrieval (rig broken, sed would be inert)"; rc=1
+else
+  sed -i 's/the coverage line from step 2 is reproduced/the coverage line is reproduced/' \
+    "$SB28/skills/knowledge-retrieval/SKILL.md"
+  expect_red "convention-sync: KB evidence anchor reworded" \
+    bash "$SB28/scripts/check-convention-sync.sh"
+  cp -f "$REPO_ROOT/skills/knowledge-retrieval/SKILL.md" "$SB28/skills/knowledge-retrieval/SKILL.md"
+  expect_green "convention-sync: unmutated copy (mutation-28 control)" \
+    bash "$SB28/scripts/check-convention-sync.sh"
+fi
+rm -rf "$SB28"
+
+# Mutation 29: beads-superpowers-eo9z2.18 widened this guard's SKIP conditions so a
+# contributor whose store lacks THIS repo's lore is not handed a red guard. Widening
+# SKIP is precisely how a guard silently stops being a gate, so the FAIL path is
+# pinned here: a ranker that returns nothing MUST still go RED, never SKIP.
+#
+# Uses a SCRATCH store (bd init + one seeded memory), never the maintainer's — a
+# mutation that depends on this machine's memories would reintroduce the exact
+# coupling the fix removes. The scratch store also proves portability directly:
+# it contains none of this repo's lore and the control still passes.
+#
+# The fixture's KEY deliberately shares NO token with its BODY ("aaa-zqx-marker"
+# vs "totally unrelated content about deployment pipelines"). That is the realistic
+# contributor case, and it is load-bearing: an earlier fixture whose key and body
+# overlapped made the control pass for the wrong reason and hid a real defect --
+# the probe was being derived from the key, which rank.py never indexes.
+#
+# NOTE: a `git ls-files` sandbox alone cannot test this guard — .beads is untracked,
+# so bd finds no store there and the guard SKIPs, which would make the mutation
+# report a false result. The scratch `bd init` is what makes the rig valid.
+SB29=$(mktemp -d)
+if ! (cd "$REPO_ROOT" && git ls-files -z skills scripts | xargs -0 -I{} cp --parents {} "$SB29"/); then
+  echo "SELFTEST FAIL: mutation-29 setup copy failed (rig broken, not a caught mutation)"; rc=1
+elif ! (cd "$SB29" && bd init --non-interactive >/dev/null 2>&1); then
+  echo "SELFTEST FAIL: mutation-29 setup 'bd init' failed (rig broken, not a caught mutation)"; rc=1
+elif ! (cd "$SB29" && bd remember "totally unrelated content about deployment pipelines" --key "aaa-zqx-marker" >/dev/null 2>&1); then
+  echo "SELFTEST FAIL: mutation-29 setup 'bd remember' failed (rig broken, not a caught mutation)"; rc=1
+elif ! grep -qF -- 'return _diversify(hits, self.toks, self._idf)[:top_n]' "$SB29/skills/knowledge-retrieval/scripts/rank.py"; then
+  echo "SELFTEST FAIL: mutation-29 anchor absent from rank.py (rig broken, sed would be inert)"; rc=1
+else
+  # The control must be a real OK, not a SKIP — a SKIP also exits 0 and would make
+  # this whole mutation vacuous.
+  expect_green "live-store guard: unmutated ranker on a lore-free scratch store (control)" \
+    bash -c "cd '$SB29' && bash scripts/check-live-store-retrieval.sh | grep -q '^live-store retrieval: OK'"
+  sed -i 's/return _diversify(hits, self\.toks, self\._idf)\[:top_n\]/return []/' \
+    "$SB29/skills/knowledge-retrieval/scripts/rank.py"
+  expect_red "live-store guard: ranker returns nothing" \
+    bash -c "cd '$SB29' && bash scripts/check-live-store-retrieval.sh"
+fi
+# Leak assertion, matching the assert_scratch_bead_absent discipline mutations 5-9 use.
+# selftest.sh never unsets BEADS_DIR, so an inherited one could route the `bd remember`
+# above into a real store; pin the check rather than trusting one manual run.
+# OUTSIDE the if/elif chain on purpose: the anchor-absent branch fires AFTER the
+# `bd remember` has already run, so a leak check nested in the else arm would skip
+# the one rig-broken path it exists to cover.
+if (cd "$REPO_ROOT" && bd memories 2>/dev/null | grep -qF -- "aaa-zqx-marker"); then
+  echo "SELFTEST FAIL: mutation-29 leaked scratch memory 'aaa-zqx-marker' into the real store"; rc=1
+else
+  echo "SELFTEST ok: 'mutation-29' scratch memory absent from real store (no leak)"
+fi
+rm -rf "$SB29"
 
 exit "$rc"

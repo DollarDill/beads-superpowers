@@ -176,13 +176,13 @@ Creating the knowledge-bead is part of this step, not a separate one — it happ
 
 ```bash
 printf '%s' "<distilled 0.5-2.5KB summary: what the research established, key evidence, verdicts>" | \
-bd create "<one-line summary of the research>" -t research -l kb,<1-3 topic labels from scripts/kb-label-vocab.txt> \
+bd create "<one-line summary of the research>" -t research -l kb,<1-3 topic labels from the controlled vocabulary> \
   --defer 2099-01-01 --metadata "$(jq -nc --arg d "<docpath>" '{doc:$d}')" --body-file - --silent
 ```
 
 The description carries the distilled findings — a reader should act on it without opening the doc.
 
-Labels: `kb` plus 1–3 topics from the controlled vocabulary (`scripts/kb-label-vocab.txt`) — the guard requires at least one topic label, at most three, and every label present in the vocab.
+Labels: `kb` plus 1–3 topics from the controlled vocabulary (this repo pins its set in the repo-root `scripts/kb-label-vocab.txt`, which is not shipped with the skill; elsewhere reuse the labels already in use — `bd list --label kb --status all`) — the guard requires at least one topic label, at most three, and every label present in the vocab.
 
 ### Quality Checklist
 
