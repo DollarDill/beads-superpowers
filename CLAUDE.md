@@ -96,7 +96,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 7 best-effort harn
 - `docs/decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs, `.internal/sdd/` (SDD scratch), and `.internal/brainstorm/` (brainstorm server sessions).
 - `tests/` — deterministic suites (hooks, manifests, skills contracts, install-shape, installer docker/podman E2E, brainstorm-server Node tests) run via the `just` surface. (The 4 LLM-driven suites were removed in the 2026-07 fat audit — successor: the external eval-harness project.)
-- `scripts/` — `bump-version.sh` (sync version across all surfaces declared in `.version-bump.json` — JSON manifests + prose), `check-skill-count.sh` (guard: forbid hardcoded skill counts + structural self-consistency), `check-agent-bead-stamp.sh`, `check-zh-docs.sh`, `check-convention-sync.sh` (verify shared convention blocks are byte-identical across skills), `lint-shell.sh` (shellcheck gate over tracked `.sh` with committed baseline; visible SKIP when shellcheck absent), `check-askuser-genericization.sh` (guard: skills use generic question-tool phrasing — ADR-0041), `check-model-genericization.sh` (guard: no hardcoded Claude model names in harness-neutral content — capability tiers only), `check-guardrail-floor.sh` (guard: ADR-0049's "never remove to zero" made mechanical — counts guardrail lines per skill against the committed `guardrail-floor-baseline.txt` and fails on a drop to zero or an unjustified decrease; a recorded `0` is a legitimate, disclosed zero for capability skills with no bright lines).
+- `scripts/` — `bump-version.sh` (sync version across all surfaces declared in `.version-bump.json` — JSON manifests + prose), `check-skill-count.sh` (guard: forbid hardcoded skill counts + structural self-consistency), `check-agent-bead-stamp.sh`, `check-zh-docs.sh`, `check-convention-sync.sh` (verify shared convention blocks are byte-identical across skills), `lint-shell.sh` (shellcheck gate over tracked `.sh` with committed baseline; visible SKIP when shellcheck absent), `check-askuser-genericization.sh` (guard: skills use generic question-tool phrasing — ADR-0041), `check-model-genericization.sh` (guard: no hardcoded Claude model names in harness-neutral content — capability tiers only), `check-guardrail-floor.sh` (guard: ADR-0049's "never remove to zero" made mechanical — counts guardrail lines per skill against the committed `guardrail-floor-baseline.txt` and fails on a drop to zero or an unjustified decrease; a recorded `0` is a legitimate, disclosed zero for capability skills with no bright lines), `check-live-store-retrieval.sh` (guard: the `knowledge-retrieval` ranker still returns hits for a multi-word query against the live store; visible SKIP — never FAIL — when `bd`, `python3`, or the store is unavailable).
 - `install.sh` — curl installer with 3-tier fallback chain (plugin system → npx → tarball/git clone). SHA-256 checksum validation, atomic rollback via staging directory, lazy prerequisites. Auto-detects Claude Code, Codex, OpenCode, and 7 more CLIs (Cursor, Copilot, Droid, Antigravity, Kimi, Pi, Gemini).
 
 ## Key Design Decisions
@@ -213,7 +213,8 @@ Pre-commit covers commit-time hygiene; nothing here is CI-enforced by design.
 just            # = just check: guards + hooks + manifests + contracts + shape
 just guards     # all guard scripts (todowrite, bead-stamp, zh-docs, convention-sync,
                 #   skill-count + KNOWN_SKILLS drift, version sync, frontmatter, shell lint,
-                #   askuser-genericization, model-genericization, guardrail floor)
+                #   askuser-genericization, model-genericization, guardrail floor,
+                #   live-store retrieval)
 just lint       # shellcheck gate alone (tracked .sh, baseline'd; SKIPs if shellcheck absent)
 just hooks      # tests/hooks/* (node tests SKIP visibly if node absent)
 just shape      # install-shape: 10 harnesses (Tier A full artifacts; Tier B hint+manifest)
@@ -232,6 +233,12 @@ grep -r "bd create\|bd close\|bd ready" skills/ | wc -l
 
 For a quick, no-Docker installer smoke test outside the `just` surface: `bash install.sh --test`
 (installs to `/tmp`, verifies, cleans up).
+
+The `knowledge-retrieval` ranker's live-store measurements are **opt-in** — their numbers move as the
+store grows, so they are deliberately not part of `just check`:
+`BSP_VERIFY_REAL_STORE=1 bash tests/skills/verify-real-store.sh`. Without the variable it SKIPs visibly
+(`tests/skills/*.sh` is globbed unconditionally by `run-contracts.sh`, so the env gate is what keeps it
+out of every run). `BSP_TOP_N` overrides the ranker's default 5-hit shortlist.
 
 Skill *behavior* testing lives in the external eval-harness project (the in-repo LLM suites
 were removed in the 2026-07 fat audit).

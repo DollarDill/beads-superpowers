@@ -9,6 +9,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- A new `knowledge-retrieval` skill searches your accumulated memories and knowledge notes and returns a ranked shortlist, each hit showing the sentence that actually matched — so you can judge relevance without opening every result. Ask it directly ("what do we know about worktrees?"), or let `brainstorming` and `writing-plans` reach it before they design or plan. Multi-word queries work for the first time: `bd worktree gotchas` and `memory salience` previously returned nothing at all, because the store matched the whole phrase literally.
+- Retrieval results no longer drown in metadata. Entries carry a `@type`/`@salience` header that plain substring search matched against — a query for `salience` returned 151 hits, 144 of which matched only that header. Headers are now stripped before matching, which removes the entire class of false positive.
+- Every result set opens with a coverage line — `searched: memories(171) beads(232)` — that names any source which was unavailable, so "no hits" can never be mistaken for "didn't look". Without Python 3 the skill still returns matching keys and says so, withholding bodies rather than printing text it cannot redact.
+
+### Changed
+
+- `brainstorming` and `writing-plans` now reach the retrieval protocol by invoking the skill that owns it, instead of each carrying its own copy of the instructions. Both keep a plain-`bd` fallback, so if the skill is unavailable they degrade to the previous behaviour rather than losing the check.
+
 ## [0.16.0] - 2026-07-27
 
 ### Added
