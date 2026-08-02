@@ -409,6 +409,23 @@ def extra_checks(ok):
     _mo = {h.key: h.score for h in _dv([_mk("m1"), _mk("m2")], _mid, _idf)}
     ok &= check("a 0.375 mass-ratio overlap does NOT demote (pins the lower bound)",
                 abs(_mo["m2"] - 2.0) < 1e-9)
+
+    # eo9z2.6 SECURITY FLOOR — pins FAIL-CLOSED unterminated-PEM redaction.
+    # The second alternation in _SECRET is deliberately unbounded: an unterminated
+    # BEGIN header redacts to end of body. The accepted cost is that a knowledge
+    # entry ABOUT PEM redaction loses its tail. DO NOT "fix" this by narrowing the
+    # match — that is a security regression, and it is the change a future reader
+    # will be tempted to make after seeing the finding described as a bug.
+    # Header assembled at runtime so no committed file carries a contiguous PEM
+    # marker (GH013 push protection), same idiom as the ghp_ fixture above.
+    from rank import redact as _redact
+    _pem = "-----BEGIN " + "RSA PRIVATE KEY" + "-----"
+    _leak = "intro text %s\nMIIsecretsecretsecret\ntrailing sentence that must not survive" % _pem
+    _out_r = _redact(_leak)
+    ok &= check("unterminated PEM redacts to end of body (fail-closed floor)",
+                "trailing sentence" not in _out_r and "MIIsecret" not in _out_r)
+    ok &= check("text before an unterminated PEM survives redaction",
+                "intro text" in _out_r)
     return ok
 
 main()

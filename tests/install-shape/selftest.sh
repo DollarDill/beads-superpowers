@@ -604,5 +604,33 @@ else
 fi
 rm -rf "$MUTR3"
 
+# Mutation 26: the unterminated-PEM alternation is a SECURITY FLOOR
+# (beads-superpowers-eo9z2.6). Narrowing `.*` to end-of-line is the exact "fix" a
+# future reader applies after seeing the finding described as a bug — and it is
+# the most plausible one, because "just redact the header line" sounds reasonable.
+# Verified 2026-08-02: with [^\n]* both the key material AND the trailing text
+# survive redaction. An earlier candidate, .{0,40}, was INERT — byte-identical
+# output to the control — which would have left this floor "protected" by a test
+# that could never fail. A mutation is not a guard until you run it.
+MUTR4=$(mktemp -d)
+trap 'rm -rf "$MUTR4"' EXIT
+if ! mkdir -p "$MUTR4/ctl" "$MUTR4/pem" \
+   || ! cp -f "$REPO_ROOT/skills/knowledge-retrieval/scripts/rank.py" "$MUTR4/ctl/rank.py"; then
+  echo "SELFTEST FAIL: mutation-26 setup (mkdir/cp rank.py) failed (rig broken, not a caught mutation)"; rc=1
+else
+  sed 's|^    r"\|-----BEGIN \[A-Z \]\*PRIVATE KEY-----\.\*"$|    r"\|-----BEGIN [A-Z ]*PRIVATE KEY-----[^\\n]*"|' \
+    "$MUTR4/ctl/rank.py" > "$MUTR4/pem/rank.py"
+  if cmp -s "$MUTR4/pem/rank.py" "$MUTR4/ctl/rank.py"; then
+    echo "SELFTEST FAIL: mutation-26 changed nothing (stale PEM alternation line, not a caught mutation)"; rc=1
+  else
+    expect_green "rank invariants: unmutated copy through RANK_DIR (control, mutation-26)" \
+      env RANK_DIR="$MUTR4/ctl" python3 "$REPO_ROOT/tests/skills/rank_invariants.py"
+    expect_red "rank invariants: unterminated-PEM redaction narrowed (SECURITY FLOOR)" \
+      env RANK_DIR="$MUTR4/pem" python3 "$REPO_ROOT/tests/skills/rank_invariants.py"
+  fi
+fi
+rm -rf "$MUTR4"
+
+
 
 exit "$rc"

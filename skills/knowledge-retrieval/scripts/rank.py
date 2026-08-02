@@ -9,6 +9,16 @@ from dataclasses import dataclass
 
 _HEADER = re.compile(r'^((?:@\w+=\S+(?:\s+|$))+)', re.S)
 _WORD = re.compile(r'[a-z0-9]+')
+# SECURITY FLOOR (beads-superpowers-eo9z2.6): the SECOND alternation below is
+# deliberately unbounded — an unterminated BEGIN header redacts to end of body
+# under re.S. FAIL-CLOSED ON PURPOSE. The accepted cost is that a knowledge entry
+# ABOUT PEM redaction loses its tail, and this store does contain meta-content
+# about secret scanning.
+#
+# DO NOT narrow this to `[^\n]*`, `.*?` or a bounded `.{0,N}`. It reads like a
+# bug and is not one: narrowing it leaks key material and everything after it.
+# Pinned by rank_invariants.py ("unterminated PEM redacts to end of body") and by
+# mutation 26 in tests/install-shape/selftest.sh, which proves that test can fail.
 _SECRET = re.compile(
     r"(-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----"
     r"|-----BEGIN [A-Z ]*PRIVATE KEY-----.*"
