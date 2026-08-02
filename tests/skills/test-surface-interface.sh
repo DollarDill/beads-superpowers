@@ -72,6 +72,15 @@ Never chain open after bd commands in one invocation — it hangs." \
   "This decision covers an unrelated labelling convention with no repeated marker word." \
   | bd create "ADR-0099 xenolith retrieval marker decision" -t decision -l kb,adr-process \
       --defer 2099-01-01 --body-file - --silent >/dev/null )
+# A NON-ASCII topic label. tokenize() keeps only [a-z0-9]+, so this label
+# tokenizes to the EMPTY set — and in Python `set() <= anything` is True, so a
+# subset matcher without a truthiness guard fires this label on EVERY query and
+# narrows the whole bead corpus to its bucket (beads-superpowers-eo9z2.7). This
+# repo ships Chinese docs, so the label set is one contributor away from this.
+( cd "$TMP" && printf '%s' \
+  "A decision carrying a non-ASCII topic label, used to prove the label matcher ignores empty-tokenizing labels." \
+  | bd create "ADR-0100 non-ascii label guard" -t decision -l kb,中文 \
+      --defer 2099-01-01 --body-file - --silent >/dev/null )
 
 # ── 1. coverage line opens every result set
 out="$( cd "$TMP" && bash "$SURFACE" "worktree gotchas" )"
@@ -127,6 +136,16 @@ for q in sdd-process "sdd process"; do
     || { echo "FAIL: hyphenated label filter never fires for query '$q'"; printf '%s\n' "$hyp"; exit 1; }
 done
 
+# ── 8b. an EMPTY-TOKENIZING label never fires (beads-superpowers-eo9z2.7).
+# `set() <= qtok` is True for any query, so without a truthiness guard the
+# non-ASCII label above joins `named` on every search and its bucket is unioned
+# into the results — silently changing what was searched. Asserted through the
+# real __main__ path (the matcher is not importable), so this cannot pass by
+# re-implementing the comprehension in the test.
+nas="$( cd "$TMP" && bash "$SURFACE" docs )"
+grep -qE '^searched: memories\([0-9][0-9]*\) beads\(1\) label=docs$' <<<"${nas%%$'\n'*}" \
+  || { echo "FAIL: empty-tokenizing label leaked into the label filter"; printf '%s\n' "$nas"; exit 1; }
+
 # ── 9. injection: metacharacter queries are one argument and execute nothing
 # shellcheck disable=SC2016  # the un-expanded $(...) and backticks ARE the payload
 for payload in 'x"; touch INJECTED; echo "' '$(touch PWNED)' '`touch BACKTICKED`'; do
@@ -152,7 +171,7 @@ for b in bd bash grep head sed sort dirname; do
   case "$p" in /*) ln -sf "$p" "$TMP/nopy/$b" ;; esac
 done
 set +e
-deg="$( cd "$TMP" && PATH="$TMP/nopy" bash "$SURFACE" "worktree gotchas" )"
+deg="$( cd "$TMP" && PATH="$TMP/nopy" bash "$SURFACE" "worktree hangs" )"
 deg_rc=$?
 set -e
 [ "$deg_rc" -eq 0 ] || { echo "FAIL: degraded path exited $deg_rc, must be 0"; printf '%s\n' "$deg"; exit 1; }
@@ -160,9 +179,18 @@ grep -q "requires python3" <<<"$deg" \
   || { echo "FAIL: python3-absent degradation is silent"; printf '%s\n' "$deg"; exit 1; }
 grep -q '^searched:' <<<"${deg%%$'\n'*}" \
   || { echo "FAIL: degraded path emits no coverage line"; printf '%s\n' "$deg"; exit 1; }
+# The query is "worktree hangs", and that choice IS the assertion: "worktree"
+# finds ONLY lesson-worktree-path-gotchas, "hangs" finds ONLY lesson-open-after-bd,
+# so BOTH keys appear only if the per-term results are genuinely unioned. The old
+# query "worktree gotchas" had either term alone finding the single asserted key,
+# so a loop that disclosed every term while searching only terms[0] still passed —
+# the assertion could not fail (beads-superpowers-eo9z2.8). Verified 2026-08-02:
+# that exact mutation left the old fixture GREEN and turns this one RED.
 grep -q 'lesson-worktree-path-gotchas' <<<"$deg" \
-  || { echo "FAIL: degraded path surfaced no matching key for a multi-word query"; printf '%s\n' "$deg"; exit 1; }
-grep -q 'terms=worktree,gotchas' <<<"$deg" \
+  || { echo "FAIL: degraded path term-1 hit missing — per-term union broken"; printf '%s\n' "$deg"; exit 1; }
+grep -q 'lesson-open-after-bd' <<<"$deg" \
+  || { echo "FAIL: degraded path term-2 hit missing — per-term union broken"; printf '%s\n' "$deg"; exit 1; }
+grep -q 'terms=worktree,hangs' <<<"$deg" \
   || { echo "FAIL: degraded path does not disclose which terms it searched"; printf '%s\n' "$deg"; exit 1; }
 grep -q '\.worktrees/name' <<<"$deg" \
   && { echo "FAIL: degraded path printed an unredacted body"; printf '%s\n' "$deg"; exit 1; }
@@ -185,6 +213,49 @@ grep -q 'lesson-Grep_E.alternation-bug' <<<"$deg2" \
   || { echo "FAIL: degraded path drops a key containing uppercase/underscore/dot"; printf '%s\n' "$deg2"; exit 1; }
 grep -q 'unredacted alternation pattern' <<<"$deg2" \
   && { echo "FAIL: degraded path printed body text for a mixed-charset key (security floor breach)"; printf '%s\n' "$deg2"; exit 1; }
+
+# ── 11c. the PER-TERM bd exit status is constrained (beads-superpowers-eo9z2.8).
+# Assertion 12 below cannot constrain it: when bd is broken for EVERY call, the
+# `bd memories --json` corpus fetch at the top of surface.sh has already set
+# degraded=memories before the per-term loop runs, so the loop's else-branch is
+# redundant and reverting it to `|| true` leaves the suite green (verified
+# 2026-08-02). Only a bd that fails for ONE term can prove the per-term record.
+# This is failure INJECTION, not a hand-authored fixture: every other call
+# delegates to the real binary, so the success path still sees genuine output.
+mkdir -p "$TMP/onefail"
+REALBD="$(command -v bd)"
+cat > "$TMP/onefail/bd" <<EOF
+#!/bin/sh
+if [ "\$1" = "memories" ] && [ "\$2" = "hangs" ]; then exit 1; fi
+exec "$REALBD" "\$@"
+EOF
+chmod 755 "$TMP/onefail/bd"
+set +e
+onefail="$( cd "$TMP" && PATH="$TMP/onefail:$TMP/nopy" bash "$SURFACE" "worktree hangs" )"
+onefail_rc=$?
+set -e
+[ "$onefail_rc" -eq 0 ] || { echo "FAIL: per-term-failure path exited $onefail_rc, must be 0"; printf '%s\n' "$onefail"; exit 1; }
+# The distinction is the whole point: "memories(DEGRADED)" means python3 was
+# absent but the memory source answered, whereas "memories UNAVAILABLE(bd error)"
+# means the source itself failed. Without the per-term record this run reports
+# the former and the failed term vanishes silently.
+grep -q 'memories UNAVAILABLE' <<<"$onefail" \
+  || { echo "FAIL: a per-term bd failure is not recorded on the coverage line"; printf '%s\n' "$onefail"; exit 1; }
+
+# ── 11d. a BROKEN degraded pipeline is DISCLOSED, never rendered as zero hits
+# (beads-superpowers-eo9z2.23). surface.sh runs under `set -o pipefail`, so a
+# missing/erroring grep genuinely propagates — the old `|| true` was what
+# swallowed it, leaving output byte-identical to a real empty result. The
+# reviewer hit this by accident while building a restricted PATH.
+mkdir -p "$TMP/nogrep"
+printf '#!/bin/sh\nexit 127\n' > "$TMP/nogrep/grep"; chmod 755 "$TMP/nogrep/grep"
+set +e
+brk="$( cd "$TMP" && PATH="$TMP/nogrep:$TMP/nopy" bash "$SURFACE" "worktree hangs" )"
+brk_rc=$?
+set -e
+[ "$brk_rc" -eq 0 ] || { echo "FAIL: broken-pipeline path exited $brk_rc, must be 0"; printf '%s\n' "$brk"; exit 1; }
+grep -q 'pipeline error' <<<"$brk" \
+  || { echo "FAIL: broken degraded pipeline rendered as a genuine zero-hit result"; printf '%s\n' "$brk"; exit 1; }
 
 # ── 12. python3 absent AND bd broken: the coverage line NAMES the dead source.
 # Rendering it as a fixed "memories(DEGRADED)" makes "bd is broken" and "nothing

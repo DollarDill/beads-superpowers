@@ -496,7 +496,13 @@ if ! mkdir -p "$MUTR/ctl" "$MUTR/b0" "$MUTR/k1" "$MUTR/idf" \
 else
   sed 's/^K1, B = 1\.5, 0\.75$/K1, B = 1.5, 0.0/'  "$MUTR/ctl/rank.py" > "$MUTR/b0/rank.py"
   sed 's/^K1, B = 1\.5, 0\.75$/K1, B = 0.5, 0.75/' "$MUTR/ctl/rank.py" > "$MUTR/k1/rank.py"
-  sed 's/^            idf = math\.log(1 + (self\.N - self\.df\[term\] + 0\.5) \/ (self\.df\[term\] + 0\.5))$/            idf = 1.0/' \
+  # Anchor tracks rank.py: the IDF formula moved out of _bm25 into Corpus._idf so
+  # _bm25 and _diversify share one source (beads-superpowers-eo9z2.14). Flattening
+  # it there is now a STRONGER mutation — it defeats BM25 ranking AND the
+  # IDF-weighted diversity bar at once. A task that edits a mutation-anchored line
+  # MUST re-anchor its sed in the same commit or the mutation silently stops
+  # testing anything; the `changed nothing` guard below is what catches it.
+  sed 's/^        return math\.log(1 + (self\.N - self\.df\[term\] + 0\.5) \/ (self\.df\[term\] + 0\.5))$/        return 1.0/' \
     "$MUTR/ctl/rank.py" > "$MUTR/idf/rank.py"
   # Rig-broken guard (stress-test P2, as in mutations 14-16): a reformatted constant
   # line, or a reformatted idf= computation line, makes the matching sed a no-op.
@@ -542,7 +548,12 @@ if ! mkdir -p "$MUTR2/ctl" "$MUTR2/score0" "$MUTR2/hazF" "$MUTR2/salU" \
    || ! cp -f "$REPO_ROOT/skills/knowledge-retrieval/scripts/rank.py" "$MUTR2/ctl/rank.py"; then
   echo "SELFTEST FAIL: mutation-22/23/24 setup (mkdir/cp rank.py) failed (rig broken, not a caught mutation)"; rc=1
 else
-  sed 's/^            score += 0\.5 \* (salience >= 4) + 0\.5 \* hazard + _recency(header, today or datetime\.date\.today())$/            score += 0.0/' \
+  # Anchor tracks rank.py: the per-call `today or datetime.date.today()` became
+  # `today or self.today` when the date was frozen at construction
+  # (beads-superpowers-eo9z2.4). A task that edits a mutation-anchored line MUST
+  # re-anchor its sed in the same commit, or the mutation silently stops testing
+  # anything — caught here by the `changed nothing` guard below.
+  sed 's/^            score += 0\.5 \* (salience >= 4) + 0\.5 \* hazard + _recency(header, today or self\.today)$/            score += 0.0/' \
     "$MUTR2/ctl/rank.py" > "$MUTR2/score0/rank.py"
   sed 's/^            hazard = bool(_HAZARD\.search(self\.bodies\[key\]))$/            hazard = False/' \
     "$MUTR2/ctl/rank.py" > "$MUTR2/hazF/rank.py"
@@ -568,5 +579,58 @@ else
   fi
 fi
 rm -rf "$MUTR2"
+
+# Mutation 25: DIVERSIFY_FRACTION. eo9z2.14 replaced a count-based overlap bar
+# with an IDF-weighted one; without a mutation the new constant is unconstrained,
+# which is exactly how the reverted 0.5->0.7 tune passed "25/25 invariants
+# unchanged" while the fixture could not discriminate the two values at all.
+# 0.99 defangs demotion entirely (no realistic overlap reaches 99% of a hit's IDF
+# mass), so the content-word assertion must go RED.
+MUTR3=$(mktemp -d)
+trap 'rm -rf "$MUTR3"' EXIT
+if ! mkdir -p "$MUTR3/ctl" "$MUTR3/df" \
+   || ! cp -f "$REPO_ROOT/skills/knowledge-retrieval/scripts/rank.py" "$MUTR3/ctl/rank.py"; then
+  echo "SELFTEST FAIL: mutation-25 setup (mkdir/cp rank.py) failed (rig broken, not a caught mutation)"; rc=1
+else
+  sed 's/^DIVERSIFY_FRACTION = 0\.5.*$/DIVERSIFY_FRACTION = 0.99/' "$MUTR3/ctl/rank.py" > "$MUTR3/df/rank.py"
+  if cmp -s "$MUTR3/df/rank.py" "$MUTR3/ctl/rank.py"; then
+    echo "SELFTEST FAIL: mutation-25 changed nothing (stale DIVERSIFY_FRACTION line, not a caught mutation)"; rc=1
+  else
+    expect_green "rank invariants: unmutated copy through RANK_DIR (control, mutation-25)" \
+      env RANK_DIR="$MUTR3/ctl" python3 "$REPO_ROOT/tests/skills/rank_invariants.py"
+    expect_red "rank invariants: diversity bar defanged (DIVERSIFY_FRACTION=0.99)" \
+      env RANK_DIR="$MUTR3/df" python3 "$REPO_ROOT/tests/skills/rank_invariants.py"
+  fi
+fi
+rm -rf "$MUTR3"
+
+# Mutation 26: the unterminated-PEM alternation is a SECURITY FLOOR
+# (beads-superpowers-eo9z2.6). Narrowing `.*` to end-of-line is the exact "fix" a
+# future reader applies after seeing the finding described as a bug — and it is
+# the most plausible one, because "just redact the header line" sounds reasonable.
+# Verified 2026-08-02: with [^\n]* both the key material AND the trailing text
+# survive redaction. An earlier candidate, .{0,40}, was INERT — byte-identical
+# output to the control — which would have left this floor "protected" by a test
+# that could never fail. A mutation is not a guard until you run it.
+MUTR4=$(mktemp -d)
+trap 'rm -rf "$MUTR4"' EXIT
+if ! mkdir -p "$MUTR4/ctl" "$MUTR4/pem" \
+   || ! cp -f "$REPO_ROOT/skills/knowledge-retrieval/scripts/rank.py" "$MUTR4/ctl/rank.py"; then
+  echo "SELFTEST FAIL: mutation-26 setup (mkdir/cp rank.py) failed (rig broken, not a caught mutation)"; rc=1
+else
+  sed 's|^    r"\|-----BEGIN \[A-Z \]\*PRIVATE KEY-----\.\*"$|    r"\|-----BEGIN [A-Z ]*PRIVATE KEY-----[^\\n]*"|' \
+    "$MUTR4/ctl/rank.py" > "$MUTR4/pem/rank.py"
+  if cmp -s "$MUTR4/pem/rank.py" "$MUTR4/ctl/rank.py"; then
+    echo "SELFTEST FAIL: mutation-26 changed nothing (stale PEM alternation line, not a caught mutation)"; rc=1
+  else
+    expect_green "rank invariants: unmutated copy through RANK_DIR (control, mutation-26)" \
+      env RANK_DIR="$MUTR4/ctl" python3 "$REPO_ROOT/tests/skills/rank_invariants.py"
+    expect_red "rank invariants: unterminated-PEM redaction narrowed (SECURITY FLOOR)" \
+      env RANK_DIR="$MUTR4/pem" python3 "$REPO_ROOT/tests/skills/rank_invariants.py"
+  fi
+fi
+rm -rf "$MUTR4"
+
+
 
 exit "$rc"

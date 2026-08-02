@@ -332,6 +332,100 @@ def extra_checks(ok):
     # blind to the salience mutation, by design — isolates the hazard wiring.
     ok &= check("hazard boost is wired into the score, not just computed",
                 bool(keys6) and keys6[0] == "hazard-hazard")
+
+    # eo9z2.4: the module docstring declares this body pure, but search() read the
+    # wall clock per call. Harmless while no FIXTURE entry carries @created, and
+    # non-deterministic the moment one does — a Corpus could straddle midnight and
+    # two calls would disagree. The date is now frozen once, at construction.
+    import datetime as _dt
+    _c = Corpus({"aged": "@created=2026-08-02\ntourmaline body text"},
+                today=_dt.date(2026, 8, 2))
+    ok &= check("date frozen at construction (today= honoured by __init__)",
+                _c.today == _dt.date(2026, 8, 2))
+    # Not a tautology: @created=2026-08-02 sits at age 0 against the frozen date
+    # (full recency boost) and ages out against an explicit far-future today=. A
+    # search() that ignored self.today and re-read the wall clock would drift with
+    # the calendar instead of tracking the frozen value.
+    _near = _c.search("tourmaline")[0].score
+    _far = _c.search("tourmaline", today=_dt.date(2027, 1, 1))[0].score
+    ok &= check("search() inherits the frozen date, and today= still overrides",
+                _near > _far)
+
+    # eo9z2.5 property (2): a hit ALREADY judged redundant must not be able to
+    # demote a third hit. Standard MMR diversifies against the SELECTED set, not
+    # the rejected one. Fixture is built so the distinction is the only thing that
+    # decides the outcome: each doc has exactly 8 distinct terms, so most_common(8)
+    # returns all of them and the threshold is >4.
+    #   a vs nothing        -> kept
+    #   b vs a: overlap 5   -> demoted
+    #   c vs a: overlap 2   -> NOT demoted by a
+    #   c vs b: overlap 5   -> demoted ONLY IF the rejected b is in `seen`
+    from rank import _diversify as _dv, Hit
+    _dtoks = {"a": ["p", "q", "r", "s", "t", "u", "v", "w"],
+              "b": ["p", "q", "r", "s", "t", "m", "n", "o"],
+              "c": ["m", "n", "o", "t", "q", "aa", "bb", "cc"]}
+    _dhits = [Hit(key="a", score=3.0, sentence="", salience=3, hazard=False),
+              Hit(key="b", score=2.0, sentence="", salience=3, hazard=False),
+              Hit(key="c", score=1.0, sentence="", salience=3, hazard=False)]
+    # Flat IDF reproduces the original count-based bar exactly (mass == cardinality),
+    # so this assertion keeps testing property (2) and nothing else even after the
+    # overlap became IDF-weighted (eo9z2.14).
+    _dout = {h.key: h.score for h in _dv(_dhits, _dtoks, lambda t: 1.0)}
+    ok &= check("a demoted hit does not poison later comparisons (eo9z2.5)",
+                abs(_dout["c"] - 1.0) < 1e-9)
+    ok &= check("the genuinely redundant hit is still demoted",
+                abs(_dout["b"] - 1.0) < 1e-9)
+
+    # eo9z2.14: overlap must be weighted by IDF, not counted. The failing design
+    # criterion. A count-based bar cannot separate stopword overlap from topical
+    # overlap — the measured false positive shared {the, worktree, bd, it, a},
+    # three of which are function words. Asserted on SCORES through _diversify,
+    # never on presence through search(): _diversify DEMOTES rather than drops, so
+    # every hit is always present and a presence check can never fail.
+    _idf = lambda t: 0.05 if t in {"the", "it", "a", "bd", "worktree"} else 3.0
+    _mk = lambda k: Hit(key=k, score=2.0, sentence="", salience=3, hazard=False)
+    # shared mass 5x0.05=0.25 vs bar 9.25x0.5=4.625 -> NO demotion.
+    # Under the count-based bar this is 5 shared of 8 > 4 -> s2 halved to 1.0.
+    _stop = {"s1": ["the", "it", "a", "bd", "worktree", "alpha", "beta", "gamma"],
+             "s2": ["the", "it", "a", "bd", "worktree", "delta", "epsilon", "zeta"]}
+    _so = {h.key: h.score for h in _dv([_mk("s1"), _mk("s2")], _stop, _idf)}
+    ok &= check("function-word overlap does not demote (eo9z2.14)",
+                abs(_so["s2"] - 2.0) < 1e-9)
+    # shared mass 5x3.0=15.0 vs bar 24.0x0.5=12.0 -> DEMOTES. Stops "disable
+    # demotion entirely" from being a passing fix.
+    _cont = {"c1": ["shellcheck", "pipefail", "sigpipe", "mutation", "idf", "alpha", "beta", "gamma"],
+             "c2": ["shellcheck", "pipefail", "sigpipe", "mutation", "idf", "delta", "epsilon", "zeta"]}
+    _co = {h.key: h.score for h in _dv([_mk("c1"), _mk("c2")], _cont, _idf)}
+    ok &= check("content-word overlap still demotes (diversify still works)",
+                abs(_co["c2"] - 1.0) < 1e-9)
+    # Pins the LOWER bound of DIVERSIFY_FRACTION. Without this the sweep showed
+    # 0.3 and 0.5 behaving identically — any value below 0.625 passed, so the
+    # constant was only half-constrained, and .14's failure mode is OVER-demotion
+    # (a bar that is too low). Shared mass 3x3.0=9.0 against a total of 24.0 is a
+    # ratio of 0.375, which sits between the candidates: at 0.3 the bar is 7.2 and
+    # this pair demotes (RED); at 0.5 the bar is 12.0 and it does not (GREEN).
+    _mid = {"m1": ["shellcheck", "pipefail", "sigpipe", "aa", "bb", "cc", "dd", "ee"],
+            "m2": ["shellcheck", "pipefail", "sigpipe", "ff", "gg", "hh", "ii", "jj"]}
+    _mo = {h.key: h.score for h in _dv([_mk("m1"), _mk("m2")], _mid, _idf)}
+    ok &= check("a 0.375 mass-ratio overlap does NOT demote (pins the lower bound)",
+                abs(_mo["m2"] - 2.0) < 1e-9)
+
+    # eo9z2.6 SECURITY FLOOR — pins FAIL-CLOSED unterminated-PEM redaction.
+    # The second alternation in _SECRET is deliberately unbounded: an unterminated
+    # BEGIN header redacts to end of body. The accepted cost is that a knowledge
+    # entry ABOUT PEM redaction loses its tail. DO NOT "fix" this by narrowing the
+    # match — that is a security regression, and it is the change a future reader
+    # will be tempted to make after seeing the finding described as a bug.
+    # Header assembled at runtime so no committed file carries a contiguous PEM
+    # marker (GH013 push protection), same idiom as the ghp_ fixture above.
+    from rank import redact as _redact
+    _pem = "-----BEGIN " + "RSA PRIVATE KEY" + "-----"
+    _leak = "intro text %s\nMIIsecretsecretsecret\ntrailing sentence that must not survive" % _pem
+    _out_r = _redact(_leak)
+    ok &= check("unterminated PEM redacts to end of body (fail-closed floor)",
+                "trailing sentence" not in _out_r and "MIIsecret" not in _out_r)
+    ok &= check("text before an unterminated PEM survives redaction",
+                "intro text" in _out_r)
     return ok
 
 main()
