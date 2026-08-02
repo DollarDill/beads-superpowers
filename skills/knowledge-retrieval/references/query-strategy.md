@@ -67,8 +67,8 @@ grinding past that; a bounded "none" is a valid, complete answer.
 
 | Condition | Behavior |
 | --- | --- |
-| No `python3` on `PATH` | Keys/titles only are returned; hit **bodies are withheld** (redaction lives in the ranker — see SKILL.md Floor). |
+| No `python3` on `PATH` | Memory **keys only** — never titles, never bodies (redaction lives in the ranker — see SKILL.md Floor). Knowledge beads are not searched at all on this path; the coverage line reads `kb-beads(SKIPPED)`. Keys are cut at 20, and the cut is disclosed as `showing 20 of N keys`. |
 | No `bd` on `PATH` | Visible SKIP — the coverage line names `bd` as unavailable rather than silently returning zero hits. |
 | Empty store (no matching beads at all) | Reported as "none" — a legitimate empty result, not an error. |
 | Broken text-processing pipeline (`grep`/`sort`/`sed` missing or erroring, no `python3`) | Named on the coverage line as `keys UNAVAILABLE(pipeline error)`. Without this a broken toolchain printed output byte-identical to the row above, so "none" could not be trusted. |
-| Malformed entry (unparseable bead record) | Counted and named individually in the coverage line, not silently dropped from the total. |
+| Malformed entry (bead carrying no id) | **Counted but not searched** — it is included in `kb-beads(N)` yet excluded from the corpus, and nothing names it individually. This differs from the `schema_version` envelope key, which is excluded from the memory count precisely so that count reports what was *searched*. A known inconsistency, recorded rather than fixed here. |
