@@ -240,6 +240,12 @@ store grows, so they are deliberately not part of `just check`:
 (`tests/skills/*.sh` is globbed unconditionally by `run-contracts.sh`, so the env gate is what keeps it
 out of every run). `BSP_TOP_N` overrides the ranker's default 5-hit shortlist.
 
+That glob is **non-recursive**, so a non-test helper belongs in `tests/skills/helpers/` rather than
+beside the tests — a helper globbed as a test reports PASS while asserting nothing, which is a false
+green in the suite. Use the env gate only for a real test that must not run every time
+(`verify-real-store.sh`); use `helpers/` for anything that is not a test at all
+(`helpers/v1-describe-skills.sh`).
+
 Skill *behavior* testing lives in the external eval-harness project (the in-repo LLM suites
 were removed in the 2026-07 fat audit).
 
