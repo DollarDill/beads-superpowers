@@ -84,7 +84,7 @@ Never chain open after bd commands in one invocation — it hangs." \
 
 # ── 1. coverage line opens every result set
 out="$( cd "$TMP" && bash "$SURFACE" "worktree gotchas" )"
-grep -qE '^searched: memories\([0-9][0-9]*\) beads\([0-9][0-9]*\)' <<<"${out%%$'\n'*}" \
+grep -qE '^searched: memories\([0-9][0-9]*\) kb-beads\([0-9][0-9]*\)' <<<"${out%%$'\n'*}" \
   || { echo "FAIL: coverage line absent or not first"; printf '%s\n' "$out"; exit 1; }
 
 # ── 2. the count is what was SEARCHED. bd memories --json wraps the map in a
@@ -124,7 +124,7 @@ grep -q 'hand-authored fixture' <<<"$rec" \
 
 # ── 7. label filter is stage-1 recall for beads (ADR-0056), and it is disclosed
 lab="$( cd "$TMP" && bash "$SURFACE" docs )"
-grep -qE '^searched: memories\([0-9][0-9]*\) beads\(1\) label=docs' <<<"${lab%%$'\n'*}" \
+grep -qE '^searched: memories\([0-9][0-9]*\) kb-beads\(1\) label=docs' <<<"${lab%%$'\n'*}" \
   || { echo "FAIL: label filter absent or undisclosed"; printf '%s\n' "$lab"; exit 1; }
 
 # ── 8. …including HYPHENATED labels, in both the hyphenated and the spaced form.
@@ -132,7 +132,7 @@ grep -qE '^searched: memories\([0-9][0-9]*\) beads\(1\) label=docs' <<<"${lab%%$
 # for these — 10 of the live store's 19 labels, its four largest buckets included.
 for q in sdd-process "sdd process"; do
   hyp="$( cd "$TMP" && bash "$SURFACE" "$q" )"
-  grep -qE '^searched: memories\([0-9][0-9]*\) beads\(1\) label=sdd-process' <<<"${hyp%%$'\n'*}" \
+  grep -qE '^searched: memories\([0-9][0-9]*\) kb-beads\(1\) label=sdd-process' <<<"${hyp%%$'\n'*}" \
     || { echo "FAIL: hyphenated label filter never fires for query '$q'"; printf '%s\n' "$hyp"; exit 1; }
 done
 
@@ -143,7 +143,12 @@ done
 # real __main__ path (the matcher is not importable), so this cannot pass by
 # re-implementing the comprehension in the test.
 nas="$( cd "$TMP" && bash "$SURFACE" docs )"
-grep -qE '^searched: memories\([0-9][0-9]*\) beads\(1\) label=docs$' <<<"${nas%%$'\n'*}" \
+# The trailing `$` is LOAD-BEARING: it proves `label=docs` is the COMPLETE label
+# list, i.e. the non-ASCII label did NOT union in (beads-superpowers-eo9z2.7).
+# eo9z2.27 appended the boundary clause after the label, so the anchor moved to
+# the end of that clause — it was NOT dropped. Dropping it would let
+# `label=docs,中文` pass and silently defang this guard.
+grep -qE '^searched: memories\([0-9][0-9]*\) kb-beads\(1\) label=docs — open backlog not indexed \(doing-moment scope\)$' <<<"${nas%%$'\n'*}" \
   || { echo "FAIL: empty-tokenizing label leaked into the label filter"; printf '%s\n' "$nas"; exit 1; }
 
 # ── 9. injection: metacharacter queries are one argument and execute nothing
@@ -296,7 +301,7 @@ grep -qi 'xenolith' <<<"$title_only" \
 # VACUOUSLY — a body cannot leak from a key that was never rendered. Measured:
 # "fixture-*" => 0 of 3 floor fixtures survive; "zz-*" => 3 of 3. This block also runs
 # AFTER assertions 11/11b for the same reason.
-for i in $(seq -w 1 25); do
+for i in $(seq -w 1 21); do   # 21 = minimum to exceed the 20-key cut; each bd write costs ~1s
   ( cd "$TMP" && bd remember "degraded truncation fixture number $i" \
       --key "zz-truncation-$i" >/dev/null )
 done
@@ -305,8 +310,8 @@ deg_trunc="$( cd "$TMP" && PATH="$TMP/nopy" bash "$SURFACE" "zz truncation" 2>&1
 grep -qF -e 'showing 20 of' <<<"$deg_trunc" \
   || { echo "FAIL: degraded path truncated to 20 keys without disclosing the total"; printf '%s\n' "$deg_trunc"; exit 1; }
 disclosed="$( grep -oE 'showing 20 of [0-9]+ keys' <<<"$deg_trunc" | grep -oE '[0-9]+ keys' | grep -oE '[0-9]+' )"
-[ "${disclosed:-0}" -ge 25 ] \
-  || { echo "FAIL: disclosed total ${disclosed:-0} is below the 25 seeded fixtures"; exit 1; }
+[ "${disclosed:-0}" -ge 21 ] \
+  || { echo "FAIL: disclosed total ${disclosed:-0} is below the 21 seeded fixtures"; exit 1; }
 
 # FLOOR LIVENESS: prove the seeding did not displace the floor fixtures. Without this,
 # a future change to the key prefix silently re-defangs the two body-leak assertions.
@@ -322,4 +327,18 @@ deg_empty="$( cd "$TMP" && PATH="$TMP/nopy" bash "$SURFACE" "zzzznomatchzzzz" 2>
 grep -q 'keys UNAVAILABLE(pipeline error)' <<<"$deg_empty" \
   && { echo "FAIL: healthy-but-empty degraded result reported as a pipeline error"; printf '%s\n' "$deg_empty"; exit 1; }
 
-echo "PASS: surface.sh — coverage line, counts, salience rendering, untruncated keys, hyphenated label filter, injection-inert, bd-error visible, degradation, truncation disclosure, empty-vs-error"
+# ── 17. the coverage line names its BOUNDARY (beads-superpowers-eo9z2.27).
+# "beads(N)" read as "all beads"; in fact only kb-labelled knowledge beads are indexed
+# and the open backlog is out of scope BY DESIGN (spec D5: knowledge-retrieval serves
+# the doing moment, backlog query serves the choosing moment). Disclosed, not widened.
+cov="$( cd "$TMP" && bash "$SURFACE" "lesson" 2>&1 | head -1 )"
+grep -q 'kb-beads(' <<<"$cov" \
+  || { echo "FAIL: coverage line does not name the bead source as the knowledge store: $cov"; exit 1; }
+grep -q 'backlog not indexed' <<<"$cov" \
+  || { echo "FAIL: coverage line does not disclose the open-backlog exclusion: $cov"; exit 1; }
+# The disclosure is deliberate SCOPE, never a degraded source — a reader must not
+# confuse it with 'beads UNAVAILABLE'.
+grep -qE 'UNAVAILABLE|DEGRADED|SKIPPED' <<<"$cov" \
+  && { echo "FAIL: boundary disclosure must not read as a degraded source: $cov"; exit 1; }
+
+echo "PASS: surface.sh — coverage line, counts, salience rendering, untruncated keys, hyphenated label filter, injection-inert, bd-error visible, degradation, truncation disclosure, empty-vs-error, boundary disclosure"

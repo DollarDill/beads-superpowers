@@ -9,7 +9,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 [ "$#" -gt 0 ] || { echo "usage: surface.sh <query...>" >&2; exit 2; }
 
 if ! command -v bd >/dev/null 2>&1; then
-  echo "searched: memories(SKIP) beads(SKIP) — bd absent"; exit 0
+  echo "searched: memories(SKIP) kb-beads(SKIP) — bd absent"; exit 0
 fi
 
 # Each bd call's exit status is captured separately. Falling back to an empty
@@ -98,7 +98,10 @@ if ! command -v python3 >/dev/null 2>&1; then
     *,memories,*) searched="memories UNAVAILABLE(bd error)" ;;
     *)            searched="memories(DEGRADED)" ;;
   esac
-  printf 'searched: %s beads(SKIPPED)%s terms=%s\n' "$searched" "$keys_status" "$joined"
+  # "kb-beads" matches rank.py's healthy line (beads-superpowers-eo9z2.27). No
+  # boundary clause here: on this path beads are not searched AT ALL, so disclosing a
+  # scope filter would imply something ran that never did.
+  printf 'searched: %s kb-beads(SKIPPED)%s terms=%s\n' "$searched" "$keys_status" "$joined"
   echo "ranking requires python3 — matching keys only, bodies withheld (redaction unavailable)"
   if [ -n "$keys" ]; then
     printf '%s\n' "$keys"
