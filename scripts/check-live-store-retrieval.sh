@@ -31,10 +31,23 @@ if command -v bd >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1 && bd mem
   # `bd memories` and `bd search` return zero for, so the probe still exercises
   # the ranker's reason to exist.
   #
-  # `sed -n '1p'`, never `head -1`: head exits early and SIGPIPEs the upstream
-  # stage under pipefail (same reason surface.sh gives at its key-extraction step).
-  first_body="$(bd memories 2>/dev/null | grep -E '^    [^ ]' | sed -n '1p')"
-  read -r probe_a probe_b _ <<<"$(printf '%s' "$first_body" | sed -E 's/^ *(@[A-Za-z_]+=[^ ]+ +)*//')"
+  # SCAN the bodies, never sample the first one. Two ways a single sample fails on a
+  # perfectly healthy store, both reproduced: (a) rank.py's tokenizer is [a-z0-9]+,
+  # so a body opening in CJK or emoji tokenizes to nothing and FAILs — and this repo
+  # ships docs/zh, so that is a live case here, not a hypothetical; (b) `bd memories`
+  # truncates each preview at ~120 chars, so on a header-heavy entry the @k=v block
+  # can consume the whole line and leave under two tokens after the strip, which
+  # SKIPs. Measured: 50 of this store's 180 memories have that shape. Taking the
+  # first line that yields two indexable tokens makes the guard hold on ANY store
+  # rather than on a lucky alphabetical draw.
+  probe_a=""; probe_b=""
+  while IFS= read -r _body_line; do
+    read -r _a _b _ <<<"$(printf '%s' "$_body_line" | sed -E 's/^ *(@[A-Za-z_]+=[^ ]+ *)*//')"
+    # Both terms must carry something the tokenizer will actually index.
+    if printf '%s' "$_a" | grep -qE '[A-Za-z0-9]' && printf '%s' "$_b" | grep -qE '[A-Za-z0-9]'; then
+      probe_a="$_a"; probe_b="$_b"; break
+    fi
+  done < <(bd memories 2>/dev/null | grep -E '^    [^ ]')
   if [ -z "${probe_b:-}" ]; then
     # No two-token probe derivable — nothing to assert, so say so rather than
     # inventing a query. This SKIP widens the old conditions, which is exactly how

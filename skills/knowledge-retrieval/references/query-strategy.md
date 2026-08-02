@@ -74,18 +74,21 @@ Adding a term therefore *widens* the candidate set. Narrowing means **replacing*
 appending them:
 
 1. **Replace a low-signal term with a high-signal one.** Signal is rarity: a term carried by most
-   entries discriminates nothing. (Measured on this repo's store, as counts of memories whose body
-   contains the term: `lesson` 117 of 180, `shellcheck` 5. Swapping `lesson` for `shellcheck`
-   collapses the set; adding it to `lesson` enlarges it — `lesson` returns 136 keys on the degraded
-   path, `lesson guard` returns 144.)
-2. **Drop terms rather than add them.** Every extra term is more results, not fewer.
+   entries discriminates nothing. (Measured on this repo's store, as counts of memories whose
+   stripped body contains the term: `lesson` 117 of 180, `shellcheck` 5. On the degraded path
+   `lesson` returns 136 keys; *replacing* it — `shellcheck` alone — returns 5, while *appending*
+   it — `lesson shellcheck` — returns 137.)
+2. **Drop terms rather than add them.** On the degraded path every extra term is strictly more
+   results. On the ranked path it cannot add results, because the shortlist is capped — but it
+   re-ranks, and can evict the hit you wanted.
 3. Only then re-run.
 
 If a compound may be spelled two ways, `worktree` and `work tree` are different searches — `bd` has
 no stemming. That is a *recall* fix for the zero-hits case above, not a narrowing move; it widens.
 
-**On the degraded path (no `python3`) nothing bounds the set but the query** — and that is the only
-path where more than 10 hits can reach you, since the ranker caps its shortlist. Keys come back in
+**On the degraded path (no `python3`) nothing bounds the set but the query** — and that is normally
+the only path where more than 10 hits reach you, since the ranker caps its shortlist (raise
+`BSP_TOP_N` and the ranked path can exceed it too). Keys come back in
 alphabetical order, never relevance order, cut at 20 with a `showing 20 of N keys` disclosure. Do
 not disposition 20 unranked keys — replace terms until the disclosure disappears, or install
 `python3` so the shortlist is ranked and bounded.

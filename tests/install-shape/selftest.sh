@@ -631,7 +631,7 @@ else
 fi
 rm -rf "$MUTR4"
 
-# Mutation 27: KB_NARROW_SIG pins ADR-0058's hit bound at its six carrying sites
+# Mutation 27: KB_NARROW_SIG pins ADR-0058's hit bound at its seven carrying sites
 # (beads-superpowers-eo9z2.11). The clause is load-bearing prose that nothing
 # pinned, so a compression pass could delete it with every guard green. Verified
 # meaningful: this exact mutation exited 0 BEFORE the signature was wired.
@@ -710,14 +710,17 @@ else
     "$SB29/skills/knowledge-retrieval/scripts/rank.py"
   expect_red "live-store guard: ranker returns nothing" \
     bash -c "cd '$SB29' && bash scripts/check-live-store-retrieval.sh"
-  # Leak assertion, matching the assert_scratch_bead_absent discipline mutations 5-9
-  # use. selftest.sh never unsets BEADS_DIR, so an inherited one could route this
-  # `bd remember` into a real store; pin the check rather than trusting one manual run.
-  if (cd "$REPO_ROOT" && bd memories 2>/dev/null | grep -qF -- "aaa-zqx-marker"); then
-    echo "SELFTEST FAIL: mutation-29 leaked scratch memory 'aaa-zqx-marker' into the real store"; rc=1
-  else
-    echo "SELFTEST ok: 'mutation-29' scratch memory absent from real store (no leak)"
-  fi
+fi
+# Leak assertion, matching the assert_scratch_bead_absent discipline mutations 5-9 use.
+# selftest.sh never unsets BEADS_DIR, so an inherited one could route the `bd remember`
+# above into a real store; pin the check rather than trusting one manual run.
+# OUTSIDE the if/elif chain on purpose: the anchor-absent branch fires AFTER the
+# `bd remember` has already run, so a leak check nested in the else arm would skip
+# the one rig-broken path it exists to cover.
+if (cd "$REPO_ROOT" && bd memories 2>/dev/null | grep -qF -- "aaa-zqx-marker"); then
+  echo "SELFTEST FAIL: mutation-29 leaked scratch memory 'aaa-zqx-marker' into the real store"; rc=1
+else
+  echo "SELFTEST ok: 'mutation-29' scratch memory absent from real store (no leak)"
 fi
 rm -rf "$SB29"
 
