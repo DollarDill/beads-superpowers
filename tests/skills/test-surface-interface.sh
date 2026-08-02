@@ -72,6 +72,15 @@ Never chain open after bd commands in one invocation — it hangs." \
   "This decision covers an unrelated labelling convention with no repeated marker word." \
   | bd create "ADR-0099 xenolith retrieval marker decision" -t decision -l kb,adr-process \
       --defer 2099-01-01 --body-file - --silent >/dev/null )
+# A NON-ASCII topic label. tokenize() keeps only [a-z0-9]+, so this label
+# tokenizes to the EMPTY set — and in Python `set() <= anything` is True, so a
+# subset matcher without a truthiness guard fires this label on EVERY query and
+# narrows the whole bead corpus to its bucket (beads-superpowers-eo9z2.7). This
+# repo ships Chinese docs, so the label set is one contributor away from this.
+( cd "$TMP" && printf '%s' \
+  "A decision carrying a non-ASCII topic label, used to prove the label matcher ignores empty-tokenizing labels." \
+  | bd create "ADR-0100 non-ascii label guard" -t decision -l kb,中文 \
+      --defer 2099-01-01 --body-file - --silent >/dev/null )
 
 # ── 1. coverage line opens every result set
 out="$( cd "$TMP" && bash "$SURFACE" "worktree gotchas" )"
@@ -126,6 +135,16 @@ for q in sdd-process "sdd process"; do
   grep -qE '^searched: memories\([0-9][0-9]*\) beads\(1\) label=sdd-process' <<<"${hyp%%$'\n'*}" \
     || { echo "FAIL: hyphenated label filter never fires for query '$q'"; printf '%s\n' "$hyp"; exit 1; }
 done
+
+# ── 8b. an EMPTY-TOKENIZING label never fires (beads-superpowers-eo9z2.7).
+# `set() <= qtok` is True for any query, so without a truthiness guard the
+# non-ASCII label above joins `named` on every search and its bucket is unioned
+# into the results — silently changing what was searched. Asserted through the
+# real __main__ path (the matcher is not importable), so this cannot pass by
+# re-implementing the comprehension in the test.
+nas="$( cd "$TMP" && bash "$SURFACE" docs )"
+grep -qE '^searched: memories\([0-9][0-9]*\) beads\(1\) label=docs$' <<<"${nas%%$'\n'*}" \
+  || { echo "FAIL: empty-tokenizing label leaked into the label filter"; printf '%s\n' "$nas"; exit 1; }
 
 # ── 9. injection: metacharacter queries are one argument and execute nothing
 # shellcheck disable=SC2016  # the un-expanded $(...) and backticks ARE the payload

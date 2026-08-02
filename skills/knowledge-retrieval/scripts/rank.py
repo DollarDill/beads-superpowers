@@ -170,7 +170,11 @@ if __name__ == "__main__":
     # single-token labels behave exactly as before.
     vocab = {l for b in beads for l in b.get("labels", []) if l != "kb"}
     qtok = set(tokenize(query))
-    named = {l for l in vocab if set(tokenize(l)) <= qtok}
+    # The truthiness guard is load-bearing, not defensive: `set() <= qtok` is True
+    # for EVERY query, so a label whose tokens are all stripped by tokenize() —
+    # any non-ASCII label, and this repo ships Chinese docs — would fire on every
+    # search and union its bucket into the results (beads-superpowers-eo9z2.7).
+    named = {l for l in vocab if (t := set(tokenize(l))) and t <= qtok}
     if named:
         beads = [b for b in beads if named & set(b.get("labels", []))]
 
