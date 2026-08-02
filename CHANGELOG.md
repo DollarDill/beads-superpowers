@@ -15,9 +15,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Retrieval results no longer drown in metadata. Entries carry a `@type`/`@salience` header that plain substring search matched against — a query for `salience` returned 151 hits, 144 of which matched only that header. Headers are now stripped before matching, which removes the entire class of false positive.
 - Every result set opens with a coverage line — `searched: memories(181) kb-beads(232) — open backlog not indexed (doing-moment scope)` — that names any source which was unavailable, so "no hits" can never be mistaken for "didn't look". It also names what it deliberately does not cover: your open backlog is out of scope, because this skill answers "what do we already know about the thing I am working on", not "what should I work on next". Without Python 3 the skill still returns matching keys and says so, withholding bodies rather than printing text it cannot redact — and it now tells you when that key list was cut short.
 
+- When a query returns more results than you can work through, the skill now tells you what to do about it. The guidance had been promised by a pointer that led to a section covering only the opposite case — an empty result. Because search terms are combined with OR, adding a word *widens* the result set; narrowing means swapping a common word for a rare one. On this repo's store, searching `lesson` reaches 136 entries while `shellcheck` reaches 5.
+
 ### Changed
 
 - `brainstorming` and `writing-plans` now reach the retrieval protocol by invoking the skill that owns it, instead of each carrying its own copy of the instructions. Both keep a plain-`bd` fallback, so if the skill is unavailable they degrade to the previous behaviour rather than losing the check.
+- The completion marker now says which path produced it — `KB check (retriever)` or `KB check (fallback)` — and the retriever path must quote the coverage line it got back. The counts on that line come from the search itself and can be checked against your store, so a result is now backed by something the agent cannot simply assert.
+
+### Fixed
+
+- `BSP_TOP_N` no longer crashes the ranker. A non-numeric or negative value used to raise a Python traceback *after* the results header had already printed, leaving you holding half an answer that looked whole; it now prints a notice, falls back to 5, and continues. Setting it to `0` says so plainly instead of reporting "no hits", which read as though the search had found nothing.
+- Searching for the literal text `--stdin` works. It was being silently dropped from the query, so the search ran on fewer words than you typed and quietly returned the wrong answer.
+- The pointer to the knowledge-label vocabulary now resolves for installed users. Inside a skill, `scripts/` means that skill's own folder, so the path led nowhere unless you happened to be sitting in this repository — it now names where the list really lives and how to read the labels already in use from your own store.
+- Contributors no longer get a red check on a healthy setup. The live-store check probed for a phrase specific to this maintainer's notes, so anyone else's store failed it; it now builds its probe from whatever your store actually contains, and skips visibly — rather than failing — when it cannot.
 
 ## [0.16.0] - 2026-07-27
 
