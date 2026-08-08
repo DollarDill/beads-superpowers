@@ -71,7 +71,16 @@ fi
 # not a comment, so a future tokenizer change that makes CJK indexable turns this red and
 # forces the record to be updated. `工作树 隔离` is itself CJK, so the QUERY tokenizes to
 # nothing under [a-z0-9]+ and the result set is empty by construction.
-if grep -qE '^  [^ ]' <<<"$(sed '1,2d' <<<"$cjk")"; then
+#
+# REPAIRED (fix round 1, beads-superpowers-gkp61): the original form (`sed '1,2d'` then grep
+# for an indented hit-shaped line) assumed line 2 is always the fixed "(no hits …)" notice.
+# It isn't on a hit — a single-hit result occupies the position the notice occupies today,
+# so `sed '1,2d'` deletes the ONE line this assertion exists to catch, and the grep after it
+# finds nothing: a blind pass on exactly the regression being pinned (proven: it only fires
+# at 2+ hits, never at 1). Replaced with a positive assertion on the documented zero-hit
+# marker text (verbatim from rank.py and surface.sh's degraded path) — no positional line
+# arithmetic, so it can't be defeated by where in the output a hit lands.
+if ! grep -q '(no hits' <<<"$cjk"; then
   echo "NOTE: CJK query now returns hits — tokenizer behaviour changed, update the shape record"; exit 1
 fi
 
