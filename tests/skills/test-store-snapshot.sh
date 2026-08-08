@@ -16,8 +16,10 @@ SNAP="$REPO/tests/skills/helpers/store-snapshot.sh"
 
 unset BEADS_DIR
 TMP="$(mktemp -d)"
+TMP2="$(mktemp -d)"           # a SECOND real store — assertion 7's containment control
 EMPTY="$(mktemp -d)"          # no store, ever — assertion 4's subject
-trap 'rm -rf "$TMP" "$EMPTY"' EXIT
+STUB="$(mktemp -d)"           # a fake `bd` on PATH — assertion 8's environment probe
+trap 'rm -rf "$TMP" "$TMP2" "$EMPTY" "$STUB"' EXIT
 ( cd "$TMP" && bd init --non-interactive --prefix snaptest >/dev/null 2>&1 ) \
   || { echo "FAIL: scratch bd init failed"; exit 1; }
 # bd auto-discovers .beads/ UP the tree, so prove the store is local BEFORE writing:
@@ -131,12 +133,128 @@ set -e
 grep -q 'no reachable store' <<<"$err" \
   || { echo "FAIL: storeless dir lacked the 'no reachable store' message: $err"; exit 1; }
 
-# ── 5. BEADS_DIR MUST NOT REDIRECT THE HELPER TO A FOREIGN STORE.
+# `BEADS_DB` names the database directory INSIDE a store. Derive it from the scratch
+# store and fail loudly if bd's layout ever moves: a path that does not exist would
+# make assertions 6-8 pass vacuously, which is the failure mode this whole file exists
+# to stamp out.
+FOREIGN_DB="$TMP/.beads/embeddeddolt"
+[ -d "$FOREIGN_DB" ] \
+  || { echo "FAIL: fixture invalid — no db dir at $FOREIGN_DB, so the redirect probes prove nothing"; exit 1; }
+
+# ── 5. AN INHERITED BEADS_DIR MUST NOT REDIRECT THE HELPER TO A FOREIGN STORE.
 # An inherited BEADS_DIR is the exact false-clean this backstop exists to prevent,
 # arriving via environment instead of via hash-ordering: it must fail exactly like
 # assertion 4, not silently resolve to $TMP's store while $EMPTY is the argument.
-if out="$( BEADS_DIR="$TMP/.beads" bash "$SNAP" "$EMPTY" 2>/dev/null )"; then
-  echo "FAIL: BEADS_DIR redirected the snapshot to a foreign store: $out"; exit 1
-fi
+# Pinned to rc 4 plus the stderr marker for the same reason assertion 4 is — a bare
+# non-zero check cannot tell the containment guard from a typo in the helper.
+set +e
+err="$( BEADS_DIR="$TMP/.beads" bash "$SNAP" "$EMPTY" 2>&1 >/dev/null )"
+rc=$?
+set -e
+[ "$rc" -eq 4 ] \
+  || { echo "FAIL: BEADS_DIR + storeless dir exited $rc, not the helper's 4 — cannot tell the guard from a different failure"; exit 1; }
+grep -q 'no reachable store' <<<"$err" \
+  || { echo "FAIL: BEADS_DIR + storeless dir lacked the 'no reachable store' message: $err"; exit 1; }
 
-echo "PASS: test-store-snapshot (18 assertions)"
+# ── 6. NOR MUST BEADS_DB. A round of fixes closed BEADS_DIR by name and this variable
+# reopened the identical false-clean: exit 0, a foreign store's hashes for a directory
+# holding no store at all, byte-stable across consecutive reads. The caller's decision
+# rule is "hash delta -> floor breach, stop" and "no delta -> proceed", so that reads
+# as a permanent all-clear on the containment backstop itself.
+set +e
+err="$( BEADS_DB="$FOREIGN_DB" bash "$SNAP" "$EMPTY" 2>&1 >/dev/null )"
+rc=$?
+set -e
+[ "$rc" -eq 4 ] \
+  || { echo "FAIL: BEADS_DB + storeless dir exited $rc, not the helper's 4 — cannot tell the guard from a different failure"; exit 1; }
+grep -q 'no reachable store' <<<"$err" \
+  || { echo "FAIL: BEADS_DB + storeless dir lacked the 'no reachable store' message: $err"; exit 1; }
+
+# ── 7. CONTAINMENT WHERE IT ACTUALLY BITES: an argument that DOES own a store.
+# Assertions 5-6 pass a storeless directory, which a bare "$dir/.beads must exist"
+# precondition satisfies on its own without constraining store resolution at all.
+# This one cannot be satisfied that way: $TMP2 owns a store, so the helper reaches its
+# `bd` reads either way and the only question left is WHICH store answered them. The
+# answer must be $TMP2's, whatever the ambient environment claims.
+( cd "$TMP2" && bd init --non-interactive --prefix snaptest2 >/dev/null 2>&1 ) \
+  || { echo "FAIL: second scratch bd init failed"; exit 1; }
+[ -d "$TMP2/.beads" ] || { echo "FAIL: second scratch store not created in \$TMP2"; exit 1; }
+( cd "$TMP2" && bd remember "second store body about worktrees" --key snap2-key >/dev/null )
+( cd "$TMP2" && bd create "a second-store task" -t task -p 2 >/dev/null )
+set +e
+plain2="$( bash "$SNAP" "$TMP2" )"
+rc=$?
+set -e
+[ "$rc" -eq 0 ] || { echo "FAIL: snapshot of \$TMP2 exited $rc unexpectedly"; exit 1; }
+# Fixture validity: the two scratch stores must be distinguishable, or "unchanged
+# under redirection" would hold trivially and assertion 7 would prove nothing.
+[ "$plain2" != "$d" ] \
+  || { echo "FAIL: fixture invalid — the two scratch stores hash identically"; exit 1; }
+set +e
+redir2="$( BEADS_DIR="$TMP/.beads" BEADS_DB="$FOREIGN_DB" bash "$SNAP" "$TMP2" )"
+rc=$?
+set -e
+[ "$rc" -eq 0 ] || { echo "FAIL: redirected snapshot of \$TMP2 exited $rc unexpectedly"; exit 1; }
+[ "$redir2" = "$plain2" ] \
+  || { echo "FAIL: the environment changed the snapshot of a store-owning dir: $redir2 != $plain2"; exit 1; }
+
+# ── 8. THE MECHANISM, NOT A LIST OF NAMES. Assertions 5-7 name the variables that
+# exist TODAY, and a guard that enumerates names silently stops guarding the moment bd
+# adds another one — exactly how BEADS_DB slipped past a fix that had just closed
+# BEADS_DIR. So probe the property itself: stand a fake `bd` on PATH that records every
+# ambient variable that reached it, and require that set to be EMPTY. BSPPROBE_FUTURE_VAR
+# stands in for the variable a future bd has not invented yet: no enumeration can
+# contain a name nobody knows, so only a scrub-everything mechanism keeps this green.
+DUMP="$STUB/leaked-env.txt"
+cat > "$STUB/bd" <<'STUBSH'
+#!/usr/bin/env bash
+# Records which ambient variables survived into `bd`'s environment, then fails, so
+# the caller also exercises its no-reachable-store path.
+env | sed -n 's/^\(BEADS_[A-Z0-9_]*\|BSPPROBE_[A-Z0-9_]*\)=.*/\1/p' \
+  >> "$(dirname "$0")/leaked-env.txt"
+exit 1
+STUBSH
+chmod 755 "$STUB/bd"
+
+# Guard the guard: an empty $DUMP proves nothing unless the probe records when nothing
+# is scrubbing it. Establish that it does BEFORE reading emptiness as containment.
+: > "$DUMP"
+set +e
+( cd "$TMP2" && BEADS_DB="$FOREIGN_DB" BSPPROBE_FUTURE_VAR=1 PATH="$STUB:$PATH" bd list >/dev/null 2>&1 )
+set -e
+[ -s "$DUMP" ] \
+  || { echo "FAIL: fixture invalid — the env probe recorded nothing even unscrubbed, so assertion 8 cannot fail"; exit 1; }
+
+: > "$DUMP"
+set +e
+BEADS_DIR="$TMP/.beads" BEADS_DB="$FOREIGN_DB" BSPPROBE_FUTURE_VAR=1 \
+  PATH="$STUB:$PATH" bash "$SNAP" "$TMP2" >/dev/null 2>&1
+rc=$?
+set -e
+[ "$rc" -eq 4 ] \
+  || { echo "FAIL: with a stub bd that returns nothing, the helper exited $rc, not the guard's 4"; exit 1; }
+leaked="$( sort -u "$DUMP" | tr '\n' ' ' )"
+[ -z "$leaked" ] \
+  || { echo "FAIL: ambient variables reached bd: $leaked"; exit 1; }
+
+# ── 9. THE NARROWED CONTRACT, PINNED. The helper documents its argument as the store
+# ROOT and enforces it by requiring $dir/.beads. Drop that requirement and `bd` walks UP
+# the tree, so a subdirectory reports the PARENT project's store under the
+# subdirectory's name — the same false attribution as an environment redirect, reached
+# through the filesystem instead of the environment. A caller holding a subdirectory has
+# to be told so, not quietly answered from a store it did not name.
+mkdir -p "$TMP2/sub"
+set +e
+err="$( bash "$SNAP" "$TMP2/sub" 2>&1 >/dev/null )"
+rc=$?
+set -e
+[ "$rc" -eq 4 ] \
+  || { echo "FAIL: a subdirectory of a store-owning dir exited $rc, not the helper's 4 — it answered from a store it was not asked about"; exit 1; }
+grep -q 'no reachable store' <<<"$err" \
+  || { echo "FAIL: subdirectory case lacked the 'no reachable store' message: $err"; exit 1; }
+
+# Counting rule, unchanged since this file was written: every failure site, minus the 5
+# fixture-CONSTRUCTION checks ($SNAP missing, plus each scratch store's `bd init` and
+# local-store guard). Recount with `grep -c 'FAIL' + colon` over this file: 36 - 5 = 31.
+# No comment here may contain that literal marker, or the recount inflates.
+echo "PASS: test-store-snapshot (31 assertions)"
