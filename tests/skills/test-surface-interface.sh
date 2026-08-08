@@ -385,4 +385,131 @@ grep -q 'appeared-in-the-deploy-log' <<<"$keyleak" \
 grep -qi "$FAKE_AKIA" <<<"$keyleak" \
   && { echo "FAIL: a secret in the memory KEY printed in the clear"; printf '%s\n' "$keyleak"; exit 1; }
 
-echo "PASS: surface.sh — coverage line, counts, salience rendering, untruncated keys, hyphenated label filter, injection-inert, bd-error visible, degradation, truncation disclosure, empty-vs-error, boundary disclosure, too-many-hits branch, key redaction"
+# ── 20. DEGRADED PATH: a secret-shaped KEY is WITHHELD (beads-superpowers-wze77.8).
+# wze77.7 closed the key leak inside rank.py. The degraded path never reaches
+# rank.py — surface.sh greps keys straight out of `bd memories` and prints them —
+# so redact_key() cannot run there BY CONSTRUCTION, and every shape it catches
+# printed in the clear on the one path whose own banner says "redaction
+# unavailable". The AWS shape is the sharp one: bd lowercases the key and AWS
+# access key ids are uppercase-alphanumeric only, so upcasing the printed column
+# hands back the credential.
+#
+# ALL FOUR shapes _SECRET_KEY knows are exercised, not just the reported one.
+# The PEM shape is the trap: bd DELETES the `-----` fences outright
+# (`begin-rsa-private-key-mii…`), so a fence-anchored pattern misses it however
+# case-insensitive it is.
+#
+# Tokens are assembled at runtime — a contiguous credential literal in a
+# committed file trips GH013 push protection (same idiom as assertion 19).
+FAKE_SK="sk-$(printf 'FAKEsk%.0s' 1 2 3 4)"
+FAKE_GHP="ghp_$(printf 'FAKEghp%.0s' 1 2 3 4)"
+FAKE_PEM="-----BEGIN RSA PRIVATE KEY-----MII$(printf 'FAKEpem%.0s' 1 2 3 4)"
+# `--` is mandatory for the PEM body: it starts with `-----`, which bd's flag
+# parser would otherwise consume as options.
+for tok in "$FAKE_SK" "$FAKE_GHP" "$FAKE_AKIA" "$FAKE_PEM"; do
+  ( cd "$TMP" && bd remember -- "$tok xylophone marker for the degraded key filter" >/dev/null )
+done
+set +e
+degkey="$( cd "$TMP" && PATH="$TMP/nopy" bash "$SURFACE" xylophone )"
+degkey_rc=$?
+set -e
+[ "$degkey_rc" -eq 0 ] || { echo "FAIL: degraded key-filter path exited $degkey_rc, must be 0"; printf '%s\n' "$degkey"; exit 1; }
+# LIVENESS FIRST, as in assertion 19: every check below is a NEGATIVE grep, and a
+# negative grep over an empty result set passes for the wrong reason. The
+# withheld notice is the positive proof that all four poisoned entries were
+# genuinely retrieved and then suppressed — not that the query missed them.
+withheld_n="$( grep -oE '\(([0-9]+) secret-shaped key' <<<"$degkey" | grep -oE '[0-9]+' || true )"
+[ "${withheld_n:-0}" -ge 4 ] \
+  || { echo "FAIL: degraded path discloses ${withheld_n:-0} withheld keys, expected >=4 — the leak checks below would be vacuous"; printf '%s\n' "$degkey"; exit 1; }
+# EVERY hit for this query is secret-shaped, so NO key line may survive. This is
+# what makes the fail-closed contract falsifiable: redacting a span instead of
+# dropping the line would still print a key here.
+grep -qE '^  [A-Za-z0-9._-]+$' <<<"$degkey" \
+  && { echo "FAIL: a key line survived a query whose every hit is secret-shaped"; printf '%s\n' "$degkey"; exit 1; }
+# Per-vector: the raw token AND the bd-mangled fragment bd actually derives from
+# it. Checking only the raw token would pass against the reported leak, because
+# bd never writes the raw token into a key — it writes the mangled one.
+vec_names="sk ghp akia pem"
+vec_toks=( "$FAKE_SK" "$FAKE_GHP" "$FAKE_AKIA" "$FAKE_PEM" )
+vec_frags=( "sk-fakesk" "ghp-fakeghp" "akiafake" "miifakepem" )
+i=0
+for name in $vec_names; do
+  # -i throughout: bd's lowercasing is the whole defect, so a case-sensitive
+  # grep here would pass against the exact leak this assertion exists to catch.
+  grep -qiF -e "${vec_toks[$i]}" <<<"$degkey" \
+    && { echo "FAIL: degraded path printed the raw $name credential"; printf '%s\n' "$degkey"; exit 1; }
+  grep -qiF -e "${vec_frags[$i]}" <<<"$degkey" \
+    && { echo "FAIL: degraded path printed the bd-mangled $name credential"; printf '%s\n' "$degkey"; exit 1; }
+  i=$((i + 1))
+done
+
+# ── 20b. the SAME four vectors are covered on the python3-PRESENT path too.
+# Two paths, two implementations of one rule: this runs one fixture set through
+# both, so a vector closed on one side and open on the other is a red suite
+# rather than a discovery.
+heal="$( cd "$TMP" && bash "$SURFACE" xylophone )"
+red_n="$( grep -cF '[REDACTED]' <<<"$heal" || true )"
+[ "${red_n:-0}" -ge 4 ] \
+  || { echo "FAIL: ranked path redacted ${red_n:-0} of 4 poisoned entries — the leak checks below would be vacuous"; printf '%s\n' "$heal"; exit 1; }
+i=0
+for name in $vec_names; do
+  grep -qiF -e "${vec_toks[$i]}" <<<"$heal" \
+    && { echo "FAIL: ranked path printed the raw $name credential"; printf '%s\n' "$heal"; exit 1; }
+  grep -qiF -e "${vec_frags[$i]}" <<<"$heal" \
+    && { echo "FAIL: ranked path printed the bd-mangled $name credential"; printf '%s\n' "$heal"; exit 1; }
+  i=$((i + 1))
+done
+
+# ── 20c. a DEAD key filter fails closed and stays quiet on stderr.
+# Assertion 11d kills grep outright, which takes the body-withholding anchor down
+# with it — so the filter's own error branch is never reached there. Only a grep
+# that answers the anchor and dies on the filter can reach it. Two properties:
+# no key survives a filter that did not run (fail closed, not fail open), and the
+# suppressed count is reset to an integer rather than left as grep's empty output,
+# which would turn the later `-gt 0` into a shell error on a security path.
+mkdir -p "$TMP/badfilter"
+REALGREP="$(command -v grep)"
+cat > "$TMP/badfilter/grep" <<EOF
+#!/bin/sh
+for a in "\$@"; do
+  case "\$a" in *PRIVATE*) exit 2 ;; esac
+done
+exec "$REALGREP" "\$@"
+EOF
+chmod 755 "$TMP/badfilter/grep"
+set +e
+badf="$( cd "$TMP" && PATH="$TMP/badfilter:$TMP/nopy" bash "$SURFACE" xylophone 2>&1 )"
+badf_rc=$?
+set -e
+[ "$badf_rc" -eq 0 ] || { echo "FAIL: dead-key-filter path exited $badf_rc, must be 0"; printf '%s\n' "$badf"; exit 1; }
+grep -q 'pipeline error' <<<"$badf" \
+  || { echo "FAIL: a key filter that could not run is not disclosed"; printf '%s\n' "$badf"; exit 1; }
+grep -qE '^  [A-Za-z0-9._-]+$' <<<"$badf" \
+  && { echo "FAIL: keys printed although the secret filter never ran (fails open)"; printf '%s\n' "$badf"; exit 1; }
+grep -qi 'integer expression expected' <<<"$badf" \
+  && { echo "FAIL: suppressed count left non-numeric — shell error on the security path"; printf '%s\n' "$badf"; exit 1; }
+
+# ── 21. DRIFT CONTROL: the shell key filter mirrors rank.py's _SECRET_KEY.
+# The degraded path cannot call rank.py, so the shapes are necessarily spelled
+# twice, in two languages. This is the mechanism that keeps them in sync: every
+# alternation in _SECRET_KEY must contribute its literal prefix to surface.sh's
+# ERE, so adding a sixth shape to the ranker without teaching the shell filter
+# about it turns this suite red. Extraction is mechanical — a hand-listed set of
+# prefixes here would drift exactly the way the patterns do.
+RANKPY="$REPO/skills/knowledge-retrieval/scripts/rank.py"
+pyre="$( sed -n '/_SECRET_KEY = re\.compile(/,/re\.S | re\.I)/p' "$RANKPY" \
+         | grep -oE 'r"[^"]*"' | sed 's/^r"//; s/"$//' | tr -d '\n' )"
+[ -n "$pyre" ] || { echo "FAIL: could not extract _SECRET_KEY from rank.py (drift guard is vacuous)"; exit 1; }
+IFS='|' read -ra pyalts <<<"$pyre"
+[ "${#pyalts[@]}" -ge 4 ] \
+  || { echo "FAIL: _SECRET_KEY parsed into ${#pyalts[@]} alternations, expected >=4 (drift guard is vacuous)"; exit 1; }
+for alt in "${pyalts[@]}"; do
+  # Literal prefix = everything before the first character class. "sk[-_]…" -> "sk",
+  # "-*BEGIN[ -]…" -> "-*BEGIN", "AKIA[0-9A-Za-z]{16})" -> "AKIA".
+  lit="$( printf '%s' "$alt" | sed 's/^(//; s/\[.*//; s/)$//' )"
+  [ -n "$lit" ] || continue
+  grep -qF -e "$lit" "$SURFACE" \
+    || { echo "FAIL: _SECRET_KEY alternation '$lit' has no counterpart in surface.sh's key filter (patterns have drifted)"; exit 1; }
+done
+
+echo "PASS: surface.sh — coverage line, counts, salience rendering, untruncated keys, hyphenated label filter, injection-inert, bd-error visible, degradation, truncation disclosure, empty-vs-error, boundary disclosure, too-many-hits branch, key redaction, degraded-path key withholding (4 vectors, both paths), dead-filter fail-closed, pattern-drift guard"

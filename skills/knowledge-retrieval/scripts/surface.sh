@@ -81,6 +81,53 @@ if ! command -v python3 >/dev/null 2>&1; then
   set +e
   all_keys="$(grep -E '^  [A-Za-z0-9._-]+$' <<<"$raw" | sort -u)"; keys_rc=$?
   set -e
+  # SECURITY FLOOR (beads-superpowers-wze77.8) — THE KEY IS AN OUTPUT TOO.
+  # The anchor above withholds BODIES; keys were never modelled as a secret
+  # carrier, so every shape rank.py's _SECRET_KEY catches printed in the clear on
+  # the one path whose own banner says "redaction unavailable". bd derives a
+  # memory key from the body's leading words, lowercasing it and collapsing runs
+  # of non-alphanumerics to "-", and a bd-mangled credential matches the anchor's
+  # charset exactly. AWS is the sharp shape: access key ids are uppercase-
+  # alphanumeric only, so bd's lowercasing is LOSSLESSLY REVERSIBLE — upcase the
+  # printed column and you have the credential back.
+  #
+  # FAIL CLOSED, not redact: redact_key() lives in rank.py and python3 is by
+  # definition absent here, so there is no redaction to apply. This path's
+  # existing contract is already "withhold what we cannot make safe" (bodies);
+  # a secret-shaped key is dropped WHOLE and the count disclosed, never spliced.
+  # Dropping the whole line is a strict superset of redacting a span, so this
+  # NARROWS nothing — in particular the PEM shape needs no `.*` tail here, since
+  # matching the header alone already suppresses the entire key.
+  #
+  # KEEPING THIS IN SYNC WITH rank.py: the shapes are necessarily spelled twice,
+  # in two languages, because this path cannot call python3. Assertion 21 of
+  # tests/skills/test-surface-interface.sh extracts every alternation from
+  # _SECRET_KEY mechanically and requires its literal prefix to appear below —
+  # add a shape to the ranker without adding it here and the suite goes red.
+  # Same five alternations, each LOOSENED and never tightened: `-i` for bd's
+  # lowercasing, `[-_]` for its "_" -> "-" rewrite, and no `-----` fences,
+  # because bd DELETES them outright (`begin-rsa-private-key-mii…`).
+  KEY_SECRET_ERE='-*BEGIN[ -][A-Za-z -]*PRIVATE[ -]KEY|sk[-_][A-Za-z0-9]{20,}|ghp[-_][A-Za-z0-9]{20,}|AKIA[0-9A-Za-z]{16}'
+  withheld=0
+  if [ "$keys_rc" -le 1 ]; then
+    set +e
+    safe_keys="$(grep -Evi -e "$KEY_SECRET_ERE" <<<"$all_keys")"; safe_rc=$?
+    withheld="$(grep -cEi -e "$KEY_SECRET_ERE" <<<"$all_keys")"; wh_rc=$?
+    set -e
+    # A filter that could not RUN is not a clean result. grep exits 1 for
+    # "no match" — normal — and >=2 for a real error; on a real error the key set
+    # is unfiltered, so it is treated as a pipeline error and nothing is printed.
+    # Failing open here would restore the exact leak this block closes.
+    #
+    # `withheld` is RESET, not left as grep's output: a grep that died wrote
+    # nothing, and the empty string would make the later `-gt 0` test an
+    # "integer expression expected" error rather than a suppressed count.
+    if [ "$safe_rc" -gt 1 ] || [ "$wh_rc" -gt 1 ]; then
+      keys_rc=2; withheld=0
+    else
+      all_keys="$safe_keys"
+    fi
+  fi
   if [ "$keys_rc" -gt 1 ]; then
     keys=""; keys_status=" keys UNAVAILABLE(pipeline error)"
   else
@@ -105,8 +152,14 @@ if ! command -v python3 >/dev/null 2>&1; then
   echo "ranking requires python3 — matching keys only, bodies withheld (redaction unavailable)"
   if [ -n "$keys" ]; then
     printf '%s\n' "$keys"
-  else
+  elif [ "$withheld" -eq 0 ]; then
     echo "  (no hits — re-angle the query once before reporting none)"
+  fi
+  # DISCLOSED, never silent: a suppressed hit that vanishes without a trace is the
+  # same silent partial the coverage line exists to prevent. Printed even when the
+  # safe set is empty, so "every hit was withheld" never reads as "no hits".
+  if [ "$withheld" -gt 0 ]; then
+    echo "  ($withheld secret-shaped key(s) withheld — redaction requires python3)"
   fi
   exit 0
 fi
