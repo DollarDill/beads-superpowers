@@ -14,6 +14,10 @@ if ! command -v shellcheck >/dev/null 2>&1; then
 fi
 
 mapfile -t files < <(git ls-files '*.sh')
+# tests/skills/helpers/bd-readonly/bd is a bash script with no .sh extension (it must
+# be named exactly `bd` to shadow the real binary on PATH), so the glob above never
+# finds it. List it explicitly or it escapes this lint gate permanently.
+files+=("tests/skills/helpers/bd-readonly/bd")
 [ "${#files[@]}" -gt 0 ] || { echo "PASS: no tracked shell scripts"; exit 0; }
 
 # One finding per line: file:line:SCcode (stable across runs; line drift = new finding, acceptable)

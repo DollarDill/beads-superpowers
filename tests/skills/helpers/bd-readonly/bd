@@ -23,6 +23,13 @@ for _p in "${_parts[@]}"; do
 done
 REAL_BD="$(PATH="$clean_path" command -v bd || true)"
 [ -n "$REAL_BD" ] || { echo "bd-readonly: real bd not found on PATH" >&2; exit 127; }
+# Exact-string PATH matching is not enough: a trailing slash, a relative entry, or an
+# alias of this tree (this repo is reachable as both /home/dillon/... and
+# /workspace/...) leaves SHIM_DIR on clean_path, and `exec`ing ourselves HANGS
+# FOREVER rather than crashing — a far harder failure to diagnose.
+if [ "$(readlink -f "$REAL_BD")" = "$(readlink -f "$0")" ]; then
+  echo "bd-readonly: refusing to exec self (PATH strip failed)" >&2; exit 127
+fi
 
 verb="${1:-}"
 sub="${2:-}"
@@ -44,4 +51,9 @@ case "$verb" in
     ;;
 esac
 
-exec "$REAL_BD" "$@"
+# --readonly is bd's OWN write-blocking mode ("for worker sandboxes"); --sandbox
+# disables Dolt auto-push. Defence in depth BELOW the verb allowlist: without them,
+# any write path reachable under an ALLOWED verb (a future mutating flag on search or
+# query, a new memories subcommand) passes through unguarded and the allowlist has to
+# be re-audited on every bd upgrade. With them, containment is structural.
+exec "$REAL_BD" --readonly --sandbox "$@"
