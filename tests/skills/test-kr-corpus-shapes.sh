@@ -235,3 +235,131 @@ else
 fi
 printf 'OBSERVED label-collision coverage line: %s\n' "$cov"
 printf 'OBSERVED narrowing: %s; unlabelled-bead excluded: %s\n' "$narrowing" "$excluded"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SHAPE 4 (Task 8): bd ABSENT — restricted-PATH symlink farm, never a stub
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ── 4. bd ABSENT (surface.sh:11). Built as a restricted-PATH symlink farm, NOT a
+# stub: a stub that exists and exits 127 PASSES `command -v`, so the degraded
+# branch never runs, the stub dies, and set -e yields EMPTY output instead of the
+# path under test (lesson-stubbed-binary-is-not-absent-binary).
+#
+# Real binaries are resolved through BASH (not the caller's shell) because under
+# zsh `command -v grep` returns a shell FUNCTION name, not /usr/bin/grep, and a
+# farm built from that silently loses grep.
+#
+# PATH IS PRESERVED (stress-test B3). A bare `env -i` clears PATH, so bash falls
+# back to a compiled-in default that finds /usr/bin tools but MISSES everything
+# mise- or brew-managed. Measured 2026-08-08 on this host:
+#   env -i            -> python3=/usr/bin/python3            bd=NOT FOUND
+#   env -i PATH=$PATH -> python3=<mise>/python/latest/bin/python3  bd=<brew>/bin/bd
+# Linking the system python3 would silently test a DIFFERENT interpreter than the
+# suites run under (lesson-sandboxed-test-paths-shims-usr-bin-bin).
+mkdir -p "$TMP/nobd"
+FARM_BINS="bash grep head sed sort dirname python3 cut tr"
+for b in $FARM_BINS; do
+  p="$(env -i PATH="$PATH" /bin/bash -c "command -v $b" 2>/dev/null || true)"
+  case "$p" in /*) ln -sf "$p" "$TMP/nobd/$b" ;; esac
+done
+# COMPLETENESS ASSERTION: the `case /*)` guard SILENTLY SKIPS anything that fails
+# to resolve — the same silent-escape class as an unguarded allowlist. A missing
+# binary must fail here, loudly, rather than surface downstream as a mysterious
+# ranker "defect".
+for b in $FARM_BINS; do
+  [ -e "$TMP/nobd/$b" ] \
+    || { echo "FAIL: farm incomplete — '$b' did not resolve; the bd-absent result would be an ENVIRONMENT artifact, not a finding"; exit 1; }
+done
+set +e
+nobd="$( cd "$TMP" && PATH="$TMP/nobd" bash "$SURFACE" worktree 2>&1 )"; nobd_rc=$?
+set -e
+[ "$nobd_rc" -eq 0 ] || { echo "FAIL: bd-absent path exited $nobd_rc, must be 0"; printf '%s\n' "$nobd"; exit 1; }
+grep -q 'bd absent' <<<"$nobd" \
+  || { echo "FAIL: bd-absent path does not disclose the absence"; printf '%s\n' "$nobd"; exit 1; }
+echo "PASS: shape 4 — bd absent, disclosed via symlink farm (4 assertions)"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SHAPE 5 (Task 8): whitespace-only query must not trip set -u
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ── 5a. MAIN path (bd + python3 both present): a whitespace-only query must
+# survive end to end. rank.py's tokenize() reduces "   " to zero query terms and
+# ranks nothing — a python-side empty list, not a bash array — so this leg proves
+# the overall command survives whitespace input via the path most callers take.
+set +e
+ws="$( cd "$TMP" && bash "$SURFACE" "   " 2>&1 )"; ws_rc=$?
+set -e
+if grep -qiE 'unbound variable' <<<"$ws"; then
+  echo "FAIL: whitespace-only query hit an unbound variable on the main path"; printf '%s\n' "$ws"; exit 1
+fi
+[ "$ws_rc" -eq 0 ] || [ "$ws_rc" -eq 2 ] \
+  || { echo "FAIL: whitespace-only query exited $ws_rc (expected 0 or usage-error 2)"; printf '%s\n' "$ws"; exit 1; }
+
+# ── 5b. DEGRADED (python3-absent) path. surface.sh:45's own comment names the
+# guard this shape exists to pin: "${terms[@]}" would be unbound under `set -u`
+# on bash 3.2 when a whitespace-only query leaves `read -ra terms` with zero
+# elements. That line lives ENTIRELY inside the `command -v python3` branch
+# (surface.sh:31-165) — 5a runs with python3 present and NEVER reaches it, so a
+# regression that deleted the guard would leave 5a green. This leg is the only
+# one that can go red for a regression on surface.sh:45 itself. Farm built the
+# same way as shape 4's, minus python3 (to force the degraded branch), plus bd
+# (bd must be PRESENT so the script reaches line 31 at all rather than exiting
+# at line 11's bd-absent check first).
+mkdir -p "$TMP/nopy_ws"
+WS_FARM_BINS="bd bash grep head sed sort dirname cut tr"
+for b in $WS_FARM_BINS; do
+  p="$(env -i PATH="$PATH" /bin/bash -c "command -v $b" 2>/dev/null || true)"
+  case "$p" in /*) ln -sf "$p" "$TMP/nopy_ws/$b" ;; esac
+done
+for b in $WS_FARM_BINS; do
+  [ -e "$TMP/nopy_ws/$b" ] \
+    || { echo "FAIL: nopy_ws farm incomplete — '$b' did not resolve; the degraded whitespace result would be an ENVIRONMENT artifact"; exit 1; }
+done
+set +e
+ws_deg="$( cd "$TMP" && PATH="$TMP/nopy_ws" bash "$SURFACE" "   " 2>&1 )"; ws_deg_rc=$?
+set -e
+# LIVENESS FIRST: must have actually taken the degraded branch, else the checks
+# below are vacuous — the same class Task 5/6's first-round redaction greps got
+# wrong (asserting on a query that returned zero hits).
+grep -q 'requires python3' <<<"$ws_deg" \
+  || { echo "FAIL: degraded branch not taken for whitespace query — assertion vacuous"; printf '%s\n' "$ws_deg"; exit 1; }
+if grep -qiE 'unbound variable' <<<"$ws_deg"; then
+  echo "FAIL: whitespace-only query hit an unbound variable on the DEGRADED path"; printf '%s\n' "$ws_deg"; exit 1
+fi
+[ "$ws_deg_rc" -eq 0 ] || [ "$ws_deg_rc" -eq 2 ] \
+  || { echo "FAIL: degraded whitespace query exited $ws_deg_rc (expected 0 or usage-error 2)"; printf '%s\n' "$ws_deg"; exit 1; }
+echo "PASS: shape 5 — whitespace-only query survives main and degraded paths (6 assertions)"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SHAPE 6 (Task 8): near-empty store is a HEALTHY empty, never a pipeline error
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ── 6. a store with zero memories and zero kb beads must report as such — not
+# as a degraded or errored result. $EMPTY is folded into the EXIT trap (not left
+# to a standalone `rm -rf` alone) so it cannot leak if any assertion between its
+# creation and its cleanup fires `exit 1` first; $TMP already had this coverage,
+# $EMPTY previously did not.
+EMPTY="$(mktemp -d)"
+trap 'rm -rf "$TMP" "$EMPTY"' EXIT
+( cd "$EMPTY" && bd init --non-interactive --prefix emptystore >/dev/null 2>&1 )
+set +e
+mt="$( cd "$EMPTY" && bash "$SURFACE" worktree 2>&1 )"; mt_rc=$?
+set -e
+[ "$mt_rc" -eq 0 ] || { echo "FAIL: empty store exited $mt_rc"; printf '%s\n' "$mt"; exit 1; }
+mt_cov="${mt%%$'\n'*}"
+grep -q '^searched:' <<<"$mt_cov" \
+  || { echo "FAIL: empty store emitted no coverage line"; printf '%s\n' "$mt"; exit 1; }
+if grep -qiE 'UNAVAILABLE|pipeline error' <<<"$mt"; then
+  echo "FAIL: healthy empty store reported as a pipeline error"; printf '%s\n' "$mt"; exit 1
+fi
+# Pin the AC's LITERAL wording, not just "no error string appeared" — a store
+# that silently mis-counts (e.g. counting the `bd memories --json` schema-version
+# envelope key as a memory, or a stale label filter narrowing an empty bead list
+# to something non-zero) would pass the two checks above while failing these.
+grep -q 'memories(0)' <<<"$mt_cov" \
+  || { echo "FAIL: empty store coverage line does not report memories(0)"; printf '%s\n' "$mt_cov"; exit 1; }
+grep -q 'kb-beads(0)' <<<"$mt_cov" \
+  || { echo "FAIL: empty store coverage line does not report kb-beads(0)"; printf '%s\n' "$mt_cov"; exit 1; }
+echo "PASS: shape 6 — near-empty store reports a healthy memories(0)/kb-beads(0) (4 assertions)"
+
+echo "PASS: test-kr-corpus-shapes — shapes 1-6"
