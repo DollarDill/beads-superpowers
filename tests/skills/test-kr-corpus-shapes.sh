@@ -188,3 +188,50 @@ if grep -qF "$FAKE_SECRET" <<<"$hh_hit"; then
   echo "FAIL: secret leaked from a header-heavy body"; printf '%s\n' "$hh_hit"; exit 1
 fi
 echo "PASS: shape 2 — header-heavy body under two tokens"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SHAPE 3 (Task 7): a query word collides with a LABEL name
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ── 3. a query word that collides with a LABEL name must not narrow the corpus
+# silently. Observed live 2026-08-08 on a foreign store: `surface.sh scoring routing`
+# emitted `label=routing,scoring`. Narrowing may be intended; SILENT narrowing is not.
+( cd "$TMP" && bd create "labelled bead" -t task -p 2 -l kb,routing --description "a bead that carries the routing label" >/dev/null )
+( cd "$TMP" && bd create "unlabelled bead" -t task -p 2 -l kb --description "this body discusses routing decisions in depth but carries no routing label" >/dev/null )
+set +e
+col="$( cd "$TMP" && bash "$SURFACE" routing 2>&1 )"; col_rc=$?
+set -e
+[ "$col_rc" -eq 0 ] || { echo "FAIL: label-collision query exited $col_rc"; printf '%s\n' "$col"; exit 1; }
+cov="${col%%$'\n'*}"
+# AMENDED 2026-08-08 (pre-flight, controller). The plan shipped ONLY the `if label=`
+# branch, disclosing it as "record-only, not a guarantee". That framing is wrong, and
+# the gap is not benign: the AC's stated FAIL condition is "a filter that silently
+# narrows the searched corpus WITHOUT disclosing it". In the shipped form, silent
+# narrowing makes `grep -q 'label='` FALSE, so the block is skipped and the test PASSES.
+# It was blind to precisely the failure it exists to catch — the same class as Task 5's
+# `sed '1,2d'` pin and the Task 5/6 vacuous redaction greps.
+#
+# BOTH branches must now assert. The fixture is built for exactly this: `unlabelled bead`
+# matches the query in its BODY and carries no `routing` label, so it is the probe for
+# whether the corpus was narrowed.
+if grep -q 'label=' <<<"$cov"; then
+  # Narrowing happened and was disclosed — check it names the label.
+  grep -q 'label=routing' <<<"$cov" \
+    || { echo "FAIL: a label filter engaged but did not name the label"; printf '%s\n' "$cov"; exit 1; }
+  narrowing="disclosed"
+else
+  # No disclosure — then the corpus must NOT have been narrowed. Prove it by requiring
+  # the body-relevant unlabelled bead to still be reachable. If it is missing here, the
+  # corpus was narrowed silently: the AC's FAIL condition, now detectable.
+  grep -q 'carries no routing label' <<<"$col" \
+    || { echo "FAIL: no label= disclosure, yet the unlabelled body-relevant bead is absent — SILENT NARROWING"; printf '%s\n' "$col"; exit 1; }
+  narrowing="none"
+fi
+# Record the exclusion question literally (AC: "recorded literally"), whichever branch ran.
+if grep -q 'carries no routing label' <<<"$col"; then
+  excluded="no — the unlabelled body-relevant bead was returned"
+else
+  excluded="YES — the unlabelled body-relevant bead was excluded"
+fi
+printf 'OBSERVED label-collision coverage line: %s\n' "$cov"
+printf 'OBSERVED narrowing: %s; unlabelled-bead excluded: %s\n' "$narrowing" "$excluded"
