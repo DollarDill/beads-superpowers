@@ -427,6 +427,100 @@ def extra_checks(ok):
     ok &= check("text before an unterminated PEM survives redaction",
                 "intro text" in _out_r)
 
+    # ── beads-superpowers-wze77.7 — SECRET REDACTION, every alternation, every
+    # surface. Two separate holes are closed below.
+    #
+    # HOLE 1 (bodies): only `ghp_` and PEM were pinned. Deleting the `sk-` or the
+    # `AKIA` alternation from _SECRET left this whole suite at exit 0 with zero
+    # FAIL lines (measured 2026-08-08 through the RANK_DIR rig), and deleting the
+    # TERMINATED-PEM alternation was invisible too — the unterminated one below it
+    # still fires, just to end of body. Three of the five alternations were
+    # defended by nothing.
+    #
+    # HOLE 2 (keys): redact() was applied to the BODY only, so the KEY printed the
+    # credential in the clear while the body beside it printed [REDACTED].
+    #
+    # Fixtures are runtime-assembled, never contiguous literals — a secret
+    # scanner's own test fixtures trip GH013 push protection otherwise, the same
+    # idiom the ghp_ and PEM fixtures above use.
+    _AKIA = "AKIA" + "FAKE" * 4
+    _GHP = "ghp" + "_" + "A" * 36
+    _SK = "sk" + "-" + "B" * 32
+    _BEGIN = "-----BEGIN " + "RSA PRIVATE KEY" + "-----"
+    _END = "-----END " + "RSA PRIVATE KEY" + "-----"
+
+    _sk_body = _redact("the token is %s trailing text" % _SK)
+    ok &= check("an sk- secret is redacted in a body (pins the sk- alternation)",
+                "[REDACTED]" in _sk_body and "sk-B" not in _sk_body)
+    _akia_body = _redact("the token is %s trailing text" % _AKIA)
+    ok &= check("an AKIA secret is redacted in a body (pins the AKIA alternation)",
+                "[REDACTED]" in _akia_body and "AKIA" not in _akia_body)
+    # Pins the FIRST alternation, which nothing reached before: with it deleted a
+    # terminated block still redacts — via the unbounded second alternation — but
+    # takes the rest of the body with it, so the tail is what tells them apart.
+    # This asserts existing behaviour; it is NOT a narrowing of the PEM match, and
+    # the fail-closed unterminated floor two checks above is untouched.
+    _term_body = _redact("intro text %s\nMIIfakefakefake\n%s trailing sentence"
+                         % (_BEGIN, _END))
+    ok &= check("a terminated PEM redacts the block only — the tail survives (pins the terminated-PEM alternation)",
+                "MIIfake" not in _term_body and "trailing sentence" in _term_body
+                and "intro text" in _term_body)
+
+    # HOLE 2. `bd` derives a memory key from the body's leading words: it
+    # LOWERCASES, collapses each run of non-alphanumerics to a single "-", and
+    # cuts to ~60 chars. _SECRET is case-SENSITIVE and expects literal "_" and
+    # literal "-----" fences, so applying it to a key catches `sk-` alone and
+    # misses the other three. The AWS shape is the sharp one: AKIA ids are
+    # uppercase-alphanumeric only, so lowercasing is LOSSLESSLY REVERSIBLE —
+    # upcase the printed key column and you have the credential back.
+    #
+    # The mangled spellings below are TRANSCRIBED from a real `bd remember`
+    # round-trip (bd 1.1.2, scratch store, 2026-08-08), not modelled:
+    #   AKIA0123456789ABCDEF appeared in the deploy log during rollout
+    #     -> akia0123456789abcdef-appeared-in-the-deploy-log-during-rollo
+    #   ghp_A*36 appeared in the deploy log during rollout
+    #     -> ghp-a*36-appeared-in-the-dep
+    #   sk-B*32 appeared in the deploy log during rollout
+    #     -> sk-b*32-appeared-in-the-deploy-l
+    #   -----BEGIN RSA PRIVATE KEY----- MIIfakefakefake appeared in the deploy log
+    #     -> begin-rsa-private-key-miifakefakefake-appeared-in-the
+    # The PEM row is the one that surprises: the ----- FENCES DO NOT SURVIVE, so a
+    # pattern anchored on them can never fire on a key.
+    from rank import redact_key
+    _K_SK = "sk-" + "b" * 32 + "-appeared-in-the-deploy-l"
+    _K_GHP = "ghp-" + "a" * 36 + "-appeared-in-the-dep"
+    _K_AKIA = "akia" + "fakefakefakefake" + "-appeared-in-the-deploy-log-durin"
+    _K_PEM = "begin-rsa-" + "private-key" + "-miifakefakefake-appeared-in-the"
+    for _name, _k, _residue in (
+            ("sk- secret in a raw key",         _SK,                    "sk-B"),
+            ("sk- secret in a bd-mangled key",  _K_SK,                  "sk-b"),
+            ("ghp_ secret in a raw key",        _GHP,                   "ghp_A"),
+            ("ghp_ secret in a bd-mangled key", _K_GHP,                 "ghp-a"),
+            ("AKIA secret in a raw key",        _AKIA,                  "AKIA"),
+            ("AKIA secret in a bd-mangled key", _K_AKIA,                "akiafake"),
+            ("PEM material in a raw key",       _BEGIN + "MIIfakefake", "MIIfake"),
+            ("PEM material in a bd-mangled key", _K_PEM,                "miifake")):
+        _kr = redact_key(_k)
+        ok &= check("%s is redacted" % _name,
+                    "[REDACTED]" in _kr and _residue not in _kr)
+    # Same terminated-vs-unterminated split as the body check above, for the key
+    # pattern's own first alternation.
+    _kterm = redact_key(_BEGIN + "MIIfakefake" + _END + "-tail-marker")
+    ok &= check("a terminated PEM in a key redacts the block only — the tail survives",
+                "MIIfake" not in _kterm and "tail-marker" in _kterm)
+
+    # WIRING. The eight checks above prove the pattern; this proves the ranker
+    # actually applies it to the key it hands back. Without this, redact_key can
+    # be perfect and rank.py can still print the credential — which is exactly the
+    # state this bead was filed against.
+    _poisoned_key = {_K_AKIA: "@type=semantic:lesson @salience=3 "
+                              "the credential turned up in the rollout log"}
+    _kh = Corpus(_poisoned_key).search("credential", top_n=1)[0]
+    ok &= check("a secret in the KEY is redacted on the ranked output, not just in the body",
+                "[REDACTED]" in _kh.key and "akiafake" not in _kh.key)
+    ok &= check("redacting the key leaves the rest of it intact (the hit stays identifiable)",
+                "appeared-in-the-deploy-log" in _kh.key)
+
     # beads-superpowers-eo9z2.16 — __main__ argument and BSP_TOP_N edges.
     # The helpers are PURE: _resolve_top_n RETURNS its notice instead of printing
     # it, so the module keeps the no-I/O contract its own docstring states, and

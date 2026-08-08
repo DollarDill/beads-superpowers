@@ -354,4 +354,35 @@ grep -qF -e 'narrow the query, never triage truncated titles' \
      "$REPO/skills/knowledge-retrieval/SKILL.md" \
   || { echo "FAIL: SKILL.md carries no narrowing clause for the degraded path"; exit 1; }
 
-echo "PASS: surface.sh — coverage line, counts, salience rendering, untruncated keys, hyphenated label filter, injection-inert, bd-error visible, degradation, truncation disclosure, empty-vs-error, boundary disclosure, too-many-hits branch"
+# ── 19. a secret in the memory KEY is redacted (beads-superpowers-wze77.7).
+# redact() only ever reached the body, so an entry printed "[REDACTED]" in its
+# excerpt column beside a key spelling the credential out. bd derives the key from
+# the body's leading words and LOWERCASES it; AWS access key ids are
+# uppercase-alphanumeric only, so that mangling is losslessly reversible — upcase
+# the key column and you have the credential back.
+#
+# Written against a REAL bd write on purpose: rank_invariants.py pins the pattern
+# against transcribed spellings, and only this can prove the transcription still
+# matches what bd actually derives. A hand-authored key would test my model of the
+# mangling, which is the failure mode this file's header warns about.
+#
+# Runs LAST so the memory it seeds cannot move the memories(3) count assertion 2
+# pins, nor the 20-key degraded window assertion 15 measures.
+#
+# Token assembled at runtime — a contiguous AKIA literal in a committed file trips
+# GH013 push protection (same idiom as rank_invariants.py's fixtures).
+FAKE_AKIA="AKIA$(printf 'FAKE%.0s' 1 2 3 4)"
+( cd "$TMP" && bd remember "$FAKE_AKIA appeared in the deploy log during rollout" >/dev/null )
+keyleak="$( cd "$TMP" && bash "$SURFACE" deploy rollout )"
+# LIVENESS FIRST. The leak check below is a NEGATIVE grep, and a negative grep over
+# a result set that does not contain the entry passes for the wrong reason. The
+# surviving tail of the redacted key proves the hit came back AND that only the
+# credential span was cut.
+grep -q 'appeared-in-the-deploy-log' <<<"$keyleak" \
+  || { echo "FAIL: poisoned entry absent from the result set — the key-leak assertion would be vacuous"; printf '%s\n' "$keyleak"; exit 1; }
+# -i, because bd's own lowercasing is the whole defect: a case-sensitive grep here
+# would pass against the exact leak this assertion exists to catch.
+grep -qi "$FAKE_AKIA" <<<"$keyleak" \
+  && { echo "FAIL: a secret in the memory KEY printed in the clear"; printf '%s\n' "$keyleak"; exit 1; }
+
+echo "PASS: surface.sh — coverage line, counts, salience rendering, untruncated keys, hyphenated label filter, injection-inert, bd-error visible, degradation, truncation disclosure, empty-vs-error, boundary disclosure, too-many-hits branch, key redaction"

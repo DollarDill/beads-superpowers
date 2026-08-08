@@ -699,14 +699,18 @@ elif ! (cd "$SB29" && bd init --non-interactive >/dev/null 2>&1); then
   echo "SELFTEST FAIL: mutation-29 setup 'bd init' failed (rig broken, not a caught mutation)"; rc=1
 elif ! (cd "$SB29" && bd remember "totally unrelated content about deployment pipelines" --key "aaa-zqx-marker" >/dev/null 2>&1); then
   echo "SELFTEST FAIL: mutation-29 setup 'bd remember' failed (rig broken, not a caught mutation)"; rc=1
-elif ! grep -qF -- 'return _diversify(hits, self.toks, self._idf)[:top_n]' "$SB29/skills/knowledge-retrieval/scripts/rank.py"; then
+# Anchor tracks rank.py: search() no longer returns _diversify's result directly —
+# beads-superpowers-wze77.7 binds it to `ranked` so the KEY can be redacted before
+# it leaves the ranker. Emptying `ranked` is the same mutation as emptying the
+# return was.
+elif ! grep -qF -- 'ranked = _diversify(hits, self.toks, self._idf)[:top_n]' "$SB29/skills/knowledge-retrieval/scripts/rank.py"; then
   echo "SELFTEST FAIL: mutation-29 anchor absent from rank.py (rig broken, sed would be inert)"; rc=1
 else
   # The control must be a real OK, not a SKIP — a SKIP also exits 0 and would make
   # this whole mutation vacuous.
   expect_green "live-store guard: unmutated ranker on a lore-free scratch store (control)" \
     bash -c "cd '$SB29' && bash scripts/check-live-store-retrieval.sh | grep -q '^live-store retrieval: OK'"
-  sed -i 's/return _diversify(hits, self\.toks, self\._idf)\[:top_n\]/return []/' \
+  sed -i 's/ranked = _diversify(hits, self\.toks, self\._idf)\[:top_n\]/ranked = []/' \
     "$SB29/skills/knowledge-retrieval/scripts/rank.py"
   expect_red "live-store guard: ranker returns nothing" \
     bash -c "cd '$SB29' && bash scripts/check-live-store-retrieval.sh"

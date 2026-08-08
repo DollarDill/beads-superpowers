@@ -37,6 +37,30 @@ _SECRET = re.compile(
     r"(-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----"
     r"|-----BEGIN [A-Z ]*PRIVATE KEY-----.*"
     r"|sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16})", re.S)
+# SECURITY FLOOR (beads-superpowers-wze77.7): the KEY is an output too, and it
+# needs its OWN pattern. `bd` derives a memory key from the body's leading words,
+# lowercasing it and collapsing each run of non-alphanumerics to a single "-", so
+# _SECRET above — case-SENSITIVE, expecting a literal "_" and literal "-----"
+# fences — fires on only ONE of the four shapes once bd has been through it.
+# Verified against bd 1.1.2: `ghp_A…` keys as `ghp-a…`, `AKIA0123…` as
+# `akia0123…`, and `-----BEGIN RSA PRIVATE KEY-----MII…` as
+# `begin-rsa-private-key-mii…` WITH THE FENCES GONE. The AWS shape is the sharp
+# one: AKIA ids are uppercase-alphanumeric only, so bd's lowercasing is LOSSLESSLY
+# REVERSIBLE — upcase the printed key column and you have the credential back.
+#
+# Same five alternations as _SECRET, each LOOSENED and never tightened, so this is
+# a strict superset — pinned by the raw-form half of the key checks in
+# rank_invariants.py, which run every shape _SECRET knows through this pattern.
+#
+# Kept SEPARATE from _SECRET on purpose, not merged: bodies are prose, and a
+# fence-less `BEGIN … PRIVATE KEY` would redact any sentence about PEM handling to
+# end of body — this store carries exactly that meta-content. A key is a 60-char
+# identifier, where the same over-redaction costs nothing.
+_SECRET_KEY = re.compile(
+    r"(-*BEGIN[ -][A-Za-z -]*PRIVATE[ -]KEY-*.*?-*END[ -][A-Za-z -]*PRIVATE[ -]KEY-*"
+    r"|-*BEGIN[ -][A-Za-z -]*PRIVATE[ -]KEY-*.*"
+    r"|sk[-_][A-Za-z0-9]{20,}|ghp[-_][A-Za-z0-9]{20,}|AKIA[0-9A-Za-z]{16})",
+    re.S | re.I)
 _HAZARD = re.compile(r"\b(never|always|must not|do not|don't|forbidden)\b", re.I)
 _SALIENCE = re.compile(r'@salience=(\d+)')   # (\d+), matching tests/skills/rank_invariants.py
 _CREATED = re.compile(r'@created=(\d{4})-(\d{2})-(\d{2})')
@@ -61,6 +85,17 @@ def redact(text):
     excerpt can leave a partial secret too short to match the pattern, and
     print it unredacted — see orient.sh:55-90."""
     return _SECRET.sub("[REDACTED]", text)
+
+def redact_key(key):
+    """Redact a memory KEY before it is printed. Bodies use redact(); keys need
+    _SECRET_KEY because bd mangles the credential on its way into the key.
+
+    Only the matched span is replaced, so the surviving words still say what the
+    entry is about. The cost is real and accepted: the key column exists so the
+    agent can run `bd recall <key>` next, and a redacted key does not resolve.
+    A credential printed in a column an agent pastes into its context is the worse
+    outcome, and an entry whose key IS a credential has nothing safe to recall."""
+    return _SECRET_KEY.sub("[REDACTED]", key)
 
 def _recency(header, today):
     """1.0 today, decaying linearly to 0.0 at 60 days, clamped at BOTH ends.
@@ -189,7 +224,18 @@ class Corpus:
             hits.append(Hit(key=key, score=score, sentence=body_r[start:start + 150].strip(),
                             salience=salience, hazard=hazard))
         hits.sort(key=lambda h: -h.score)
-        return _diversify(hits, self.toks, self._idf)[:top_n]
+        ranked = _diversify(hits, self.toks, self._idf)[:top_n]
+        # SECURITY FLOOR (beads-superpowers-wze77.7): the KEY is an output too —
+        # __main__ prints it in its own column, and redact() only ever reached the
+        # body, so an entry could print "[REDACTED]" beside a key spelling out the
+        # credential. Applied HERE, after _diversify rather than at Hit
+        # construction, because _diversify indexes self.toks BY h.key and a
+        # redacted key turns that lookup into a KeyError. Applied inside search()
+        # rather than at the print site so no caller of search() can print one
+        # either.
+        for h in ranked:
+            h.key = redact_key(h.key)
+        return ranked
 
 
 def _store(name, count, failed):

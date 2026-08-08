@@ -37,8 +37,10 @@ re-queries — it never requests input, so it is safe in interactive, headless a
 
 ## Floor (never moved, never compressed)
 
-- **Never truncate before redacting.** Redact the full body first; a redacted excerpt cut afterwards can
-  print a partial secret.
+- **Never truncate before redacting, and redact the key as well as the body.** Redact the full body
+  first; a redacted excerpt cut afterwards can print a partial secret. The key is an output too: `bd`
+  derives it from the body's leading words and lowercases it, so a credential reaches the key column
+  in a mangled — and for uppercase-only shapes, trivially reversible — spelling.
 - **Never build a query into a command string** — pass it as an argument. Queries are model-generated.
 - **Never print bodies without `python3`** — redaction lives in the ranker; print keys only. A floor with
   a bypass is not a floor. With no ranker there is also no bound: if the output discloses
