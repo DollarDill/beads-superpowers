@@ -139,3 +139,52 @@ set -e
   || { echo "FAIL: emoji-bearing corpus exited $emo_rc"; printf '%s\n' "$emo"; exit 1; }
 
 echo "PASS: shape 1 — CJK/emoji survival (12 assertions)"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SHAPE 2 (Task 6): header-heavy body truncated below two tokens
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ── 2. a header-heavy body leaves <2 tokens after @k=v stripping.
+# `bd memories` truncates previews at ~120 chars; 50 of 180 entries on the live
+# store were measured in this class. The ranker must survive and disclose.
+# $FAKE_SECRET is defined in shape 1's block earlier in this same file (Task 5).
+( cd "$TMP" && bd remember "@type=semantic:lesson @created=2026-08-08 @salience=3 @tags=a,b,c,d,e,f @refs=x,y,z ok $FAKE_SECRET" --key shape-headerheavy >/dev/null )
+set +e
+hh="$( cd "$TMP" && bash "$SURFACE" semantic lesson 2>&1 )"; hh_rc=$?
+set -e
+[ "$hh_rc" -eq 0 ] \
+  || { echo "FAIL: header-heavy corpus exited $hh_rc"; printf '%s\n' "$hh"; exit 1; }
+grep -q '^searched:' <<<"${hh%%$'\n'*}" \
+  || { echo "FAIL: header-heavy run emitted no coverage line"; printf '%s\n' "$hh"; exit 1; }
+# PIN THE OBSERVED BEHAVIOUR (amended 2026-08-08 by the M1 audit, beads-superpowers-8tyco).
+# `semantic` and `lesson` live ONLY inside the @k=v header, which strip_header removes
+# before indexing — so this query matches nothing by construction. Assert that outcome
+# on the documented zero-hit marker rather than by line arithmetic (fix round 1 of Task 5
+# showed a positional form is blind to the single-hit case it exists to catch).
+grep -q '(no hits' <<<"$hh" \
+  || { echo "NOTE: header terms now match — strip_header behaviour changed, update the shape record"; printf '%s\n' "$hh"; exit 1; }
+
+# SECRETS FLOOR UNDER TRUNCATION-SHAPED INPUT (stress-test B7), REPAIRED.
+#
+# WHY THE ORIGINAL FORM COULD NOT FAIL: the plan grepped for the fake token in the output
+# of `$SURFACE semantic lesson` — a query whose terms are stripped before indexing, so the
+# result set is empty and a negative grep over it passes regardless of what redaction does.
+# Measured by the M1 audit: query `semantic lesson` -> zero hits; control query `ok` -> the
+# entry, showing [REDACTED].
+#
+# `ok` is the one token in this body that SURVIVES strip_header, so it is the anchor that
+# makes the assertion live. No new fixture is needed — the body already carries it.
+set +e
+hh_hit="$( cd "$TMP" && bash "$SURFACE" ok 2>&1 )"; hh_hit_rc=$?
+set -e
+[ "$hh_hit_rc" -eq 0 ] \
+  || { echo "FAIL: anchored header-heavy query exited $hh_hit_rc"; printf '%s\n' "$hh_hit"; exit 1; }
+# LIVENESS FIRST — without this the redaction check below is vacuous again.
+grep -q 'shape-headerheavy' <<<"$hh_hit" \
+  || { echo "FAIL: header-heavy fixture not returned — redaction assertion would be vacuous"; printf '%s\n' "$hh_hit"; exit 1; }
+grep -q '\[REDACTED\]' <<<"$hh_hit" \
+  || { echo "FAIL: header-heavy hit shows no [REDACTED] marker"; printf '%s\n' "$hh_hit"; exit 1; }
+if grep -qF "$FAKE_SECRET" <<<"$hh_hit"; then
+  echo "FAIL: secret leaked from a header-heavy body"; printf '%s\n' "$hh_hit"; exit 1
+fi
+echo "PASS: shape 2 — header-heavy body under two tokens"
