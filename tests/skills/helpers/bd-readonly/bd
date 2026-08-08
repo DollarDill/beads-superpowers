@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# tests/skills/helpers/bd-readonly/bd — read-only bd wrapper (spec §5.3).
+#
+# Prepend THIS DIRECTORY to PATH for any dispatch that touches a foreign store.
+# Default-deny: anything not on the allowlist exits 64 without reaching real bd.
+#
+# Why a mechanism and not a prompt: no before/after snapshot can detect
+# `bd dolt push` (a push changes no local state), and CLAUDE.md records the
+# reproduced consequence — with no Dolt remote configured, push silently adopts
+# git origin and ships the beads DB into the code repo (ADR-0057).
+set -euo pipefail
+
+SHIM_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Resolve the REAL bd by removing this shim's own directory from PATH; a bare
+# `command -v bd` would resolve back to this script and recurse until the shell
+# runs out of processes.
+clean_path=""
+IFS=: read -ra _parts <<<"$PATH"
+for _p in "${_parts[@]}"; do
+  [ "$_p" = "$SHIM_DIR" ] && continue
+  clean_path="${clean_path:+$clean_path:}$_p"
+done
+REAL_BD="$(PATH="$clean_path" command -v bd || true)"
+[ -n "$REAL_BD" ] || { echo "bd-readonly: real bd not found on PATH" >&2; exit 127; }
+
+verb="${1:-}"
+sub="${2:-}"
+
+case "$verb" in
+  list|show|search|memories|recall|query)
+    ;;
+  label)
+    # Only the vocabulary read. `bd label list` is per-issue (also a read) but
+    # `add`, `remove` and `propagate` are writes, so the sub-verb is checked.
+    case "$sub" in
+      list-all|list) ;;
+      *) echo "bd-readonly: REJECTED 'bd label $sub' — only list/list-all allowed" >&2; exit 64 ;;
+    esac
+    ;;
+  *)
+    echo "bd-readonly: REJECTED 'bd $verb' — not in the read-only allowlist" >&2
+    exit 64
+    ;;
+esac
+
+exec "$REAL_BD" "$@"
