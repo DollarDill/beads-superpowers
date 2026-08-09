@@ -32,9 +32,10 @@ if command -v bd >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1 && bd mem
   # the ranker's reason to exist.
   #
   # SCAN the bodies, never sample the first one. Two ways a single sample fails on a
-  # perfectly healthy store, both reproduced: (a) rank.py's tokenizer is [a-z0-9]+,
-  # so a body opening in CJK or emoji tokenizes to nothing and FAILs — and this repo
-  # ships docs/zh, so that is a live case here, not a hypothetical; (b) `bd memories`
+  # perfectly healthy store, both reproduced: (a) an emoji-only body still
+  # tokenizes to nothing and FAILs — a body opening in CJK used to fail the same
+  # way, but as of 9e0e55b rank.py's tokenizer indexes CJK (per-character unigrams
+  # plus overlapping bigrams), so that half no longer false-FAILs; (b) `bd memories`
   # truncates each preview at ~120 chars, so on a header-heavy entry the @k=v block
   # can consume the whole line and leave under two tokens after the strip, which
   # SKIPs. Measured: 50 of this store's 180 memories have that shape. Taking the

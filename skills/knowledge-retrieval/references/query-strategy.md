@@ -93,12 +93,17 @@ alphabetical order, never relevance order, cut at 20 with a `showing 20 of N key
 not disposition 20 unranked keys — replace terms until the disclosure disappears, or install
 `python3` so the shortlist is ranked and bounded.
 
-## CJK, Japanese and Korean
+## CJK support
 
-Chinese, Japanese kana and Hangul are indexed and retrievable. These scripts have no spaces, so the
-ranker tokenizes them character by character: per-character unigrams plus overlapping bigrams, so a
-query of one or more characters matches. No dictionary or segmenter is involved, and no extra
-dependency is required.
+Modern CJK ideographs, kana, and precomposed Hangul syllables are indexed and retrievable. These
+scripts have no spaces, so the ranker tokenizes them character by character: per-character unigrams
+plus overlapping bigrams, so a query of one or more characters matches. No dictionary or segmenter is
+involved, and no extra dependency is required.
+
+A few adjacent character sets fall outside that range: halfwidth katakana, the rarer CJK Extension
+blocks (Extension A onward, including everything outside the Basic Multilingual Plane), and Hangul
+written as separate Jamo letters instead of precomposed syllables. Text in any of these tokenizes to
+nothing, the same as an unsupported script.
 
 **Storing a CJK memory requires an explicit `--key`.** `bd` derives a memory's key from the leading
 words of its body, and it cannot derive one from CJK text:
@@ -112,17 +117,19 @@ words of its body, and it cannot derive one from CJK text:
 This is `bd` behavior, not a retrieval limitation — bodies are what get indexed, so an ASCII key costs
 nothing.
 
-**A lone CJK character in a query blocks label narrowing for that query, and only that query.** Label
-matching uses a stricter tokenizer than body search: a single CJK character is never enough to narrow
-by itself, so a label like 库 can't silently match every query that happens to mention it (without
-this, a search for 数据库 would be falsely narrowed by a label that only means 库). The same rule
-applies on the query side of that comparison — if the query itself contains a lone CJK character, its
-label-token set comes back empty, taking any ASCII words in the same query with it, so no label
-narrows that search. The label filter simply doesn't engage, and the search runs against the full
-kb-bead set instead. That can only widen a result set, never drop a hit silently.
+**A single-character CJK topic label — 库 on its own, say — can never narrow a search: its own
+tokenizer treats it as empty.** Don't create one; it can't do the job a label is for.
 
-**Emoji are not retrievable.** An emoji-only body has no segmentable content under any tokenizer. A
-query against it returns no hits; the ranker survives and says so rather than failing silently.
+The same mechanism reaches the query side. A single-character CJK *run* inside a query — one set off
+from other CJK text, like the 库 in `库 数据库` — empties that query's whole label-token set, ASCII
+words included, so no label narrows it. (`数据库` alone doesn't trigger this: it's one three-character
+run, not a lone character.) The search falls back to the full kb-bead set instead of the
+label-filtered one — wider results, never a silently dropped hit.
+
+**Emoji are not retrievable.** An emoji-only body has no segmentable content under this tokenizer — a
+codepoint-level tokenizer could index it, but this one doesn't. A query against it returns a clean,
+honest zero rather than crashing, but that zero looks identical to a genuine no-match; it doesn't
+disclose the cause.
 
 ## Degradation matrix
 
