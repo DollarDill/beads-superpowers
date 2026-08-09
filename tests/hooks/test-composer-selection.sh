@@ -40,31 +40,31 @@ BSP_SOURCED=1 . "$HOOK"
 
 # 1. selection: salience 4/5 keys + latest continuation — incl. the late-@salience regression
 sel=$(bd memories --json | bsp_select_memory_keys)
-echo "$sel" | grep -q "5	big-lesson"        || { echo "FAIL: missing salience-5 key"; exit 1; }
-echo "$sel" | grep -q "4	medium-design"     || { echo "FAIL: missing salience-4 key"; exit 1; }
-echo "$sel" | grep -q "4	long-refs-lesson"  || { echo "FAIL: late-@salience key dropped (truncation regression)"; exit 1; }
+grep -q "5	big-lesson" <<<"$sel"        || { echo "FAIL: missing salience-5 key"; exit 1; }
+grep -q "4	medium-design" <<<"$sel"     || { echo "FAIL: missing salience-4 key"; exit 1; }
+grep -q "4	long-refs-lesson" <<<"$sel"  || { echo "FAIL: late-@salience key dropped (truncation regression)"; exit 1; }
 cont=$(bd memories --json | bsp_latest_continuation)
 [ "$cont" = "continuation-2026-07-07-new" ] || { echo "FAIL: latest continuation wrong: $cont"; exit 1; }
-echo "$sel" | grep -q "low-note" && { echo "FAIL: salience-2 selected"; exit 1; }
+grep -q "low-note" <<<"$sel" && { echo "FAIL: salience-2 selected"; exit 1; }
 
 # 2. composition order + disclosure (generous ceiling)
 out=$(bsp_compose_memories 8192)
-echo "$out" | grep -q "FULL BODY OF BIG LESSON"    || { echo "FAIL: s5 body absent"; exit 1; }
-echo "$out" | grep -q "FULL BODY OF MEDIUM DESIGN" || { echo "FAIL: s4 body absent"; exit 1; }
+grep -q "FULL BODY OF BIG LESSON" <<<"$out"    || { echo "FAIL: s5 body absent"; exit 1; }
+grep -q "FULL BODY OF MEDIUM DESIGN" <<<"$out" || { echo "FAIL: s4 body absent"; exit 1; }
 [ "$(echo "$out" | grep -n 'BIG LESSON' | cut -d: -f1)" -lt "$(echo "$out" | grep -n 'MEDIUM DESIGN' | cut -d: -f1)" ] \
   || { echo "FAIL: s5 not before s4"; exit 1; }
-echo "$out" | grep -q "core memories: 4 of 6 injected" || { echo "FAIL: disclosure line wrong"; exit 1; }
+grep -q "core memories: 4 of 6 injected" <<<"$out" || { echo "FAIL: disclosure line wrong"; exit 1; }
 
 # 3. ceiling clip: ceiling 90 fits the continuation SECTION (### header + 21B body
 #    + scaffolding ≈ 55B), clips the rest, emits tail. Ceiling 40 does NOT fit the
 #    section -> continuation degrades to a pointer line (ADR-0052: no bypass).
 out=$(bsp_compose_memories 90)
-echo "$out" | grep -q "CONTINUATION NEW BODY" || { echo "FAIL: continuation clipped at 90"; exit 1; }
-echo "$out" | grep -q "full digest: run the getting-up-to-speed skill" || { echo "FAIL: no full-digest tail"; exit 1; }
+grep -q "CONTINUATION NEW BODY" <<<"$out" || { echo "FAIL: continuation clipped at 90"; exit 1; }
+grep -q "full digest: run the getting-up-to-speed skill" <<<"$out" || { echo "FAIL: no full-digest tail"; exit 1; }
 out=$(bsp_compose_memories 40)
-echo "$out" | grep -q "CONTINUATION NEW BODY" && { echo "FAIL: continuation body injected over allowance (bypass not removed)"; exit 1; }
+grep -q "CONTINUATION NEW BODY" <<<"$out" && { echo "FAIL: continuation body injected over allowance (bypass not removed)"; exit 1; }
 # shellcheck disable=SC2016  # backticks are literal markdown in the asserted output, not expansions
-echo "$out" | grep -q 'continuation over budget — `bd recall continuation-2026-07-07-new`' || { echo "FAIL: degraded continuation pointer line absent"; exit 1; }
+grep -q 'continuation over budget — `bd recall continuation-2026-07-07-new`' <<<"$out" || { echo "FAIL: degraded continuation pointer line absent"; exit 1; }
 
 # 4. pre-sweep notice when no salience headers exist
 cat > "$TMP/fixtures/memories.json" <<'FIX'
@@ -74,7 +74,7 @@ cat > "$TMP/fixtures/memories.json" <<'FIX'
 }
 FIX
 out=$(bsp_compose_memories 8192)
-echo "$out" | grep -q "curation sweep" || { echo "FAIL: pre-sweep notice absent"; exit 1; }
+grep -q "curation sweep" <<<"$out" || { echo "FAIL: pre-sweep notice absent"; exit 1; }
 
 # 5. ceiling counts BYTES, not chars: em-dash body is 30 chars but 90 bytes.
 # Ceiling 60: continuation (20B, exempt) + 90B = 110 > 60 -> must be clipped
@@ -89,9 +89,9 @@ FIX
 { printf '—%.0s' {1..30}; echo; } > "$TMP/fixtures/recall-utf8-lesson.txt"
 printf 'SHORT CONT BODY XXXX\n' > "$TMP/fixtures/recall-continuation-2026-07-07-x.txt"
 out=$(bsp_compose_memories 60)
-echo "$out" | grep -q "SHORT CONT BODY" || { echo "FAIL: continuation clipped in byte-ceiling test"; exit 1; }
-echo "$out" | grep -q "full digest: run the getting-up-to-speed skill" || { echo "FAIL: multi-byte body not clipped — ceiling counted chars, not bytes"; exit 1; }
-echo "$out" | grep -q "core memories: 1 of 2 injected" || { echo "FAIL: byte-test disclosure wrong"; exit 1; }
+grep -q "SHORT CONT BODY" <<<"$out" || { echo "FAIL: continuation clipped in byte-ceiling test"; exit 1; }
+grep -q "full digest: run the getting-up-to-speed skill" <<<"$out" || { echo "FAIL: multi-byte body not clipped — ceiling counted chars, not bytes"; exit 1; }
+grep -q "core memories: 1 of 2 injected" <<<"$out" || { echo "FAIL: byte-test disclosure wrong"; exit 1; }
 
 # 6. large-store pipefail regression: listing > 64KB pipe buffer with an EARLY
 # @salience match. A `printf | grep -q` probe under pipefail takes SIGPIPE
@@ -110,8 +110,8 @@ echo "$out" | grep -q "core memories: 1 of 2 injected" || { echo "FAIL: byte-tes
 } > "$TMP/fixtures/memories.json"
 printf 'EARLY SALIENT FULL BODY\n' > "$TMP/fixtures/recall-salient-early.txt"
 out=$(bsp_compose_memories 8192)
-echo "$out" | grep -q "curation sweep" && { echo "FAIL: pre-sweep misfired on large store (pipefail SIGPIPE)"; exit 1; }
-echo "$out" | grep -q "EARLY SALIENT FULL BODY" || { echo "FAIL: salient body absent from large-store composition"; exit 1; }
+grep -q "curation sweep" <<<"$out" && { echo "FAIL: pre-sweep misfired on large store (pipefail SIGPIPE)"; exit 1; }
+grep -q "EARLY SALIENT FULL BODY" <<<"$out" || { echo "FAIL: salient body absent from large-store composition"; exit 1; }
 
 # 7. false-match regression: a body mention of @salience must NOT drive selection —
 # only the @type=… header run counts. The `\n` in the fixture is the two-char escape
@@ -123,8 +123,8 @@ cat > "$TMP/fixtures/memories.json" <<'FIX'
 }
 FIX
 sel=$(bd memories --json | bsp_select_memory_keys)
-echo "$sel" | grep -q "hdr3-body5" && { echo "FAIL: body @salience=5 false-selected a salience-3 header"; exit 1; }
-echo "$sel" | grep -q "4	hdr4-body2" || { echo "FAIL: salience-4 header not selected when body mentions salience=2"; exit 1; }
+grep -q "hdr3-body5" <<<"$sel" && { echo "FAIL: body @salience=5 false-selected a salience-3 header"; exit 1; }
+grep -q "4	hdr4-body2" <<<"$sel" || { echo "FAIL: salience-4 header not selected when body mentions salience=2"; exit 1; }
 
 # 8. graduated nudge: curated store above BSP_MEM_NUDGE_AT emits a curator nudge
 cat > "$TMP/fixtures/memories.json" <<'FIX'
@@ -134,18 +134,18 @@ cat > "$TMP/fixtures/memories.json" <<'FIX'
 FIX
 printf 'KEEP\n' > "$TMP/fixtures/recall-keep-lesson.txt"
 out=$(BSP_MEM_NUDGE_AT=1 bsp_compose_memories 8192)   # total_count=1 >= 1 -> nudge
-echo "$out" | grep -qi "memory-curator" || { echo "FAIL: size-nudge absent above threshold"; exit 1; }
+grep -qi "memory-curator" <<<"$out" || { echo "FAIL: size-nudge absent above threshold"; exit 1; }
 out=$(BSP_MEM_NUDGE_AT=999 bsp_compose_memories 8192)  # below threshold -> no nudge
-echo "$out" | grep -qi "run the memory-curator" && { echo "FAIL: nudged below threshold"; exit 1; }
+grep -qi "run the memory-curator" <<<"$out" && { echo "FAIL: nudged below threshold"; exit 1; }
 
 # 8b. escalation tier: count >= BSP_MEM_ESCALATE_AT -> file-a-bead directive,
 #     tier-1 line suppressed (tiers never stack — ADR-0052)
 out=$(BSP_MEM_NUDGE_AT=1 BSP_MEM_ESCALATE_AT=1 bsp_compose_memories 8192)
-echo "$out" | grep -q "file ONE chore bead" || { echo "FAIL: escalation directive absent at threshold"; exit 1; }
-echo "$out" | grep -q "consolidate/route" && { echo "FAIL: tiers stacked"; exit 1; }
+grep -q "file ONE chore bead" <<<"$out" || { echo "FAIL: escalation directive absent at threshold"; exit 1; }
+grep -q "consolidate/route" <<<"$out" && { echo "FAIL: tiers stacked"; exit 1; }
 out=$(BSP_MEM_NUDGE_AT=1 BSP_MEM_ESCALATE_AT=999 bsp_compose_memories 8192)
-echo "$out" | grep -q "file ONE chore bead" && { echo "FAIL: directive fired below escalate threshold"; exit 1; }
-echo "$out" | grep -q "consolidate/route" || { echo "FAIL: tier-1 nudge lost"; exit 1; }
+grep -q "file ONE chore bead" <<<"$out" && { echo "FAIL: directive fired below escalate threshold"; exit 1; }
+grep -q "consolidate/route" <<<"$out" || { echo "FAIL: tier-1 nudge lost"; exit 1; }
 
 # 10. escalation fires on the uncurated (pre-sweep) path too — backlog is backlog
 cat > "$TMP/fixtures/memories.json" <<'FIX'
@@ -155,7 +155,7 @@ cat > "$TMP/fixtures/memories.json" <<'FIX'
 }
 FIX
 out=$(BSP_MEM_ESCALATE_AT=2 bsp_compose_memories 8192)
-echo "$out" | grep -q "file ONE chore bead" || { echo "FAIL: directive absent on pre-sweep path"; exit 1; }
+grep -q "file ONE chore bead" <<<"$out" || { echo "FAIL: directive absent on pre-sweep path"; exit 1; }
 
 # 9. scaffolding-accurate accounting: body alone fits the ceiling, full section
 #    "### pad-lesson\n"(15) + 49 + "\n\n"(2) = 66B (command substitution strips the
@@ -168,7 +168,7 @@ cat > "$TMP/fixtures/memories.json" <<'FIX'
 FIX
 { printf 'y%.0s' {1..49}; echo; } > "$TMP/fixtures/recall-pad-lesson.txt"
 out=$(bsp_compose_memories 60)
-echo "$out" | grep -q "yyyy" && { echo "FAIL: section over ceiling injected — accounting ignores scaffolding"; exit 1; }
-echo "$out" | grep -q "core memories: 0 of 1 injected" || { echo "FAIL: scaffolding-test disclosure wrong"; exit 1; }
+grep -q "yyyy" <<<"$out" && { echo "FAIL: section over ceiling injected — accounting ignores scaffolding"; exit 1; }
+grep -q "core memories: 0 of 1 injected" <<<"$out" || { echo "FAIL: scaffolding-test disclosure wrong"; exit 1; }
 
 echo "PASS: composer selection/ceiling"

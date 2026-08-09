@@ -97,7 +97,7 @@ assert_scratch_bead_absent() {  # assert_scratch_bead_absent <mutation-label> <s
     echo "SELFTEST FAIL: '$label' — 'bd list --label kb --status all --limit 0 --json' failed; cannot verify no leak"; rc=1
     return
   fi
-  if printf '%s\n' "$real_ids" | grep -qxF "$bead_id"; then
+  if grep -qxF "$bead_id" <<<"$real_ids"; then
     echo "SELFTEST FAIL: '$label' leaked scratch bead '$bead_id' into the real store"; rc=1
   else
     echo "SELFTEST ok: '$label' scratch bead '$bead_id' absent from real store (no leak)"
@@ -178,7 +178,13 @@ else
     if ! (cd "$SB8" && bd create "opaque-ref doc bead" -t task -l kb --defer +1d \
           --metadata '{"doc":"4l5v"}' --silent >/dev/null 2>&1); then
       echo "SELFTEST FAIL: mutation-8 setup 'bd create' (opaque-ref bead) failed (rig broken, not a caught mutation)"; rc=1
-    elif (cd "$SB8" && bash "$REPO_ROOT/scripts/check-kb-doc-reconciliation.sh" 2>&1) | grep -q '^warn:'; then
+    # Capture, then match. Piping the guard into `grep -q` under pipefail had TWO
+    # failure modes: the guard could take SIGPIPE (141 -> pipeline 141), and a
+    # guard that exited non-zero WHILE warning also scored the pipeline non-zero,
+    # so a real warn: line silently reported "ok" (beads-superpowers-wze77.9).
+    # `|| true` inside the substitution keeps the assertion purely about output.
+    elif recon8=$( (cd "$SB8" && bash "$REPO_ROOT/scripts/check-kb-doc-reconciliation.sh") 2>&1 || true ) \
+         && grep -q '^warn:' <<<"$recon8"; then
       echo "SELFTEST FAIL: kb doc-reconciliation warned on an opaque (non-path) metadata.doc"; rc=1
     else
       echo "SELFTEST ok: kb doc-reconciliation: no warn on opaque (non-path) metadata.doc"
@@ -294,7 +300,7 @@ else
   out11=$(bash "$SB11/scripts/check-zh-docs.sh" 2>&1); ec11=$?
   if [ "$ec11" -eq 0 ]; then
     echo "SELFTEST FAIL: 'zh-parity structural: EN page without ZH twin' should have gone RED but passed"; rc=1
-  elif ! printf '%s\n' "$out11" | grep -qF "docs/zh/orphan-page.md missing"; then
+  elif ! grep -qF "docs/zh/orphan-page.md missing" <<<"$out11"; then
     echo "SELFTEST FAIL: 'zh-parity structural: EN page without ZH twin' failed for the wrong reason (no message naming docs/zh/orphan-page.md)"; rc=1
   else
     echo "SELFTEST ok: 'zh-parity structural: EN page without ZH twin' correctly fails, naming the missing twin"
@@ -708,8 +714,11 @@ elif ! grep -qF -- 'ranked = _diversify(hits, self.toks, self._idf)[:top_n]' "$S
 else
   # The control must be a real OK, not a SKIP — a SKIP also exits 0 and would make
   # this whole mutation vacuous.
+  # `;` not `&&` between capture and match: the original pipeline's status was
+  # grep's alone (the inner `bash -c` does not inherit pipefail), so gating on the
+  # guard's own exit code here would silently STRENGTHEN the control.
   expect_green "live-store guard: unmutated ranker on a lore-free scratch store (control)" \
-    bash -c "cd '$SB29' && bash scripts/check-live-store-retrieval.sh | grep -q '^live-store retrieval: OK'"
+    bash -c "cd '$SB29' && _o=\$(bash scripts/check-live-store-retrieval.sh); grep -q '^live-store retrieval: OK' <<<\"\$_o\""
   sed -i 's/ranked = _diversify(hits, self\.toks, self\._idf)\[:top_n\]/ranked = []/' \
     "$SB29/skills/knowledge-retrieval/scripts/rank.py"
   expect_red "live-store guard: ranker returns nothing" \
@@ -721,11 +730,67 @@ fi
 # OUTSIDE the if/elif chain on purpose: the anchor-absent branch fires AFTER the
 # `bd remember` has already run, so a leak check nested in the else arm would skip
 # the one rig-broken path it exists to cover.
-if (cd "$REPO_ROOT" && bd memories 2>/dev/null | grep -qF -- "aaa-zqx-marker"); then
+# Capture before matching: `bd memories | grep -qF` inside a subshell INHERITS
+# pipefail, so a SIGPIPE'd bd (141) would score the condition false and report
+# "no leak" on a store that had in fact been polluted — the one direction a leak
+# assertion must never fail in (beads-superpowers-wze77.9).
+real_memories=$( (cd "$REPO_ROOT" && bd memories) 2>/dev/null || true )
+if grep -qF -- "aaa-zqx-marker" <<<"$real_memories"; then
   echo "SELFTEST FAIL: mutation-29 leaked scratch memory 'aaa-zqx-marker' into the real store"; rc=1
 else
   echo "SELFTEST ok: 'mutation-29' scratch memory absent from real store (no leak)"
 fi
 rm -rf "$SB29"
+
+# Mutation 30: check-pipefail-grep-q.sh (beads-superpowers-wze77.9) — a tracked
+# shell file that sets `pipefail` must not pipe a producer into `grep -q`.
+# `grep -q` exits at first match and closes the pipe; the producer takes SIGPIPE
+# and returns 141; pipefail promotes 141 to the PIPELINE status, so a trailing
+# `|| { echo FAIL; exit 1; }` fires even though the pattern MATCHED. That is a
+# spurious FAIL, and it is why a different item failed on each run of the
+# diagnose/orient suites (which item grep matched decided how much of the stream
+# was left unread). Fixture-isolated: the guard takes explicit file paths, so the
+# real tracked tree is never touched. Setup failure is rig breakage, NOT a catch.
+#
+# Five cases, because a guard that only ever fires is as useless as one that
+# never does: it must fire on the piped form (2, 5), stay quiet on the
+# here-string fix (1), and DISCRIMINATE — no pipefail means no SIGPIPE
+# promotion (3), and a comment cannot execute (4).
+SB30=$(mktemp -d)
+# The fixtures below must contain a literal `<bar> grep -q`, but this file sets
+# pipefail and is itself scanned by the guard. Interpolating the bar through
+# printf's %s keeps the fixture faithful without planting a construct here that
+# LOOKS executable — no annotation opt-out needed on either side.
+BAR='|'
+# shellcheck disable=SC2016  # single quotes are deliberate: "$out" must reach the
+# fixture FILES as literal text, not expand in this shell. Applies to the whole block.
+if ! mkdir -p "$SB30"; then
+  echo "SELFTEST FAIL: mutation-30 setup mkdir failed (rig broken, not a caught mutation)"; rc=1
+else
+  printf '#!/usr/bin/env bash\nset -euo pipefail\ngrep -q needle <<<"$out" || { echo FAIL; exit 1; }\n' > "$SB30/clean.sh"
+  expect_green "pipefail grep -q: here-string assertion (control)" \
+    bash "$REPO_ROOT/scripts/check-pipefail-grep-q.sh" "$SB30/clean.sh"
+
+  printf '#!/usr/bin/env bash\nset -euo pipefail\necho "$out" %s grep -q needle || { echo FAIL; exit 1; }\n' "$BAR" > "$SB30/dirty.sh"
+  expect_red "pipefail grep -q: piped grep -q reintroduced" \
+    bash "$REPO_ROOT/scripts/check-pipefail-grep-q.sh" "$SB30/dirty.sh"
+
+  # No pipefail => the producer's 141 never reaches the pipeline status, so the
+  # pipe is not a spurious-FAIL hazard. Guard must not fire.
+  printf '#!/usr/bin/env bash\nset -eu\necho "$out" %s grep -q needle || { echo FAIL; exit 1; }\n' "$BAR" > "$SB30/nopipefail.sh"
+  expect_green "pipefail grep -q: same pipe WITHOUT pipefail (discriminates)" \
+    bash "$REPO_ROOT/scripts/check-pipefail-grep-q.sh" "$SB30/nopipefail.sh"
+
+  printf '#!/usr/bin/env bash\nset -euo pipefail\n# NEVER write: echo "$out" %s grep -q needle\ngrep -q needle <<<"$out"\n' "$BAR" > "$SB30/comment.sh"
+  expect_green "pipefail grep -q: anti-pattern named in a comment (discriminates)" \
+    bash "$REPO_ROOT/scripts/check-pipefail-grep-q.sh" "$SB30/comment.sh"
+
+  # Option clusters (-qi, -qE, -Fq, -Eq) are the same hazard; a guard matching
+  # only the bare literal `-q` would miss over half the real occurrences.
+  printf '#!/usr/bin/env bash\nset -uo pipefail\nif bd list %s grep -qi needle; then :; fi\nprintf %%s "$x" %s grep -Fq -- "$y"\n' "$BAR" "$BAR" > "$SB30/clustered.sh"
+  expect_red "pipefail grep -q: option-cluster forms (-qi/-Fq)" \
+    bash "$REPO_ROOT/scripts/check-pipefail-grep-q.sh" "$SB30/clustered.sh"
+fi
+rm -rf "$SB30"
 
 exit "$rc"

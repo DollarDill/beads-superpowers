@@ -10,13 +10,13 @@ cd "$TMP"
 
 payload='{"session_id":"sess-abc","source":"startup"}'
 out1=$(printf '%s' "$payload" | CLAUDE_PLUGIN_ROOT=x bash "$HOOK")
-echo "$out1" | grep -q 'additionalContext' || { echo "FAIL: first run did not inject"; exit 1; }
+grep -q 'additionalContext' <<<"$out1" || { echo "FAIL: first run did not inject"; exit 1; }
 out2=$(printf '%s' "$payload" | CLAUDE_PLUGIN_ROOT=x bash "$HOOK")
-echo "$out2" | grep -q 'additionalContext' && { echo "FAIL: duplicate event injected twice"; exit 1; }
+grep -q 'additionalContext' <<<"$out2" && { echo "FAIL: duplicate event injected twice"; exit 1; }
 
 # different source (compact) same session → must inject
 out3=$(printf '{"session_id":"sess-abc","source":"compact"}' | CLAUDE_PLUGIN_ROOT=x bash "$HOOK")
-echo "$out3" | grep -q 'additionalContext' || { echo "FAIL: compact re-injection suppressed"; exit 1; }
+grep -q 'additionalContext' <<<"$out3" || { echo "FAIL: compact re-injection suppressed"; exit 1; }
 
 # empty stdin: TTL-only dedup still suppresses an immediate duplicate.
 # File-redirect, NOT $() capture: the nosid fallback is keyed on $PPID (same parent
@@ -51,7 +51,7 @@ nosid_markers=$(printf '%s\n' "$dir"/m-nosid-*-unknown | grep -cE '/m-nosid-[0-9
 # symlinked marker → fail open (inject), don't write through
 ln -s /etc/hostname "$dir/m-sess-lnk-startup"
 out6=$(printf '{"session_id":"sess-lnk","source":"startup"}' | CLAUDE_PLUGIN_ROOT=x bash "$HOOK")
-echo "$out6" | grep -q 'additionalContext' || { echo "FAIL: symlink case did not fail open"; exit 1; }
+grep -q 'additionalContext' <<<"$out6" || { echo "FAIL: symlink case did not fail open"; exit 1; }
 [ "$(readlink "$dir/m-sess-lnk-startup")" = "/etc/hostname" ] || { echo "FAIL: symlink replaced"; exit 1; }
 
 # suppressed JSON run prints valid empty object
@@ -75,6 +75,6 @@ outp2=$(printf '{"session_id":"sess-plain","source":"startup"}' | bash "$HOOK" -
 # design, so timeout always fires — the contract is output-present, not exit-0.
 # shellcheck disable=SC2016  # $0/$1 are the inner bash -c shell's positional args — single quotes intentional
 out9=$(timeout 5 bash -c '{ printf "%s" "$0"; sleep 30; } | CLAUDE_PLUGIN_ROOT=x bash "$1"' '{"session_id":"sess-hang","source":"startup"}' "$HOOK") || true
-echo "$out9" | grep -q 'additionalContext' || { echo "FAIL: never-EOF stdin prevented injection (hook hung on stdin)"; exit 1; }
+grep -q 'additionalContext' <<<"$out9" || { echo "FAIL: never-EOF stdin prevented injection (hook hung on stdin)"; exit 1; }
 
 echo "PASS: dedup marker"

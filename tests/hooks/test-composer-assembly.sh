@@ -29,14 +29,14 @@ cd "$TMP/ws"   # no .beads here; no settings files
 
 # distinct stdin per invocation: each run its own event (dedup-marker-safe once Task 3 lands)
 out=$(printf '{"session_id":"t2-a","source":"startup"}' | bash "$HOOK" --emit-plain)
-echo "$out" | grep -q "hookSpecificOutput" && { echo "FAIL: JSON envelope in plain mode"; exit 1; }
-echo "$out" | grep -q "RECALLED BODY key-a" || { echo "FAIL: composed memory absent"; exit 1; }
-echo "$out" | grep -q "bd ready" || { echo "FAIL: bd pointer block absent"; exit 1; }
-echo "$out" | grep -q "Persistent Memories (1)" && { echo "FAIL: raw prime dump leaked"; exit 1; }
+grep -q "hookSpecificOutput" <<<"$out" && { echo "FAIL: JSON envelope in plain mode"; exit 1; }
+grep -q "RECALLED BODY key-a" <<<"$out" || { echo "FAIL: composed memory absent"; exit 1; }
+grep -q "bd ready" <<<"$out" || { echo "FAIL: bd pointer block absent"; exit 1; }
+grep -q "Persistent Memories (1)" <<<"$out" && { echo "FAIL: raw prime dump leaked"; exit 1; }
 
 # JSON mode still emits envelope (distinct session id → distinct event)
 outj=$(printf '{"session_id":"t2-b","source":"startup"}' | CLAUDE_PLUGIN_ROOT=x bash "$HOOK")
-echo "$outj" | grep -q '"hookSpecificOutput"' || { echo "FAIL: JSON envelope missing"; exit 1; }
-echo "$outj" | grep -q 'RECALLED BODY key-a' || { echo "FAIL: composed memory absent from JSON mode"; exit 1; }
+grep -q '"hookSpecificOutput"' <<<"$outj" || { echo "FAIL: JSON envelope missing"; exit 1; }
+grep -q 'RECALLED BODY key-a' <<<"$outj" || { echo "FAIL: composed memory absent from JSON mode"; exit 1; }
 
 echo "PASS: composer assembly"

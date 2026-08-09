@@ -44,7 +44,7 @@ if command -v bd >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1 && bd mem
   while IFS= read -r _body_line; do
     read -r _a _b _ <<<"$(printf '%s' "$_body_line" | sed -E 's/^ *(@[A-Za-z_]+=[^ ]+ *)*//')"
     # Both terms must carry something the tokenizer will actually index.
-    if printf '%s' "$_a" | grep -qE '[A-Za-z0-9]' && printf '%s' "$_b" | grep -qE '[A-Za-z0-9]'; then
+    if grep -qE '[A-Za-z0-9]' <<<"$_a" && grep -qE '[A-Za-z0-9]' <<<"$_b"; then
       probe_a="$_a"; probe_b="$_b"; break
     fi
   done < <(bd memories 2>/dev/null | grep -E '^    [^ ]')

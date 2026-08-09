@@ -215,7 +215,7 @@ cmd_bump() {
   local new_version="$1"
 
   # Validate semver-ish format
-  if ! echo "$new_version" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+'; then
+  if ! grep -qE '^[0-9]+\.[0-9]+\.[0-9]+' <<<"$new_version"; then
     echo "error: '$new_version' doesn't look like a version (expected X.Y.Z)" >&2
     exit 1
   fi

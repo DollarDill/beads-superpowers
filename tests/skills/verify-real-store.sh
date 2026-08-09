@@ -59,7 +59,7 @@ if wt="$(bash "$S" worktree)"; then
   for k in lesson-bd-worktree-creation-gotchas \
            lesson-never-use-raw-git-worktree-commands-always \
            worktree-gitignored-files-absent; do
-    if printf '%s\n' "$wt" | grep -q "$k"; then
+    if grep -q "$k" <<<"$wt"; then
       present=$((present + 1))
     else
       echo "MISSING: salience-3 gotcha '$k' not in the top-5"

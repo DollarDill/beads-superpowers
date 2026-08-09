@@ -1182,7 +1182,7 @@ NOPYEOF
   after=$(cat "$nopython_settings")
   if [ "$before" != "$after" ]; then
     error "cleanup_stale_reminder: modified settings without python3"; fail=$((fail + 1))
-  elif ! echo "$cleanup_output" | grep -qi "manual fix"; then
+  elif ! grep -qi "manual fix" <<<"$cleanup_output"; then
     error "cleanup_stale_reminder: no manual-fix warning printed"; fail=$((fail + 1))
   else
     success "cleanup_stale_reminder: skip-with-warning without python3"; pass=$((pass + 1))

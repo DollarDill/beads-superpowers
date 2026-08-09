@@ -178,7 +178,7 @@ FAKENODE
          "Expected empty or unset, got '$owner_pid_value'"
   fi
 
-  if echo "$captured" | grep -Eq '^CAPTURED_ARGV=--brainstorm-server-id=[A-Za-z0-9_-]{32,64}$'; then
+  if grep -Eq '^CAPTURED_ARGV=--brainstorm-server-id=[A-Za-z0-9_-]{32,64}$' <<<"$captured"; then
     pass "start-server.sh passes server instance id argv on Windows"
   else
     fail "start-server.sh passes server instance id argv on Windows" \
@@ -208,7 +208,7 @@ FAKENODE
   # Run WITHOUT --foreground flag — Windows should auto-detect
   captured=$(PATH="$FAKE_NODE_DIR:$PATH" bash "$START_SCRIPT" --project-dir "$TEST_DIR/session2" 2>/dev/null || true)
 
-  if echo "$captured" | grep -q "FOREGROUND_MODE=true"; then
+  if grep -q "FOREGROUND_MODE=true" <<<"$captured"; then
     pass "Windows auto-detects foreground mode"
   else
     fail "Windows auto-detects foreground mode" \

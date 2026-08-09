@@ -33,7 +33,7 @@ assert_eq() {
 }
 
 assert_contains() {
-  if printf '%s' "$1" | grep -Fq -- "$2"; then pass "$3"; else fail "$3 (missing: $2)"; fi
+  if grep -Fq -- "$2" <<<"$1"; then pass "$3"; else fail "$3 (missing: $2)"; fi
 }
 
 # extract_block <heading-regex> — emit the first ```bash fence that follows the
@@ -106,7 +106,7 @@ EOF
   assert_contains "$OUTPUT" "BD_CALLED: worktree remove" "a .worktrees/ path reaches 'bd worktree remove'"
 
   OUTSIDE="$(PATH="$TEST_ROOT/bin:$PATH" WORKTREE_PATH="/somewhere/else/tree" bash -c "$STEP6" 2>&1 || true)"
-  if printf '%s' "$OUTSIDE" | grep -Fq "BD_CALLED: worktree remove"; then
+  if grep -Fq "BD_CALLED: worktree remove" <<<"$OUTSIDE"; then
     fail "a worktree outside .worktrees/ must NOT be auto-removed"
   else
     pass "a worktree outside .worktrees/ is left alone"
@@ -149,7 +149,7 @@ fi
 
 echo "Test: neither menu advertises discard (vctf4.13)"
 MENUS="$(awk '/^#+ Step 4/,/^#+ Step 5/' "$SKILL")"
-if printf '%s' "$MENUS" | grep -qiE 'discard (this )?work|Discard\b'; then
+if grep -qiE 'discard (this )?work|Discard\b' <<<"$MENUS"; then
   fail "a completion menu still offers discard next to merge"
 else
   pass "no menu advertises discard"

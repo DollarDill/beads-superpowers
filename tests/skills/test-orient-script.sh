@@ -26,7 +26,7 @@ FAKE
 chmod +x "$TMP/bin/bd"
 out=$(PATH="$TMP/bin:$PATH" bash "$SCRIPT")
 for s in scale ledger ready in-progress blocked memories handoff; do
-  echo "$out" | grep -q "== $s ==" || { echo "FAIL: section $s missing"; exit 1; }
+  grep -q "== $s ==" <<<"$out" || { echo "FAIL: section $s missing"; exit 1; }
 done
 
 # handoff detection: newest inbox doc surfaced with raw freshness inputs
@@ -37,14 +37,14 @@ sleep 0.02 2>/dev/null || sleep 1
 # shellcheck disable=SC2016  # backticks are literal fixture content, not command substitution
 printf '# H\n- branch @ `def5678`\n' > .internal/handoff/2026-01-02-new-handoff.md
 out=$(PATH="$TMP/bin:$PATH" bash "$SCRIPT")
-echo "$out" | grep -q "2026-01-02-new-handoff.md" || { echo "FAIL: newest handoff not detected"; exit 1; }
-echo "$out" | grep -q "doc_sha=def5678" || { echo "FAIL: doc sha not extracted"; exit 1; }
-echo "$out" | grep -q "inbox_count=2" || { echo "FAIL: inbox count wrong"; exit 1; }
+grep -q "2026-01-02-new-handoff.md" <<<"$out" || { echo "FAIL: newest handoff not detected"; exit 1; }
+grep -q "doc_sha=def5678" <<<"$out" || { echo "FAIL: doc sha not extracted"; exit 1; }
+grep -q "inbox_count=2" <<<"$out" || { echo "FAIL: inbox count wrong"; exit 1; }
 
 # no verdict language ever
-echo "$out" | grep -qiE 'fresh|stale|consistent|verdict' && { echo "FAIL: verdict language in raw digest"; exit 1; }
+grep -qiE 'fresh|stale|consistent|verdict' <<<"$out" && { echo "FAIL: verdict language in raw digest"; exit 1; }
 
 # bd absent: visible SKIP, still exits 0
 out2=$(PATH="/usr/bin:/bin" bash "$SCRIPT")
-echo "$out2" | grep -q "SKIP" || { echo "FAIL: no visible SKIP without bd"; exit 1; }
+grep -q "SKIP" <<<"$out2" || { echo "FAIL: no visible SKIP without bd"; exit 1; }
 echo "PASS: orient.sh"

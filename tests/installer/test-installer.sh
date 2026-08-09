@@ -131,7 +131,7 @@ restore_tools() {
 
 assert_output_contains() {
   local output="$1" pattern="$2" name="$3"
-  if echo "$output" | grep -q "$pattern"; then
+  if grep -q "$pattern" <<<"$output"; then
     echo "  [PASS] $name"; pass=$((pass + 1))
   else
     echo "  [FAIL] $name — pattern not found: $pattern"; fail=$((fail + 1))
@@ -256,7 +256,7 @@ start_http_server
 output=$(BEADS_SUPERPOWERS_TARBALL_URL="$TARBALL_URL" bash /src/install.sh --yes --version "$VERSION" 2>&1) || true
 stop_http_server
 
-if echo "$output" | grep -q "already installed"; then
+if grep -q "already installed" <<<"$output"; then
     echo "  [PASS] re-install detects existing version"; pass=$((pass + 1))
 else
     echo "  [FAIL] re-install did not detect existing version"; fail=$((fail + 1))

@@ -29,4 +29,5 @@ run "kb doc reconciliation" bash scripts/check-kb-doc-reconciliation.sh
 run "guardrail floor"       bash scripts/check-guardrail-floor.sh
 run "live store retrieval"  bash scripts/check-live-store-retrieval.sh
 run "doctrine floor"        bash scripts/check-doctrine-floor.sh
+run "pipefail grep -q"      bash scripts/check-pipefail-grep-q.sh
 exit "$rc"

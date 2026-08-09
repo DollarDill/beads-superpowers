@@ -18,7 +18,7 @@ printf '{"hooks":{"SessionStart":[{"command":"bd prime"}]}}\n' \
 
 out=$(cd "$tmp_cwd" && env -i HOME="$tmp_home" PATH="$PATH" CLAUDE_PLUGIN_ROOT=/x \
   bash "$HOOK" 2>/dev/null)
-if echo "$out" | grep -q '<beads-context>'; then
+if grep -q '<beads-context>' <<<"$out"; then
   echo "FAIL: dedup — output contains <beads-context> even though 'bd prime' is in settings"
   echo "  got: $out"
   fail=1
@@ -37,7 +37,7 @@ if command -v bd >/dev/null 2>&1; then
   printf '{"hooks":{}}\n' > "$tmp_home2/.claude/settings.json"
   out2=$(cd "$tmp_cwd" && env -i HOME="$tmp_home2" PATH="$PATH" CLAUDE_PLUGIN_ROOT=/x \
     bash "$HOOK" 2>/dev/null) || true
-  if echo "$out2" | grep -q '<beads-context>'; then
+  if grep -q '<beads-context>' <<<"$out2"; then
     echo "INFO: negative-control — <beads-context> present when bd not in settings (bd installed, project active)"
   else
     echo "SKIP: negative-control — bd installed but bd prime returned empty (no active project in this env)"

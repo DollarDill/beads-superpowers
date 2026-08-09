@@ -7,7 +7,7 @@ fail=0
 for f in hooks/hooks.json hooks/codex-hooks.json; do
   m=$(jq -r '.hooks.SessionStart[0].matcher' "$ROOT/$f")
   for src in startup resume clear compact; do
-    if echo "$m" | grep -q "$src"; then
+    if grep -q "$src" <<<"$m"; then
       echo "PASS: $f contains '$src'"
     else
       echo "FAIL: $f missing '$src' (matcher: $m)"; fail=1

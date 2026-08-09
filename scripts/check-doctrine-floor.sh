@@ -61,7 +61,13 @@ for name in $DOCTRINE_SKILLS; do
     echo "FAIL: $f has no Production-Grade Doctrine floor — the bootstrap does not reach subagents, compaction, or Tier-B harnesses, so this skill's own steps would run unfloored"
     fail=1; continue
   fi
-  if ! grep -F "$SIG" "$f" | grep -qE "$RULE"; then
+  # Capture first: `grep -F ... | grep -qE ...` under pipefail is a race — the
+  # -q side exits on first match, the -F side takes SIGPIPE and returns 141, and
+  # pipefail makes 141 the pipeline status, inverting `!` into a spurious FAIL on
+  # exactly the files that DO carry a rule (beads-superpowers-wze77.9).
+  # `hits -eq 0` above already guarantees at least one SIG line here.
+  sig_lines=$(grep -F "$SIG" "$f")
+  if ! grep -qE "$RULE" <<<"$sig_lines"; then
     echo "FAIL: $f names the Production-Grade Doctrine but states no rule — a pointer is not a floor; restate the obligation in this skill's own terms (ADR-0040)"
     fail=1; continue
   fi
