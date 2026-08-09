@@ -28,8 +28,9 @@ _WORD = re.compile(r'[a-z0-9]+')
 # across docs/zh/*.md + README.zh-CN.md, ZERO in Ext-A. Added on evidence.
 # Also uncovered, disclosed rather than measured (matches the brief's scope, not
 # a deviation from it): halfwidth katakana (U+FF61-FF9F, e.g. tokenize('ｱｲ') ->
-# []) and astral-plane CJK (Ext B and beyond, outside the BMP) — both considered,
-# neither in scope.
+# []), astral-plane CJK (Ext B and beyond, outside the BMP), CJK Compatibility
+# Ideographs (U+F900 block), Hangul Compatibility Jamo (U+3131 etc.), and
+# Bopomofo (U+3105 etc.) — all considered, none in scope.
 _CJK = re.compile(r'[一-鿿぀-ヿ가-힯]+')
 # SECURITY FLOOR (beads-superpowers-eo9z2.6): the SECOND alternation below is
 # deliberately unbounded — an unterminated BEGIN header redacts to end of body

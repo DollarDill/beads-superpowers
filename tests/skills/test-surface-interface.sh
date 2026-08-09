@@ -72,11 +72,18 @@ Never chain open after bd commands in one invocation — it hangs." \
   "This decision covers an unrelated labelling convention with no repeated marker word." \
   | bd create "ADR-0099 xenolith retrieval marker decision" -t decision -l kb,adr-process \
       --defer 2099-01-01 --body-file - --silent >/dev/null )
-# A NON-ASCII topic label. tokenize() keeps only [a-z0-9]+, so this label
-# tokenizes to the EMPTY set — and in Python `set() <= anything` is True, so a
-# subset matcher without a truthiness guard fires this label on EVERY query and
-# narrows the whole bead corpus to its bucket (beads-superpowers-eo9z2.7). This
-# repo ships Chinese docs, so the label set is one contributor away from this.
+# A NON-ASCII topic label. Labels tokenize through tokenize_label(), not
+# tokenize(): it emits no CJK unigrams and fails closed on any CJK run shorter
+# than two characters, so a bare single-character label like this one can never
+# form a bigram and tokenizes to the EMPTY set — and in Python `set() <= anything`
+# is True, so a subset matcher without a truthiness guard fires this label on
+# EVERY query and narrows the whole bead corpus to its bucket
+# (beads-superpowers-eo9z2.7). This repo ships Chinese docs, so the label set is
+# one contributor away from this. LOAD-BEARING: the label below must stay a
+# SINGLE CJK character — a two-or-more-character CJK label (e.g. 中文) keeps its
+# own bigram under tokenize_label() and is no longer empty, which makes this
+# assertion pass identically whether or not the truthiness guard exists (the
+# vacuity 7a279cc fixed).
 ( cd "$TMP" && printf '%s' \
   "A decision carrying a non-ASCII topic label, used to prove the label matcher ignores empty-tokenizing labels." \
   | bd create "ADR-0100 non-ascii label guard" -t decision -l kb,库 \

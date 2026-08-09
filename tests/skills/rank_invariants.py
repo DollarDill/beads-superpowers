@@ -106,9 +106,11 @@ def main():
                 not any("bodyless" in keys(q)
                         for q in ("type", "semantic", "pattern", "salience", "4")))
 
-    # Raw BM25, deliberately NOT search(). Since Task 3, search() scores carry the
-    # salience/hazard/recency boosts AND the diversity halving, and either can move
-    # a comparison on its own — reading the five bracket assertions below through
+    # Raw BM25, deliberately NOT search(). Since commit f609a5c (the 2026-08-01
+    # knowledge-retrieval-skill epic's Task 3: boosts, recency, diversity,
+    # redact-before-truncate), search() scores carry the salience/hazard/recency
+    # boosts AND the diversity halving, and either can move a comparison on its
+    # own — reading the five bracket assertions below through
     # search() lets a B=0 mutation pass the WHOLE suite green, because len-short
     # and len-long tie and the halving of len-long then fakes the expected order.
     # B and K1 govern the core, so the core is what these five assert.
@@ -201,8 +203,9 @@ def main():
     # This is the falsifiable half of the English-safety argument. avgdl drift is
     # what moves English scores, and avgdl drift comes from CJK token COUNT — so
     # pin the count directly rather than trying to observe it through ranking.
-    # Task 2 FLIPS this to `== 2 * len(_ZH) - 1` when the tokenizer lands; the
-    # pin-then-flip idiom is the same one shape 1 uses in test-kr-corpus-shapes.sh.
+    # Task 2 FLIPPED this to `== 2 * len(_ZH) - 1` once the tokenizer landed (see
+    # the FLIPPED note below); the pin-then-flip idiom is the same one shape 1
+    # uses in test-kr-corpus-shapes.sh.
     # Expressed as a formula over the literal, never by calling tokenize() twice —
     # a pin that derives its expected value from the code under test is a tautology
     # (the B11 defect, one level up).

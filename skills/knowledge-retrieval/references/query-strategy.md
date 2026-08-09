@@ -100,10 +100,18 @@ scripts have no spaces, so the ranker tokenizes them character by character: per
 plus overlapping bigrams, so a query of one or more characters matches. No dictionary or segmenter is
 involved, and no extra dependency is required.
 
-A few adjacent character sets fall outside that range: halfwidth katakana, the rarer CJK Extension
-blocks (Extension A onward, including everything outside the Basic Multilingual Plane), and Hangul
-written as separate Jamo letters instead of precomposed syllables. Text in any of these tokenizes to
-nothing, the same as an unsupported script.
+A few adjacent character sets fall outside that range, and this list is illustrative, not
+exhaustive: halfwidth katakana; the rarer CJK Extension blocks (Extension A onward, including
+everything outside the Basic Multilingual Plane); Hangul written as separate combining Jamo letters
+instead of precomposed syllables; CJK Compatibility Ideographs (the U+F900 block); Hangul
+Compatibility Jamo, the individual letter forms used for display rather than composition (like
+U+3131 ㄱ); and Bopomofo (like U+3105 ㄅ). Text in any of these tokenizes to nothing, the same as an
+unsupported script.
+
+Some of these have a unified-form lookalike that looks identical on screen but is a different
+codepoint — a terminal can silently normalize a pasted compatibility ideograph into its CJK Unified
+Ideographs counterpart, for instance. If a script's coverage matters, check by codepoint (`ord()` in
+Python), not by eye.
 
 **Storing a CJK memory requires an explicit `--key`.** `bd` derives a memory's key from the leading
 words of its body, and it cannot derive one from CJK text:
@@ -119,6 +127,12 @@ nothing.
 
 **A single-character CJK topic label — 库 on its own, say — can never narrow a search: its own
 tokenizer treats it as empty.** Don't create one; it can't do the job a label is for.
+
+Mixed-script labels follow the same rule: a lone CJK character anywhere inside a label empties the
+label's whole token set, ASCII parts included, not just that character's own contribution — `库-kb`
+tokenizes to nothing, same as `库` alone, so it never narrows either. A multi-character CJK run
+avoids this: `路由-kb` keeps its `路由` bigram alongside `kb` and narrows normally, because every CJK
+run inside it is at least two characters long.
 
 The same mechanism reaches the query side. A single-character CJK *run* inside a query — one set off
 from other CJK text, like the 库 in `库 数据库` — empties that query's whole label-token set, ASCII
