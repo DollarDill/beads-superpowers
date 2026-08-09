@@ -23,6 +23,10 @@ from dataclasses import dataclass
 
 _HEADER = re.compile(r'^((?:@\w+=\S+(?:\s+|$))+)', re.S)
 _WORD = re.compile(r'[a-z0-9]+')
+# CJK Unified Ideographs, Hiragana+Katakana, Hangul syllables. Extension A
+# (3400-4dbf) is deliberately EXCLUDED: measured 2026-08-09, 20771 CJK chars
+# across docs/zh/*.md + README.zh-CN.md, ZERO in Ext-A. Added on evidence.
+_CJK = re.compile(r'[一-鿿぀-ヿ가-힯]+')
 # SECURITY FLOOR (beads-superpowers-eo9z2.6): the SECOND alternation below is
 # deliberately unbounded — an unterminated BEGIN header redacts to end of body
 # under re.S. FAIL-CLOSED ON PURPOSE. The accepted cost is that a knowledge entry
@@ -78,7 +82,30 @@ def strip_header(value):
     return (value[m.end():] if m else value).replace("\n", " ")
 
 def tokenize(text):
-    return _WORD.findall(text.lower())
+    """Bodies and queries. Optimises RECALL.
+
+    ASCII is byte-identical to the historical `[a-z0-9]+` behaviour — pinned by
+    rank_invariants' differential invariant over tests/skills/fixtures/ascii-corpus.txt.
+
+    CJK has no spaces, so there are no word boundaries to find without a dictionary.
+    Overlapping bigrams are the standard dictionary-free substitute; unigrams are
+    added because single CJK characters are meaningful words in this domain
+    (树 tree, 库 repo, 键 key) and a one-character query must be able to match a
+    longer run. BM25's IDF suppresses very common characters on its own.
+
+    Cost: a run of n characters yields 2n-1 tokens, so avgdl (rank.py:174) rises and
+    length normalisation shifts for EVERY document, English included. English rank
+    ORDER is pinned instead; absolute score invariance is not achievable and is not
+    claimed. See the design spec 2026-08-09 §3.
+
+    Labels use tokenize_label() — NOT this function. See Task 3 / spec §4.4.
+    """
+    t = text.lower()
+    toks = _WORD.findall(t)
+    for run in _CJK.findall(t):
+        toks += list(run)                                    # unigrams
+        toks += [run[i:i + 2] for i in range(len(run) - 1)]  # overlapping bigrams
+    return toks
 
 def redact(text):
     """Redact the FULL text before any truncation. Redacting an already-cut

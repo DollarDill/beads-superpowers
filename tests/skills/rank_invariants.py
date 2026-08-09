@@ -207,8 +207,12 @@ def main():
     # a pin that derives its expected value from the code under test is a tautology
     # (the B11 defect, one level up).
     _ZH = "工作树隔离与并行执行的注意事项"
-    ok &= check("CJK tokenizes to nothing (PINNED — Task 2 flips this to 2n-1)",
-                len(tokenize(_ZH)) == 0)
+    # FLIPPED 2026-08-09 (spec §4.1b). Task 1 pinned this at 0 so this task could
+    # not change tokenized length silently; the tokenizer has now landed. 2n-1 is
+    # n unigrams plus n-1 overlapping bigrams. Expressed as a formula over the
+    # literal — never `len(tokenize(_ZH))` on both sides, which would be a tautology.
+    ok &= check("a CJK run of n chars yields exactly 2n-1 tokens",
+                len(tokenize(_ZH)) == 2 * len(_ZH) - 1)
 
     # §4.1a — the END-TO-END guard the differential invariant cannot provide.
     # avgdl is corpus-wide (rank.py:174, divided at :192), so adding CJK docs DOES
@@ -236,6 +240,29 @@ def main():
     _order_after = sorted(_en, key=lambda k: (-_c_mx._bm25(k, _q), k))
     ok &= check("English rank order is unchanged when CJK documents are added (COARSE — not mutation-proved, see beads-superpowers-z1xl4.1)",
                 _order_before == _order_after)
+
+    # ── CJK RETRIEVABILITY (spec 2026-08-09 §4.3) ────────────────────────────
+    # OWN corpus, never the shared FIXTURE: FIXTURE's assertions depend on
+    # annotated doc lengths and on avgdl, and CJK docs would silently shift both
+    # (lesson-seeding-a-shared-test-corpus-can-silently).
+    _zh = {
+        "zh-worktree": _H + "工作树隔离与并行执行的注意事项",
+        "zh-mixed":    _H + "worktree 并行执行的注意事项",
+        "en-only":     _H + _body("bd", "quarry", "piston"),
+    }
+    _c_zh = Corpus(dict(_zh))
+    ok &= check("a CJK body is findable by a multi-char CJK query",
+                _c_zh._bm25("zh-worktree", tokenize("工作树")) > 0)
+    ok &= check("a CJK body is findable by a ONE-CHARACTER CJK query",
+                _c_zh._bm25("zh-worktree", tokenize("树")) > 0)
+    ok &= check("a single-char CJK run is emitted exactly once",
+                tokenize("查") == ["查"])
+    ok &= check("a mixed CJK+ASCII body is findable by an ASCII term",
+                _c_zh._bm25("zh-mixed", tokenize("worktree")) > 0)
+    ok &= check("a mixed CJK+ASCII body is findable by a CJK term",
+                _c_zh._bm25("zh-mixed", tokenize("并行")) > 0)
+    ok &= check("a CJK query does not manufacture hits in English-only text",
+                _c_zh._bm25("en-only", tokenize("工作树")) == 0)
 
     ok = extra_checks(ok)
     sys.exit(0 if ok else 1)

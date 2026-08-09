@@ -4,8 +4,10 @@
 # Adversarial corpus shapes from Plan C spec §6, in scratch stores only.
 # NO FOREIGN DATA is read or written by this file.
 #
-# Grounding: rank.py's Corpus indexes the stripped BODY only and its tokenizer is
-# [a-z0-9]+, so a CJK or emoji body tokenizes to NOTHING; and `bd memories`
+# Grounding: rank.py's Corpus indexes the stripped BODY only. Its tokenizer is
+# [a-z0-9]+ PLUS, since Task 2 (2026-08-09), CJK unigrams and overlapping
+# bigrams — so a CJK body IS retrievable now. Emoji are still outside the
+# tokenizer and an emoji-only body still tokenizes to NOTHING. `bd memories`
 # truncates previews at ~120 chars, leaving header-heavy entries under two tokens
 # after @k=v stripping (root-cause-rank-py-indexes-bodies-never-keys).
 set -euo pipefail
@@ -27,13 +29,18 @@ trap 'rm -rf "$TMP"' EXIT
 [ -d "$TMP/.beads" ] || { echo "FAIL: scratch store not created in \$TMP"; exit 1; }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# SHAPE 1 (Task 5): CJK / emoji body tokenizes to nothing under [a-z0-9]+
+# SHAPE 1 (Task 5, flipped Task 2 2026-08-09): CJK body is retrievable; emoji
+# body still tokenizes to nothing under [a-z0-9]+
 # ═══════════════════════════════════════════════════════════════════════════
 
 # ── 1. a CJK-only body must not crash the ranker.
-# The assertion is SURVIVAL plus DISCLOSURE, not retrievability: if the [a-z0-9]+
-# tokenizer yields nothing the entry is simply unfindable, which is a defect to
-# FILE, not to fix here. What is unacceptable is a traceback or a non-zero exit.
+# CJK is tokenized (unigrams + overlapping bigrams, Task 2 2026-08-09) and
+# retrievable — the block below asserts liveness AND redaction on it. Emoji is
+# the separate case further down: the tokenizer does not cover emoji, so an
+# emoji-only body is asserted for SURVIVAL plus DISCLOSURE only, not
+# retrievability — the entry is simply unfindable, which is a defect to FILE,
+# not to fix here. What is unacceptable, for either shape, is a traceback or a
+# non-zero exit.
 # The fake secret is ASSEMBLED AT RUNTIME (stress-test B7). A contiguous fake-token
 # literal in a committed file trips GitHub push-protection GH013 even though it is fake
 # (lesson-a-secret-scanner-s-own-test-fixtures); printf keeps the runtime value intact
@@ -66,35 +73,47 @@ if [ -z "$mem_n" ] || [ "$mem_n" -lt 1 ]; then
   echo "FAIL: coverage line reports no memories searched — the CJK fixture never seeded"; printf '%s\n' "$cjk"; exit 1
 fi
 
-# PIN THE OBSERVED BEHAVIOUR (amended 2026-08-08 by the M1 audit, beads-superpowers-8tyco).
-# The AC says the outcome is "recorded whichever way it goes" — record it as an ASSERTION,
-# not a comment, so a future tokenizer change that makes CJK indexable turns this red and
-# forces the record to be updated. `工作树 隔离` is itself CJK, so the QUERY tokenizes to
-# nothing under [a-z0-9]+ and the result set is empty by construction.
-#
-# REPAIRED (fix round 1, beads-superpowers-gkp61): the original form (`sed '1,2d'` then grep
-# for an indented hit-shaped line) assumed line 2 is always the fixed "(no hits …)" notice.
-# It isn't on a hit — a single-hit result occupies the position the notice occupies today,
-# so `sed '1,2d'` deletes the ONE line this assertion exists to catch, and the grep after it
-# finds nothing: a blind pass on exactly the regression being pinned (proven: it only fires
-# at 2+ hits, never at 1). Replaced with a positive assertion on the documented zero-hit
-# marker text (verbatim from rank.py and surface.sh's degraded path) — no positional line
-# arithmetic, so it can't be defeated by where in the output a hit lands.
-if ! grep -q '(no hits' <<<"$cjk"; then
-  echo "NOTE: CJK query now returns hits — tokenizer behaviour changed, update the shape record"; exit 1
+# FLIPPED 2026-08-09 (spec §4.2). This block previously pinned CJK as UNFINDABLE,
+# deliberately, so that a tokenizer change would force this record to be updated
+# rather than drift silently. That change has now landed: tokenize() emits CJK
+# unigrams + overlapping bigrams, so a CJK query matches.
+# LIVENESS FIRST — without it the assertion below is vacuous, which is the defect
+# class this file has already hit twice (see the repaired pin in fix round 1).
+grep -q 'shape-cjk' <<<"$cjk" \
+  || { echo "FAIL: CJK query returned no hit for the seeded fixture — CJK retrieval regressed"; printf '%s\n' "$cjk"; exit 1; }
+if grep -q '(no hits' <<<"$cjk"; then
+  echo "FAIL: CJK query reports '(no hits)' — the tokenizer's CJK path regressed"; printf '%s\n' "$cjk"; exit 1
+fi
+
+# SECRETS FLOOR, NEWLY LIVE ON THIS PATH (added 2026-08-09, Task 2 pre-flight).
+# shape-cjk's body is "工作树隔离与并行执行的注意事项 $FAKE_SECRET". BEFORE this flip the
+# CJK query returned zero hits, so that body was never rendered and the original
+# `grep -qF "$FAKE_SECRET" <<<"$cjk"` was removed as vacuous (see the SECRETS FLOOR block
+# below, which moved the assertion onto the ASCII-anchored fixture instead).
+# The flip makes shape-cjk retrievable, so this path now renders a secret-bearing body for
+# the first time and the floor MUST be asserted here as well — a floor in one code path is
+# bypassed by every other path (lesson-a-floor-in-one-code-path-is-bypassed-by-every-fallback).
+grep -q '\[REDACTED\]' <<<"$cjk" \
+  || { echo "FAIL: CJK hit rendered without a [REDACTED] marker"; printf '%s\n' "$cjk"; exit 1; }
+if grep -qF "$FAKE_SECRET" <<<"$cjk"; then
+  echo "FAIL: secret leaked from a CJK body on the newly-live CJK query path"; exit 1
 fi
 
 # SECRETS FLOOR UNDER AN ADVERSARIAL SHAPE (stress-test B7), REPAIRED.
 #
-# WHY THE ORIGINAL FORM COULD NOT FAIL: the plan shipped `grep -qF "$FAKE_SECRET" <<<"$cjk"`
-# against the CJK query above, which returns ZERO hits. A negative grep over empty output
-# passes no matter what redaction does — the eo9z2.8 assertion class this repo keeps
-# rediscovering. Measured by the M1 audit: query `工作树 隔离` -> no hit lines; control
-# query `ok` -> the entry, with `[REDACTED]`.
+# WHY THE ORIGINAL FORM COULD NOT FAIL (HISTORICAL — pre-Task-2): the plan shipped
+# `grep -qF "$FAKE_SECRET" <<<"$cjk"` against the CJK query above, which at the time
+# returned ZERO hits under the [a-z0-9]+-only tokenizer. A negative grep over empty
+# output passes no matter what redaction does — the eo9z2.8 assertion class this repo
+# keeps rediscovering. Measured by the M1 audit: query `工作树 隔离` -> no hit lines;
+# control query `ok` -> the entry, with `[REDACTED]`. Since Task 2 (2026-08-09) the CJK
+# query above DOES return the shape-cjk hit and carries its own redaction assertion —
+# this ANCHORED fixture remains, kept for the degraded (python3-absent) path below,
+# which the CJK query cannot exercise.
 #
-# The repair keeps the CJK shape AND makes the assertion live: a second fixture whose body
-# is CJK *plus one indexable ASCII anchor*, queried by that anchor. The entry is therefore
-# retrievable, so the redaction assertion has something to be wrong about.
+# The fixture: a second entry whose body is CJK *plus one indexable ASCII anchor*,
+# queried by that anchor. The entry is retrievable on both the main and degraded
+# paths, so the redaction assertion has something to be wrong about on both.
 CJK_ANCHOR="zhcorpusanchor"
 ( cd "$TMP" && bd remember "并行执行 $CJK_ANCHOR 的注意事项 $FAKE_SECRET" --key shape-cjk-anchored >/dev/null )
 set +e
@@ -138,7 +157,7 @@ set -e
 [ "$emo_rc" -eq 0 ] \
   || { echo "FAIL: emoji-bearing corpus exited $emo_rc"; printf '%s\n' "$emo"; exit 1; }
 
-echo "PASS: shape 1 — CJK/emoji survival (12 assertions)"
+echo "PASS: shape 1 — CJK retrievability + emoji survival (15 assertions)"
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SHAPE 2 (Task 6): header-heavy body truncated below two tokens
