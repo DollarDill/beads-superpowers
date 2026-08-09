@@ -97,7 +97,7 @@ def tokenize(text):
     (树 tree, 库 repo, 键 key) and a one-character query must be able to match a
     longer run. BM25's IDF suppresses very common characters on its own.
 
-    Cost: a run of n characters yields 2n-1 tokens, so avgdl (rank.py:174) rises and
+    Cost: a run of n characters yields 2n-1 tokens, so Corpus.avgdl rises and
     length normalisation shifts for EVERY document, English included. The same
     expansion also multiplies the QUERY side: a query's CJK half contributes 2n-1
     term matches to _bm25 versus n for its ASCII half (`tokenize('并行 worktree')`

@@ -93,6 +93,37 @@ alphabetical order, never relevance order, cut at 20 with a `showing 20 of N key
 not disposition 20 unranked keys — replace terms until the disclosure disappears, or install
 `python3` so the shortlist is ranked and bounded.
 
+## CJK, Japanese and Korean
+
+Chinese, Japanese kana and Hangul are indexed and retrievable. These scripts have no spaces, so the
+ranker tokenizes them character by character: per-character unigrams plus overlapping bigrams, so a
+query of one or more characters matches. No dictionary or segmenter is involved, and no extra
+dependency is required.
+
+**Storing a CJK memory requires an explicit `--key`.** `bd` derives a memory's key from the leading
+words of its body, and it cannot derive one from CJK text:
+
+    $ bd remember "工作树隔离与并行执行的注意事项"
+    Error: could not generate key from content; use --key to specify one
+
+    $ bd remember "工作树隔离与并行执行的注意事项" --key zh-worktree
+    Remembered [zh-worktree]: 工作树隔离与并行执行的注意事项
+
+This is `bd` behavior, not a retrieval limitation — bodies are what get indexed, so an ASCII key costs
+nothing.
+
+**A lone CJK character in a query blocks label narrowing for that query, and only that query.** Label
+matching uses a stricter tokenizer than body search: a single CJK character is never enough to narrow
+by itself, so a label like 库 can't silently match every query that happens to mention it (without
+this, a search for 数据库 would be falsely narrowed by a label that only means 库). The same rule
+applies on the query side of that comparison — if the query itself contains a lone CJK character, its
+label-token set comes back empty, taking any ASCII words in the same query with it, so no label
+narrows that search. The label filter simply doesn't engage, and the search runs against the full
+kb-bead set instead. That can only widen a result set, never drop a hit silently.
+
+**Emoji are not retrievable.** An emoji-only body has no segmentable content under any tokenizer. A
+query against it returns no hits; the ranker survives and says so rather than failing silently.
+
 ## Degradation matrix
 
 | Condition | Behavior |
