@@ -127,30 +127,49 @@ def tokenize_label(text):
     Labels filter, and a false positive silently DROPS results
     (see beads-superpowers-wze77.11 for that harm in the ASCII case).
 
-    Emitting no unigrams also means a one-character CJK label has an EMPTY token
-    set, so the caller's existing `and t` guard short-circuits and it is
-    structurally incapable of narrowing — no length special-case required.
+    FAIL CLOSED on a lone CJK run: if any CJK run inside the label is shorter
+    than 2 characters, the WHOLE label returns [] — not just that run's empty
+    contribution. A mixed-script label like '库-kb' has an ASCII token ('kb')
+    plus a single-char CJK run ('库'); emitting ['kb'] alone would silently
+    DROP the CJK constraint and make the label MORE permissive than
+    tokenize(), which is the same false-positive harm this function exists to
+    prevent, reached through a mixed-script label instead of a bare
+    one-character one.
+
+    Emitting no unigrams also means a one-character CJK label has an EMPTY
+    token set, so the caller's existing `and t` guard short-circuits and it
+    is structurally incapable of narrowing.
 
     DO NOT "unify" this with tokenize(). rank_invariants' label checks will go red.
     """
     t = text.lower()
     toks = _WORD.findall(t)
     for run in _CJK.findall(t):
+        if len(run) < 2:
+            # FAIL CLOSED: a lone CJK char yields no bigram. Emitting the
+            # ASCII remainder alone would silently DROP the CJK constraint
+            # and make the label MORE permissive than tokenize() — the same
+            # false-positive harm this function exists to prevent.
+            return []
         toks += [run[i:i + 2] for i in range(len(run) - 1)]
     return toks
 
 def label_narrows(label, query):
     """True when `label` should narrow the corpus for `query`.
 
-    Extracted from the inline `named = {...}` comprehension (rank.py:366 as of 48c774e) so rank_invariants can
-    exercise THIS code rather than a reimplementation that can silently drift.
+    Extracted from the inline `named = {...}` comprehension so rank_invariants
+    can exercise THIS code rather than a reimplementation that can silently
+    drift.
 
-    The truthiness guard on `t` is load-bearing, not defensive: `set() <= qtok` is
-    True for EVERY query, so a label whose tokens all vanish would fire on every
-    search and union its bucket into the results (beads-superpowers-eo9z2.7).
-    With tokenize_label, a one-character CJK label has an empty token set and is
-    therefore structurally incapable of narrowing — that is the intended behaviour,
-    delivered by this guard rather than by a length special-case.
+    The truthiness guard on `t` is load-bearing, not defensive: an empty set
+    is a subset of the query's token set for EVERY query, so a label whose
+    tokens all vanish would fire on every search and union its bucket into
+    the results (beads-superpowers-eo9z2.7) — verified 2026-08-09: Cyrillic
+    (`ключ` -> []) and emoji (`🔐` -> []) both vanish under tokenize_label()
+    too. With tokenize_label, a one-character CJK label also has an empty
+    token set and is therefore structurally incapable of narrowing — that is
+    the intended behaviour, delivered by this guard rather than by a length
+    special-case.
     """
     t = set(tokenize_label(label))
     return bool(t and t <= set(tokenize_label(query)))
@@ -380,13 +399,15 @@ if __name__ == "__main__":
     # relative to __file__ resolves to ~/.claude/scripts/... once installed and
     # would silently disable label filtering for every real user. Deriving also
     # makes the skill portable to projects with their own label sets.
-    # SUBSET match, not set intersection: tokenize() splits on hyphens, so
-    # comparing whole label strings against query tokens can never fire for a
-    # hyphenated label — 10 of the live store's 19 labels, including its four
-    # largest buckets (skills-arch 61, beads-tooling 44, harness-parity 41,
-    # adr-process 20). A label fires when its own tokens all appear in the query,
-    # so `skills-arch` and `skills arch` both reach the same bucket, and
-    # single-token labels behave exactly as before.
+    # SUBSET match, not set intersection: tokenize_label() splits on hyphens,
+    # so comparing whole label strings against query tokens can never fire
+    # for a hyphenated label — 10 of the live store's 19 labels, including
+    # its four largest buckets (skills-arch 61, beads-tooling 44,
+    # harness-parity 41, adr-process 20). A label fires when its own tokens
+    # all appear in the query, so `skills-arch` and `skills arch` both reach
+    # the same bucket. ASCII single-token labels behave exactly as before; a
+    # single-character CJK label does not — it fails closed to no tokens (see
+    # tokenize_label()'s docstring).
     vocab = {l for b in beads for l in b.get("labels", []) if l != "kb"}
     named = {l for l in vocab if label_narrows(l, query)}
     if named:

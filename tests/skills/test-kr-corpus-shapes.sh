@@ -393,7 +393,12 @@ grep -q 'kb-beads(0)' <<<"$mt_cov" \
   || { echo "FAIL: empty store coverage line does not report kb-beads(0)"; printf '%s\n' "$mt_cov"; exit 1; }
 echo "PASS: shape 6 — near-empty store reports a healthy memories(0)/kb-beads(0) (4 assertions)"
 
-echo "PASS: test-kr-corpus-shapes — shapes 1-6"
+# ═══════════════════════════════════════════════════════════════════════════
+# SHAPE 7 (Task 3 / review round 2): a CJK query colliding with a CJK LABEL
+# must disclose the narrowing — and a single-character CJK label, which the
+# fail-closed tokenize_label() (review round 2, finding 1) can never narrow
+# on, must not.
+# ═══════════════════════════════════════════════════════════════════════════
 
 # ── 7. a CJK query colliding with a CJK LABEL must disclose the narrowing.
 # Predicate coverage lives in rank_invariants; this asserts the USER-VISIBLE
@@ -417,3 +422,33 @@ else
     || { echo "FAIL: no label= disclosure, yet the CJK-labelled bead is absent — SILENT NARROWING"; printf '%s\n' "$zhcol"; exit 1; }
 fi
 printf 'OBSERVED CJK label-collision coverage line: %s\n' "$zhcov"
+
+# ── 7b. (review round 2, finding 9) the case above (路由 vs 路由问题) narrows
+# and discloses under BOTH tokenizers — tokenize('路由') is also a subset of
+# tokenize('路由问题') — so it passes identically on pre-Task-3 code and never
+# exercises the else branch above. A single-character CJK label discriminates:
+# pre-Task-3 code narrowed it via substring (库's unigram appears inside
+# 数据库's unigrams); this task's fail-closed tokenize_label() must not.
+( cd "$TMP" && bd create "库标签 bead" -t task -p 2 -l kb,库 --description "database configuration notes 数据库" >/dev/null )
+set +e
+libcol="$( cd "$TMP" && bash "$SURFACE" 数据库 2>&1 )"; libcol_rc=$?
+set -e
+[ "$libcol_rc" -eq 0 ] \
+  || { echo "FAIL: single-char CJK label-collision query exited $libcol_rc"; printf '%s\n' "$libcol"; exit 1; }
+libcov="${libcol%%$'\n'*}"
+if grep -q 'label=' <<<"$libcov"; then
+  # A single-char CJK label narrowing AT ALL is the regression this case
+  # exists to catch — fail loudly rather than only checking the label name.
+  echo "FAIL: a single-char CJK label narrowed the corpus — the fail-closed guard regressed"; printf '%s\n' "$libcol"; exit 1
+else
+  # No disclosure means the corpus must NOT have been narrowed — prove it by
+  # requiring the body-relevant bead to still be reachable. Same both-branches
+  # discipline as shape 3 and the case above.
+  grep -q 'database configuration notes' <<<"$libcol" \
+    || { echo "FAIL: no label= disclosure, yet the single-char-CJK-labelled bead is absent — SILENT NARROWING"; printf '%s\n' "$libcol"; exit 1; }
+fi
+printf 'OBSERVED single-char CJK label-collision coverage line: %s\n' "$libcov"
+
+echo "PASS: shape 7 — CJK label-collision disclosure (multi-char narrows; single-char fails closed)"
+
+echo "PASS: test-kr-corpus-shapes — shapes 1-7"

@@ -79,7 +79,7 @@ Never chain open after bd commands in one invocation — it hangs." \
 # repo ships Chinese docs, so the label set is one contributor away from this.
 ( cd "$TMP" && printf '%s' \
   "A decision carrying a non-ASCII topic label, used to prove the label matcher ignores empty-tokenizing labels." \
-  | bd create "ADR-0100 non-ascii label guard" -t decision -l kb,中文 \
+  | bd create "ADR-0100 non-ascii label guard" -t decision -l kb,库 \
       --defer 2099-01-01 --body-file - --silent >/dev/null )
 
 # ── 1. coverage line opens every result set
@@ -139,15 +139,16 @@ done
 # ── 8b. an EMPTY-TOKENIZING label never fires (beads-superpowers-eo9z2.7).
 # `set() <= qtok` is True for any query, so without a truthiness guard the
 # non-ASCII label above joins `named` on every search and its bucket is unioned
-# into the results — silently changing what was searched. Asserted through the
-# real __main__ path (the matcher is not importable), so this cannot pass by
-# re-implementing the comprehension in the test.
+# into the results — silently changing what was searched. This check asserts
+# through the real __main__ path, which the predicate-level invariants in
+# rank_invariants.py do not cover — those exercise label_narrows() directly,
+# never surface.sh's end-to-end wiring of it into the CLI.
 nas="$( cd "$TMP" && bash "$SURFACE" docs )"
 # The trailing `$` is LOAD-BEARING: it proves `label=docs` is the COMPLETE label
 # list, i.e. the non-ASCII label did NOT union in (beads-superpowers-eo9z2.7).
 # eo9z2.27 appended the boundary clause after the label, so the anchor moved to
 # the end of that clause — it was NOT dropped. Dropping it would let
-# `label=docs,中文` pass and silently defang this guard.
+# `label=docs,库` pass and silently defang this guard.
 grep -qE '^searched: memories\([0-9][0-9]*\) kb-beads\(1\) label=docs — open backlog not indexed \(doing-moment scope\)$' <<<"${nas%%$'\n'*}" \
   || { echo "FAIL: empty-tokenizing label leaked into the label filter"; printf '%s\n' "$nas"; exit 1; }
 

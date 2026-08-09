@@ -303,6 +303,21 @@ def main():
     ok &= check("English label behaviour is byte-identical (kb vs 'kb notes')",
                 _narrows("kb", "kb notes"))
 
+    # FAIL-CLOSED ON A LONE CJK RUN (review round 2, finding 1). A mixed-script
+    # label like 库-kb has one ASCII token and one single-char CJK run; without
+    # the fail-closed branch in tokenize_label, the CJK run's empty bigram
+    # contribution is silently absorbed and the label narrows on 'kb' alone —
+    # the same false-positive harm this task exists to prevent, reached via a
+    # mixed-script label instead of a bare one-character CJK label. Direct
+    # token-shape assertions (finding 8), not just the predicate: pins the
+    # emptiness the whole design rests on rather than only inferring it.
+    ok &= check("tokenize_label emits no tokens for a bare single-char CJK label",
+                tokenize_label("库") == [])
+    ok &= check("a lone CJK run inside a mixed-script label fails closed to no tokens",
+                tokenize_label("库-kb") == [])
+    ok &= check("a multi-char CJK run in a mixed-script label still yields its bigram",
+                tokenize_label("路由-kb") == ["kb", "路由"])
+
     ok = extra_checks(ok)
     sys.exit(0 if ok else 1)
 
