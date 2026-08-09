@@ -394,3 +394,26 @@ grep -q 'kb-beads(0)' <<<"$mt_cov" \
 echo "PASS: shape 6 — near-empty store reports a healthy memories(0)/kb-beads(0) (4 assertions)"
 
 echo "PASS: test-kr-corpus-shapes — shapes 1-6"
+
+# ── 7. a CJK query colliding with a CJK LABEL must disclose the narrowing.
+# Predicate coverage lives in rank_invariants; this asserts the USER-VISIBLE
+# coverage line, which is the only place a silent narrow would show up.
+( cd "$TMP" && bd create "中文标签 bead" -t task -p 2 -l kb,路由 --description "routing notes in chinese 路由问题" >/dev/null )
+set +e
+zhcol="$( cd "$TMP" && bash "$SURFACE" 路由问题 2>&1 )"; zhcol_rc=$?
+set -e
+[ "$zhcol_rc" -eq 0 ] \
+  || { echo "FAIL: CJK label-collision query exited $zhcol_rc"; printf '%s\n' "$zhcol"; exit 1; }
+zhcov="${zhcol%%$'\n'*}"
+if grep -q 'label=' <<<"$zhcov"; then
+  grep -q 'label=路由' <<<"$zhcov" \
+    || { echo "FAIL: a CJK label filter engaged but did not name the label"; printf '%s\n' "$zhcov"; exit 1; }
+else
+  # No disclosure means the corpus must NOT have been narrowed — prove it by
+  # requiring the body-relevant bead to still be reachable. Same both-branches
+  # discipline as shape 3: the AC's FAIL condition is SILENT narrowing, and a
+  # single-branch assertion is blind to exactly that.
+  grep -q 'routing notes in chinese' <<<"$zhcol" \
+    || { echo "FAIL: no label= disclosure, yet the CJK-labelled bead is absent — SILENT NARROWING"; printf '%s\n' "$zhcol"; exit 1; }
+fi
+printf 'OBSERVED CJK label-collision coverage line: %s\n' "$zhcov"

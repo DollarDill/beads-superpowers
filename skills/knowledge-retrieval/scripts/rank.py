@@ -107,9 +107,9 @@ def tokenize(text):
     English-vs-English only). English rank ORDER is pinned instead; absolute score
     invariance is not achievable and is not claimed. See the design spec 2026-08-09 §3.
 
-    Labels ALSO use this function today; Task 3 moves them to tokenize_label()
-    (spec §4.4). Until then a single-character CJK label narrows on substring —
-    beads-superpowers-z1xl4.2.
+    Labels use tokenize_label() instead (spec §4.4) — this function's unigrams
+    would give a single-character CJK label substring semantics on any query
+    containing that character.
     """
     t = text.lower()
     toks = _WORD.findall(t)
@@ -117,6 +117,43 @@ def tokenize(text):
         toks += list(run)                                    # unigrams
         toks += [run[i:i + 2] for i in range(len(run) - 1)]  # overlapping bigrams
     return toks
+
+def tokenize_label(text):
+    """Label VOCABULARY only. Optimises PRECISION — deliberately NOT tokenize().
+
+    No CJK unigrams. With them, a single-character CJK label acquires substring
+    semantics that English labels do not have: label 库 would match any query
+    containing 库 anywhere, silently narrowing a search for 数据库 (database).
+    Labels filter, and a false positive silently DROPS results
+    (see beads-superpowers-wze77.11 for that harm in the ASCII case).
+
+    Emitting no unigrams also means a one-character CJK label has an EMPTY token
+    set, so the caller's existing `and t` guard short-circuits and it is
+    structurally incapable of narrowing — no length special-case required.
+
+    DO NOT "unify" this with tokenize(). rank_invariants' label checks will go red.
+    """
+    t = text.lower()
+    toks = _WORD.findall(t)
+    for run in _CJK.findall(t):
+        toks += [run[i:i + 2] for i in range(len(run) - 1)]
+    return toks
+
+def label_narrows(label, query):
+    """True when `label` should narrow the corpus for `query`.
+
+    Extracted from the inline `named = {...}` comprehension (rank.py:366 as of 48c774e) so rank_invariants can
+    exercise THIS code rather than a reimplementation that can silently drift.
+
+    The truthiness guard on `t` is load-bearing, not defensive: `set() <= qtok` is
+    True for EVERY query, so a label whose tokens all vanish would fire on every
+    search and union its bucket into the results (beads-superpowers-eo9z2.7).
+    With tokenize_label, a one-character CJK label has an empty token set and is
+    therefore structurally incapable of narrowing — that is the intended behaviour,
+    delivered by this guard rather than by a length special-case.
+    """
+    t = set(tokenize_label(label))
+    return bool(t and t <= set(tokenize_label(query)))
 
 def redact(text):
     """Redact the FULL text before any truncation. Redacting an already-cut
@@ -351,19 +388,7 @@ if __name__ == "__main__":
     # so `skills-arch` and `skills arch` both reach the same bucket, and
     # single-token labels behave exactly as before.
     vocab = {l for b in beads for l in b.get("labels", []) if l != "kb"}
-    qtok = set(tokenize(query))
-    # The truthiness guard is load-bearing, not defensive: `set() <= qtok` is True
-    # for EVERY query, so a label whose tokens are all stripped by tokenize() —
-    # verified 2026-08-09: Cyrillic ('ключ' -> []) and emoji ('🔐' -> []), NOT CJK
-    # (see below) — would fire on every search and union its bucket into the
-    # results (beads-superpowers-eo9z2.7).
-    #
-    # CJK labels are NOT covered by this guard as of 2026-08-09: tokenize() now
-    # emits CJK unigrams, so a single-character CJK label (e.g. '库') is never
-    # stripped to empty here. Instead it narrows on substring against any query
-    # containing that character (e.g. '数据库') — a live, separate hazard, tracked
-    # as beads-superpowers-z1xl4.2 and closed by Task 3's tokenize_label().
-    named = {l for l in vocab if (t := set(tokenize(l))) and t <= qtok}
+    named = {l for l in vocab if label_narrows(l, query)}
     if named:
         beads = [b for b in beads if named & set(b.get("labels", []))]
 

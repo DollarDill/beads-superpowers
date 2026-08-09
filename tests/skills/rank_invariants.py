@@ -279,6 +279,30 @@ def main():
                 _c_zh._bm25("zh-worktree", tokenize("工作"))
                 > _c_zh._bm25("zh-worktree", tokenize("工 作")))
 
+    # ── LABEL PRECISION (spec 2026-08-09 §4.4) ───────────────────────────────
+    # Task 2's unigrams gave CJK labels SUBSTRING semantics that English labels do
+    # not have: label 库 would silently narrow a search for 数据库, because unigrams
+    # decompose 数据库 into 数/据/库 and the subset test then passes. Labels FILTER,
+    # so a false positive silently drops results — they need precision, not recall.
+    # REVISED by stress-test B3. This originally reimplemented the predicate here,
+    # using tokenize(query) while the shipped code used tokenize_label(query) — the
+    # two agree today only by coincidence (label tokens are never CJK unigrams, which
+    # is the only thing the two query tokenizers differ by). A test that reimplements
+    # the logic it guards can drift from it silently. Call the SHIPPED predicate.
+    from rank import tokenize_label, label_narrows as _narrows
+    ok &= check("a single-char CJK label cannot narrow (库 vs 数据库)",
+                not _narrows("库", "数据库"))
+    ok &= check("a single-char CJK label cannot narrow (树 vs 工作树隔离)",
+                not _narrows("树", "工作树隔离"))
+    ok &= check("a multi-char CJK label narrows on its own bigram",
+                _narrows("路由", "路由问题"))
+    ok &= check("a multi-char CJK label does not narrow on a partial match",
+                not _narrows("路由", "路 问题"))
+    ok &= check("English label behaviour is byte-identical (kb vs kbase)",
+                not _narrows("kb", "kbase"))
+    ok &= check("English label behaviour is byte-identical (kb vs 'kb notes')",
+                _narrows("kb", "kb notes"))
+
     ok = extra_checks(ok)
     sys.exit(0 if ok else 1)
 
