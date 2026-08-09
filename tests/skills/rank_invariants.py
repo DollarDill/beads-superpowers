@@ -167,6 +167,68 @@ def main():
                 len({hdr for _, hdr in sal}) > 1
                 and all((got == hdr) if hdr is not None else got == SALIENCE_UNSET
                         for got, hdr in sal))
+
+    # ── CJK PREP GUARDS (spec 2026-08-09 §4.1, §4.1a) ────────────────────────
+    # These lock CURRENT behaviour in place BEFORE the tokenizer changes, so the
+    # tokenizer task cannot move English without turning something red.
+    import pathlib as _pl
+    _fix = _pl.Path(__file__).resolve().parent / "fixtures" / "ascii-corpus.txt"
+    _lines = _fix.read_text(encoding="utf-8").splitlines()
+    ok &= check("the ASCII corpus fixture is present and non-trivial", len(_lines) >= 200)
+    # §4.1 — the differential invariant. Scoped to the TOKENIZER boundary only:
+    # this is NOT evidence that English ranking is safe (see the next check).
+    #
+    # AMENDED 2026-08-09 (pre-flight, MEASURED): the expected value is a LITERAL
+    # here and must NEVER be `from rank import _WORD`. tokenize() IS
+    # `_WORD.findall(text.lower())`, so importing _WORD makes both sides of this
+    # equality the same expression and the check a tautology — Step 5's mutation A
+    # was measured GREEN through the imported form. Duplicating the regex is the
+    # POINT: a regression lock must not read its expected value from the code it
+    # guards. Do not "de-duplicate" this against rank._WORD.
+    _HIST_WORD = re.compile(r'[a-z0-9]+')
+    ok &= check("ASCII tokenization is byte-identical to [a-z0-9]+",
+                all(tokenize(x) == _HIST_WORD.findall(x.lower()) for x in _lines))
+
+    # §4.1b — CJK TOKENIZED LENGTH, PINNED (added 2026-08-09, branch B13).
+    # This is the falsifiable half of the English-safety argument. avgdl drift is
+    # what moves English scores, and avgdl drift comes from CJK token COUNT — so
+    # pin the count directly rather than trying to observe it through ranking.
+    # Task 2 FLIPS this to `== 2 * len(_ZH) - 1` when the tokenizer lands; the
+    # pin-then-flip idiom is the same one shape 1 uses in test-kr-corpus-shapes.sh.
+    # Expressed as a formula over the literal, never by calling tokenize() twice —
+    # a pin that derives its expected value from the code under test is a tautology
+    # (the B11 defect, one level up).
+    _ZH = "工作树隔离与并行执行的注意事项"
+    ok &= check("CJK tokenizes to nothing (PINNED — Task 2 flips this to 2n-1)",
+                len(tokenize(_ZH)) == 0)
+
+    # §4.1a — the END-TO-END guard the differential invariant cannot provide.
+    # avgdl is corpus-wide (rank.py:174, divided at :192), so adding CJK docs DOES
+    # move English absolute scores. Score movement is inherent to BM25; REORDERING
+    # is the user-visible harm, so order is what we pin.
+    # Reads c._bm25 (the raw scoring core), never the diversified public path.
+    #
+    # HONEST SCOPE (branch B13, measured): this is a COARSE lock. Its fixture varies
+    # only dl, so per-doc score is strictly monotonic in dl for ANY avgdl and the
+    # order is structurally unreorderable — no CJK-length mutation can falsify it.
+    # Do NOT "fix" that by making the fixture reorderable: a fixture sensitive enough
+    # to catch a 40-token distortion also reorders under the LEGITIMATE Task-2 change
+    # (measured: avgdl 17.92 -> 20.07 red, vs 21.07 mutated — a fitted threshold).
+    # Falsifiability lives in the §4.1b length pin above. This check earns its keep by
+    # catching gross end-to-end regressions, and it is labelled, not oversold. See
+    # beads-superpowers-z1xl4.1.
+    _en = {f"en{i}": _H + _body("bd", "quarry", "piston", length=4 + i) for i in range(6)}
+    _q = ["quarry", "piston"]
+    _c_en = Corpus(dict(_en))
+    _order_before = sorted(_en, key=lambda k: (-_c_en._bm25(k, _q), k))
+    _mixed = dict(_en)
+    _mixed["zh-a"] = _H + "工作树隔离与并行执行的注意事项"
+    _mixed["zh-b"] = _H + "中文内容用于测试长度归一化以及排序稳定性"
+    _c_mx = Corpus(_mixed)
+    _order_after = sorted(_en, key=lambda k: (-_c_mx._bm25(k, _q), k))
+    ok &= check("English rank order is unchanged when CJK documents are added",
+                _order_before == _order_after)
+
     ok = extra_checks(ok)
     sys.exit(0 if ok else 1)
 
