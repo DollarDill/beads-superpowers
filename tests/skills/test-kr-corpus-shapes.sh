@@ -30,7 +30,8 @@ trap 'rm -rf "$TMP"' EXIT
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SHAPE 1 (Task 5, flipped Task 2 2026-08-09): CJK body is retrievable; emoji
-# body still tokenizes to nothing under [a-z0-9]+
+# body still tokenizes to nothing under the tokenizer — neither [a-z0-9]+ nor
+# the CJK ranges match emoji
 # ═══════════════════════════════════════════════════════════════════════════
 
 # ── 1. a CJK-only body must not crash the ranker.
@@ -107,13 +108,21 @@ fi
 # output passes no matter what redaction does — the eo9z2.8 assertion class this repo
 # keeps rediscovering. Measured by the M1 audit: query `工作树 隔离` -> no hit lines;
 # control query `ok` -> the entry, with `[REDACTED]`. Since Task 2 (2026-08-09) the CJK
-# query above DOES return the shape-cjk hit and carries its own redaction assertion —
-# this ANCHORED fixture remains, kept for the degraded (python3-absent) path below,
-# which the CJK query cannot exercise.
+# query above DOES return the shape-cjk hit and carries its own redaction assertion on
+# the RANKED path.
 #
-# The fixture: a second entry whose body is CJK *plus one indexable ASCII anchor*,
-# queried by that anchor. The entry is retrievable on both the main and degraded
-# paths, so the redaction assertion has something to be wrong about on both.
+# WHY THIS ANCHORED FIXTURE STILL EARNS ITS KEEP (corrected in review round 2 — the
+# original claim below was checked against surface.sh and found false): it is NOT
+# that a raw CJK query "cannot exercise" the degraded path — verified 2026-08-09 that
+# it can: `bd memories` does its own substring match on CJK text, independent of
+# python3, so the shape-cjk query above would hit on the degraded path too. The real
+# reason is simpler — the shape-cjk block above never runs surface.sh with python3
+# stripped from PATH, so nothing above tests the degraded RENDERING path (keys-only,
+# bodies-withheld) for a secret-bearing CJK body. This fixture, queried by its ASCII
+# anchor for consistency with its own ranked-path assertion just above, is what
+# supplies that second rendering path's coverage — the entry is retrievable on both
+# the main and degraded paths, so the redaction assertion has something to be wrong
+# about on both.
 CJK_ANCHOR="zhcorpusanchor"
 ( cd "$TMP" && bd remember "并行执行 $CJK_ANCHOR 的注意事项 $FAKE_SECRET" --key shape-cjk-anchored >/dev/null )
 set +e
@@ -132,7 +141,10 @@ if grep -qF "$FAKE_SECRET" <<<"$cjk_hit"; then
   echo "FAIL: secret leaked from a CJK body on the ranked path"; exit 1
 fi
 # …and on the degraded (python3-absent) path, where bodies must be withheld entirely.
-# Query the ANCHOR here too — the CJK query would make this vacuous for the same reason.
+# This is the only place in the file exercising that rendering path for a
+# secret-bearing CJK body (see the corrected note above — the raw shape-cjk query is
+# not vacuous here either, it is simply never run against a python3-stripped PATH).
+# Queried by the ANCHOR here for consistency with the ranked-path block above.
 mkdir -p "$TMP/nopy_cjk"
 for b in bd bash grep head sed sort dirname cut tr awk cat wc; do
   p="$(env -i PATH="$PATH" /bin/bash -c "command -v $b" 2>/dev/null || true)"

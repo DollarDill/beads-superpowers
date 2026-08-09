@@ -264,6 +264,21 @@ def main():
     ok &= check("a CJK query does not manufacture hits in English-only text",
                 _c_zh._bm25("en-only", tokenize("工作树")) == 0)
 
+    # Bigram BEHAVIOUR, not just count (review round 2, finding 4). The §4.1b
+    # pin above proves bigrams are EMITTED (2n-1 tokens); it says nothing about
+    # whether they do any work — a unigram-only tokenizer also passes every
+    # check above it. zh-worktree's body starts "工作树..." so "工作" occurs
+    # CONTIGUOUSLY in it, and tokenize() emits the bigram '工作' for that run.
+    # A space breaks CJK-run contiguity (verified: tokenize("工 作") ==
+    # ["工", "作"], no bigram), so querying the same two characters
+    # non-contiguously can only match the two unigrams. If the bigram carried
+    # no extra weight the two queries would score identically; BM25 sums a
+    # positive contribution per matched query term, so the bigram match must
+    # push the contiguous query strictly higher.
+    ok &= check("a contiguous CJK bigram query outscores the same two characters presented non-contiguously",
+                _c_zh._bm25("zh-worktree", tokenize("工作"))
+                > _c_zh._bm25("zh-worktree", tokenize("工 作")))
+
     ok = extra_checks(ok)
     sys.exit(0 if ok else 1)
 

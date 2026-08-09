@@ -26,6 +26,10 @@ _WORD = re.compile(r'[a-z0-9]+')
 # CJK Unified Ideographs, Hiragana+Katakana, Hangul syllables. Extension A
 # (3400-4dbf) is deliberately EXCLUDED: measured 2026-08-09, 20771 CJK chars
 # across docs/zh/*.md + README.zh-CN.md, ZERO in Ext-A. Added on evidence.
+# Also uncovered, disclosed rather than measured (matches the brief's scope, not
+# a deviation from it): halfwidth katakana (U+FF61-FF9F, e.g. tokenize('ｱｲ') ->
+# []) and astral-plane CJK (Ext B and beyond, outside the BMP) — both considered,
+# neither in scope.
 _CJK = re.compile(r'[一-鿿぀-ヿ가-힯]+')
 # SECURITY FLOOR (beads-superpowers-eo9z2.6): the SECOND alternation below is
 # deliberately unbounded — an unterminated BEGIN header redacts to end of body
@@ -94,11 +98,18 @@ def tokenize(text):
     longer run. BM25's IDF suppresses very common characters on its own.
 
     Cost: a run of n characters yields 2n-1 tokens, so avgdl (rank.py:174) rises and
-    length normalisation shifts for EVERY document, English included. English rank
-    ORDER is pinned instead; absolute score invariance is not achievable and is not
-    claimed. See the design spec 2026-08-09 §3.
+    length normalisation shifts for EVERY document, English included. The same
+    expansion also multiplies the QUERY side: a query's CJK half contributes 2n-1
+    term matches to _bm25 versus n for its ASCII half (`tokenize('并行 worktree')`
+    -> `['worktree','并','行','并行']`, 3 CJK terms vs 1 ASCII term), so a mixed-script
+    query systematically favours CJK-matching documents on a majority-English store
+    — no invariant covers cross-script ordering (Task 1's rank-order lock is
+    English-vs-English only). English rank ORDER is pinned instead; absolute score
+    invariance is not achievable and is not claimed. See the design spec 2026-08-09 §3.
 
-    Labels use tokenize_label() — NOT this function. See Task 3 / spec §4.4.
+    Labels ALSO use this function today; Task 3 moves them to tokenize_label()
+    (spec §4.4). Until then a single-character CJK label narrows on substring —
+    beads-superpowers-z1xl4.2.
     """
     t = text.lower()
     toks = _WORD.findall(t)
@@ -343,8 +354,15 @@ if __name__ == "__main__":
     qtok = set(tokenize(query))
     # The truthiness guard is load-bearing, not defensive: `set() <= qtok` is True
     # for EVERY query, so a label whose tokens are all stripped by tokenize() —
-    # any non-ASCII label, and this repo ships Chinese docs — would fire on every
-    # search and union its bucket into the results (beads-superpowers-eo9z2.7).
+    # verified 2026-08-09: Cyrillic ('ключ' -> []) and emoji ('🔐' -> []), NOT CJK
+    # (see below) — would fire on every search and union its bucket into the
+    # results (beads-superpowers-eo9z2.7).
+    #
+    # CJK labels are NOT covered by this guard as of 2026-08-09: tokenize() now
+    # emits CJK unigrams, so a single-character CJK label (e.g. '库') is never
+    # stripped to empty here. Instead it narrows on substring against any query
+    # containing that character (e.g. '数据库') — a live, separate hazard, tracked
+    # as beads-superpowers-z1xl4.2 and closed by Task 3's tokenize_label().
     named = {l for l in vocab if (t := set(tokenize(l))) and t <= qtok}
     if named:
         beads = [b for b in beads if named & set(b.get("labels", []))]
