@@ -171,10 +171,18 @@ def main():
     # ── CJK PREP GUARDS (spec 2026-08-09 §4.1, §4.1a) ────────────────────────
     # These lock CURRENT behaviour in place BEFORE the tokenizer changes, so the
     # tokenizer task cannot move English without turning something red.
-    import pathlib as _pl
-    _fix = _pl.Path(__file__).resolve().parent / "fixtures" / "ascii-corpus.txt"
-    _lines = _fix.read_text(encoding="utf-8").splitlines()
-    ok &= check("the ASCII corpus fixture is present and non-trivial", len(_lines) >= 200)
+    #
+    # NOTE on the fixture name: "ascii-corpus.txt" is CJK-FREE, not strictly
+    # ASCII — the Step 1 harvest filters only the CJK Unicode ranges, so ~173 of
+    # its 353 lines still carry non-ASCII punctuation (em dashes, arrows, curly
+    # quotes) inherited verbatim from the live store. That non-ASCII content is
+    # deliberate coverage, not noise: it exercises the differential invariant's
+    # tokenizer boundary on both the matching and non-matching side. Do not
+    # "clean" the file to literal ASCII — that would silently delete it.
+    _fix = pathlib.Path(__file__).resolve().parent / "fixtures" / "ascii-corpus.txt"
+    _exists = _fix.is_file()
+    _lines = _fix.read_text(encoding="utf-8").splitlines() if _exists else []
+    ok &= check("the ASCII corpus fixture is present and non-trivial", _exists and len(_lines) >= 200)
     # §4.1 — the differential invariant. Scoped to the TOKENIZER boundary only:
     # this is NOT evidence that English ranking is safe (see the next check).
     #
@@ -217,8 +225,8 @@ def main():
     # Falsifiability lives in the §4.1b length pin above. This check earns its keep by
     # catching gross end-to-end regressions, and it is labelled, not oversold. See
     # beads-superpowers-z1xl4.1.
-    _en = {f"en{i}": _H + _body("bd", "quarry", "piston", length=4 + i) for i in range(6)}
-    _q = ["quarry", "piston"]
+    _en = {f"en{i}": _H + _body("bd", "trellis", "gantry", length=4 + i) for i in range(6)}
+    _q = ["trellis", "gantry"]
     _c_en = Corpus(dict(_en))
     _order_before = sorted(_en, key=lambda k: (-_c_en._bm25(k, _q), k))
     _mixed = dict(_en)
@@ -226,7 +234,7 @@ def main():
     _mixed["zh-b"] = _H + "中文内容用于测试长度归一化以及排序稳定性"
     _c_mx = Corpus(_mixed)
     _order_after = sorted(_en, key=lambda k: (-_c_mx._bm25(k, _q), k))
-    ok &= check("English rank order is unchanged when CJK documents are added",
+    ok &= check("English rank order is unchanged when CJK documents are added (COARSE — not mutation-proved, see beads-superpowers-z1xl4.1)",
                 _order_before == _order_after)
 
     ok = extra_checks(ok)
