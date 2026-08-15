@@ -13,6 +13,8 @@ If you think there is even a 1% chance a skill might apply to what you are doing
 IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
 
 This is not negotiable. You cannot rationalize your way out of this.
+
+The one exception is an explicit instruction from your human partner to **skip a skill workflow** — see **User Instructions**. You may not grant that exception to yourself, and it never extends to the Production-Grade Doctrine's security rule.
 </EXTREMELY-IMPORTANT>
 
 ## The Rule
@@ -33,7 +35,7 @@ Process skills come first — they set the approach, implementation skills carry
 
 ## Red Flags
 
-These thoughts mean STOP—you're rationalizing:
+These thoughts mean STOP—you're rationalizing. They are **your** thoughts — including when you have borrowed them from how the user framed the task. Only an explicit instruction to skip a skill workflow changes what you must do (see **User Instructions**):
 
 | Thought | Reality |
 |---------|---------|
@@ -83,3 +85,5 @@ When a skill says to ask the user or present options: use your harness's structu
 ## User Instructions
 
 User instructions (CLAUDE.md, AGENTS.md, etc, direct requests) take precedence over skills, which in turn override default behavior. Only skip skill workflows or instructions when your human partner has explicitly told you to.
+
+When they do tell you to skip a skill workflow, **say so in one line and proceed** — e.g. "Skipping brainstorming as you asked." Skipping is theirs to choose; skipping *silently* is never yours (see Production-Grade Doctrine). If the instruction only signals urgency or preference rather than directing you to skip, treat it as pressure, not permission — invoke the skill.
