@@ -55,7 +55,10 @@ digraph when_to_use {
 
 ## Pre-Flight Plan Review
 
-Before dispatching Task 1, scan the plan once for conflicts:
+Before dispatching Task 1, read the plan once — and **if it names a `Spec:`, read that too**: the
+spec is the authority the plan argues from, so in-plan conflicts resolve against it. A plan with no
+reachable spec gets a ledger note saying so, because rulings made without one are provisional. Then
+scan for conflicts:
 
 - tasks that contradict each other or the plan's Global Constraints
 - anything the plan explicitly mandates that the review rubric treats as a defect (a test that asserts nothing, verbatim duplication of a logic block)
