@@ -250,6 +250,26 @@ esac
 
 `bd worktree remove` refuses while the branch has unpushed commits. Verify the work is safe first — `git merge-base --is-ancestor <branch-tip> <base>` — and only then re-run with `--force`.
 
+**If removal is refused because the worktree "contains modified or untracked files":** those files exist **nowhere else** — uncommitted plans, notes, scratch work. **NEVER `--force` on your own initiative.** Show your human partner exactly what is at stake and ask:
+
+```bash
+git -C "$WORKTREE_PATH" status --porcelain -uall
+```
+
+```text
+Worktree removal refused — these files were never committed:
+
+<file list>
+
+1. Commit them to <branch> before cleanup
+2. Move them into <main repo root>
+3. Delete them (unrecoverable)
+
+Which?
+```
+
+Carry out their choice, then remove the worktree. Note the two refusals are different: unpushed *commits* are recoverable from the branch, but modified/untracked *files* are not recoverable from anywhere.
+
 **Capture what you learned.** At close, record durable, evidence-backed insights (still true next month, tied to a file, test, or command). Never record guesses, one-offs, or secrets (tokens, keys, PII — every memory is injected into all future sessions). Update in place (`bd remember --key <key>`) rather than adding a near-duplicate.
 
 ```bash
@@ -356,6 +376,7 @@ git status    # MUST show "up to date with origin"
 - Delete work without confirmation
 - Force-push without explicit request
 - Merge a dropped requirement or a security regression behind a green test suite
+- `--force` a refused worktree removal on your own initiative — "removal refused, `--force` is just finishing the cleanup" is backwards: the refusal means files exist **only** in that worktree, so `--force` destroys them permanently. Show your human partner and ask.
 
 **Always:**
 - Verify tests before offering options
