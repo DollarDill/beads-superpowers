@@ -173,6 +173,12 @@ bsp_marker_dir="${XDG_RUNTIME_DIR:-/tmp}/beads-superpowers-$(id -u)"
 bsp_marker="$bsp_marker_dir/m-${bsp_sid}-${bsp_src}"
 bsp_suppress=0
 if mkdir -p "$bsp_marker_dir" 2>/dev/null && chmod 700 "$bsp_marker_dir" 2>/dev/null; then
+    # Opportunistic sweep: one marker is created per (session_id, source) and never
+    # removed, so on a /tmp fallback (XDG_RUNTIME_DIR unset) they accumulate for the
+    # machine's uptime. Only plain files older than a day, only inside our own 0700
+    # dir, and -type f so a planted symlink is never followed or deleted — the same
+    # refusal the [ -L ] branch below encodes. Best effort; never blocks injection.
+    find "$bsp_marker_dir" -maxdepth 1 -type f -name 'm-*' -mtime +0 -delete 2>/dev/null || true
     if [ -L "$bsp_marker" ]; then
         : # symlink planted — refuse to touch it, fail open (inject)
     elif ( set -C; : > "$bsp_marker" ) 2>/dev/null; then
