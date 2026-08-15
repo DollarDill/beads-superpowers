@@ -15,6 +15,25 @@ description: Use when beads/Dolt database initialization fails, when bd commands
 NEVER run bd init --force (deprecated in v1.0.4). Use the named-intent alternatives: bd init --reinit-local (preserves remote) or bd init --discard-remote (explicit destruction).
 ```
 
+## Version floor: NEVER install bd v1.2.0 or v1.2.1
+
+**Safe versions: v1.1.2 or v1.2.2.** Check with `bd version` before any init, bootstrap or
+recovery — including on a machine you are only *adding* to an existing setup.
+
+v1.2.0 and v1.2.1 were published by accident on 2026-08-11 without release testing and are
+retracted in `go.mod`. Running either **once** migrates the local Dolt schema **v53 → v65**, after
+which every other bd binary refuses to start with `schema version mismatch: database is at v65,
+binary knows up to v53`. That is a data-availability failure across every clone sharing the
+database, not a local inconvenience.
+
+If it has already happened: upgrade **every** machine and clone to a safe version *first* — a
+leftover 1.2.1 binary silently re-migrates — then follow
+[`docs/RECOVERY-1.2.1.md`](https://github.com/gastownhall/beads/blob/v1.2.2/docs/RECOVERY-1.2.1.md)
+(roll the schema cursor back to v53; `BD_IGNORE_SCHEMA_SKEW=1 bd <command>` is a verified stopgap).
+
+v1.2.2 re-releases the tested v1.1.2 code under a higher version number, so it is safe but carries
+**no** new capability — never read a bd version bump as evidence that a feature or fix has landed.
+
 **Why:** Issue #2363 documents an AI agent that destroyed 247 issues via `bd init --force` cascade. The root cause was misdiagnosing "server can't connect" as "database missing". `bd init --force` is a nuclear option that should ONLY be run by a human who explicitly types it.
 
 This Iron Law is the Production-Grade Doctrine applied to your data ledger: never take the shortcut that accepts catastrophic, irreversible risk.
