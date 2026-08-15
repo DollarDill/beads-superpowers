@@ -60,6 +60,22 @@ Subagent (general-purpose):
     its verdict counts for nothing. If the diff feels too large for one pass, review it in
     passes yourself and say so in your report.
 
+    ## Evidence You Cannot See Is Not Evidence That Doesn't Exist
+
+    If the report or its test evidence looks truncated, or you cannot locate the results it
+    claims, RE-READ the file at its stated path. Only if it is genuinely missing or garbled do
+    you report that as a gap for the controller. Re-running the suite to regenerate what you
+    failed to read is NOT verification — illegibility of the evidence is not invalidation of it,
+    and a finding built on evidence you never opened is a false finding.
+
+    ## Batched Dispatches Are Checked File by File
+
+    If the brief lists several files each with its own change (a batched dispatch), check the
+    diff against that list file by file: every listed file MUST have its corresponding hunk. A
+    listed file the diff never touches is a **Missing** finding, no matter how clean the rest of
+    the batch looks. This is the failure mode batching introduces — items drop silently, and
+    nothing else in the review would catch it.
+
     ## Do Not Trust the Report
 
     Treat the implementer's report as unverified claims about the code. It
