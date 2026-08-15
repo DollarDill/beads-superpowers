@@ -268,7 +268,7 @@ Mode selection is automatic. The orchestrator checks after every batch or sequen
 
 Use the least powerful model that can handle each role to conserve cost and increase speed.
 
-**Always specify the model explicitly when dispatching a subagent.** An omitted model inherits your session's model — often the most expensive — which silently defeats this section.
+**Always specify the model explicitly when dispatching a subagent.** An omitted model inherits your session's model — often the most expensive — which silently defeats this section. Where your harness has a separate reasoning-effort setting, set it in the same call: model alone can reset effort to that model's default. **Batching and waiting:** several small same-shape tasks go in ONE dispatch, not one each, and never poll a wait interface with short timeouts — see [references/dispatch-efficiency.md](references/dispatch-efficiency.md).
 
 **Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.
 
