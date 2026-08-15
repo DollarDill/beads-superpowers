@@ -13,6 +13,20 @@ Execute plan by dispatching fresh subagent per task, with a single read-only tas
 
 **Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: BLOCKED status you cannot resolve, ambiguity that genuinely prevents progress, or all tasks complete. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
 
+## Rulings and Escalation
+
+**You MAY rule when the spec unambiguously settles it. Everything else escalates.** Ruling from the
+spec is *reading the binding authority*, not descoping; deciding a requirement is not worth meeting
+stays your human partner's call. Enumerated may-rule / must-stop lists:
+[references/rulings-and-escalation.md](references/rulings-and-escalation.md) — read it the first time
+a conflict surfaces. **Precedence: must-stop wins** where both could apply, and **a security finding
+is NEVER rulable and never parkable**, whatever the plan or spec says (`references/breaker-trip.md`).
+Without that precedence the permissive list silently swallows the restrictive one.
+
+**Every ruling cites its authority** — `Ruling: <what you decided> — settled by <spec §/heading> —
+<what it costs if wrong>`. No citable spec location means it is **by definition not spec-settled**:
+escalate. Fill-or-fail, not a judgment call.
+
 ## When to Use
 
 ```dot
@@ -46,7 +60,13 @@ Before dispatching Task 1, scan the plan once for conflicts:
 - tasks that contradict each other or the plan's Global Constraints
 - anything the plan explicitly mandates that the review rubric treats as a defect (a test that asserts nothing, verbatim duplication of a logic block)
 
-Present everything you find to your human partner as **one batched structured question** — each finding beside the plan text that mandates it, asking which governs — before execution begins, not one interrupt per discovery mid-plan. If the scan is clean, proceed without comment. The review loop remains the net for conflicts that only emerge from implementation.
+Sort what you find by the test in **Rulings and Escalation**. Conflicts the spec unambiguously
+settles: rule on them, record each as `Ruling: … — settled by … — …` in the ledger, and proceed.
+Everything else — anything the spec does not settle, and anything on the must-stop list — goes to
+your human partner as **one batched structured question**, each finding beside the plan text that
+mandates it, asking which governs. Ask before execution begins, not one interrupt per discovery
+mid-plan. If the scan is clean and every conflict was spec-settled, proceed without comment. The
+review loop remains the net for conflicts that only emerge from implementation.
 
 ## The Process (Sequential Mode)
 
@@ -301,8 +321,17 @@ most-capable-tier reviewer over the whole branch — the only place the composit
 all fix rounds is examined. Findings go to one fix subagent, then one scoped
 re-review; residuals follow the breaker rules.
 
+**Rulings I made.** Before you delete anything, collect **every** ledger line containing
+`Ruling:` — pre-flight rulings, parked findings, breaker adjudications, all of them — into your
+final message under "Rulings I made", in the order you made them, each with its cited spec
+location and what it costs if wrong. The list is exhaustive: if the ledger holds a ruling, the
+list holds it. This is the only place decisions you took on your human partner's behalf reach
+them, so they can rework whatever you got wrong. A ruling that dies with the workspace was a
+decision made in secret.
+
 **Teardown:** remove the plan's workspace once the final review is clean **and**
-each task's outcome and any implementer-raised concerns are recorded in beads.
+each task's outcome and any implementer-raised concerns are recorded in beads,
+**and** the "Rulings I made" list has been delivered.
 Reports are the only non-regenerable artifact — delete once the record is durable.
 
 ## File Handoffs
@@ -439,6 +468,8 @@ bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / patt
 | "One more round will converge" / "Just one more fix round, it's nearly there" | Past the cap, rounds don't converge — the loop is capped at five rounds. At the cap, file the findings and surface them to the user (`references/breaker-trip.md`). |
 | "The reviewer will just find something new anyway" | A scoped re-review verifies only the named findings in the fix diff; it cannot wander. New findings on code the fix diff didn't touch aren't this round's job — track them separately, they don't extend the loop. |
 | "This finding is obviously wrong, I'll drop it" | Never self-adjudicate a finding. At the round cap, file every open finding as a bead and surface both dispositions to the user — silent discards are forbidden. |
+| "The spec probably implies it" / "the spec would obviously want this" | Not spec-settled. You may rule only when you can cite the spec location that settles it; "probably implies" is the sound of a judgment call wearing the spec's authority. Unclear means escalate. |
+| "It's spec-settled, so I don't need to write the ruling down" | An unrecorded ruling is indistinguishable from a silent descope. Ledger it in the `Ruling: … — settled by … — …` form or you did not rule, you just decided. |
 | "Reviews slow the loop down" | The loop without reviews is just unverified churn — reviews are the loop's brakes and steering. |
 | "Recording progress in beads is overhead" | Beads is what survives compaction. Controllers that lose their place have re-dispatched entire completed task sequences — record each task's commit range in `bd close --reason` as you go. |
 | "Discard or defer a failed task to quietly descope a required deliverable" / "let Model-Selection cost-minimization accept weaker correctness/security review" | Surface the trade-off, never take it silently (Production-Grade Doctrine). |
