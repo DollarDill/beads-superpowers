@@ -123,14 +123,19 @@ Done when: every chain-link check reports PASS, or each FAIL is fixed.
 Clone upstream and compare.
 
 ```bash
-git clone --depth 1 https://github.com/obra/superpowers.git /tmp/superpowers-upstream
+# FULL clone — NOT --depth 1. Phase 5 diffs upstream tag ranges, which needs tags and history.
+git clone https://github.com/obra/superpowers.git /tmp/superpowers-upstream
 ```
 
-**Check 5.1 — Version gap:**
+**Check 5.1 — Version gap (tags, not just package.json):**
 ```bash
+git -C /tmp/superpowers-upstream tag --sort=-creatordate | head -10
 upstream_ver=$(grep '"version"' /tmp/superpowers-upstream/package.json | grep -o '[0-9.]*')
 echo "Upstream: v$upstream_ver | Our baseline: v6.2.0"
 ```
+
+Note **every** tag between our baseline and the newest one — the delta may span several releases,
+and Check 5.3's diff range must cover all of them.
 
 **Check 5.2 — New skills in upstream:**
 ```bash
@@ -140,16 +145,36 @@ diff <(ls /tmp/superpowers-upstream/skills/) <(ls skills/) | grep "^<"
 
 For each new skill: assess if relevant (skip platform-specific ones).
 
-**Check 5.3 — Content changes in shared skills:**
+**Check 5.3 — Content changes in shared skills. Diff `upstream-old..upstream-new`, NEVER fork vs upstream-new.**
+
+> **This is the audit's most dangerous check, and it used to be wrong.** Diffing our tree against
+> upstream's new tag conflates two entirely different things: (a) genuine upstream changes we
+> should consider adopting, and (b) pre-existing fork drift upstream never touched. Findings then
+> ship with a **false provenance** — "upstream v6.2.0 did X" — and a subagent handed such a finding
+> cannot see the audit or the upstream delta, so it implements whatever the brief says and produces
+> a plausible diff that "fixes" a non-problem. Six findings in the v6.2.0 sweep were misattributed
+> exactly this way (`vctf4.6`, `.11`, `.17`, `.19`, `.20`, `.24`); three of them do not appear in
+> the real `v6.1.1..v6.2.0` diff at all. Root cause: `beads-superpowers-ivcop`.
+
 ```bash
-for skill in /tmp/superpowers-upstream/skills/*/SKILL.md; do
-    name=$(basename $(dirname "$skill"))
-    if [ -f "skills/$name/SKILL.md" ]; then
-        changes=$(diff "$skill" "skills/$name/SKILL.md" | wc -l)
-        [ "$changes" -gt 0 ] && echo "CHANGED: $name ($changes diff lines)"
-    fi
-done
+OLD=v6.2.0   # our current baseline (the Upstream Sources table above)
+NEW=v6.3.0   # newest upstream tag from Check 5.1
+
+# 1. What upstream ACTUALLY changed in the range — this is the only source of drift findings:
+git -C /tmp/superpowers-upstream diff "$OLD".."$NEW" --stat
+git -C /tmp/superpowers-upstream log --oneline "$OLD".."$NEW"
+
+# 2. Read each changed path's real hunks before judging it:
+git -C /tmp/superpowers-upstream diff "$OLD".."$NEW" -- skills/<name>/SKILL.md
 ```
+
+Then, and only then, check each **genuinely changed** path against our tree to see whether we
+already carry the change, diverge from it deliberately, or should adopt it.
+
+A file that differs from our fork but has **no hunk in the `OLD..NEW` diff** is *not* drift — it is
+either a registered divergence or pre-existing fork drift, and it is **not** an upstream finding.
+Do not file it as one. If you believe it should change anyway, that is your own recommendation:
+say so in your own name, never in upstream's.
 
 For changed skills, categorise each:
 - **Safe merge**: Change doesn't touch our beads-integrated sections
