@@ -13,7 +13,7 @@ Write the test first. Watch it fail. Write minimal code to pass.
 
 **Violating the letter of the rules is violating the spirit of the rules.**
 
-**Spec-backed:** implementation starts from an approved spec or plan. Before the first edit, state the file you are working from — `Working from: <spec-or-plan path>`. No such file yet? Say so and run brainstorming first. A plan task, a completed root-cause investigation, or a typo/comment/rename already satisfies this.
+**Spec-backed:** implementation starts from an approved spec or plan. Before the first edit, state the file you are working from — `Working from: <spec-or-plan path>`. No such file yet? Say so and run brainstorming first. A plan task, a completed root-cause investigation, or a typo/comment/rename already satisfies this — as does **an approved bounded-path bead**, cited as `Working from: <bead-id> (bounded design, approved <date>)`. Bounded work produces no spec file by design (see brainstorming's Three Paths); the bead body carries the approved design, so the bead is the artifact you name. What is never acceptable is starting with nothing approved at all.
 
 ## When to Use
 

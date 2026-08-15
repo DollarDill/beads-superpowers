@@ -1,4 +1,4 @@
-skills/brainstorming/SKILL.md 5
+skills/brainstorming/SKILL.md 6
 skills/dispatching-parallel-agents/SKILL.md 0
 skills/document-release/SKILL.md 5
 skills/executing-plans/SKILL.md 1

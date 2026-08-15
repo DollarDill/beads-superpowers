@@ -7,21 +7,49 @@ description: "You MUST use this before any creative work - creating features, bu
 
 Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
 
-Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get user approval.
+Start by classifying how much process the request needs, then work through your path: understand the context, refine the idea, present a design, and get your human partner's approval.
 
 <HARD-GATE>
-Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
+Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have told your human partner what you intend and they have approved it. This applies to EVERY task on EVERY path below — the ceremony scales with the task; the approval gate never does.
 </HARD-GATE>
 
 **Production-Grade Doctrine** applies with full force here — trade-offs are *first chosen* in brainstorming: you MUST NOT simplify a design by quietly cutting a required behavior; surface every material trade-off and let the user decide. Never weaken, bypass, or remove a security control — a security regression is never acceptable.
 
-## Anti-Pattern: "This Is Too Simple To Need A Design"
+## Three Paths
 
-Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
+Before your first question, classify the request and say the classification out loud — "this looks bounded, so I'll present a short design here rather than write a spec" — so your human partner can override it:
+
+- **Spike** — a feasibility question ("can we…", "is it possible…", "quick and dirty is fine") whose output is an answer, not code you keep. Present the question and what you'll try in 2–3 sentences, get a nod, then find out as cheaply as correctness allows. No spec file, no plan document. Report findings as a recommendation; anything you built stays labeled throwaway. File a bead only if the spike produced something worth keeping.
+- **Bounded** — a well-scoped change to code that already exists in this repo: a new flag, a small endpoint, a one-file fix. Understanding the kind of app is not enough — bounded means the flow you are changing is already here to read. If there is no existing flow to change, the task is not bounded. Ask the clarifying questions that matter, present a short design IN CHAT (a few sentences to a few short paragraphs), and STOP. Implementation starts only after your human partner says yes — a bounded task's approval is as hard a gate as an architectural one. **File ONE task bead at approval carrying the approved design in its description**; that bead is the tracking unit. No spec file, no plan document, and `writing-plans` is skipped.
+- **Architectural** — new projects, new subsystems, changes that restructure how components fit together or alter interfaces others depend on. Follow the full process: questions, approaches, sectioned design, written spec, then the writing-plans skill.
+
+When in doubt between two paths, take the heavier one. The ratchet is one-way: hidden complexity discovered mid-task upgrades the path — stop, say so, and step up. Nothing downgrades mid-task.
+
+## Anti-Pattern: "Too Simple To Need Approval"
+
+Every path ends with your human partner approving your intent before implementation. A todo list, a single-function utility, a config change — the design may be two sentences in chat, but you MUST present it and get approval. "Simple" tasks are where unexamined assumptions cause the most wasted work. What scales with simplicity is the artifact, never the approval.
+
+## Red Flags
+
+| Thought | Reality |
+|---------|---------|
+| "This is too simple to need a design" | Simple means a short design, not no design. Two sentences in chat, then approval. |
+| "I'll call it bounded and skip the spec" | Reaching for a label to skip work IS the doubt — take the heavier path. |
+| "It's bounded and the design is obvious — I'll start while they read it" | The gate is the approval, not the design's length. Present, then stop until you hear yes. |
+| "I understand this kind of app, so it's bounded" | Bounded measures the repo, not your familiarity. A new project has no existing flow — it is architectural. |
+| "The spike works, so I'll keep the code" | A spike's output is an answer. Keeping the code is a new request — classify it. |
+| "It grew, but I'm almost done — no need to re-classify" | Hidden complexity upgrades the path mid-task. Stop and say so. |
+| "They approved the spike, so the follow-up change is approved too" | Each task gets its own classification and its own approval. |
 
 ## Checklist
 
-You MUST create the session bead + step children up front via `bd import`: first `bd create "Brainstorming: <topic>" -t task` (the permanent session bead — the audit trail; note its id), then author each checklist step as JSONL (one issue per line, `"issue_type":"chore"`, an explicit `"priority"`, `id` omitted, and a `parent-child` dep to the session id) and pipe to `bd import -`. Read `bd import --help` on first use; confirm the output shows no `Skipped dependency`. **Cleanup:** close each step bead as you complete it; if you abandon the brainstorm, close or `bd purge` the open steps (import children are permanent, not self-cleaning). Then complete the steps in order:
+Classify first, announce the path, then work the steps for that path.
+
+**Spike:** 1. explore just enough context to frame the probe → 2. present question + probe plan in 2–3 sentences → 3. get approval (a nod is enough) → 4. investigate as cheaply as correctness allows → 5. report findings as a recommendation, labeling anything built as throwaway. No session bead needed; file one only if the spike produced something worth keeping.
+
+**Bounded:** 1. explore project context (files, docs, recent commits) → 2. ask the clarifying questions that matter, one at a time → 3. present a short design in chat (approach, files touched, testing) → 4. **STOP and wait for an explicit yes** — presenting the design and starting in the same breath is skipping the gate → 5. file ONE task bead carrying the approved design → 6. implement via the normal workflow (`test-driven-development` applies; cite the bead as your spec-backed artifact). No plan document.
+
+**Architectural** — the full process below. You MUST create the session bead + step children up front via `bd import`: first `bd create "Brainstorming: <topic>" -t task` (the permanent session bead — the audit trail; note its id), then author each checklist step as JSONL (one issue per line, `"issue_type":"chore"`, an explicit `"priority"`, `id` omitted, and a `parent-child` dep to the session id) and pipe to `bd import -`. Read `bd import --help` on first use; confirm the output shows no `Skipped dependency`. **Cleanup:** close each step bead as you complete it; if you abandon the brainstorm, close or `bd purge` the open steps (import children are permanent, not self-cleaning). Then complete the steps in order:
 
 1. **Explore project context** — check files, docs, recent commits, and query the KB for prior decisions/research on the topic
 2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
@@ -66,7 +94,9 @@ digraph brainstorming {
 }
 ```
 
-**The terminal state is writing-plans.** The only other skill brainstorming may invoke is **stress-test** (optional, between spec approval and writing-plans). Do NOT invoke frontend-design, mcp-builder, or any other implementation skill.
+**Terminal states are path-bound.** *Architectural:* the terminal state is **writing-plans**, and the only other skill brainstorming may invoke is **stress-test** (optional, offered at the spec-review gate). *Bounded:* after approval, implementation proceeds directly through the normal development workflow — no plan document, and the task bead is the tracking unit. *Spike:* the terminal state is a reported recommendation. On every path, do NOT invoke frontend-design, mcp-builder, or any other implementation skill from here.
+
+**The stress-test gate is architectural-only.** Spike and bounded use a plain approve / needs-changes gate — offering an adversarial spec review for a two-sentence design is exactly the ceremony the router exists to remove.
 
 ## The Process
 
