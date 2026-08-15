@@ -87,4 +87,4 @@ Skills are pure Markdown with no platform-specific code. Only the hook wrapper h
 | Source | Baseline | Tracking |
 |--------|----------|----------|
 | [obra/superpowers](https://github.com/obra/superpowers) | v6.2.0 | Skill content, new skills, hooks |
-| [gastownhall/beads](https://github.com/gastownhall/beads) | v1.1.2 | CLI commands, `bd prime` format |
+| [gastownhall/beads](https://github.com/gastownhall/beads) | v1.2.2 | CLI commands, `bd prime` format |

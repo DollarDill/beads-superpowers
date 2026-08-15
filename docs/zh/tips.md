@@ -88,5 +88,5 @@ SessionStart hook（`hooks/session-start`）是 bash 脚本。在 Windows 上，
 
 | 来源 | 基准版本 | 跟踪内容 |
 |--------|----------|----------|
-| [obra/superpowers](https://github.com/obra/superpowers) | v6.2.0 | 技能内容、新技能、hooks |
-| [gastownhall/beads](https://github.com/gastownhall/beads) | v1.1.2 | CLI 命令、`bd prime` 格式 |
+| [obra/superpowers](https://github.com/obra/superpowers) | v6.3.0 | 技能内容、新技能、hooks |
+| [gastownhall/beads](https://github.com/gastownhall/beads) | v1.2.2 | CLI 命令、`bd prime` 格式 |

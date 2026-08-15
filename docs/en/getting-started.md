@@ -150,7 +150,7 @@ bd dolt push    # test the connection
 
 A brand-new empty remote needs an initial commit before that first push succeeds - create it with a README, then add the remote and push.
 
-Dolt history retains deleted rows, so a remote that matches your code repo makes that full history public too. A dedicated private repo keeps issue data auth-gated while your code stays public. Nothing stops you pointing bd at your code repo today - bd has a collision guard that refuses a URL matching your git origin unless you pass `--allow-git-origin`, but it is not in any released version yet (checked through v1.1.2). Treat the separate remote as your own discipline, and expect the guard on a future upgrade.
+Dolt history retains deleted rows, so a remote that matches your code repo makes that full history public too. A dedicated private repo keeps issue data auth-gated while your code stays public. Nothing stops you pointing bd at your code repo today - bd has a collision guard that refuses a URL matching your git origin unless you pass `--allow-git-origin`, but it is not in any released version yet (re-checked 2026-08-15 through v1.2.2, which re-releases the v1.1.2 code under a higher version number). Treat the separate remote as your own discipline, and do not assume an upgrade has turned the guard on.
 
 Without a remote, beads still works entirely locally.
 

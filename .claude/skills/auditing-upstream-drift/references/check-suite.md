@@ -14,10 +14,10 @@ claude plugin validate .claude-plugin/plugin.json
 
 If validation fails, the plugin CANNOT be installed. Fix before proceeding.
 
-**Check 1.2 — Version consistency across 7 files:**
+**Check 1.2 — Version consistency across the 9 declared surfaces:**
 ```bash
 ./scripts/bump-version.sh --check
-# ALL 7 must show the same version string.
+# ALL 9 surfaces declared in .version-bump.json must show the same version string.
 ```
 
 If versions drift, run: `./scripts/bump-version.sh <version>`
