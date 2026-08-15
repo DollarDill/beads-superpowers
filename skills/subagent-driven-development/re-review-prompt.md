@@ -32,6 +32,13 @@ model silently inherits the session's most expensive one]
     finding — resolved / not resolved / partially resolved — with evidence from the
     diff. Do not re-review the whole task; that already happened.
 
+    ## You Do Not Dispatch Subagents
+
+    Do all of this review yourself. Never spawn a subagent to review part of the diff, and
+    never spawn another reviewer for a second opinion. This process already provides every
+    review seat the work gets; a reviewer you spawn duplicates one of them at full cost, and
+    its verdict counts for nothing.
+
     ## What you must NOT conclude from the diff alone
 
     You are seeing only the fix diff. You cannot see whether the fix broke something
