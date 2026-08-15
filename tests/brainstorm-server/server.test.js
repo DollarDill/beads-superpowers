@@ -12,11 +12,15 @@ const { spawn } = require('child_process');
 const http = require('http');
 const WebSocket = require('ws');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const assert = require('assert');
 
 const SERVER_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/server.cjs');
 const TEST_PORT = 3334;
+// Own port for the readiness-contract probe: it spawns a second, short-lived
+// server, and BRAINSTORM_TOKEN makes the server refuse port fallback.
+const READINESS_PORT = 3337;
 const TEST_DIR = '/tmp/brainstorm-test';
 const CONTENT_DIR = path.join(TEST_DIR, 'content');
 const STATE_DIR = path.join(TEST_DIR, 'state');
@@ -99,7 +103,12 @@ async function runTests() {
   let failed = 0;
 
   function test(name, fn) {
-    return fn().then(() => {
+    // Promise.resolve().then(fn) — NOT fn(). Calling fn() directly means an
+    // assert that throws SYNCHRONOUSLY throws before .catch() is ever attached:
+    // it escapes the failed++ counter, aborts every remaining test, and still
+    // lets the summary print "0 failed". Deferring the call turns a sync throw
+    // into a rejection, so it is counted and the run continues.
+    return Promise.resolve().then(fn).then(() => {
       console.log(`  PASS: ${name}`);
       passed++;
     }).catch(e => {
@@ -131,6 +140,45 @@ async function runTests() {
       assert.strictEqual(info.screen_dir, CONTENT_DIR, 'screen_dir should point to content/');
       assert.strictEqual(info.state_dir, STATE_DIR, 'state_dir should point to state/');
       return Promise.resolve();
+    });
+
+    // Readiness contract. The `server-started` line is what every consumer —
+    // waitForServer above, and the skill's own launcher — treats as "the server
+    // is up". Whatever that announcement implies must ALREADY be on disk when it
+    // is printed, or each consumer silently races the write. The test above only
+    // passes because the preceding test gives the child incidental scheduling
+    // time; this one checks at the announcement instant, where the race is real.
+    await test('server-info exists at the instant server-started is announced', async () => {
+      const probeDir = fs.mkdtempSync(path.join(os.tmpdir(), 'brainstorm-readiness-'));
+      const probeInfo = path.join(probeDir, 'state', 'server-info');
+      const probe = spawn('node', [SERVER_PATH], {
+        env: {
+          ...process.env,
+          BRAINSTORM_PORT: READINESS_PORT,
+          BRAINSTORM_DIR: probeDir,
+          BRAINSTORM_TOKEN: TEST_TOKEN
+        }
+      });
+      try {
+        const existedAtAnnouncement = await new Promise((resolve, reject) => {
+          let out = '';
+          probe.stdout.on('data', (d) => {
+            out += d.toString();
+            // Same tick as the announcement — no awaits in between.
+            if (out.includes('server-started')) resolve(fs.existsSync(probeInfo));
+          });
+          probe.on('error', reject);
+          setTimeout(() => reject(new Error('probe server did not start within 5s')), 5000);
+        });
+        assert(
+          existedAtAnnouncement,
+          'state/server-info must already exist when server-started is announced'
+        );
+      } finally {
+        probe.kill();
+        await sleep(100);
+        fs.rmSync(probeDir, { recursive: true, force: true });
+      }
     });
 
     // ========== HTTP Serving ==========

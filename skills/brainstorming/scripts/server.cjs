@@ -677,9 +677,15 @@ function startServer() {
       url_host: URL_HOST, url: companionUrl(),
       screen_dir: CONTENT_DIR, state_dir: STATE_DIR, idle_timeout_ms: IDLE_TIMEOUT_MS
     });
-    console.log(info);
+    // Persist BEFORE announcing. `server-started` is the readiness signal every
+    // consumer waits on, so anything it implies must already be on disk when it
+    // is printed — otherwise each consumer races this write. Best effort, as
+    // before: a write failure must not stop the server announcing itself.
     // server-info embeds the key — keep it owner-only.
-    fs.writeFileSync(path.join(STATE_DIR, 'server-info'), info + '\n', { mode: 0o600 });
+    try {
+      fs.writeFileSync(path.join(STATE_DIR, 'server-info'), info + '\n', { mode: 0o600 });
+    } catch (e) { /* best effort */ }
+    console.log(info);
   }
 
   server.on('error', (err) => {

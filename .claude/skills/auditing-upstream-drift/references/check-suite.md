@@ -22,21 +22,26 @@ If validation fails, the plugin CANNOT be installed. Fix before proceeding.
 
 If versions drift, run: `./scripts/bump-version.sh <version>`
 
-**Check 1.3 — Hook is executable and produces valid JSON:**
-```bash
-# Executable?
-test -x hooks/session-start && echo "PASS" || echo "FAIL: chmod +x hooks/session-start"
+**Checks 1.3 + 1.4 — Hook is executable, emits valid JSON, and injects skills + beads context:**
 
-# Valid JSON output?
-bash hooks/session-start 2>&1 | python3 -m json.tool > /dev/null && echo "PASS" || echo "FAIL: hook output is not valid JSON"
+Invoke the hook **exactly once** and assert everything against that single capture.
+`hooks/session-start:151-189` carries an event-scoped dedup marker (jb3u) with a **60-second
+TTL**; with no stdin JSON the session id falls back to `nosid-$PPID`, so every invocation from
+one shell shares one marker and the **second** call within 60s is suppressed to `{}`. Splitting
+these into two invocations makes 1.4 fail deterministically against a perfectly healthy hook.
+A pause does not help — the TTL is 60s, not a scheduling race (`beads-superpowers-oxemv.4`).
+
+```bash
+test -x hooks/session-start && echo "PASS: executable" || echo "FAIL: chmod +x hooks/session-start"
+
+output=$(bash hooks/session-start 2>&1)   # ONCE — see the dedup note above
+printf '%s' "$output" | python3 -m json.tool > /dev/null && echo "PASS: valid JSON" || echo "FAIL: hook output is not valid JSON"
+printf '%s' "$output" | grep -q "using-superpowers" && echo "PASS: skills injected" || echo "FAIL: skills not injected"
+printf '%s' "$output" | grep -q "beads-context\|bd prime\|Beads Workflow" && echo "PASS: beads context injected" || echo "FAIL: beads context not injected"
 ```
 
-**Check 1.4 — Hook injects both skills AND bd prime:**
-```bash
-output=$(bash hooks/session-start 2>&1)
-echo "$output" | grep -q "using-superpowers" && echo "PASS: skills injected" || echo "FAIL: skills not injected"
-echo "$output" | grep -q "beads-context\|bd prime\|Beads Workflow" && echo "PASS: bd prime injected" || echo "FAIL: bd prime not injected"
-```
+A 2-byte (`{}`) capture is the dedup signature, not a defect. Before filing any hook finding,
+clear the marker and re-run: `rm -f "${XDG_RUNTIME_DIR:-/tmp}/beads-superpowers-$(id -u)"/m-nosid-*`
 
 **Check 1.5 — .claude/settings.json points to plugin hook (not bare bd prime):**
 ```bash
@@ -77,27 +82,26 @@ grep -q "Jesse Vincent" LICENSE && echo "FAIL: LICENSE still has upstream author
 
 Run ALL runnable tests. Tests are the ground truth — if they fail, nothing else matters.
 
-**Check 2.1 — Brainstorm server tests (32 tests):**
+**Checks 2.1–2.3 — Brainstorm server suites: assert the EXIT CODE, never a piped string.**
+
+`node <suite> | tail -1` cannot detect failure: the pipe discards the exit status, and a suite
+that dies mid-run leaves a `PASS:` line last, so `tail -1` reads green off a red run. Measured
+2026-08-15 on `server.test.js` — 3 failures in 8 runs, every one of them invisible to the old
+form (`beads-superpowers-oxemv.3`). Assert the status, and print the summary only as context.
+
 ```bash
 cd tests/brainstorm-server
 npm install --silent 2>/dev/null
-node server.test.js 2>&1 | tail -1
-# MUST show: --- Results: 32 passed, 0 failed ---
+for suite in server.test.js ws-protocol.test.js auth.test.js; do
+    out=$(node "$suite" 2>&1); rc=$?
+    printf '%s: %s (exit %s)\n' "$suite" "$(printf '%s' "$out" | grep -E 'Results:' | tail -1)" "$rc"
+    [ "$rc" -eq 0 ] && echo "  PASS" || { echo "  FAIL"; printf '%s\n' "$out" | tail -20; }
+done
 ```
 
-**Check 2.2 — WebSocket protocol tests (31 tests):**
-```bash
-cd tests/brainstorm-server
-node ws-protocol.test.js 2>&1 | tail -1
-# MUST show: --- Results: 31 passed, 0 failed ---
-```
-
-**Check 2.3 — Auth/security tests (20 tests):**
-```bash
-cd tests/brainstorm-server
-node auth.test.js 2>&1 | tail -1
-# MUST show: --- Results: 20 passed, 0 failed ---
-```
+Expected: `server.test.js` 33 passed, `ws-protocol.test.js` 31, `auth.test.js` 20 — all exit 0.
+Note `npm test` chains the three with `&&`, so a red first suite silently skips the other two;
+run them individually (as above) whenever you need per-suite evidence.
 
 **Check 2.4 — LLM behavioral suites:** removed in the 2026-07 fat audit — skill-behavior measurement lives in the external eval-harness project; run its suite there if behavioral verification is needed.
 

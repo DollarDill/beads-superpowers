@@ -44,7 +44,9 @@ These shared skills intentionally differ from upstream superpowers. When Phase 5
 | **using-superpowers + judgment/gate skills (doctrine class)** | fork-only Production-Grade Doctrine: canonical `## Production-Grade Doctrine` block in `using-superpowers` PLUS self-contained woven doctrine-floor lines (incl. the security floor) in judgment/gate skills | no such doctrine (obra/superpowers has none) | intended fork behavior (ADR-0023/0036/0040); on re-sync PRESERVE every woven doctrine-floor line; mark SKIP, not Conflict |
 | **using-superpowers + question-gate skills (ask-user class)** | fork-only ask-user convention: `## Asking the User` block in `using-superpowers`, self-contained consent lines at the 3 destructive gates (finishing-a-development-branch, document-release, using-git-worktrees), adapt parentheticals on the 6 JSON gate lead-ins, quirk rows in `references/{opencode,codex,pi}-tools.md` | upstream uses bare generic phrasing with no convention block (zero in-skill tool refs) | intended fork behavior (ADR-0041); on re-sync PRESERVE all four elements; mark SKIP, not Conflict |
 | **All shared skills (namespace)** | cross-skill references use `beads-superpowers:<skill>` | bare `superpowers:<skill>` | upstream's bare namespace points at the upstream plugin; in our fork it must carry our plugin name or it resolves to the wrong plugin (intended; mark SKIP, not Conflict) |
-| **brainstorming** | brainstorm session dir + auth-token files live under `.internal/brainstorm/` (self-ignored) | upstream uses `.superpowers/brainstorm/` | one canonical `.internal/` scratch root (spec 2026-06-30); `server.cjs` unchanged — do not revert the path on re-sync |
+| **brainstorming** | brainstorm session dir + auth-token files live under `.internal/brainstorm/` (self-ignored) | upstream uses `.superpowers/brainstorm/` | one canonical `.internal/` scratch root (spec 2026-06-30); `server.cjs` logic otherwise upstream-verbatim apart from the two rows below — do not revert the path on re-sync |
+| **brainstorming `server.cjs`** (branding) | `SUPERPOWERS_BRAND_IMAGE_URL = ''`, brand text `beads-superpowers v<ver>`, link to `DollarDill/beads-superpowers`, no telemetry logo | Prime Radiant logo, `Superpowers v<ver>`, link to `obra/superpowers` | fork attribution; upstream escaping preserved verbatim (defense-in-depth). Mark SKIP, not Conflict |
+| **brainstorming `server.cjs`** (readiness ordering) | writes `state/server-info` **before** printing the `server-started` announcement, best-effort in `try/catch` | prints the announcement first, then writes the file (still the order at v6.3.0:686-688) | `server-started` is the readiness signal every consumer waits on, so announcing first makes each consumer race the write. Measured 2026-08-15: server-info absent at the announcement instant in **20/20** spawns, which flaked `tests/brainstorm-server/server.test.js` at ~37% and — because `npm test` chains the three suites with `&&` — silently skipped the ws-protocol and auth suites on every red run. Pinned by the test `server-info exists at the instant server-started is announced`. Upstream bug, fixed here first; do NOT revert on re-sync. Mark SKIP, not Conflict (`beads-superpowers-oxemv.3`) |
 | **Codex SessionStart hook** | keep it — still fires `using-superpowers` bootstrap + composed beads context | v6.1.0 removed theirs ("Codex reliably triggers skills on its own, and the bootstrap hook made the UX worse rather than better") | ours also carries composed beads context injection (curated memories + a `bd prime` pointer), not just the skill bootstrap upstream deemed redundant (ADR-0039, 2026-07-02) |
 | **SessionStart matcher** | `startup|resume|clear|compact` | `startup|clear|compact` | added in bd-3ogl.2 to cover session resumption |
 | **writing-skills** | not shipped — removed 2026-07-10 (e4w8) | ships the writing-skills meta-skill | upstream maintenance weight; Check 5.2 will list it as upstream-new — mark SKIP |
@@ -186,11 +188,26 @@ Done when: Checks 5.1–5.5 are run and every CHANGED skill is categorised (Safe
 
 Check if beads has new capabilities our skills should use.
 
-**Check 6.1 — Beads version:**
+**Check 6.1 — Beads version (resolve UPSTREAM first, THEN the local binary):**
+
+The local binary reports what is **installed here**, never what **shipped**. Probing it first
+makes this phase report zero drift by construction whenever the install is stale — the same
+defect class as `beads-superpowers-ivcop` in Phase 5. Measured 2026-08-15: local `bd` was
+v1.1.2 while upstream had shipped v1.2.0, v1.2.1 and v1.2.2, so a local-first Phase 6 would
+have reported "no drift" and missed a schema-bricking hazard entirely.
+
 ```bash
+# 1. What actually shipped, newest first:
+gh api repos/gastownhall/beads/releases --jq '.[0:6][] | "\(.tag_name)  \(.published_at)  \(.name)"'
+# 2. What is installed here:
 bd version
-# Compare against our baseline (v1.1.0)
 ```
+
+State explicitly when the local binary is older than the latest release, and **read the release
+notes across `baseline..latest`** before concluding anything. A version bump is not evidence of
+a capability change: v1.2.2 re-released the v1.1.2 code verbatim after v1.2.0/v1.2.1 were
+published by accident, so its higher number carries **no** new features. Conversely, do not
+assume a fix has landed just because the number moved (`beads-superpowers-oxemv.2`).
 
 **Check 6.2 — New or changed bd commands:**
 ```bash
