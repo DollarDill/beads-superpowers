@@ -169,3 +169,73 @@ The cross-cutting convention blocks (Capture gate, memory convention) are duplic
 ### Registered upstream divergence — stripped detritus (ADR-0048 exception, slice-3)
 
 The fork does NOT ship upstream superpowers' non-functional bundled artifacts (eval fixtures, creation logs). Removed in slice-3: `skills/systematic-debugging/{CREATION-LOG.md, test-academic.md, test-pressure-1.md, test-pressure-2.md, test-pressure-3.md}`. A re-sync from upstream must NOT re-introduce them. The genuine upstream reference files (condition-based-waiting*, defense-in-depth.md, root-cause-tracing.md, find-polluter.sh) are retained verbatim.
+
+---
+
+### Phase 9: Post-Adoption Completeness Gate
+
+Runs after adoption work lands and before the baseline is re-stamped. The bright line and the
+re-stamp ordering rule live in `SKILL.md`; this section carries the runnable checks.
+
+**Check 9.1 — Every changed path has a disposition.** Enumerate the original range and account for
+each path. Do not skip the ones that look like noise; version-only manifest bumps are a legitimate
+disposition, but you must *check* that is what they are.
+
+```bash
+OLD=<baseline at audit time>   # NOT the value you are about to re-stamp to
+NEW=<newest upstream tag>
+git -C /tmp/superpowers-upstream diff --name-status "$OLD".."$NEW"
+```
+
+Every path must land in exactly one bucket, with the evidence named:
+
+| Disposition | What it means | Evidence required |
+|---|---|---|
+| **Adopted** | our tree now carries the change | the closed bead, and a diff showing the hunk is present |
+| **Registered divergence** | we deliberately do not carry it | the row in [Known Deliberate Divergences](#known-deliberate-divergences) |
+| **Deferred** | a filed, open decision bead | the bead ID — deferral is a disposition, absence is not |
+| **N/A** | upstream-only path, or a file we do not ship | the stated reason (`ABSENT` in our tree, upstream's own docs, version-only bump) |
+
+A path you cannot place in a bucket is an unregistered drift finding. File it.
+
+**Check 9.2 — Adopted files carry the change, not just a bead.** A bead closed with a plausible
+close reason is not evidence that the edit landed — read the bytes.
+
+Do **not** whole-file diff our copy against upstream `NEW`. This fork is heavily diverged by
+design; that diff runs to hundreds of lines per skill (833 on `subagent-driven-development`) and
+drowns the signal. Measure the **hunk** instead: what fraction of upstream's *added* lines in
+`OLD..NEW` are present in our tree.
+
+```bash
+U=/tmp/superpowers-upstream
+for p in $(git -C "$U" diff --name-only "$OLD".."$NEW" -- skills/); do
+  [ -e "$p" ] || { printf '%-58s ABSENT (not shipped)\n' "$p"; continue; }
+  mapfile -t add < <(git -C "$U" diff "$OLD".."$NEW" -- "$p" | grep '^+' | grep -v '^+++' \
+    | sed 's/^+//;s/^[[:space:]]*//;s/[[:space:]]*$//' | grep -E '.{25,}')
+  [ "${#add[@]}" -eq 0 ] && continue
+  hit=0; for l in "${add[@]}"; do grep -qF -- "$l" "$p" && hit=$((hit+1)); done
+  printf '%-58s added=%-4s present=%-4s %3s%%\n' "$p" "${#add[@]}" "$hit" \
+    "$(( hit * 100 / ${#add[@]} ))"
+done
+```
+
+**Read the number against the path's Check 9.1 disposition — it is a triage signal, not a verdict.**
+Low coverage is only a defect where you claimed *Adopted*:
+
+| Disposition | Expected coverage | A low number means |
+|---|---|---|
+| Adopted **verbatim** | high; near 0% is a red flag | the edit never landed — investigate |
+| Adopted **with adaptation** | low is normal | our fork rewrites upstream's wording (`bd worktree` vocabulary, beads-aware sections); confirm the *substance* landed by reading, not by the percentage |
+| Registered divergence / Deferred | low or 0% expected | nothing — absence is the intended state |
+
+**Scaling to a multi-release delta.** Check 5.1 warns the range may span several releases;
+`v6.0.0..v6.3.0` is four tags and 150+ paths. Per-path enumeration at that size degrades into a
+gate someone performs shallowly while still writing "Phase 9: PASS" — the same
+green-without-measuring failure as the tautology this phase replaced. So:
+
+- Non-`skills/` paths are dispositioned **as classes**, one line of evidence each (version-only
+  manifest bumps, upstream-only docs, files absent from our tree).
+- **Per-path evidence is required only for `skills/`** — where a missed adoption changes agent
+  behaviour.
+- A range spanning **more than two upstream releases runs per-release**, so each pass stays small
+  enough to actually perform.

@@ -71,7 +71,7 @@ When a CHANGED skill from Phase 5 matches a row here, mark it **SKIP (deliberate
 
 ## The Audit Process
 
-You MUST create an audit bead and complete ALL 8 phases in order:
+You MUST create an audit bead and complete ALL 9 phases in order:
 
 ```bash
 bd create "Audit: full plugin health check" -t chore -p 1
@@ -405,75 +405,19 @@ drift; nothing else proves you *responded* to all of it. This is that proof.
 > **Bright line: a post-adoption diff of `NEW..NEW` is not evidence.** Once you re-stamp the
 > baseline to `NEW`, `git diff NEW..NEW` is empty *by construction* and proves nothing — it cannot
 > fail, so it cannot detect a missed adoption. Verify against the **original** `OLD` baseline
-> first, re-stamp second. Reversing that order is how epic `beads-superpowers-44v32` closed
-> claiming "v6.3.0..v6.3.0 diff EMPTY (no unregistered upstream drift)" while
-> `skills/brainstorming/visual-companion.md` still carried v6.2.0 text
-> (`beads-superpowers-oxemv.17`, `beads-superpowers-oxemv.18`).
+> first, re-stamp second.
 
-**Check 9.1 — Every changed path has a disposition.** Enumerate the original range and account for
-each path. Do not skip the ones that look like noise; version-only manifest bumps are a legitimate
-disposition, but you must *check* that is what they are.
-
-```bash
-OLD=<baseline at audit time>   # NOT the value you are about to re-stamp to
-NEW=<newest upstream tag>
-git -C /tmp/superpowers-upstream diff --name-status "$OLD".."$NEW"
-```
-
-Every path must land in exactly one bucket, with the evidence named:
-
-| Disposition | What it means | Evidence required |
-|---|---|---|
-| **Adopted** | our tree now carries the change | the closed bead, and a diff showing the hunk is present |
-| **Registered divergence** | we deliberately do not carry it | the row in [Known Deliberate Divergences](#known-deliberate-divergences) |
-| **Deferred** | a filed, open decision bead | the bead ID — deferral is a disposition, absence is not |
-| **N/A** | upstream-only path, or a file we do not ship | the stated reason (`ABSENT` in our tree, upstream's own docs, version-only bump) |
-
-A path you cannot place in a bucket is an unregistered drift finding. File it.
-
-**Check 9.2 — Adopted files carry the change, not just a bead.** A bead closed with a plausible
-close reason is not evidence that the edit landed — read the bytes.
-
-Do **not** whole-file diff our copy against upstream `NEW`. This fork is heavily diverged by
-design; that diff runs to hundreds of lines per skill (833 on `subagent-driven-development`) and
-drowns the signal. Measure the **hunk** instead: what fraction of upstream's *added* lines in
-`OLD..NEW` are present in our tree.
-
-```bash
-U=/tmp/superpowers-upstream
-for p in $(git -C "$U" diff --name-only "$OLD".."$NEW" -- skills/); do
-  [ -e "$p" ] || { printf '%-58s ABSENT (not shipped)\n' "$p"; continue; }
-  mapfile -t add < <(git -C "$U" diff "$OLD".."$NEW" -- "$p" | grep '^+' | grep -v '^+++' \
-    | sed 's/^+//;s/^[[:space:]]*//;s/[[:space:]]*$//' | grep -E '.{25,}')
-  [ "${#add[@]}" -eq 0 ] && continue
-  hit=0; for l in "${add[@]}"; do grep -qF -- "$l" "$p" && hit=$((hit+1)); done
-  printf '%-58s added=%-4s present=%-4s %3s%%\n' "$p" "${#add[@]}" "$hit" \
-    "$(( hit * 100 / ${#add[@]} ))"
-done
-```
-
-**Read the number against the path's Check 9.1 disposition — it is a triage signal, not a verdict.**
-Low coverage is only a defect where you claimed *Adopted*:
-
-| Disposition | Expected coverage | A low number means |
-|---|---|---|
-| Adopted **verbatim** | high; near 0% is a red flag | the edit never landed — investigate |
-| Adopted **with adaptation** | low is normal | our fork rewrites upstream's wording (`bd worktree` vocabulary, beads-aware sections); confirm the *substance* landed by reading, not by the percentage |
-| Registered divergence / Deferred | low or 0% expected | nothing — absence is the intended state |
-
-Measured 2026-08-16 on `v6.2.0..v6.3.0`: `visual-companion.md` scored **0%** while marked Adopted
-— the real miss (`beads-superpowers-oxemv.17`), and it went to 100% once fixed.
-`using-superpowers/SKILL.md` also scores 0%, but its one added line is the Hermes reference
-deferred under `beads-superpowers-oxemv.13`, and `subagent-driven-development/SKILL.md` scores 2%
-because its delta is the deliberately-rejected "Rulings, not stalls" shift. Same number, opposite
-meanings — which is why the disposition must be read first.
+**Checks 9.1 and 9.2** — the per-path disposition buckets, the hunk-coverage measurement, and the
+scaling rules for a multi-release delta — live in
+[references/check-suite.md](references/check-suite.md). Open it when you reach this phase.
 
 **Check 9.3 — Re-stamp last.** Only once 9.1 and 9.2 pass, update the baselines in the
 [Upstream Sources](#upstream-sources) table here and in `CLAUDE.md`. Re-stamping earlier destroys
 the only range that can detect a miss.
 
-Done when: every path in `OLD..NEW` has a named disposition with evidence, every adopted file has
-been byte-checked against upstream `NEW`, and only then are the baselines re-stamped.
+Done when: a **per-path disposition table** has been produced and recorded in the audit report —
+every path in `OLD..NEW` in exactly one bucket with its evidence named — every adopted `skills/`
+file has been hunk-checked against upstream `NEW`, and only then are the baselines re-stamped.
 
 ---
 
@@ -501,7 +445,7 @@ echo "=== Quick Audit Complete ==="
 
 | Trigger | Action |
 |---------|--------|
-| Before any plugin release | Full audit (all 8 phases) — MANDATORY |
+| Before any plugin release | Full audit (all 9 phases) — MANDATORY |
 | Monthly | Phases 1-4 (infrastructure + tests + content + chain) |
 | After upstream superpowers release | Add Phase 5 |
 | After upstream beads release | Add Phase 6 |
