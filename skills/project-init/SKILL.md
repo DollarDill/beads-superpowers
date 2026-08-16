@@ -23,8 +23,7 @@ recovery — including on a machine you are only *adding* to an existing setup.
 v1.2.0 and v1.2.1 were published by accident on 2026-08-11 without release testing and are
 retracted in `go.mod`. Running either **once** migrates the local Dolt schema **v53 → v65**, after
 which every other bd binary refuses to start with `schema version mismatch: database is at v65,
-binary knows up to v53`. That is a data-availability failure across every clone sharing the
-database, not a local inconvenience.
+binary knows up to v53`.
 
 If it has already happened: upgrade **every** machine and clone to a safe version *first* — a
 leftover 1.2.1 binary silently re-migrates — then follow

@@ -21,7 +21,6 @@ stays your human partner's call. Enumerated may-rule / must-stop lists:
 [references/rulings-and-escalation.md](references/rulings-and-escalation.md) — read it the first time
 a conflict surfaces. **Precedence: must-stop wins** where both could apply, and **a security finding
 is NEVER rulable and never parkable**, whatever the plan or spec says (`references/breaker-trip.md`).
-Without that precedence the permissive list silently swallows the restrictive one.
 
 **Every ruling cites its authority** — `Ruling: <what you decided> — settled by <spec §/heading> —
 <what it costs if wrong>`. No citable spec location means it is **by definition not spec-settled**:
@@ -329,8 +328,7 @@ re-review; residuals follow the breaker rules.
 final message under "Rulings I made", in the order you made them, each with its cited spec
 location and what it costs if wrong. The list is exhaustive: if the ledger holds a ruling, the
 list holds it. This is the only place decisions you took on your human partner's behalf reach
-them, so they can rework whatever you got wrong. A ruling that dies with the workspace was a
-decision made in secret.
+them, so they can rework whatever you got wrong.
 
 **Teardown:** remove the plan's workspace once the final review is clean **and**
 each task's outcome and any implementer-raised concerns are recorded in beads,
