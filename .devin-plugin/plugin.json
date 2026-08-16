@@ -1,0 +1,24 @@
+{
+  "name": "beads-superpowers",
+  "version": "0.16.0",
+  "description": "Superpowers skills + Beads issue tracking for Devin CLI. Composable skills + persistent task memory.",
+  "author": {
+    "name": "Dillon Frawley",
+    "email": "dillon@algocents.com"
+  },
+  "homepage": "https://algocents.com/beads-superpowers/",
+  "repository": "https://github.com/DollarDill/beads-superpowers",
+  "license": "MIT",
+  "keywords": [
+    "brainstorming",
+    "subagent-driven-development",
+    "skills",
+    "planning",
+    "tdd",
+    "debugging",
+    "code-review",
+    "workflow",
+    "beads",
+    "issue-tracking"
+  ]
+}

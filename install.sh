@@ -271,6 +271,7 @@ detect_tools() {
   command -v kimi         >/dev/null 2>&1 && HAS_KIMI=1 || HAS_KIMI=0
   command -v pi           >/dev/null 2>&1 && HAS_PI=1 || HAS_PI=0
   command -v gemini       >/dev/null 2>&1 && HAS_GEMINI=1 || HAS_GEMINI=0
+  command -v devin        >/dev/null 2>&1 && HAS_DEVIN=1 || HAS_DEVIN=0
 }
 
 detect_upstream_conflict() {
@@ -965,6 +966,7 @@ print_next_steps() {
   if [ "$HAS_KIMI" = 1 ]; then info "Kimi Code detected — native install: /plugins install https://github.com/DollarDill/beads-superpowers"; fi
   if [ "$HAS_PI" = 1 ]; then info "Pi detected — native install: pi install git:github.com/DollarDill/beads-superpowers"; fi
   if [ "$HAS_GEMINI" = 1 ]; then info "Gemini CLI detected — native install: gemini extensions install https://github.com/DollarDill/beads-superpowers"; fi
+  if [ "$HAS_DEVIN" = 1 ]; then info "Devin CLI detected — native install: devin plugins install DollarDill/beads-superpowers"; fi
 }
 
 # --- Uninstall ---

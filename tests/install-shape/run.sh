@@ -7,7 +7,7 @@ set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET="${1:-all}"
 TIER_A="claude codex opencode"
-TIER_B="cursor copilot kimi antigravity droid pi gemini"
+TIER_B="cursor copilot kimi antigravity droid pi gemini devin"
 total_rc=0
 
 echo "install-shape: proves artifacts land where each harness expects — does NOT prove hooks fire."

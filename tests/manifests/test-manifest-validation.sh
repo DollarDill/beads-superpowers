@@ -37,7 +37,7 @@ jq_ok() {  # file, filter, label
 }
 # JSON validity: plugin manifests + all three marketplace manifests
 for f in .claude-plugin/plugin.json .codex-plugin/plugin.json .cursor-plugin/plugin.json \
-         hooks/hooks-cursor.json .kimi-plugin/plugin.json gemini-extension.json \
+         hooks/hooks-cursor.json .kimi-plugin/plugin.json .devin-plugin/plugin.json gemini-extension.json \
          .claude-plugin/marketplace.json .codex-plugin/marketplace.json .agents/plugins/marketplace.json; do
   if [ -f "$f" ]; then
     valid_json "$f"
@@ -47,6 +47,7 @@ for f in .claude-plugin/plugin.json .codex-plugin/plugin.json .cursor-plugin/plu
 done
 ver_match .cursor-plugin/plugin.json '.version'
 ver_match .kimi-plugin/plugin.json '.version'
+ver_match .devin-plugin/plugin.json '.version'
 ver_match gemini-extension.json '.version'
 jq -e '.skills=="./skills/"' .cursor-plugin/plugin.json >/dev/null && echo "cursor skills OK" || fail=1
 jq -e '.sessionStart.skill=="using-superpowers"' .kimi-plugin/plugin.json >/dev/null && echo "kimi sessionStart OK" || fail=1

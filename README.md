@@ -14,7 +14,7 @@
 
 ---
 
-A plugin for Claude Code, Codex, OpenCode, and 7 more AI coding agents that makes your agent write tests before code, debug systematically instead of guessing, and remember what it worked on yesterday. Composable skills enforce the practices; a Dolt-backed issue tracker keeps context across sessions.
+A plugin for Claude Code, Codex, OpenCode, and 8 more AI coding agents that makes your agent write tests before code, debug systematically instead of guessing, and remember what it worked on yesterday. Composable skills enforce the practices; a Dolt-backed issue tracker keeps context across sessions.
 
 ## Quickstart
 
@@ -34,7 +34,7 @@ bd init                               # 2. Bootstrap the Dolt database for this 
 
 Start a new Claude Code session and type "where are we" - the agent will load your `bd` context and pick up where you left off.
 
-Using a different agent? Jump to install for [Codex CLI](#codex-cli), [OpenCode](#opencode), [Cursor](#cursor), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Kimi Code](#kimi-code), [Antigravity](#antigravity), [Factory Droid](#factory-droid), or [Pi](#pi).
+Using a different agent? Jump to install for [Codex CLI](#codex-cli), [OpenCode](#opencode), [Cursor](#cursor), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Kimi Code](#kimi-code), [Antigravity](#antigravity), [Factory Droid](#factory-droid), [Pi](#pi), or [Devin CLI](#devin-cli).
 
 ## The Basic Workflow
 
@@ -223,6 +223,14 @@ Note: rides the Claude-plugin fallback (skills + session-start via the shared `h
 ```
 
 Run `/new` after install to start a fresh session with the plugin active.
+
+### Devin CLI
+
+```bash
+devin plugins install DollarDill/beads-superpowers
+```
+
+Devin reads `.devin-plugin/plugin.json` and auto-discovers the co-located `skills/` directory, surfacing every skill in its system prompt. There is no session hook, so the agent self-primes beads context by running `bd prime` as its first action.
 
 ### Antigravity
 

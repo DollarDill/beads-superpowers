@@ -36,7 +36,7 @@ bd init                               # 2. Bootstrap the Dolt database for this 
 
 开启新的 Claude Code 会话，输入 "where are we"——智能体将加载你的 `bd` 上下文，从上次中断处继续。
 
-使用其他智能体？跳转至 [Codex CLI](#codex-cli)、[OpenCode](#opencode)、[Cursor](#cursor)、[Gemini CLI](#gemini-cli)、[GitHub Copilot CLI](#github-copilot-cli)、[Kimi Code](#kimi-code)、[Antigravity](#antigravity)、[Factory Droid](#factory-droid) 或 [Pi](#pi) 的安装说明。
+使用其他智能体？跳转至 [Codex CLI](#codex-cli)、[OpenCode](#opencode)、[Cursor](#cursor)、[Gemini CLI](#gemini-cli)、[GitHub Copilot CLI](#github-copilot-cli)、[Kimi Code](#kimi-code)、[Antigravity](#antigravity)、[Factory Droid](#factory-droid)、[Pi](#pi) 或 [Devin CLI](#devin-cli) 的安装说明。
 
 ## 基本工作流
 
@@ -225,6 +225,14 @@ copilot plugin update beads-superpowers
 ```
 
 安装后运行 `/new` 以启动含插件的新会话。
+
+### Devin CLI
+
+```bash
+devin plugins install DollarDill/beads-superpowers
+```
+
+Devin 读取 `.devin-plugin/plugin.json` 并自动发现同级的 `skills/` 目录，将每个技能呈现在其系统提示中。由于没有会话钩子，代理会将 `bd prime` 作为首个操作来自行加载 beads 上下文。
 
 ### Antigravity
 
