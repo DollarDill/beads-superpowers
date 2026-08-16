@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # check-model-genericization.sh — bd-1f5w: hardcoded Claude model names
 # (haiku/sonnet/opus/fable) must not appear in harness-neutral distributed
-# content — the plugin ships to 10 harnesses where those names mean nothing.
+# content — the plugin ships to 11 harnesses where those names mean nothing.
 # Skills phrase model choice as capability tiers ("fast/cheap model",
 # "stronger model"). Allowlisted as deliberately harness-specific (ADR-0041
 # pattern): skills/using-superpowers/references/ and

@@ -19,7 +19,7 @@ manifests:
 contracts:
     bash scripts/run-contracts.sh
 
-# Install-shape suite: 10 harnesses (Tier A ×3 full artifacts, Tier B ×7 hint+manifest)
+# Install-shape suite: 11 harnesses (Tier A ×3 full artifacts, Tier B ×8 hint+manifest)
 shape HARNESS="all":
     bash tests/install-shape/run.sh {{HARNESS}}
 
