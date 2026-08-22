@@ -43,7 +43,12 @@ repos:
         entry: bash scripts/bump-version.sh --check
         language: system
         pass_filenames: false
-        files: (package\.json|plugin\.json|marketplace\.json)
+        # plugin.yaml: Hermes' manifest is a registered version surface (prose[]
+        # in .version-bump.json); without it here, drift in that file would
+        # never be caught at commit time, unlike every JSON manifest peer.
+        # .version-bump.json: the registry itself — removing an entry silently
+        # disables sync for that surface, so touching it must trigger --check.
+        files: (package\.json|plugin\.json|marketplace\.json|plugin\.yaml|\.version-bump\.json)
       - id: skill-count-guard
         name: Skill count drift guard + structural self-consistency
         entry: bash scripts/check-skill-count.sh

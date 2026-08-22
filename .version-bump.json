@@ -41,6 +41,10 @@
     {
       "path": "CLAUDE.md",
       "prefix": "**Version:** "
+    },
+    {
+      "path": ".hermes-plugin/plugin.yaml",
+      "prefix": "version: "
     }
   ],
   "audit": {
