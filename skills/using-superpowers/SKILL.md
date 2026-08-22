@@ -69,15 +69,15 @@ retry with that.
 
 ## Platform Adaptation
 
-If your harness appears here, read its reference file for special instructions:
+If your harness appears here, read `references/<file>` for special instructions:
 
-- Codex: `references/codex-tools.md`
-- OpenCode: `references/opencode-tools.md`
-- Copilot CLI: `references/copilot-tools.md`
-- Pi: `references/pi-tools.md`
-- Antigravity: `references/antigravity-tools.md`
-- Gemini: `references/gemini-tools.md`
-- Hermes: `references/hermes-tools.md`
+- Codex: `codex-tools.md`
+- OpenCode: `opencode-tools.md`
+- Copilot CLI: `copilot-tools.md`
+- Pi: `pi-tools.md`
+- Antigravity: `antigravity-tools.md`
+- Gemini: `gemini-tools.md`
+- Hermes: `hermes-tools.md`
 
 ## Asking the User
 
