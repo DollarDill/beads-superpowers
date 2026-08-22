@@ -30,8 +30,29 @@ if [ ! -f "$PLUGIN" ]; then
   exit 1
 fi
 
-# The composer-exec assertions (single source of truth, shell/timeout) are added
-# in Task 3, alongside the code they constrain.
+# Exactly ONE composer invocation -- single source of truth for composition.
+# Match the quoted string literal, NOT the bare token: `session-start`
+# legitimately appears in the module docstring and twice in _composer_path()'s
+# candidate list, and `grep -c` counts LINES, not occurrences. Only the argv
+# literal is unique to the actual invocation.
+n=$(grep -c -F '"--emit-plain"' "$PLUGIN")
+if [ "$n" = "1" ]; then
+  ok "exactly one composer invocation"
+else
+  bad "expected 1 quoted --emit-plain literal, found $n"
+fi
+
+# subprocess is list-form with a timeout, never shell=True.
+if grep -qF 'shell=True' "$PLUGIN"; then
+  bad "shell=True present"
+else
+  ok "no shell=True"
+fi
+if grep -qF 'timeout=' "$PLUGIN"; then
+  ok "subprocess timeout present"
+else
+  bad "no subprocess timeout"
+fi
 
 # No selection policy forked into the plugin. Separate greps, not
 # `grep -E 'a\|b'` -- with -E the backslash-pipe is a LITERAL pipe, not
@@ -164,6 +185,63 @@ try:
 except RuntimeError:
     check(True, "_skills_dir() raises when neither layout matches")
 shutil.rmtree(tmp)
+
+BOOT_MARK = "EXTREMELY_IMPORTANT"
+STUB = "<EXTREMELY_IMPORTANT>STUB PAYLOAD</EXTREMELY_IMPORTANT>"
+
+# --- composer exec + strict-equality injection (git-clone layout) ---
+tmp, pdir = build_fixture("sibling", with_hooks=True)
+mod = load(pdir)
+ctx = FakeCtx()
+mod.register(ctx)
+fn = ctx.hooks["pre_llm_call"]
+out = fn(is_first_turn=True)
+check(isinstance(out, dict) and "context" in out,
+      "pre_llm_call returns {'context': ...} on first turn")
+check(out["context"] == STUB,
+      "injected text equals composer payload EXACTLY (no re-wrap)")
+check(fn(is_first_turn=False) is None, "pre_llm_call returns None after turn 1")
+shutil.rmtree(tmp)
+
+# --- composer absent -> disclosing fallback, policy-free ---
+tmp, pdir = build_fixture("sibling", with_hooks=False)
+mod = load(pdir)
+ctx = FakeCtx()
+mod.register(ctx)
+text = ctx.hooks["pre_llm_call"](is_first_turn=True)["context"]
+check("session composer unavailable" in text,
+      "fallback DISCLOSES the degradation")
+check(BOOT_MARK in text, "fallback carries the injection marker")
+for tok in ("salience", "@type=", "BSP_MEM_CEILING"):
+    check(tok not in text, f"fallback carries no selection policy: {tok}")
+shutil.rmtree(tmp)
+
+# --- FLATTENED layout: the branch a git-clone-only fixture would hide ---
+# Upstream supports it; our hooks/ dependency is one upstream never had, so
+# either the composer resolves there or we degrade DISCLOSINGLY. Never silent.
+tmp, pdir = build_fixture("flat", with_hooks=False)
+mod = load(pdir)
+ctx = FakeCtx()
+mod.register(ctx)
+text = ctx.hooks["pre_llm_call"](is_first_turn=True)["context"]
+check("session composer unavailable" in text,
+      "flattened layout without hooks/ degrades DISCLOSINGLY, not silently")
+shutil.rmtree(tmp)
+
+tmp, pdir = build_fixture("flat", with_hooks=True)
+mod = load(pdir)
+ctx = FakeCtx()
+mod.register(ctx)
+text = ctx.hooks["pre_llm_call"](is_first_turn=True)["context"]
+check(text == STUB, "flattened layout WITH hooks/ resolves the composer")
+shutil.rmtree(tmp)
+
+# --- fail-closed memory line: only a count header may pass through ---
+check(mod._MEM_HEADER_RE.match("Memories (220):") is not None,
+      "memory-line pattern accepts a count header")
+check(mod._MEM_HEADER_RE.match(
+    "akia1234567890abcdef-appeared-in-the-deploy-log") is None,
+      "memory-line pattern REJECTS a bare key (wze77.8 secret-shaped-key class)")
 
 for m in ok_:
     print(f"   ok:   {m}")
