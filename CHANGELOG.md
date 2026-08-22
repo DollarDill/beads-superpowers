@@ -9,6 +9,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Hermes Agent is supported** — `hermes plugins install DollarDill/beads-superpowers`. Every skill is registered with Hermes' native skill loader, so `skill_view("brainstorming")` works without a path. Unlike the other best-effort harnesses, its bootstrap actually fires: a `pre_llm_call` hook injects the session bootstrap *including your composed beads context* on the first turn, so you don't have to run `bd prime` yourself. If the composer can't be reached, the fallback says so out loud rather than quietly starting you with no memory.
+- **Devin CLI is supported** — `devin plugins install DollarDill/beads-superpowers`. Devin reads the plugin manifest and auto-discovers the bundled skills, surfacing each one in its system prompt. There's no session hook, so the agent loads your beads context by running `bd prime` as its first action.
+- Version sync now guards the Hermes manifest and the version registry itself. Previously only JSON manifests triggered the check on commit, so a YAML manifest could drift unnoticed — and editing the registry that decides *what gets checked* triggered nothing at all.
+
+### Changed
+
+- **`brainstorming` now scales its ceremony to the task.** It picks one of three paths up front and says which: a **spike** for "can we even do this" questions (answer, not code), a **bounded** path for a small change to code that already exists (short design in chat, one tracked task, no spec file), or the full **architectural** path. The approval gate never scales — you still say yes before anything is implemented — but a one-file fix no longer costs you a spec document.
+- Upstream baselines advance: skill content tracks superpowers **v6.3.0**, beads integration **v1.2.2**.
+- **Read this before upgrading `bd`: v1.2.0 and v1.2.1 are unsafe and were retracted.** Running either one *once* migrates your local database to a schema no other `bd` binary can open, and every other version then refuses to start. Safe versions are **v1.1.2 or v1.2.2**. Note v1.2.2 is not a capability upgrade — it re-releases the tested v1.1.2 code under a higher number, so none of the advertised 1.2.x features are in it. The docs also correct a related assumption: no released `bd` yet carries the guard that stops a beads remote from colliding with your git origin, so don't assume upgrading gives you one.
+- **Subagent-driven development got materially more reliable.** Independent tasks now dispatch in batches with bounded waits instead of one at a time; workers no longer dispatch subagents of their own (the orchestrator owns that); reviewers re-read the evidence rather than trusting a worker's summary, and check batched dispatches file by file. A plan now names the spec it implements, and the executor reads both — so a task can't drift from the design it came from.
+- Subagents may now settle a question themselves **only** when the spec already answers it. Anything the spec leaves open comes back to you, and security questions are never theirs to rule on.
+- `finishing-a-development-branch` no longer force-removes a worktree that git refused to delete. A refusal means files exist *only* there — uncommitted notes, scratch work — so it now shows you exactly what's at stake and asks, instead of destroying it to finish the cleanup.
+
+### Fixed
+
+- Session start no longer follows symlinks when sweeping stale deduplication markers, so a symlinked temp directory can't send the sweep somewhere unintended.
+- The maintainer-facing upstream-drift audit had several checks that could never fail — including a completeness gate excluded by the skill's own instructions, and an exit criterion comparing a version against itself. They're fixed, which is why this release's upstream sync can be trusted rather than merely reported.
+- The manifest validation suite's guard-the-guards had been silently failing its clean-fixture baseline since Devin support landed, because the fixture list was maintained by hand and never received the new manifest.
+
 ## [0.16.0] - 2026-07-27
 
 ### Added
