@@ -77,6 +77,7 @@ If your harness appears here, read its reference file for special instructions:
 - Pi: `references/pi-tools.md`
 - Antigravity: `references/antigravity-tools.md`
 - Gemini: `references/gemini-tools.md`
+- Hermes: `references/hermes-tools.md`
 
 ## Asking the User
 
