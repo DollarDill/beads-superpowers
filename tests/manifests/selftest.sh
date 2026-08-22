@@ -14,6 +14,8 @@ FILES=(
   .codex-plugin/plugin.json  .codex-plugin/marketplace.json
   .cursor-plugin/plugin.json
   .kimi-plugin/plugin.json
+  .devin-plugin/plugin.json
+  .hermes-plugin/plugin.yaml
   gemini-extension.json GEMINI.md
   .agents/plugins/marketplace.json
   hooks/hooks-cursor.json hooks/run-hook.cmd
