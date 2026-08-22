@@ -272,6 +272,11 @@ detect_tools() {
   command -v pi           >/dev/null 2>&1 && HAS_PI=1 || HAS_PI=0
   command -v gemini       >/dev/null 2>&1 && HAS_GEMINI=1 || HAS_GEMINI=0
   command -v devin        >/dev/null 2>&1 && HAS_DEVIN=1 || HAS_DEVIN=0
+  # NOTE: `hermes` is a colliding binary name — Meta's JavaScript engine (shipped
+  # with React Native) also provides it. A false positive costs one misleading
+  # hint line and nothing else: this tier writes no files. Same posture as the
+  # equally generic `pi`, `devin`, `kimi`, `agy` and `droid`.
+  command -v hermes       >/dev/null 2>&1 && HAS_HERMES=1 || HAS_HERMES=0
 }
 
 detect_upstream_conflict() {
@@ -967,6 +972,7 @@ print_next_steps() {
   if [ "$HAS_PI" = 1 ]; then info "Pi detected — native install: pi install git:github.com/DollarDill/beads-superpowers"; fi
   if [ "$HAS_GEMINI" = 1 ]; then info "Gemini CLI detected — native install: gemini extensions install https://github.com/DollarDill/beads-superpowers"; fi
   if [ "$HAS_DEVIN" = 1 ]; then info "Devin CLI detected — native install: devin plugins install DollarDill/beads-superpowers"; fi
+  if [ "$HAS_HERMES" = 1 ]; then info "Hermes Agent detected — native install: hermes plugins install DollarDill/beads-superpowers"; fi
 }
 
 # --- Uninstall ---
