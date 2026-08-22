@@ -112,4 +112,58 @@ else
   echo "MISSING: $PI"; fail=1
 fi
 
+# Hermes plugin (.yaml) — ADR-0018 best-effort bar. Hermes is the only harness
+# whose shipped manifest is YAML, not JSON, so it gets structural validation
+# instead of valid_json/ver_match (both jq/python-json; python3 has no stdlib
+# YAML and PyYAML is not guaranteed).
+# NOTE: pre-commit's `check-yaml` hook already PARSES this file on every commit,
+# so real YAML validation is covered elsewhere. The checks below deliberately
+# cover only what parsing cannot: key presence, the version match, and the
+# prose[] ordering edge.
+# Path is RELATIVE (like $PI above) because this script cd's to $MANIFEST_ROOT.
+HERMES_YAML=".hermes-plugin/plugin.yaml"
+if [ -f "$HERMES_YAML" ]; then
+  echo "PATH OK: $HERMES_YAML"
+  for key in name version description provides_hooks; do
+    if grep -q "^${key}:" "$HERMES_YAML"; then
+      echo "hermes ${key}: OK"
+    else
+      echo "hermes MISSING KEY ${key}: $HERMES_YAML"; fail=1
+    fi
+  done
+  if grep -q 'pre_llm_call' "$HERMES_YAML"; then
+    echo "hermes pre_llm_call OK"
+  else
+    echo "hermes MISSING pre_llm_call: $HERMES_YAML"; fail=1
+  fi
+
+  # --- prose[] mechanism guard ---
+  # bump-version.sh reads this file with `grep -F -m1 "version: "` and writes it
+  # back with a first-occurrence awk substitution. A mis-match does NOT error —
+  # it writes the version into the WRONG line and leaves the real one stale.
+  # ONE check covers it: the first `version: ` line must BE the top-level key.
+  # A "no 'version: ' above the match" check was written and DELETED as
+  # tautological — the first match is by definition the first line containing
+  # the substring, so nothing above it can contain it and the check could never
+  # fail (caught by running the mutation, 2026-08-16). Do not reinstate it.
+  hv_line=$(grep -n -F -m1 'version: ' "$HERMES_YAML" | cut -d: -f1)
+  if [ -z "$hv_line" ]; then
+    echo "hermes NO 'version: ' LINE: $HERMES_YAML"; fail=1
+  else
+    if [ "$(sed -n "${hv_line}p" "$HERMES_YAML" | cut -d: -f1)" = "version" ]; then
+      echo "hermes prose-edge OK: first 'version: ' line is the top-level key"
+    else
+      echo "hermes PROSE-EDGE: first 'version: ' match is not the top-level key"; fail=1
+    fi
+    hv=$(grep -F -m1 'version: ' "$HERMES_YAML" | sed 's/.*version: *//')
+    if [ "$hv" = "$VER" ]; then
+      echo "VER OK: $HERMES_YAML"
+    else
+      echo "VER MISMATCH: $HERMES_YAML ($hv != $VER)"; fail=1
+    fi
+  fi
+else
+  echo "MISSING: $HERMES_YAML"; fail=1
+fi
+
 exit $fail

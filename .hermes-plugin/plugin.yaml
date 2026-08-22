@@ -1,0 +1,9 @@
+name: beads-superpowers
+version: 0.16.0
+description: Superpowers skills and beads task memory for Hermes Agent
+author: DollarDill
+homepage: https://github.com/DollarDill/beads-superpowers
+repository: https://github.com/DollarDill/beads-superpowers
+license: MIT
+provides_hooks:
+  - pre_llm_call
