@@ -6,3 +6,4 @@ droid	droid	-	Factory Droid detected — native: droid plugin marketplace add ht
 pi	pi	-	Pi detected — native install: pi install git:github.com/DollarDill/beads-superpowers
 gemini	gemini	gemini-extension.json	Gemini CLI detected — native install: gemini extensions install https://github.com/DollarDill/beads-superpowers
 devin	devin	.devin-plugin/plugin.json	Devin CLI detected — native install: devin plugins install DollarDill/beads-superpowers
+hermes	hermes	-	Hermes Agent detected — native install: hermes plugins install DollarDill/beads-superpowers

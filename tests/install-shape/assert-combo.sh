@@ -5,7 +5,7 @@ set -uo pipefail
 # shellcheck source=tests/install-shape/lib.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
-shape_sandbox_setup claude codex opencode cursor-agent copilot kimi agy droid pi gemini devin
+shape_sandbox_setup claude codex opencode cursor-agent copilot kimi agy droid pi gemini devin hermes
 trap 'shape_sandbox_teardown' EXIT
 # shellcheck disable=SC2119  # bare call intentional — no extra install flags for this harness
 shape_install

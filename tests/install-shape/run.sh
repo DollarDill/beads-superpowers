@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # run.sh [all|<harness>] — install-shape suite driver.
 # Tier A (claude codex opencode): full artifact assertions + uninstall round-trip.
-# Tier B (cursor copilot kimi antigravity droid pi gemini devin): hint-text + manifest assertions.
+# Tier B (cursor copilot kimi antigravity droid pi gemini devin hermes): hint-text + manifest assertions.
 # Banner: proves artifacts LAND — does NOT prove hooks FIRE. See MANUAL-VERIFICATION.md.
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET="${1:-all}"
 TIER_A="claude codex opencode"
-TIER_B="cursor copilot kimi antigravity droid pi gemini devin"
+TIER_B="cursor copilot kimi antigravity droid pi gemini devin hermes"
 total_rc=0
 
 echo "install-shape: proves artifacts land where each harness expects — does NOT prove hooks fire."
