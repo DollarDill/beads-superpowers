@@ -77,7 +77,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Project Overview
 
-A plugin for Claude Code, Codex, and OpenCode (verified) plus 8 best-effort harnesses — Cursor, Gemini CLI, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, Pi, and Devin CLI — that merges [Superpowers](https://github.com/obra/superpowers) skills (v6.3.0) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.2.2). It gives AI coding agents composable process-discipline skills (TDD, brainstorming, systematic debugging, code review, verification) plus persistent task memory via a Dolt-backed database.
+A plugin for Claude Code, Codex, and OpenCode (verified) plus 9 best-effort harnesses — Cursor, Gemini CLI, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, Pi, Devin CLI, and Hermes Agent — that merges [Superpowers](https://github.com/obra/superpowers) skills (v6.3.0) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.2.2). It gives AI coding agents composable process-discipline skills (TDD, brainstorming, systematic debugging, code review, verification) plus persistent task memory via a Dolt-backed database.
 
 **Repository:** <https://github.com/DollarDill/beads-superpowers>
 **Version:** 0.16.0
@@ -217,7 +217,7 @@ just guards     # all guard scripts (todowrite, bead-stamp, zh-docs, convention-
                 #   askuser-genericization, model-genericization, guardrail floor)
 just lint       # shellcheck gate alone (tracked .sh, baseline'd; SKIPs if shellcheck absent)
 just hooks      # tests/hooks/* (node tests SKIP visibly if node absent)
-just shape      # install-shape: 11 harnesses (Tier A full artifacts; Tier B hint+manifest)
+just shape      # install-shape: 12 harnesses (Tier A full artifacts; Tier B hint+manifest)
 just shape codex  # one harness
 just selftest   # guard-the-guards: mutations that must fail
 just server     # brainstorm-server Node tests (opt-in)
@@ -259,6 +259,7 @@ Version surfaces are declared in `.version-bump.json` and must stay in sync:
 - `.cursor-plugin/plugin.json`
 - `.kimi-plugin/plugin.json`
 - `.devin-plugin/plugin.json`
+- `.hermes-plugin/plugin.yaml` (YAML — registered in `prose[]`, not `files[]`)
 - `CLAUDE.md` (`**Version:**` line — prose entry)
 
 README version badges are dynamic (shields.io release badge) — no hand-sync needed.

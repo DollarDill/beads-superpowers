@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# assert-combo.sh — all 11 harnesses detected in one run; every hint prints; no shim executes.
+# assert-combo.sh — all 12 harnesses detected in one run; every hint prints; no shim executes.
 # NOTE: the shim list below must stay in sync with tier-b.tsv, which the hint loop reads.
 set -uo pipefail
 # shellcheck source=tests/install-shape/lib.sh
