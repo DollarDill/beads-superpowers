@@ -16,7 +16,7 @@
 
 ---
 
-一款适用于 Claude Code、Codex、OpenCode 及另外 7 款 AI 编程智能体的插件，让你的智能体在编写代码前先写测试、有条不紊地调试而非盲目猜测，并记住昨天做了什么。可组合技能强制执行这些实践；基于 Dolt 的问题追踪器在会话间保持上下文。
+一款适用于 Claude Code、Codex、OpenCode 及另外 9 款 AI 编程智能体的插件，让你的智能体在编写代码前先写测试、有条不紊地调试而非盲目猜测，并记住昨天做了什么。可组合技能强制执行这些实践；基于 Dolt 的问题追踪器在会话间保持上下文。
 
 ## 快速开始
 
@@ -36,7 +36,7 @@ bd init                               # 2. Bootstrap the Dolt database for this 
 
 开启新的 Claude Code 会话，输入 "where are we"——智能体将加载你的 `bd` 上下文，从上次中断处继续。
 
-使用其他智能体？跳转至 [Codex CLI](#codex-cli)、[OpenCode](#opencode)、[Cursor](#cursor)、[Gemini CLI](#gemini-cli)、[GitHub Copilot CLI](#github-copilot-cli)、[Kimi Code](#kimi-code)、[Antigravity](#antigravity)、[Factory Droid](#factory-droid)、[Pi](#pi) 或 [Devin CLI](#devin-cli) 的安装说明。
+使用其他智能体？跳转至 [Codex CLI](#codex-cli)、[OpenCode](#opencode)、[Cursor](#cursor)、[Gemini CLI](#gemini-cli)、[GitHub Copilot CLI](#github-copilot-cli)、[Kimi Code](#kimi-code)、[Antigravity](#antigravity)、[Factory Droid](#factory-droid)、[Pi](#pi)、[Devin CLI](#devin-cli) 或 [Hermes Agent](#hermes-agent) 的安装说明。
 
 ## 基本工作流
 
@@ -233,6 +233,14 @@ devin plugins install DollarDill/beads-superpowers
 ```
 
 Devin 读取 `.devin-plugin/plugin.json` 并自动发现同级的 `skills/` 目录，将每个技能呈现在其系统提示中。由于没有会话钩子，代理会将 `bd prime` 作为首个操作来自行加载 beads 上下文。
+
+### Hermes Agent
+
+```bash
+hermes plugins install DollarDill/beads-superpowers
+```
+
+Hermes 读取 `.hermes-plugin/plugin.yaml` 并将每个技能注册到其原生技能加载器。其 `pre_llm_call` 钩子会在首轮注入会话引导内容（包含已组装的 beads 上下文），因此无需自行加载。
 
 ### Antigravity
 

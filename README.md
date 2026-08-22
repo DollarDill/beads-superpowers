@@ -14,7 +14,7 @@
 
 ---
 
-A plugin for Claude Code, Codex, OpenCode, and 8 more AI coding agents that makes your agent write tests before code, debug systematically instead of guessing, and remember what it worked on yesterday. Composable skills enforce the practices; a Dolt-backed issue tracker keeps context across sessions.
+A plugin for Claude Code, Codex, OpenCode, and 9 more AI coding agents that makes your agent write tests before code, debug systematically instead of guessing, and remember what it worked on yesterday. Composable skills enforce the practices; a Dolt-backed issue tracker keeps context across sessions.
 
 ## Quickstart
 
@@ -34,7 +34,7 @@ bd init                               # 2. Bootstrap the Dolt database for this 
 
 Start a new Claude Code session and type "where are we" - the agent will load your `bd` context and pick up where you left off.
 
-Using a different agent? Jump to install for [Codex CLI](#codex-cli), [OpenCode](#opencode), [Cursor](#cursor), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Kimi Code](#kimi-code), [Antigravity](#antigravity), [Factory Droid](#factory-droid), [Pi](#pi), or [Devin CLI](#devin-cli).
+Using a different agent? Jump to install for [Codex CLI](#codex-cli), [OpenCode](#opencode), [Cursor](#cursor), [Gemini CLI](#gemini-cli), [GitHub Copilot CLI](#github-copilot-cli), [Kimi Code](#kimi-code), [Antigravity](#antigravity), [Factory Droid](#factory-droid), [Pi](#pi), [Devin CLI](#devin-cli), or [Hermes Agent](#hermes-agent).
 
 ## The Basic Workflow
 
@@ -231,6 +231,14 @@ devin plugins install DollarDill/beads-superpowers
 ```
 
 Devin reads `.devin-plugin/plugin.json` and auto-discovers the co-located `skills/` directory, surfacing every skill in its system prompt. There is no session hook, so the agent self-primes beads context by running `bd prime` as its first action.
+
+### Hermes Agent
+
+```bash
+hermes plugins install DollarDill/beads-superpowers
+```
+
+Hermes reads `.hermes-plugin/plugin.yaml` and registers every skill with its native skill loader. Its `pre_llm_call` hook injects the session bootstrap - including composed beads context - on the first turn, so no self-priming is needed.
 
 ### Antigravity
 
