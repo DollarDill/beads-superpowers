@@ -195,17 +195,21 @@ if [ "$bsp_suppress" = "1" ]; then
 fi
 
 # --- bd prime safety net: lean override where the composer owns injection ---
-if command -v bd >/dev/null 2>&1 && [ -d .beads ] && [ ! -e .beads/PRIME.md ] && [ ! -L .beads/PRIME.md ]; then
+if command -v bd >/dev/null 2>&1 && [ -d .beads ]; then
     # Same class as the salience probe: `<output> | grep -q` under pipefail is
     # SIGPIPE-prone — capture then match in bash (same ERE, no pipe).
     bsp_cfg=$(bd config show 2>/dev/null) || bsp_cfg=""
     bsp_net_off='custom\.prime-safety-net[[:space:]]*=[[:space:]]*false'
     if ! [[ "$bsp_cfg" =~ $bsp_net_off ]]; then
-        cat > .beads/PRIME.md <<'NET' || true
+        if [ ! -e .beads/PRIME.md ] && [ ! -L .beads/PRIME.md ]; then
+            cat > .beads/PRIME.md <<'NET' || true
 <!-- Written by the beads-superpowers plugin (safety net).
      Your session hook injects a curated beads context, so `bd prime` here
-     returns this lean pointer instead of the full memory dump.
-     To restore full `bd prime` output: delete this file.
+     returns this lean pointer in place of the default workflow text.
+     On bd >= 1.3.0 a capped memories section is still appended (see the
+     prime.max-memories note in hooks/session-start).
+     To restore full `bd prime` output: delete this file, then
+       bd config unset prime.max-memories
      To stop it being recreated: bd config set custom.prime-safety-net false -->
 # Beads Workflow (lean pointer)
 Session context is injected by the beads-superpowers hook.
@@ -213,6 +217,41 @@ Session context is injected by the beads-superpowers hook.
 - Memories: `bd memories <keyword>` · one memory: `bd recall <key>`
 - Full default prime content: `bd prime --export`
 NET
+        fi
+        # bd >= 1.3.0 APPENDS the persistent-memories section to a custom
+        # PRIME.md instead of letting it override output entirely, so the lean
+        # pointer above no longer bounds what a foreign `bd prime` caller
+        # injects (verified 2026-09-16: 5 memories -> 2658B, capped -> 904B).
+        # The cap is the only lever — bd always emits at least one memory plus
+        # an elision banner — but it makes the bleed a function of the largest
+        # single memory rather than of store size, which is the ADR-0052
+        # property. Set once, not per session (with dolt.auto-commit now
+        # defaulting to `on`, a write every SessionStart is commit churn); any
+        # existing value is left alone, so an operator's own cap wins.
+        #
+        # `bd config get` is the probe, NOT `bd config show` and not a grep of
+        # config.yaml. Only bd >= 1.3.0 honors the cap, and only from
+        # config.yaml (config.GetInt -> viper): a value an older bd wrote to the
+        # database is still listed by `config show`, so keying on that left the
+        # 1.2.2 -> 1.3.0 upgrade permanently uncapped while looking configured.
+        # Grepping the file instead is no better - viper also honors the nested
+        # spelling (`prime:` / `  max-memories:`), which a flat-key grep misses,
+        # so the hook would overwrite an operator's own cap. `config get` answers
+        # the real question - is a cap in effect - in bd's own terms, and an
+        # explicit 0 (meaning unlimited) is an answer we respect.
+        #
+        # Both probes are best-effort, matching the config/memory probes above:
+        # under `set -euo pipefail` a bare assignment from a failing pipeline
+        # would abort the whole hook before any context is emitted, trading a
+        # memory-budget nicety for a dead session bootstrap.
+        bsp_bd_ver=$(bd --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1) || bsp_bd_ver=""
+        if [ -n "$bsp_bd_ver" ] \
+           && [ "$(printf '1.3.0\n%s\n' "$bsp_bd_ver" | sort -V | head -1)" = "1.3.0" ]; then
+            bsp_cap_now=$(bd config get prime.max-memories 2>/dev/null) || bsp_cap_now=""
+            if ! [[ "$bsp_cap_now" =~ ^[0-9]+$ ]]; then
+                bd config set prime.max-memories 1 >/dev/null 2>&1 || true
+            fi
+        fi
     fi
 fi
 
