@@ -139,7 +139,7 @@ cd your-project
 bd init
 ```
 
-This creates `.beads/` (config, metadata, git hooks), `CLAUDE.md`, and `AGENTS.md`. The plugin's session-start hook automatically detects if `bd setup claude` hooks are present and skips its own beads-context section, so no manual cleanup is needed.
+This creates `.beads/` (config, metadata, git hooks), `CLAUDE.md`, and `AGENTS.md`. If bd's own prime hook is also registered (`bd setup claude`, or bd's Cursor hooks), the plugin's session-start hook keeps its curated beads context and prints a one-line notice naming the remedy.
 
 ### Add a dedicated beads remote
 
@@ -250,7 +250,7 @@ To override a skill's behaviour, add instructions to your project's `CLAUDE.md` 
 
 **No `.beads` directory** - Run `bd init` in your project directory. The plugin automatically handles duplicate hook detection.
 
-**Double context injection** - The plugin detects `bd setup claude` hooks in project and global settings and automatically skips its own beads-context section; same-event double-firing under multi-scope hook registration is suppressed by a dedup marker. If you still see duplicates, run `bd setup claude --remove`.
+**Double context injection** - When bd's own prime hook is registered in project or global settings (`bd setup claude`, or bd's Cursor hooks), the plugin keeps its curated context and prints a one-line notice naming the remedy; same-event double-firing under multi-scope hook registration is suppressed by a dedup marker. To keep only the plugin's context, run `bd setup claude --remove` (add `--global` if the hook is in `~/.claude`), or under Cursor remove the `bd cursor-hook` entries from `.cursor/hooks.json`.
 
 **A `.beads/PRIME.md` file appeared** - that's the plugin's guarded safety net: it makes a stray `bd prime` call emit a lean pointer instead of the full memory dump. It is only written when `.beads/` exists and never overwrites an existing file. Disable with `bd config set custom.prime-safety-net false`.
 

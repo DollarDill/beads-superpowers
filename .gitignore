@@ -16,6 +16,7 @@ docs/decisions/*
 .dolt/
 *.db
 .beads-credential-key
+*.gate.lock*
 
 # Session work logs (internal, not part of the plugin)
 SESSION-SUMMARY.md

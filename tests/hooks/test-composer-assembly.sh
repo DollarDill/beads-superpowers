@@ -19,9 +19,8 @@ cat > "$TMP/fixtures/memories.json" <<'FIX'
   "key-a": "@type=semantic:lesson @created=2026-07-01 @salience=5 preview body"
 }
 FIX
-mkdir -p "$TMP/home/.claude"   # isolated HOME: a real dev machine's ~/.claude/settings.json may
-                               # itself register a "bd prime" hook (e.g. via `bd setup claude`),
-                               # which would trip the dedup guard and suppress <beads-context>
+mkdir -p "$TMP/home/.claude"   # isolated HOME: keeps the dev machine's real ~/.claude settings
+                               # (which may register bd's own `bd prime` hook) out of the run
                                # (same isolation pattern as test-bd-prime-dedup.sh / test-session-start-warnings.sh)
 export PATH="$TMP/bin:$PATH" BSP_FIXTURES="$TMP/fixtures" HOME="$TMP/home"
 export XDG_RUNTIME_DIR="$TMP/run"   # marker isolation (Task 3 adds a dedup marker; this test must never touch real markers)

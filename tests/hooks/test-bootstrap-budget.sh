@@ -44,8 +44,8 @@ cat > "$TMP/fixtures/memories.json" <<'FIX'
   "key-a": "@type=semantic:lesson @created=2026-07-01 @salience=5 preview body"
 }
 FIX
-# Isolated HOME: a real dev machine's ~/.claude/settings.json may itself register a
-# "bd prime" hook, tripping the dedup guard (see test-composer-assembly.sh).
+# Isolated HOME: keeps the dev machine's real ~/.claude settings (which may register
+# bd's own `bd prime` hook) out of the run (see test-composer-assembly.sh).
 export PATH="$TMP/bin:$PATH" BSP_FIXTURES="$TMP/fixtures" HOME="$TMP/home"
 export XDG_RUNTIME_DIR="$TMP/run"   # marker isolation + distinct events per invocation (see test-composer-assembly.sh)
 
