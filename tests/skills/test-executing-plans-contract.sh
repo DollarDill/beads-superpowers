@@ -18,7 +18,9 @@ pin 'bd list --parent <epic-id> --status in_progress'
 # shellcheck disable=SC2016  # backticks are literal pinned skill text, not command substitution
 pin 'Then `bd ready --parent <epic-id>` is the remaining work'
 # shellcheck disable=SC2016  # backticks are literal pinned skill text, not command substitution
-pin 'Final Review starts only when `bd epic status <epic-id>` shows every child closed'
+pin 'Final Review starts only when `bd list --parent <epic-id> --status open,in_progress,blocked,deferred` lists no children'
+# absence-of-defect — bd epic status ignores the id (prints every epic), so it cannot gate one epic
+absent 'bd epic status <epic-id>'
 pin 'bd list -t epic --status open --desc-contains "Plan: <plan file path>"'
 absent 'bd search "<plan basename>"'
 absent 'The stops above are the only reasons to stop.'

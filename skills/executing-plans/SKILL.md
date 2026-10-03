@@ -123,11 +123,11 @@ Run the test command the brief names for the whole task, redirected to the works
 
 `bd close <task-id> --reason "complete (commits <base7>..<head7>, tests: <cmd> → <last result line>; rulings: <n>)"`
 
-A red run closes nothing; the task is not complete. Then `bd epic status <epic-id>` and take the next task.
+A red run closes nothing; the task is not complete. Then `bd ready --parent <epic-id>` and take the next task.
 
 ## Final Review
 
-Final Review starts only when `bd epic status <epic-id>` shows every child closed. An open, in-progress, deferred or flagged child is a task not yet done: finish it, or stop and surface it — never review around it.
+Final Review starts only when `bd list --parent <epic-id> --status open,in_progress,blocked,deferred` lists no children. An open, in-progress, deferred or flagged child is a task not yet done: finish it, or stop and surface it — never review around it.
 
 Run `bash ../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the commit the branch started from, e.g. `git merge-base main HEAD`) and append to the file it prints the closed beads' completion lines (`bd list --parent <epic-id> --status closed --long`) and the path of the test logs, so the reviewer can cross-check each claim against its artifact.
 
