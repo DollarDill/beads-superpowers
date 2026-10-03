@@ -254,7 +254,7 @@ Skills use `bd` commands to track work. Only the orchestrating agent manages bea
 | Sync to remote | `bd dolt push` | finishing-a-development-branch |
 
 !!! info "Go deeper - upstream Beads docs"
-    - [CLI reference](https://gastownhall.github.io/beads/cli-reference) - the full `bd` command surface beyond the workflow-core set above (`batch`, `lint`, `defer`, `human`, `swarm`, `-C`, …)
+    - [CLI reference](https://beads.gascity.com/cli-reference) - the full `bd` command surface beyond the workflow-core set above (`batch`, `lint`, `defer`, `human`, `swarm`, `-C`, …)
 
 ## How skills chain
 

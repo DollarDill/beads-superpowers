@@ -19,7 +19,7 @@ A plugin for Claude Code, Codex, OpenCode, and 9 more AI coding agents that make
 The fastest path - Claude Code with native plugin install:
 
 ```bash
-brew install beads                    # 1. Install bd (requires beads v1.1.0+)
+brew install beads                    # 1. Install bd (requires beads v1.3.1+)
 # From your shell:
 claude plugin marketplace add DollarDill/beads-superpowers
 claude plugin install beads-superpowers@beads-superpowers-marketplace
@@ -144,7 +144,7 @@ The long form lives in [Methodology](https://algocents.com/beads-superpowers/met
 
 ### Prerequisites
 
-**Install `bd` before the plugin.** Its hooks call `bd` on every session start; without it they fail silently and you lose persistent memory. Use Homebrew (`brew install beads`) or `npm install -g @beads/bd` on any platform. Verify with `bd version`.
+**Install `bd` before the plugin.** Its hooks call `bd` on every session start; without it they fail silently and you lose persistent memory. Use Homebrew (`brew install beads`) or `npm install -g @beads/bd` on any platform. Verify with `bd version` (bd v1.3.1 or newer).
 
 **Note:** Native plugin install installs skills and hooks, but not `bd init` - run that yourself per project.
 

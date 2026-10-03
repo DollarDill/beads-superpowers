@@ -23,8 +23,8 @@ Two projects attacked each half of this.
 Superpowers tracked tasks with `TodoWrite`, which vanishes when a session ends. [Beads](https://github.com/gastownhall/beads) (Steve Yegge) replaced that with a Dolt-backed issue tracker where every task is a bead with a hash-based ID that survives session boundaries. Beads handles dependency tracking, cell-level merges for conflict-free multi-agent work, a full audit trail via the events table, and `bd remember` for persistent learnings. At every session start, the plugin's hook injects a composed beads context — a task-state pointer plus curated memories — so the agent picks up where it left off. The hook does that job in the same pass as injecting the skills bootstrap, because firing beads' own standalone `bd setup claude` hook alongside it would inject duplicate context and waste tokens; if that standalone hook is already registered, this hook keeps its curated beads context and shows a one-line notice naming the remedy.
 
 !!! info "Go deeper — upstream Beads docs"
-    - [Core concepts](https://gastownhall.github.io/beads/core-concepts) — issues, dependencies, hash IDs, and the memory model
-    - [Architecture](https://gastownhall.github.io/beads/architecture) — the Dolt engine and events table under the hood
+    - [Core concepts](https://beads.gascity.com/core-concepts) — issues, dependencies, hash IDs, and the memory model
+    - [Architecture](https://beads.gascity.com/architecture) — the Dolt engine and events table under the hood
 
 ### The gap
 

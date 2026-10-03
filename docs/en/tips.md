@@ -31,12 +31,12 @@ recovery, coordination - lives in the upstream reference linked below.
 | `bd dep add <child> <depends-on>` | Add dependency |
 | `bd note <id> "context"` | Append evidence to a bead |
 | `bd remember "insight"` / `bd memories <kw>` / `bd forget <id>` | Persist / search / remove learnings |
-| `bd list --label <topic> --status all` / `bd search "<kw>" --status all` | Search the knowledge base - deferred `research`/`design`/`decision` beads labeled `kb` (body terms: `--desc-contains "<kw>"`; then read hits with `bd show <id1> <id2>` or `--flat --long -n 10`). |
+| `bd list --label <topic> --status all` / `bd search "<kw>" --status all` | Search the knowledge base - deferred `research`/`design`/`decision` beads labeled `kb` (body terms: `--desc-contains "<kw>"`; then read hits with `bd show <id1> <id2>` or `--flat --long -n 10`). `bd search` already includes closed issues by default (v1.3.0+); `--status all` is kept and harmless. |
 | `bd dolt push` / `pull` | Sync beads DB to/from your beads remote |
 
 !!! info "Go deeper - upstream Beads docs"
-    - [CLI reference](https://gastownhall.github.io/beads/cli-reference) - every `bd` command and flag, including the housekeeping and coordination commands trimmed from this sheet (`list`, `stats`, `doctor`, `lint`, `stale`, `find-duplicates`, `defer`, `human`, `swarm`, `batch`, `merge-slot`, `github`, `-C`)
-    - [Recovery guides](https://gastownhall.github.io/beads/recovery) - diverged Dolt history, failed syncs
+    - [CLI reference](https://beads.gascity.com/cli-reference) - every `bd` command and flag, including the housekeeping and coordination commands trimmed from this sheet (`list`, `stats`, `doctor`, `lint`, `stale`, `find-duplicates`, `defer`, `human`, `swarm`, `batch`, `merge-slot`, `github`, `-C`)
+    - [Recovery guides](https://beads.gascity.com/recovery) - diverged Dolt history, failed syncs
 
 **Land the Plane:** Every session ends with `bd close` → `bd dolt push` (to your beads remote) → `git push` (to your code repo). The `finishing-a-development-branch` skill enforces this.
 

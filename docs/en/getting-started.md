@@ -18,14 +18,14 @@ brew install beads          # macOS / Linux
 npm install -g @beads/bd    # any platform
 ```
 
-Verify with `bd version`. Then install the plugin (see below), then run `bd init` in each project.
+Verify with `bd version` — **bd v1.3.1 or newer is required**. The first bd command after upgrading runs the in-place v53→v66 schema migration — run any bd command once in a terminal before starting an agent session. Then install the plugin (see below), then run `bd init` in each project.
 
 **Note:** Native plugin install (Tier 1) installs skills automatically for all three. Hooks come along too for Claude Code and OpenCode - Codex needs the scripted installer to wire its SessionStart hook (see Codex CLI below). None of the three runs `bd init` for you - do that yourself per project.
 
 **Optional:** A [DoltHub](https://dolthub.com) account if you want cross-session sync via `bd dolt push/pull`. Without it, beads still works locally.
 
 !!! info "Go deeper - upstream Beads docs"
-    - [Installation](https://gastownhall.github.io/beads/getting-started/installation) - every `bd` install channel (brew, npm, curl, go), platform notes, upgrades
+    - [Installation](https://beads.gascity.com/getting-started/installation) - every `bd` install channel (brew, npm, curl, go), platform notes, upgrades
 
 ## Supported Platforms
 
@@ -152,13 +152,13 @@ bd dolt push    # test the connection
 
 A brand-new empty remote needs an initial commit before that first push succeeds - create it with a README, then add the remote and push.
 
-Dolt history retains deleted rows, so a remote that matches your code repo makes that full history public too. A dedicated private repo keeps issue data auth-gated while your code stays public. Nothing stops you pointing bd at your code repo today - bd has a collision guard that refuses a URL matching your git origin unless you pass `--allow-git-origin`, but it is not in any released version yet (re-checked 2026-08-15 through v1.2.2, which re-releases the v1.1.2 code under a higher version number). Treat the separate remote as your own discipline, and do not assume an upgrade has turned the guard on.
+Dolt history retains deleted rows, so a remote that matches your code repo makes that full history public too. A dedicated private repo keeps issue data auth-gated while your code stays public. bd v1.3.0+ ships a collision guard that refuses a URL matching your git origin unless you pass `--allow-git-origin`, but a separate remote is still the recommendation.
 
 Without a remote, beads still works entirely locally.
 
 !!! info "Go deeper - upstream Beads docs"
-    - [Core concepts](https://gastownhall.github.io/beads/core-concepts) - how the Dolt-backed database and sync model work
-    - [Recovery guides](https://gastownhall.github.io/beads/recovery) - when a sync fails or history diverges
+    - [Core concepts](https://beads.gascity.com/core-concepts) - how the Dolt-backed database and sync model work
+    - [Recovery guides](https://beads.gascity.com/recovery) - when a sync fails or history diverges
 
 ## Updating
 
@@ -252,7 +252,7 @@ To override a skill's behaviour, add instructions to your project's `CLAUDE.md` 
 
 **Double context injection** - When bd's own prime hook is registered in project or global settings (`bd setup claude`, or bd's Cursor hooks), the plugin keeps its curated context and prints a one-line notice naming the remedy; same-event double-firing under multi-scope hook registration is suppressed by a dedup marker. To keep only the plugin's context, run `bd setup claude --remove` (add `--global` if the hook is in `~/.claude`), or under Cursor remove the `bd cursor-hook` entries from `.cursor/hooks.json`.
 
-**A `.beads/PRIME.md` file appeared** - that's the plugin's guarded safety net: it makes a stray `bd prime` call emit a lean pointer instead of the full memory dump. It is only written when `.beads/` exists and never overwrites an existing file. Disable with `bd config set custom.prime-safety-net false`.
+**A `.beads/PRIME.md` file appeared** - that's the plugin's guarded safety net: it makes a stray `bd prime` call emit a lean pointer instead of the full default workflow text. On bd 1.3.0 and newer, bd still appends memories to a custom PRIME.md, so the output is the pointer plus capped memories plus an elision banner (the plugin sets `prime.max-memories 1` once, leaving any value you already set). It is only written when `.beads/` exists and never overwrites an existing file. `bd config set custom.prime-safety-net false` stops it being recreated but does not remove an already-written cap — run `bd config unset prime.max-memories` for that, and delete the file to restore full `bd prime` output.
 
 **Stale plugin cache** - The cache doesn't update when you edit skill files locally. Either symlink the cache to your checkout:
 
@@ -268,4 +268,4 @@ Or reinstall. Note: `claude plugin update` has a known [cache bug](https://githu
 
 **Stale reminder hook after updating from ≤0.8.2** - Earlier versions registered a per-prompt `superpowers-reminder.sh` hook that no longer ships. Re-run the scripted installer (`install.sh`) - it detects the stale `UserPromptSubmit` entry and removes it automatically. If `python3` isn't available, it prints the settings-file entry to remove by hand.
 
-**`bd dolt push` fails** - You need a beads remote configured first: `bd dolt remote add origin <url>`. Use a dedicated beads remote, not your code repo's URL - and note that no released bd stops you from getting this wrong yet, so check it yourself. If you don't need remote sync, the failure is harmless - beads works fine locally.
+**`bd dolt push` fails** - You need a beads remote configured first: `bd dolt remote add origin <url>`. Use a dedicated beads remote, not your code repo's URL. If you don't need remote sync, the failure is harmless - beads works fine locally.

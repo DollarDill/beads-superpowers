@@ -109,7 +109,7 @@ Before creating the worktree, the skill runs pre-flight checks: it confirms the 
 When several tasks are unblocked, **parallel batch mode** runs up to five concurrently, each in its own worktree (mechanics: [subagent-driven-development](skills.md#subagent-driven-development)); sequential mode runs one at a time when tasks depend on each other. Every subagent result passes through the [review gate](#review-gate) before it's accepted, and the initial epic and tasks are created with `bd import` (JSONL, after `bd create` for the epic); `bd batch` handles `blocks` ordering and subsequent close and update operations.
 
 !!! info "Go deeper - upstream Beads docs"
-    - [Multi-agent coordination](https://gastownhall.github.io/beads/multi-agent) - the tool-level primitives beneath parallel batch mode
+    - [Multi-agent coordination](https://beads.gascity.com/multi-agent) - the tool-level primitives beneath parallel batch mode
 
 ### Code Review
 
