@@ -177,8 +177,8 @@ For a prose or Markdown edit, the decisions are the target file and anchor, the 
 A plan is the set of decisions the implementer cannot make alone. A plan
 longer than the code it describes has written the code instead. Lines that
 decide nothing ("TBD", "TODO", "implement later", "fill in details",
-"handle edge cases", "add appropriate validation", "write tests for the
-above", "Similar to Task N" with no Interfaces block to point at, a type or
+"handle edge cases", "add appropriate error handling", "add validation",
+"add appropriate validation", "write tests for the above", "Similar to Task N" with no Interfaces block to point at, a type or
 function no task defines) are the opposite failure, and the self-review
 catches both.
 
