@@ -1,7 +1,7 @@
 skills/brainstorming/SKILL.md 6
 skills/dispatching-parallel-agents/SKILL.md 0
 skills/document-release/SKILL.md 5
-skills/executing-plans/SKILL.md 1
+skills/executing-plans/SKILL.md 4
 skills/finishing-a-development-branch/SKILL.md 6
 skills/getting-up-to-speed/SKILL.md 1
 skills/memory-curator/SKILL.md 2
