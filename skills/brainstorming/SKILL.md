@@ -39,9 +39,11 @@ Before taking any implementation action, including invoking an implementation sk
 
 - Spike: your human partner approves the question and probe.
 - Bounded: your human partner approves the short in-chat design.
-- Architectural: conversational design approval permits writing the spec; spec approval at the spec-review gate (Approved, or Approved + stress-test) permits invoking writing-plans; plan review plus execution-method selection at writing-plans' handoff gate permits implementation.
+- Architectural: conversational design approval permits only writing the spec; spec approval at the spec-review gate (Approved, or Approved + stress-test) permits only invoking writing-plans; plan review plus execution-method selection at writing-plans' handoff gate permits implementation.
 
 A reply approves the stage actually presented. Approval of an idea or feature scope does not approve artifacts that do not exist yet. Resume at the earliest incomplete stage; do not turn one approval into permission to skip the rest of the selected path. Read-only project exploration is allowed while those prerequisites remain incomplete.
+
+The ceremony scales with the task; the approval gate never does — what scales with simplicity is the artifact, never the approval.
 </HARD-GATE>
 
 **Production-Grade Doctrine** applies with full force here — trade-offs are *first chosen* in brainstorming: you MUST NOT simplify a design by quietly cutting a required behavior; surface every material trade-off and let the user decide. Never weaken, bypass, or remove a security control — a security regression is never acceptable.

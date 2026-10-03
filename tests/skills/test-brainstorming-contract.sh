@@ -14,5 +14,7 @@ pin "carried in the task bead's description"
 pin "you MUST complete the selected path's prerequisites"
 # Unchanged doctrine + 3-option gate
 pin '**Production-Grade Doctrine** applies with full force here'
-pin 'Approved + stress-test'
+pin '(Approved, or Approved + stress-test) permits only invoking writing-plans'
+pin "plan review plus execution-method selection at writing-plans' handoff gate permits implementation"
+pin 'The ceremony scales with the task; the approval gate never does — what scales with simplicity is the artifact, never the approval.'
 [ "$fail" -eq 0 ] && echo "PASS: brainstorming contract" || exit 1
