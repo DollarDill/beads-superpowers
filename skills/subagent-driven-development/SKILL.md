@@ -117,9 +117,11 @@ digraph process {
 }
 ```
 
-**Checking for remaining tasks:** Use `bd ready --parent <epic-id>` to see remaining unblocked child tasks. Use `bd epic status <epic-id>` for a summary view of completion percentage. When `bd ready` returns no results for the epic, all tasks are complete.
+**Checking for remaining tasks:** Use `bd ready --parent <epic-id>` to see remaining unblocked child tasks. For a per-epic view use `bd list --parent <epic-id> --status open,in_progress,blocked,deferred` (`bd epic status` takes no id and reports every epic). When `bd ready` returns no results for the epic, all tasks are complete.
 
 > **`--claim` consent boundary.** This skill's autonomous take-next / batch-dispatch flow is the one place `bd ready --claim` is legitimate. That autonomous `--claim` is FORBIDDEN wherever the user picks the work (orientation, brainstorming, session close) — the consent gate binds even when this skill is not loaded.
+
+> **Leases (bd v1.3.1).** A claim carries a lease (default 5 minutes) that expires unless heartbeated. As the plan's bead owner, run `bd heartbeat <id>` on every in-flight bead each time you regain control: after each subagent return, or at each task boundary when executing inline. If the heartbeat fails, the claim was reclaimed: stop and check `bd show <id>` before you commit, close or re-claim anything. **Never** `bd reclaim`, `bd unclaim --force`, or `bd update --force` another actor's claim without your human partner's consent.
 
 ## Parallel Batch Mode
 
@@ -299,12 +301,9 @@ commit, not `BASE`) before dispatching fix round 1** — it is round 1's `<fix-b
 Then dispatch a scoped re-review filling `re-review-prompt.md` against
 `bash scripts/review-package <plan-file> <fix-base> HEAD`.
 
-**A re-review PASS requires the reviewer's verdict AND a green full test suite** —
-**you (the controller) run the suite** and report it in `[SUITE_STATUS]`. What the
-scoped reviewer cannot see, and why, is in `references/breaker-trip.md`.
+**A re-review PASS requires the reviewer's verdict AND a green full test suite** — **you (the controller) run the suite** and report it in `[SUITE_STATUS]`. What the scoped reviewer cannot see, and why, is in `references/breaker-trip.md`.
 
-**Completion criterion:** re-review returns PASS with a green suite, or the round
-counter increments.
+**Completion criterion:** re-review returns PASS with a green suite, or the round counter increments.
 
 ## The Breaker
 

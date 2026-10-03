@@ -92,6 +92,8 @@ Everything you print, and every tool result, stays resident in your context. Red
 
 > **`--claim` consent boundary.** This skill's autonomous take-next flow is the one place `bd ready --claim` is legitimate. That autonomous `--claim` is FORBIDDEN wherever the user picks the work (orientation, brainstorming, session close) — the consent gate binds even when this skill is not loaded.
 
+> **Leases (bd v1.3.1).** A claim carries a lease (default 5 minutes) that expires unless heartbeated. As the plan's bead owner, run `bd heartbeat <id>` on every in-flight bead each time you regain control: after each subagent return, or at each task boundary when executing inline. If the heartbeat fails, the claim was reclaimed: stop and check `bd show <id>` before you commit, close or re-claim anything. **Never** `bd reclaim`, `bd unclaim --force`, or `bd update --force` another actor's claim without your human partner's consent.
+
 Every tool call is a turn that re-reads your whole context. Bookkeeping rides along with work — a ledger append in the same call as the commit, never in a call of its own.
 
 ### 2. Work the steps

@@ -248,7 +248,7 @@ case "$WORKTREE_PATH" in
 esac
 ```
 
-`bd worktree remove` refuses while the branch has unpushed commits. Verify the work is safe first — `git merge-base --is-ancestor <branch-tip> <base>` — and only then re-run with `--force`.
+`bd worktree remove` refuses unless the worktree is clean and its HEAD is contained in the configured upstream. After a local merge (Option 1), re-run with `--merged-into <base>`, so bd verifies containment itself and `--force` is not needed for merged work. `--force` and `--merged-into` are mutually exclusive.
 
 **If removal is refused because the worktree "contains modified or untracked files":** those files exist **nowhere else** — uncommitted plans, notes, scratch work. **NEVER `--force` on your own initiative.** Show your human partner exactly what is at stake and ask:
 
@@ -285,6 +285,8 @@ Work is NOT complete until `git push` succeeds.
 ```bash
 # 1. Close completed task beads with reasons
 bd close <task-id-1> <task-id-2> ... --reason "Completed: description of what was done"
+# Multi-id close exits non-zero if any id is refused (v1.3.1): the closable ids still close;
+# read the `Error: N of M issues failed to close` line and resolve the refused ids.
 ```
 
 > **Tip — atomic batch close + follow-up creation:** If you need to close multiple tasks and create a follow-up bead in one atomic operation (all succeed or none do), use `bd batch`:
@@ -295,10 +297,12 @@ bd close <task-id-1> <task-id-2> ... --reason "Completed: description of what wa
 
 ```bash
 # 2. Close the epic bead (if all child tasks are done)
-bd epic status <epic-id>                    # Summary view of completion
+bd list --parent <epic-id> --status open,in_progress,blocked,deferred   # anything left under this epic?
 bd epic close-eligible                      # Auto-close epics where all children are done
 # Or manually: bd close <epic-id> --reason "Epic complete: all tasks finished and reviewed"
 ```
+
+**Never** `bd reclaim`, `bd unclaim --force`, or `bd update --force` another actor's claim without your human partner's consent.
 
 **3. File remaining work as new beads (if any)**
 
@@ -334,6 +338,8 @@ If selected, invoke `Skill(beads-superpowers:memory-curator)` (it proposes a rev
 ```bash
 # 4. Push beads to Dolt remote
 bd dolt push
+# `bd sync` is an alternative (pull, conflict check, push in one verb): exit 2 = merge conflict,
+# resolve by hand; exit 3 = transient, retry; exit 4 = stuck working set, not retryable, investigate (`bd sync --help`).
 
 # 5. Push code to git remote
 git pull --ff-only && git push
