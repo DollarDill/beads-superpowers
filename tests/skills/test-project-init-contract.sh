@@ -23,4 +23,6 @@ pin 'Iron Law: NEVER Run'
 # absence-of-defect — superseded text gone
 absent 'Safe versions: v1.1.2 or v1.2.2'
 absent 'forward-compat'
+absent 'releases after 1.1.0'
+absent 'releases after v1.1.0'
 [ "$fail" -eq 0 ] && echo "PASS: project-init contract" || exit 1

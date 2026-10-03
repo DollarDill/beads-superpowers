@@ -10,7 +10,7 @@ states exactly when to open each section below.
 
 ```bash
 # Manual bootstrap (8 steps)
-bd init                                    # Creates empty .beads/
+bd init --skip-agents                      # Creates empty .beads/
 bd dolt stop 2>/dev/null                   # Stop server if running
 DB_NAME=$(python3 -c "import json; print(json.load(open('.beads/metadata.json')).get('dolt_database','beads'))" 2>/dev/null || echo "beads")
 rm -rf ".beads/embeddeddolt/$DB_NAME/"     # Remove empty database
@@ -37,14 +37,15 @@ else stops). When the gate blocks you, pick ONE:
   `BD_ALLOW_REMOTE_MIGRATE=1`; single designated migrator only), then `bd dolt push`.
 - **Any other machine:** do NOT migrate. Adopt the already-migrated database: `bd bootstrap`.
 
-Never set `BD_ALLOW_REMOTE_MIGRATE=1` outside the designated-migrator role — independently migrated
+Never set `BD_ALLOW_REMOTE_MIGRATE=1` or run `bd migrate --force` outside the designated-migrator role — independently migrated
 clones fork the schema and break `bd dolt pull`. `BD_SMART_GATE=0` disables the smart gate entirely;
 discouraged for the same reason.
 
-**Observed vs documented (flagged, unresolved):** on embedded storage bd has been seen to
-auto-migrate as a "safe first-mover", yet `bd migrate --help` says bd "refuses to migrate in
-place" on a remote-backed database with pending migrations. These contradict; do not rely on
-either. Treat the gate as possible and follow the two options above.
+**Observed vs documented (flagged, unresolved):** the documented position is the bright line above:
+only the designated migrator forces a migration. Separately, on embedded storage bd has been
+observed to auto-migrate as a "safe first-mover", which appears to contradict `bd migrate --help`
+("refuses to migrate in place" on a remote-backed database with pending migrations). Not resolved
+here; the flag stays and neither side is chosen. Follow the two options above.
 
 If a pull conflicts and the auto-resolver declines it, `bd dolt pull --strategy ours|theirs`
 resolves it (embedded storage only; `bd dolt pull --help`). Pick the side deliberately — the
@@ -82,7 +83,7 @@ Error: push to origin/main: ... GH013: Repository rule violations found
 bd export -o /tmp/beads-backup.jsonl
 
 # Nuclear recovery
-bd dolt stop 2>/dev/null
+bd dolt stop 2>/dev/null     # server mode only
 rm -rf .beads/
 bd bootstrap
 

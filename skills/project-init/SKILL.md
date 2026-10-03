@@ -31,9 +31,8 @@ recovery — including on a machine you are only *adding* to an existing setup.
 
 If it has already happened: upgrade **every** machine and clone to v1.3.1 *first* — a
 leftover 1.2.1 binary silently re-migrates — then follow
-[`docs/RECOVERY-1.2.1.md`](https://github.com/gastownhall/beads/blob/v1.2.2/docs/RECOVERY-1.2.1.md)
+the [upstream runbook](https://beads.gascity.com/recovery/accidental-1-2-1-release)
 (roll the schema cursor back to v53; `BD_IGNORE_SCHEMA_SKEW=1 bd <command>` is a verified stopgap).
-Upstream runbook: [beads.gascity.com/recovery/accidental-1-2-1-release](https://beads.gascity.com/recovery/accidental-1-2-1-release).
 
 The first bd command after upgrading runs the in-place v53→v66 schema migration — run any bd command once in a terminal before starting an agent session.
 
@@ -45,7 +44,7 @@ This Iron Law is the Production-Grade Doctrine applied to your data ledger: neve
 |--------|-------|----------|
 | `bd init` | ✅ Safe | Fresh project, no existing .beads/ |
 | `bd bootstrap` | ✅ Safe | Cloned repo with remote beads data |
-| `bd doctor --fix --yes` | ✅ Safe | Database exists but seems broken |
+| `bd doctor --fix --yes` | ✅ Safe (server mode only) | Database exists but seems broken; embedded: see Path D's embedded branch |
 | `bd init --force` | ❌ **NEVER** | **Deprecated (v1.0.4) — do NOT use** |
 | `bd init --reinit-local` | ⚠️ Recovery only | Reinitialize local state, preserve remote data |
 | `bd init --discard-remote` | ⚠️ Recovery only | Discard remote data and reinitialize (explicit destruction); requires `--destroy-token DESTROY-<prefix>` non-interactively |
@@ -83,7 +82,7 @@ git origin; see "Multi-Repo / Private Beads Remote" below.
 | No .beads/, no remote data | Fresh init | → Path A |
 | No .beads/, remote has dolt refs | Bootstrap from remote | → Path B |
 | .beads/ exists, `bd list` works, beads remote matches | Already good ✅ | Done |
-| .beads/ exists, `bd list` fails | Run `bd doctor --fix --yes` | → Path D |
+| .beads/ exists, `bd list` fails | Server mode: `bd doctor --fix --yes`; embedded: Path D's embedded branch | → Path D |
 | .beads/ exists, `bd list` works, no beads remote configured | Add remote | → Path E |
 | .beads/ exists, push fails "no common ancestor" | Fix diverged history | → Path C |
 | .beads/ exists but empty/corrupt, remote has data | Export + re-bootstrap | → Path F |
@@ -213,7 +212,7 @@ The Dolt remote is independent of the code repo's git origin — point it anywhe
 is public and beads will hold anything non-public (strategy, unreleased plans, candid
 notes) — Dolt history retains deleted rows, so "public remote" means the full history
 is public. **Same-repo is an explicit opt-in** for private/throwaway projects (bd
-releases after 1.1.0 refuse a `bd dolt remote add` URL matching the git origin without
+v1.3.0+ refuses a `bd dolt remote add` URL matching the git origin without
 `--allow-git-origin`).
 
 **Setup (existing local database):**
@@ -236,7 +235,7 @@ bd dolt push
 **New-machine bootstrap (VALIDATED):**
 
 ```bash
-bd init --non-interactive --prefix <prefix> --remote "git+ssh://git@github.com/<owner>/<project>-beads.git"
+bd init --non-interactive --skip-agents --prefix <prefix> --remote "git+ssh://git@github.com/<owner>/<project>-beads.git"
 ```
 
 This clones the database from the dedicated private remote in one step and persists
@@ -272,7 +271,8 @@ server or proxied mode. Embedded is bd's default and the plugin works in every m
 this unless you run a server. Caveats: no TLS; a token grants the whole surface including
 destructive `issues:delete` / `issues:sweep`; `actor` is caller-asserted, not authenticated;
 hooks do not fire on HTTP writes; `--allow-non-loopback` requires `--auth-token-file`
-(`bd serve --help`).
+(`bd serve --help`; beads CHANGELOG v1.3.1 L272-274 for the embedded refusal, L1792 and L2416 for the
+token and `issues:delete` surface).
 
 ## Configuration Validation
 
@@ -292,7 +292,7 @@ bd dolt remote list
 bd config drift 2>/dev/null
 ```
 
-**`bd backup`:** bare `bd backup` takes no backup — it prints help and exits 0. Configure with
+**`bd backup`:** bare `bd backup` takes no backup — it prints help and exits 0 (beads CHANGELOG v1.3.0 upgrade notes, L801). Configure with
 `bd backup init <path-or-dolthub-url>`, then `bd backup sync`. Embedded auto-backup is on when a
 git remote exists. A `bd backup sync` that fails after upgrading means the backup is already in
 the manifest-ahead state and has to be re-seeded (beads CHANGELOG v1.3.1: "backups already in the
