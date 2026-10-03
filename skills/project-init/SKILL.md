@@ -20,6 +20,11 @@ NEVER run bd init --force (deprecated in v1.0.4). Use the named-intent alternati
 **Minimum supported: bd v1.3.1.** Check with `bd version` before any init, bootstrap or
 recovery — including on a machine you are only *adding* to an existing setup.
 
+**Upgrading from an older bd:** back up first with the bd you have now (after upgrading, `bd export`
+auto-migrates before exporting), and finish `bd dolt push/pull` before installing — remote-backed
+stores keep the designated-migrator gate, and push/pull are refused until the store is migrated
+(beads CHANGELOG [1.3.0] upgrade notes).
+
 - **v1.1.2 and v1.2.2 are unsupported — upgrade.** Skills assume the 1.3-only flags
   `--merged-into`, `bd heartbeat`, `--destroy-token`, `migrate --force` and `dolt pull --strategy`,
   and a remote migrated by 1.3.x is unreadable by older bd.

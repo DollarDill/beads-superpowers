@@ -18,7 +18,7 @@ brew install beads          # macOS / Linux
 npm install -g @beads/bd    # any platform
 ```
 
-Verify with `bd version` — **bd v1.3.1 or newer is required**. The first bd command after upgrading runs the in-place v53→v66 schema migration — run any bd command once in a terminal before starting an agent session. Then install the plugin (see below), then run `bd init` in each project.
+Verify with `bd version` — **bd v1.3.1 or newer is required**. The first bd command after upgrading runs the in-place v53→v66 schema migration — run any bd command once in a terminal before starting an agent session. Back up first with the bd you have now (after upgrading, `bd export` auto-migrates before exporting), and finish any `bd dolt push/pull` before installing: remote-backed stores keep the designated-migrator gate, and push/pull are refused until the store is migrated. Then install the plugin (see below), then run `bd init` in each project.
 
 **Note:** Native plugin install (Tier 1) installs skills automatically for all three. Hooks come along too for Claude Code and OpenCode - Codex needs the scripted installer to wire its SessionStart hook (see Codex CLI below). None of the three runs `bd init` for you - do that yourself per project.
 
