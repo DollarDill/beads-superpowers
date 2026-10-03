@@ -64,7 +64,7 @@ In beads terms, a right-sized task is one bead (`bd create -t task --parent <epi
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use beads-superpowers:subagent-driven-development (recommended) or beads-superpowers:executing-plans to implement this plan task-by-task. Each Task becomes a bead (`bd create -t task --parent <epic-id>`). Steps within tasks use checkbox (`- [ ]`) syntax for human readability.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use beads-superpowers:subagent-driven-development or beads-superpowers:executing-plans (the method is chosen at the Execution Handoff) to implement this plan task-by-task. Each Task becomes a bead (`bd create -t task --parent <epic-id>`). Steps within tasks use checkbox (`- [ ]`) syntax for human readability.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -284,7 +284,7 @@ After the plan is approved, recommend a method from the plan itself, then **use 
 
 **"For this plan I recommend <method>, because <one sentence from the plan: task count, interface coupling, sensitivity>."**
 
-If the plan header or your human partner already names an execution method, present it as the default and ask only for review confirmation.
+If your human partner, or a plan header naming only one method, already names an execution method, present it as the default and ask only for review confirmation.
 
 ```json
 {
