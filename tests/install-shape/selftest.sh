@@ -383,7 +383,9 @@ rm -rf "$SB16"
 # the guard script tests/skills/test-sdd-structure.sh is new in this same
 # task and may not be tracked yet when this selftest runs, so git ls-files
 # would silently omit it and understate the fixture. Copying
-# skills/subagent-driven-development/ and the guard script by explicit path
+# skills/subagent-driven-development/, the guard script, and
+# skills/using-superpowers/references/ (the cross-skill pointer target that
+# SKILL.md cites, which the guard resolves for real) by explicit path
 # into mktemp -d, preserving the guard's expected ROOT-relative layout
 # (tests/skills/<script> + skills/<dir>), reproduces exactly what the guard
 # resolves via "$(dirname "$0")/../..". The real tree is never touched.
@@ -394,6 +396,8 @@ elif ! cp -rf "$REPO_ROOT/skills/subagent-driven-development" "$SB17/skills/suba
   echo "SELFTEST FAIL: mutation-17 setup copy skill dir failed (rig broken, not a caught mutation)"; rc=1
 elif ! cp -f "$REPO_ROOT/tests/skills/test-sdd-structure.sh" "$SB17/tests/skills/test-sdd-structure.sh"; then
   echo "SELFTEST FAIL: mutation-17 setup copy guard script failed (rig broken, not a caught mutation)"; rc=1
+elif ! mkdir -p "$SB17/skills/using-superpowers" || ! cp -rf "$REPO_ROOT/skills/using-superpowers/references" "$SB17/skills/using-superpowers/references"; then
+  echo "SELFTEST FAIL: mutation-17 setup copy using-superpowers references failed (rig broken, not a caught mutation)"; rc=1
 else
   rm -f "$SB17/skills/subagent-driven-development/references/breaker-trip.md"
   expect_red "sdd structure: dangling breaker-trip.md pointer" \
@@ -407,7 +411,8 @@ rm -rf "$SB17"
 
 # Mutation 18: test-sdd-structure.sh (Task 6) — pushing SDD's SKILL.md past
 # the 500-line C1 budget must fail RED; the unmutated copy must pass GREEN
-# (control). Same fixture-isolation as mutation 17.
+# (control). Same fixture-isolation as mutation 17 (including the copied
+# skills/using-superpowers/references/ cross-skill pointer target).
 SB18=$(mktemp -d)
 if ! mkdir -p "$SB18/skills" "$SB18/tests/skills"; then
   echo "SELFTEST FAIL: mutation-18 setup mkdir failed (rig broken, not a caught mutation)"; rc=1
@@ -415,6 +420,8 @@ elif ! cp -rf "$REPO_ROOT/skills/subagent-driven-development" "$SB18/skills/suba
   echo "SELFTEST FAIL: mutation-18 setup copy skill dir failed (rig broken, not a caught mutation)"; rc=1
 elif ! cp -f "$REPO_ROOT/tests/skills/test-sdd-structure.sh" "$SB18/tests/skills/test-sdd-structure.sh"; then
   echo "SELFTEST FAIL: mutation-18 setup copy guard script failed (rig broken, not a caught mutation)"; rc=1
+elif ! mkdir -p "$SB18/skills/using-superpowers" || ! cp -rf "$REPO_ROOT/skills/using-superpowers/references" "$SB18/skills/using-superpowers/references"; then
+  echo "SELFTEST FAIL: mutation-18 setup copy using-superpowers references failed (rig broken, not a caught mutation)"; rc=1
 else
   for _ in $(seq 1 60); do echo >> "$SB18/skills/subagent-driven-development/SKILL.md"; done
   expect_red "sdd structure: SKILL.md over the 500-line budget" \
