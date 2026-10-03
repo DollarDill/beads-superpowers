@@ -47,6 +47,12 @@ CB4_SITES=(
   skills/write-documentation/SKILL.md
   skills/verification-before-completion/SKILL.md
 )
+# CB-6 (one bead owner per plan, ADR-0068): byte-identical whole line at both sites.
+CB6_SIG="One bead owner per plan"
+CB6_SITES=(
+  skills/using-superpowers/SKILL.md
+  CLAUDE.md
+)
 # CB-5 (Reviewer security floor): the task-reviewer's security-floor paragraph is
 # duplicated verbatim into the re-review prompt (scoped re-review after a fix round)
 # so a re-reviewer applies the same non-negotiable severity rule. Byte-identical at
@@ -206,6 +212,13 @@ self_test() {
     fi
   fi
 
+  # CB-6 self-test: a one-character mutation of the owner rule must be caught.
+  local c6src="skills/using-superpowers/SKILL.md" c6sig="One bead owner per plan"
+  if [ ! -f "$c6src" ]; then echo "self-test FAIL: CB-6 fixture missing"; ok=0; else
+    sed 's/One bead owner per plan/One bead owner per pIan/' "$c6src" > "$tmp/cb6-mutated.md"
+    if grep -qF -- "$c6sig" "$tmp/cb6-mutated.md"; then echo "self-test FAIL: CB-6 detector did NOT catch the mutation"; ok=0; fi
+  fi
+
   rm -rf "$tmp"
   if [ "$ok" -eq 1 ]; then echo "self-test OK: detector matches correct, rejects mutated"; return 0; else return 1; fi
 }
@@ -217,6 +230,8 @@ fi
 check_block "CB-3 Capture gate"    "$CB3_SIG" "${CB3_SITES[@]}"
 check_block "CB-4 memory convention" "$CB4_SIG" "${CB4_SITES[@]}"
 assert_line_identical "CB-4 memory convention (byte-identity)" "$CB4_SIG" "${CB4_SITES[@]}"
+check_block "CB-6 one bead owner per plan" "$CB6_SIG" "${CB6_SITES[@]}"
+assert_line_identical "CB-6 one bead owner per plan (byte-identity)" "$CB6_SIG" "${CB6_SITES[@]}"
 assert_block_identical "CB-3 Capture gate (byte-identity)" "$CB3_ANCHOR" '^```$' "${CB3_SITES[@]}"
 check_block "KB read-depth fragment" "$KB_SIG" "${KB_SITES[@]}"
 check_block "CB-5 Reviewer security floor" "$CB5_SIG" "${CB5_SITES[@]}"
