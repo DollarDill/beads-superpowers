@@ -41,4 +41,15 @@ else
   echo "git origin: clean (no dolt refs)"
 fi
 
+echo "== gitignore =="
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  if git -C "$(git rev-parse --show-toplevel)" check-ignore -q .beads.gate.lock 2>/dev/null; then
+    echo "gitignore: gate.lock ignored"
+  else
+    echo "WARNING: *.gate.lock* is not gitignored - bd 1.3.x drops .beads.gate.lock at the repo root; add '*.gate.lock*' to .gitignore (bd doctor cannot add it in embedded mode)"
+  fi
+else
+  echo "gitignore: SKIP (not a git repo)"
+fi
+
 exit 0
