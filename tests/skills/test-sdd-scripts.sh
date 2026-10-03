@@ -74,4 +74,32 @@ rc=0; "$RP" "$base_sha" "$head_sha" >/dev/null 2>&1 || rc=$?
 found=$(find "$dir" -maxdepth 1 -name 'review-*.diff' | grep -c '' || true)
 [ "$found" -eq 1 ] || { echo "FAIL: review diff not in plan workspace (found $found)"; exit 1; }
 
+# --- v6.4.1 additions (behavioural) ---
+# 10. same-basename collision -> distinct workspaces, second suffixed with parent dir
+mkdir -p docs/alpha docs/beta
+printf '### Task 1: A\nbody\n' > docs/alpha/plan.md
+printf '### Task 1: B\nbody\n' > docs/beta/plan.md
+d1=$("$WS" docs/alpha/plan.md); d2=$("$WS" docs/beta/plan.md)
+[ "$d1" != "$d2" ] || { echo "FAIL: same-basename plans share a workspace: $d1"; exit 1; }
+case "$d2" in */plan-beta) : ;; *) echo "FAIL: expected <slug>-<parent> suffix, got $d2"; exit 1 ;; esac
+[ "$(cat "$d1/plan-path")" = "docs/alpha/plan.md" ] || { echo "FAIL: plan-path marker wrong: $(cat "$d1/plan-path")"; exit 1; }
+# 11. legacy workspace (no marker) is adopted, not skipped
+mkdir -p .internal/sdd/legacy-plan; printf '### Task 1: L\nbody\n' > plans/legacy-plan.md
+d3=$("$WS" plans/legacy-plan.md)
+[ "$d3" = "$(pwd -P)/.internal/sdd/legacy-plan" ] || { echo "FAIL: legacy workspace not adopted: $d3"; exit 1; }
+[ -f "$d3/plan-path" ] || { echo "FAIL: adoption did not write plan-path"; exit 1; }
+# 12. review-package range guards -> exit 3
+git checkout -q -b rp-test; git commit -q --allow-empty -m one; A=$(git rev-parse HEAD)
+git checkout -q -b rp-other "$A~1"; git commit -q --allow-empty -m other; B=$(git rev-parse HEAD)
+set +e; "$RP" plans/alpha-plan.md "$A" "$B" >/dev/null 2>&1; rc=$?; set -e
+[ "$rc" -eq 3 ] || { echo "FAIL: non-ancestor BASE should exit 3, got $rc"; exit 1; }
+set +e; "$RP" plans/alpha-plan.md "$B" "$B" >/dev/null 2>&1; rc=$?; set -e
+[ "$rc" -eq 3 ] || { echo "FAIL: empty range should exit 3, got $rc"; exit 1; }
+git checkout -q rp-test
+# 13. scripts work without exec bits when invoked via bash
+cp -rf "$SKILL_DIR/scripts" ./noexec && chmod -x ./noexec/*
+out=$(bash ./noexec/task-brief plans/alpha-plan.md 1) || { echo "FAIL: task-brief via bash without exec bit"; exit 1; }
+brief_path=${out#wrote }; brief_path=${brief_path%: *}
+[ -f "$brief_path" ] || { echo "FAIL: task-brief did not write a brief: $out"; exit 1; }
+
 echo "PASS: sdd plan-scoped workspace + callers"
