@@ -4,14 +4,15 @@
 # site that carries them. Free-form duplication rots (bd-6814 ADR-strip missed skills/; the
 # TodoWrite gate drifted across 4 sites). Two tiers:
 #   * Canonical BLOCKS — CB-3 (Capture gate), CB-4 (memory convention), CB-5 (Reviewer
-#     security floor) and CB-6 (one bead owner per plan) must be BYTE-IDENTICAL at every
-#     site: enforced by extract-and-diff (assert_block_identical / assert_line_identical),
+#     security floor), CB-6 (one bead owner per plan) and CB-7 (ruling citation) must be
+#     BYTE-IDENTICAL at every site: enforced by extract-and-diff (assert_block_identical / assert_line_identical),
 #     backstopped by an ASCII signature-presence grep.
 #   * Per-site FRAGMENT (KB read-depth) and KERNELS — only a fixed sentence / per-skill line
 #     is shared, so signature-presence (`grep -qF`) is the correct check (the fragment IS the
 #     whole shared unit; kernels are per-site by design).
 # Any missing/divergent copy is DRIFT. Guard-the-guards: tests/install-shape/selftest.sh
-# (Mutations 13-16).
+# (Mutations 13-16); CB-6 and CB-7 are covered by this script's own --self-test (no
+# selftest.sh mutation).
 #
 # Usage:
 #   scripts/check-convention-sync.sh            # verify all sites (exit 1 on drift)
@@ -64,6 +65,20 @@ CB5_ENDRE='is not one[.][)]'
 CB5_SITES=(
   skills/subagent-driven-development/task-reviewer-prompt.md
   skills/subagent-driven-development/re-review-prompt.md
+)
+# CB-7 (shared adjudication bright lines, ADR-0068 era): the ruling-citation block
+# is byte-identical in SDD and executing-plans; the security clause is presence-
+# checked at both (its SDD line carries a relative link that differs by directory).
+CB7_ANCHOR="**Every ruling cites its authority**"
+CB7_ENDRE='Fill-or-fail, not a judgment call[.]'
+CB7_SEC_SIG="is NEVER rulable and never parkable"
+# The adjudication boundary and its precedence: presence-checked at both sites, so a
+# softened boundary ("reasonably suggests it") or precedence is DRIFT.
+CB7_ADJ_SIG="You MAY rule when the spec unambiguously settles it. Everything else escalates."
+CB7_PREC_SIG="**Precedence: must-stop wins**"
+CB7_SITES=(
+  skills/subagent-driven-development/SKILL.md
+  skills/executing-plans/SKILL.md
 )
 # KB read-depth fragment (ADR-0058): one byte-identical ASCII sentence at every
 # retrieval instruction site; stripping the read mandate strips the fragment.
@@ -229,6 +244,48 @@ self_test() {
     fi
   fi
 
+  # CB-7 self-test: the unmutated source must carry the security clause and the
+  # ruling-citation block; stripping the clause must defeat the presence check, and
+  # assert_block_identical must FAIL on a copy with a one-character mutation in the block.
+  local c7src="skills/executing-plans/SKILL.md" c7ref="skills/subagent-driven-development/SKILL.md"
+  local c7sig="is NEVER rulable and never parkable"
+  if [ ! -f "$c7src" ] || [ ! -f "$c7ref" ]; then echo "self-test FAIL: CB-7 fixture missing"; ok=0; else
+    if ! grep -qF -- "$c7sig" "$c7src"; then
+      echo "self-test FAIL: CB-7 security clause missing from unmutated source"; ok=0
+    else
+      grep -v -- "$c7sig" "$c7src" > "$tmp/cb7-stripped.md"
+      if (check_block "CB-7 self-test" "$c7sig" "$tmp/cb7-stripped.md" 2>&1) | grep -q "DRIFT"; then :; else
+        echo "self-test FAIL: CB-7 detector did NOT catch the stripped clause"; ok=0
+      fi
+    fi
+    if ! grep -qF -- "$CB7_ANCHOR" "$c7src"; then
+      echo "self-test FAIL: CB-7 ruling block missing from unmutated source"; ok=0
+    else
+      sed 's/by definition not spec-settled/by definition not spec-setIled/' "$c7src" > "$tmp/cb7-mutated.md"
+      if cmp -s "$c7src" "$tmp/cb7-mutated.md"; then
+        echo "self-test FAIL: CB-7 block mutation did not change the file (fixture stale)"; ok=0
+      elif ! (assert_block_identical "CB-7 self-test" "$CB7_ANCHOR" "$CB7_ENDRE" "$c7ref" "$tmp/cb7-mutated.md" 2>&1) | grep -q "DRIFT"; then
+        echo "self-test FAIL: CB-7 byte-identity check did NOT catch a one-character mutation"; ok=0
+      fi
+    fi
+    # Adjudication boundary + precedence: both must be present unmutated, and a
+    # weakened copy ("reasonably suggests it" / "may-rule wins") must be DRIFT.
+    local c7pair c7s c7from c7to
+    for c7pair in "$CB7_ADJ_SIG|unambiguously settles it|reasonably suggests it" \
+                  "$CB7_PREC_SIG|must-stop wins|may-rule wins"; do
+      c7s="${c7pair%%|*}"; c7from="${c7pair#*|}"; c7to="${c7from#*|}"; c7from="${c7from%%|*}"
+      if ! grep -qF -- "$c7s" "$c7src"; then
+        echo "self-test FAIL: CB-7 signature missing from unmutated source: $c7s"; ok=0; continue
+      fi
+      sed "s/$c7from/$c7to/" "$c7src" > "$tmp/cb7-weakened.md"
+      if cmp -s "$c7src" "$tmp/cb7-weakened.md"; then
+        echo "self-test FAIL: CB-7 weakening '$c7from' did not change the file (fixture stale)"; ok=0
+      elif ! (check_block "CB-7 self-test" "$c7s" "$tmp/cb7-weakened.md" 2>&1) | grep -q "DRIFT"; then
+        echo "self-test FAIL: CB-7 detector did NOT catch '$c7from' -> '$c7to'"; ok=0
+      fi
+    done
+  fi
+
   rm -rf "$tmp"
   if [ "$ok" -eq 1 ]; then echo "self-test OK: detector matches correct, rejects mutated"; return 0; else return 1; fi
 }
@@ -246,6 +303,10 @@ assert_block_identical "CB-3 Capture gate (byte-identity)" "$CB3_ANCHOR" '^```$'
 check_block "KB read-depth fragment" "$KB_SIG" "${KB_SITES[@]}"
 check_block "CB-5 Reviewer security floor" "$CB5_SIG" "${CB5_SITES[@]}"
 assert_block_identical "CB-5 Reviewer security floor (byte-identity)" "$CB5_ANCHOR" "$CB5_ENDRE" "${CB5_SITES[@]}"
+assert_block_identical "CB-7 ruling citation (byte-identity)" "$CB7_ANCHOR" "$CB7_ENDRE" "${CB7_SITES[@]}"
+check_block "CB-7 security never rulable" "$CB7_SEC_SIG" "${CB7_SITES[@]}"
+check_block "CB-7 adjudication boundary" "$CB7_ADJ_SIG" "${CB7_SITES[@]}"
+check_block "CB-7 precedence: must-stop wins" "$CB7_PREC_SIG" "${CB7_SITES[@]}"
 check_kernels
 
 if [ "$FAIL" -eq 0 ]; then
