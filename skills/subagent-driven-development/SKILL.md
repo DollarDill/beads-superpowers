@@ -32,25 +32,25 @@ escalate. Fill-or-fail, not a judgment call.
 digraph when_to_use {
     "Have implementation plan?" [shape=diamond];
     "Tasks mostly independent?" [shape=diamond];
-    "Stay in this session?" [shape=diamond];
+    "Partner chose inline, or no subagent tool?" [shape=diamond];
     "subagent-driven-development" [shape=box];
     "executing-plans" [shape=box];
     "Manual execution or brainstorm first" [shape=box];
 
     "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
     "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
-    "Tasks mostly independent?" -> "Stay in this session?" [label="yes"];
+    "Tasks mostly independent?" -> "Partner chose inline, or no subagent tool?" [label="yes"];
     "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
-    "Stay in this session?" -> "subagent-driven-development" [label="yes"];
-    "Stay in this session?" -> "executing-plans" [label="no - parallel session"];
+    "Partner chose inline, or no subagent tool?" -> "executing-plans" [label="yes"];
+    "Partner chose inline, or no subagent tool?" -> "subagent-driven-development" [label="no"];
 }
 ```
 
-**vs. Executing Plans (parallel session):**
-- Same session (no context switch)
-- Fresh subagent per task (no context pollution)
-- One task review after each task: spec-compliance and code-quality verdicts in a single read-only pass
-- Faster iteration (no human-in-loop between tasks)
+**vs. Executing Plans (inline):**
+- Fresh subagent per task (no context pollution) instead of one context doing every task
+- Review after each task (spec compliance + code quality) instead of only at the end
+- Costs a fresh context per task and per review; inline costs one context plus one final reviewer
+- Both run in this session, share the same plan workspace under `.internal/sdd/`, use beads as the ledger, and never pause between tasks
 
 ## Pre-Flight Plan Review
 
@@ -284,6 +284,8 @@ Use the least powerful model that can handle each role to conserve cost and incr
 - Touches multiple files with integration concerns → standard model
 - Requires design judgment or broad codebase understanding → most capable model
 
+**Delegated orchestration (opt-in, whole plan only):** where the harness nests subagents, your human partner may opt in — per run, never assumed — to one orchestrator subagent running this skill end to end and owning the plan's beads until it returns; the session touches none of them meanwhile, relays its "Rulings I made" verbatim, and verifies the ledger against `git log` before any merge — `../using-superpowers/references/claude-code-tools.md`.
+
 ## Handling Reviewer ⚠️ Items
 
 The task reviewer returns a Spec Compliance verdict of ✅, ❌, or ⚠️. A ⚠️ "cannot verify from diff" item does **not** block the task on its own — but you (the controller) must resolve it, because it usually needs cross-task context the reviewer lacks. Check the named requirement against the broader implementation. If the ⚠️ turns out to be a real gap, treat it as a failed spec review and re-dispatch the implementer to close it; if it's actually satisfied elsewhere, record that and proceed.
@@ -295,7 +297,7 @@ A review returning findings starts a fix round: dispatch a **fresh implementer**
 recent** section of the report file. **Record `ROUND0_HEAD` (round 0's final
 commit, not `BASE`) before dispatching fix round 1** — it is round 1's `<fix-base>`.
 Then dispatch a scoped re-review filling `re-review-prompt.md` against
-`scripts/review-package <plan-file> <fix-base> HEAD`.
+`bash scripts/review-package <plan-file> <fix-base> HEAD`.
 
 **A re-review PASS requires the reviewer's verdict AND a green full test suite** —
 **you (the controller) run the suite** and report it in `[SUITE_STATUS]`. What the
@@ -318,7 +320,7 @@ Implementer status handling (BLOCKED / NEEDS_CONTEXT and friends): see `referenc
 
 ## Final Review
 
-Run `scripts/review-package <plan-file> <MERGE_BASE> HEAD` and dispatch a
+Run `bash scripts/review-package <plan-file> <MERGE_BASE> HEAD` and dispatch a
 most-capable-tier reviewer over the whole branch — the only place the composite of
 all fix rounds is examined. Findings go to one fix subagent, then one scoped
 re-review; residuals follow the breaker rules.
@@ -339,11 +341,11 @@ Reports are the only non-regenerable artifact — delete once the record is dura
 
 Hand task text and review diffs to subagents as **files**, not pasted context — this keeps large text out of your own context and gives subagents a single thing to read.
 
-- Before dispatching an implementer, run `scripts/task-brief <plan-file> <N>` → writes `.internal/sdd/<plan-basename>/task-<N>-brief.md`. Pass that path to the implementer as "read this first — it is your requirements."
+- Before dispatching an implementer, run `bash scripts/task-brief <plan-file> <N>` → writes `.internal/sdd/<plan-basename>/task-<N>-brief.md`. Pass that path to the implementer as "read this first — it is your requirements."
 - The implementer writes its full report to `.internal/sdd/<plan-basename>/task-<N>-report.md` (you name the path via `[REPORT_FILE]`); the reviewer reads it as a file. Fix rounds **append** to it.
-- Before dispatching the reviewer, run `scripts/review-package <plan-file> <BASE> <HEAD>` → writes `.internal/sdd/<plan-basename>/review-<base7>..<head7>.diff`. `BASE` is the commit recorded before the implementer ran — never `HEAD~1`.
+- Before dispatching the reviewer, run `bash scripts/review-package <plan-file> <BASE> <HEAD>` → writes `.internal/sdd/<plan-basename>/review-<base7>..<head7>.diff`. `BASE` is the commit recorded before the implementer ran — never `HEAD~1`.
 - The reviewer is **read-only**: it must not mutate the working tree, the index, HEAD, or branch state.
-- The workspace is resolved **per plan, per working tree** (`scripts/sdd-workspace <plan-file>`). Two plans in one tree never share brief filenames, and in Parallel Batch Mode each `bd worktree` gets its own tree.
+- The workspace is resolved **per plan, per working tree** (`bash scripts/sdd-workspace <plan-file>`). Two plans in one tree never share brief filenames, and in Parallel Batch Mode each `bd worktree` gets its own tree.
 
 ## Prompt Templates
 
@@ -365,7 +367,7 @@ You: I'm using Subagent-Driven Development to execute this plan.
 [Read plan file once: .internal/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]
 [Create epic + tasks via bd import (parent-child rides the import; blocks wired after):]
-[  bd create "Epic: <name>" -t epic -p 2 -d "<goal + '## Success Criteria' heading on its own line>"  -> note epic id]
+[  bd create "Epic: <name>" -t epic -p 2 -d "<goal>, then 'Plan: <plan path>' and 'Spec: <spec path>' lines, then '## Success Criteria' on its own line"  -> note epic id]
 [  Author tasks as JSONL, one per line, id OMITTED, each with a parent-child dep to the epic]
 [    and "## Acceptance Criteria" in description; pipe to: bd import -]
 [    (schema: bd import --help / bd export <id>; confirm output has no "Skipped dependency")]
@@ -388,7 +390,7 @@ Implementer: "Got it. Implementing now..."
   - Self-review: Found I missed --force flag, added it
   - Committed
 
-[Generate review package: scripts/review-package PLAN_FILE BASE HEAD]
+[Generate review package: bash scripts/review-package PLAN_FILE BASE HEAD]
 [Dispatch single task reviewer with the brief, report file, and diff]
 Task reviewer:
   Spec Compliance: ✅ Spec compliant - all requirements met, nothing extra
@@ -457,7 +459,7 @@ bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / patt
 | "Parallel subagents on different files won't collide" | Every parallel subagent MUST have its own `bd worktree` — never dispatch parallel subagents without per-task worktree isolation. |
 | "A few extra subagents this batch won't hurt" | Never dispatch more than 5 parallel subagents in a single batch (resource exhaustion). |
 | "Claude's built-in `isolation: \"worktree\"` is the same thing" | It bypasses beads DB sharing — `bd worktree` is not optional isolation, it's the only isolation this skill recognizes. **Never** substitute Claude's `isolation: "worktree"` parameter for it. |
-| "The subagent can just read the plan file itself" | Never make a subagent navigate the raw multi-task plan file — give it a focused, self-contained task brief instead (`scripts/task-brief` writes one, see File Handoffs). |
+| "The subagent can just read the plan file itself" | Never make a subagent navigate the raw multi-task plan file — give it a focused, self-contained task brief instead (`bash scripts/task-brief` writes one, see File Handoffs). |
 | "It'll figure out where the task fits" | Never skip scene-setting context — the subagent needs to understand where its task fits. |
 | "Ignore subagent questions, keep it moving" | Answer clearly and completely, provide additional context if needed, and don't rush the subagent into implementation. |
 | "Close enough on spec compliance" / "Accept 'close enough' on spec compliance" | Reviewer found spec issues = not done. Fix it, or run out the five-round cap and let the breaker take over (`references/breaker-trip.md`) — those are the only exits. |
@@ -494,4 +496,4 @@ bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / patt
 - **beads-superpowers:systematic-debugging** - Integration test failures after batch merge
 
 **Alternative workflow:**
-- **beads-superpowers:executing-plans** - Use for parallel session instead of same-session execution
+- **beads-superpowers:executing-plans** - Use when your human partner chose inline execution or no subagent tool exists — cheaper: one context plus one final review
