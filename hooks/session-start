@@ -16,7 +16,7 @@ BSP_MEM_CEILING=1550
 # recalled body. Live continuation memory measured 600B (via `bd recall`,
 # 2026-10-03) — never size a budget to today's measurement. This ceiling is NOT
 # the effective cap: with the bootstrap at its 6400B ceiling the nominal
-# worst-case bsp_allowance is 9500-6400-768-965 = 1367B (the live measured
+# worst-case bsp_allowance is ≈1129B (9500 envelope − 6400 SKILL.md ceiling − ~239 wrapper − ~964 pointer − 768 wrap overhead, warnings excluded) (the live measured
 # allowance is ~1311B — the hook prints "1311-byte budget"), so the min() below
 # DOES clamp, and the effective memory cap is that allowance, not 1550. An
 # over-budget continuation is not truncated: it degrades to the
