@@ -8,7 +8,7 @@ Claude Code nests subagents (three layers below the main conversation by default
 
 **Only when your human partner asks for it, or opts in at the writing-plans handoff.** Never choose delegation yourself to save cost; that is a trade-off the doctrine reserves for the human.
 
-Dispatch ONE orchestrator subagent on a capability tier no lower than mid with this brief:
+Dispatch ONE orchestrator subagent on a capability tier no lower than the standard tier with this brief:
 
 - the plan path and the spec path;
 - "You are the orchestrating agent for this plan: you own its beads (epic and children) for this run; the session will not touch them until you return";
