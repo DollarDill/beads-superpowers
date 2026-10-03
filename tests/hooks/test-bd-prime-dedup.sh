@@ -113,6 +113,8 @@ claude_notice() {  # $1 = id, $2 = label
   local sm; sm=$(sysmsg "$1")
   if [[ "$sm" == *"is also registered"* && "$sm" == *"bd setup claude --remove"* ]]; then pass "$2"
   else bad "$2 — systemMessage lacks notice (got: '$sm')"; fi
+  if grep -q 'is also registered' "$TMP/c/$1/err"; then bad "$2 — notice also on stderr (must be systemMessage only)"
+  else pass "$2 — notice absent from stderr"; fi
 }
 
 # --- baseline (anti-vacuous): no settings anywhere ---
@@ -184,6 +186,22 @@ setup plain; mkdir -p "$(P plain)/.claude"
 claude_settings "bd prime --hook-json" >"$(P plain)/.claude/settings.json"
 run plain "$(P plain)" CLAUDE_PLUGIN_ROOT=x -- --emit-plain
 no_notice plain "plain — --emit-plain with Claude settings -> no notice"
+
+# cursor-plain: Cursor env + --emit-plain + bd's Cursor hook -> no notice anywhere
+setup cursor-plain; mkdir -p "$(P cursor-plain)/.cursor"
+cursor_hooks >"$(P cursor-plain)/.cursor/hooks.json"
+run cursor-plain "$(P cursor-plain)" CURSOR_PLUGIN_ROOT=x -- --emit-plain
+no_notice cursor-plain "cursor-plain — --emit-plain under Cursor env with bd Cursor hook -> no notice"
+
+# non-hook: a bd string that is not a hook command -> no notice
+setup non-hook; mkdir -p "$(P non-hook)/.claude"
+printf '{\n  "description": "bd prime --json"\n}\n' >"$(P non-hook)/.claude/settings.json"
+run non-hook "$(P non-hook)" CLAUDE_PLUGIN_ROOT=x
+no_notice non-hook "non-hook — Claude settings mentioning 'bd prime --json' only in a description -> no notice"
+setup non-hook-cursor; mkdir -p "$(P non-hook-cursor)/.cursor"
+printf '{\n  "description": "bd cursor-hook sessionStart"\n}\n' >"$(P non-hook-cursor)/.cursor/hooks.json"
+run non-hook-cursor "$(P non-hook-cursor)" CURSOR_PLUGIN_ROOT=x
+no_notice non-hook-cursor "non-hook — Cursor hooks mentioning 'bd cursor-hook ' only in a description -> no notice"
 
 # d: no settings -> no notice
 setup d; run d "$(P d)" CLAUDE_PLUGIN_ROOT=x

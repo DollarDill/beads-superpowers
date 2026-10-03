@@ -57,7 +57,7 @@ fi
 if [ ! -f .claude/settings.json ]; then
   echo "SKIP 1.6: .claude/settings.json absent (gitignored by design, .gitignore:25)"
 else
-  cat .claude/settings.json | grep -qE '"bd prime[ "]' && echo "WARNING: bd setup claude hooks still installed — run bd setup claude --remove" || echo "PASS: no duplicate hooks"
+  cat .claude/settings.json | grep -qE '"command"[[:space:]]*:[[:space:]]*"bd prime[ "]' && echo "WARNING: bd setup claude hooks still installed — run bd setup claude --remove" || echo "PASS: no duplicate hooks"
 fi
 ```
 

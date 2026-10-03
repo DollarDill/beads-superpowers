@@ -277,8 +277,8 @@ fi
 # Notice only — our curated context is always kept. Read by the notice block below.
 bd_own_hook=""
 if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
-    for settings_file in ".cursor/hooks.json" "${HOME}/.cursor/hooks.json"; do
-        if [ -f "$settings_file" ] && grep -qF '"bd cursor-hook ' "$settings_file" 2>/dev/null; then
+    [ "$BSP_EMIT_PLAIN" = "1" ] || for settings_file in ".cursor/hooks.json" "${HOME}/.cursor/hooks.json"; do
+        if [ -f "$settings_file" ] && grep -qE '"command"[[:space:]]*:[[:space:]]*"bd cursor-hook ' "$settings_file" 2>/dev/null; then
             bd_own_hook=cursor
             break
         fi
@@ -291,7 +291,7 @@ elif [ "$BSP_EMIT_PLAIN" != "1" ] && [ -z "${CODEX_PLUGIN_ROOT:-}" ] && [ -z "${
         "${CLAUDE_PROJECT_DIR:-.}/.claude/settings.local.json" \
         "${HOME}/.claude/settings.json" \
         "${HOME}/.claude/settings.local.json"; do
-        if [ -f "$settings_file" ] && grep -qE '"bd prime[ "]' "$settings_file" 2>/dev/null; then
+        if [ -f "$settings_file" ] && grep -qE '"command"[[:space:]]*:[[:space:]]*"bd prime[ "]' "$settings_file" 2>/dev/null; then
             bd_own_hook=claude
             break
         fi
