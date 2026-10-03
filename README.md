@@ -42,7 +42,7 @@ Using a different agent? Jump to install for [Codex CLI](#codex-cli), [OpenCode]
 
 3. **stress-test** - Adversarially interrogates the approved spec branch by branch (offered at every spec review), so flaws surface before planning.
 
-4. **writing-plans** - Turns the spec into bite-sized tasks with exact files, code, and verification steps. Every task becomes a `bd` bead.
+4. **writing-plans** - Turns the spec into bite-sized tasks whose steps each have a checkable result, recording the decisions an implementer needs (exact file paths, signatures, test assertions, verification commands). Every task becomes a `bd` bead.
 
 5. **stress-test** (again) - The same adversarial pass against the plan itself: task boundaries, parallel-safety, failure modes.
 

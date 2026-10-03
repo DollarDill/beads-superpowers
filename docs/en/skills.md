@@ -148,7 +148,7 @@ Interrogates every branch of the decision tree, proposing a recommended answer f
 
 **Trigger:** When you have a spec or requirements for a multi-step task.
 
-Breaks a design into bite-sized tasks (2-5 minutes each) with exact file paths, code, and verification steps. Every task becomes a bead with dependency ordering.
+Breaks a design into bite-sized tasks whose steps each have a checkable result, recording the decisions an implementer needs (exact file paths, signatures, test assertions, verification commands). Every task becomes a bead with dependency ordering.
 
 ### subagent-driven-development
 
