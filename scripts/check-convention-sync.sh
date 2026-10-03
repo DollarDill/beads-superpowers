@@ -62,7 +62,7 @@ CB8_SITES=(
   skills/subagent-driven-development/SKILL.md
   skills/executing-plans/SKILL.md
 )
-CB8_RECLAIM_SIG="another actor's claim without your human partner's consent"
+CB8_RECLAIM_SIG="**Never** \`bd reclaim\`, \`bd unclaim --force\`, or \`bd update --force\` another actor's claim without your human partner's consent."
 CB8_RECLAIM_SITES=(
   skills/subagent-driven-development/SKILL.md
   skills/executing-plans/SKILL.md
@@ -268,6 +268,22 @@ self_test() {
         echo "self-test FAIL: CB-8 tail mutation did not change the line (fixture stale)"; ok=0
       elif ! (assert_line_identical "CB-8 self-test" "$c8sig" "$c8src" "$tmp/cb8-mutated.md" 2>&1) | grep -q "DRIFT"; then
         echo "self-test FAIL: CB-8 byte-identity check did NOT catch a tail mutation"; ok=0
+      fi
+    fi
+  fi
+
+  # CB-8 never-reclaim self-test: softening the leading bright-line phrase must be DRIFT.
+  local c8rsrc="skills/finishing-a-development-branch/SKILL.md"
+  local c8rlead="**Never** \`bd reclaim\`, \`bd unclaim --force\`, or \`bd update --force\`"
+  if [ ! -f "$c8rsrc" ]; then echo "self-test FAIL: CB-8 reclaim fixture missing"; ok=0; else
+    if ! grep -qF -- "$CB8_RECLAIM_SIG" "$c8rsrc"; then
+      echo "self-test FAIL: CB-8 reclaim signature missing from unmutated source"; ok=0
+    else
+      CB8_LEAD="$c8rlead" awk '{ i = index($0, ENVIRON["CB8_LEAD"]); if (i) $0 = substr($0, 1, i-1) "Prefer to ask before you touch" substr($0, i + length(ENVIRON["CB8_LEAD"])); print }' "$c8rsrc" > "$tmp/cb8-soft.md"
+      if cmp -s "$c8rsrc" "$tmp/cb8-soft.md"; then
+        echo "self-test FAIL: CB-8 softening mutation did not change the file (fixture stale)"; ok=0
+      elif ! (check_block "CB-8 reclaim self-test" "$CB8_RECLAIM_SIG" "$tmp/cb8-soft.md" 2>&1) | grep -q "DRIFT"; then
+        echo "self-test FAIL: CB-8 never-reclaim check did NOT catch a softened sentence"; ok=0
       fi
     fi
   fi
