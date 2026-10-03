@@ -83,6 +83,14 @@ d1=$("$WS" docs/alpha/plan.md); d2=$("$WS" docs/beta/plan.md)
 [ "$d1" != "$d2" ] || { echo "FAIL: same-basename plans share a workspace: $d1"; exit 1; }
 case "$d2" in */plan-beta) : ;; *) echo "FAIL: expected <slug>-<parent> suffix, got $d2"; exit 1 ;; esac
 [ "$(cat "$d1/plan-path")" = "docs/alpha/plan.md" ] || { echo "FAIL: plan-path marker wrong: $(cat "$d1/plan-path")"; exit 1; }
+# 10b. a ../-relative spelling of an owned plan resolves to the same workspace
+d1b=$(cd docs/beta && "$WS" ../alpha/plan.md)
+[ "$d1b" = "$d1" ] || { echo "FAIL: ../ spelling resolved to a different workspace: $d1b (want $d1)"; exit 1; }
+# 10c. third plan with same basename AND same parent dir name -> -N counter
+mkdir -p other/beta; printf '### Task 1: C\nbody\n' > other/beta/plan.md
+d4=$("$WS" other/beta/plan.md)
+case "$d4" in */plan-beta-2) : ;; *) echo "FAIL: expected <slug>-<parent>-2 counter, got $d4"; exit 1 ;; esac
+if [ "$d4" = "$d1" ] || [ "$d4" = "$d2" ]; then echo "FAIL: counter workspace collided: $d4"; exit 1; fi
 # 11. legacy workspace (no marker) is adopted, not skipped
 mkdir -p .internal/sdd/legacy-plan; printf '### Task 1: L\nbody\n' > plans/legacy-plan.md
 d3=$("$WS" plans/legacy-plan.md)
@@ -101,5 +109,7 @@ cp -rf "$SKILL_DIR/scripts" ./noexec && chmod -x ./noexec/*
 out=$(bash ./noexec/task-brief plans/alpha-plan.md 1) || { echo "FAIL: task-brief via bash without exec bit"; exit 1; }
 brief_path=${out#wrote }; brief_path=${brief_path%: *}
 [ -f "$brief_path" ] || { echo "FAIL: task-brief did not write a brief: $out"; exit 1; }
+rc=0; bash ./noexec/review-package plans/alpha-plan.md "$base_sha" "$head_sha" >/dev/null 2>&1 || rc=$?
+[ "$rc" -eq 0 ] || { echo "FAIL: review-package via bash without exec bit exited $rc"; exit 1; }
 
 echo "PASS: sdd plan-scoped workspace + callers"
