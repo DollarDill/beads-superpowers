@@ -22,7 +22,7 @@ Execute the plan yourself, task by task, in this session: no implementer subagen
 **You MAY rule when the spec unambiguously settles it. Everything else escalates.** Ruling from the
 spec is *reading the binding authority*, not descoping; deciding a requirement is not worth meeting
 stays your human partner's call. Enumerated may-rule / must-stop lists:
-[references/rulings-and-escalation.md](../subagent-driven-development/references/rulings-and-escalation.md) — read it the first time
+[../subagent-driven-development/references/rulings-and-escalation.md](../subagent-driven-development/references/rulings-and-escalation.md) — read it the first time
 a conflict surfaces. **Precedence: must-stop wins** where both could apply, and **a security finding
 is NEVER rulable and never parkable**, whatever the plan or spec says (`../subagent-driven-development/references/breaker-trip.md`).
 
@@ -46,7 +46,7 @@ Prefer subagent-driven development when the plan has more than about eight tasks
 
 1. Isolated workspace first — use beads-superpowers:using-git-worktrees. Never start on a main/master branch without your human partner's explicit consent.
 2. Plan workspace: `bash ../subagent-driven-development/scripts/sdd-workspace PLAN_FILE` prints this plan's git-ignored directory under `.internal/sdd/` — briefs, review packages and test logs live there. Shared with subagent-driven development, so a plan can change executors mid-flight.
-3. Find or create the ledger. Locate an existing epic by plan path: `bd search "<plan basename>" -t epic --status open`. **Resuming:** `bd ready --parent <epic-id>` is the remaining work; a closed child's completion line names its commit range — check it against `git log` before touching anything, and trust bd and git over your recollection. **Fresh:** create the epic, then import the tasks:
+3. Find or create the ledger. Locate an existing epic by its `Plan:` anchor, which lives in the description (`bd search` matches titles only): `bd list -t epic --status open --desc-contains "Plan: <plan file path>"`. **Resuming:** first `bd list --parent <epic-id> --status in_progress` — a task interrupted mid-flight is still claimed, and `bd ready` excludes it. Check its commits against `git log` before redoing anything, then finish it through the Task Loop from step 2. Then `bd ready --parent <epic-id>` is the remaining work; a closed child's completion line names its commit range — check it against `git log` before touching anything, and trust bd and git over your recollection. **Fresh:** create the epic, then import the tasks:
 
    ```bash
    # 1. Create the epic (→ note its id). Plan: and Spec: are the resume anchors.
@@ -79,7 +79,7 @@ EOF
 
 4. Read the plan once — its context and Global Constraints — and the Spec it names: the spec is the authority the plan argues from, and conflicts inside the plan resolve against it. No reachable spec → `bd update <epic-id> --append-notes "No spec reachable — rulings are provisional"`.
 5. **REQUIRED SUB-SKILL:** load beads-superpowers:test-driven-development now, before Task 1. It governs every step of every task below.
-6. Pre-flight scan: for every task that consumes what an earlier task produces, one row — the two tasks, what one produces against what the other consumes, what you found — appended with `bd update <epic-id> --append-notes "Pre-flight: <row>"`. Tasks that share nothing get no row; a plan whose tasks share nothing gets the single line `Pre-flight: no shared interfaces`. Rule on each conflict a row surfaces (spec as the binding authority) and record the ruling beside its row.
+6. Pre-flight scan: for every task that consumes what an earlier task produces, one row — the two tasks, what one produces against what the other consumes, what you found — appended with `bd update <epic-id> --append-notes "Pre-flight: <row>"`. Tasks that share nothing get no row; a plan whose tasks share nothing gets the single line `Pre-flight: no shared interfaces`. Rule on each conflict the spec settles; escalate the rest. Record each ruling beside its row.
 
 ## The Task Loop
 
@@ -127,13 +127,15 @@ A red run closes nothing; the task is not complete. Then `bd epic status <epic-i
 
 ## Final Review
 
+Final Review starts only when `bd epic status <epic-id>` shows every child closed. An open, in-progress, deferred or flagged child is a task not yet done: finish it, or stop and surface it — never review around it.
+
 Run `bash ../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the commit the branch started from, e.g. `git merge-base main HEAD`) and append to the file it prints the closed beads' completion lines (`bd list --parent <epic-id> --status closed --long`) and the path of the test logs, so the reviewer can cross-check each claim against its artifact.
 
 **With a subagent tool:** dispatch the reviewer on the most capable available tier — the whole-branch review is a judgment task — using beads-superpowers:requesting-code-review's `code-reviewer.md`, with the package path, the plan and spec paths, the plan's `## Review Focus` section verbatim if it has one, and a pointer to the epic's notes so it can weigh the rulings you made. Name the tier explicitly; an omitted tier inherits the session's. This is the one fresh context the whole run buys. Do not skip it, and do not replace it with your own read of the diff.
 
-**Without a subagent tool:** read `code-reviewer.md` and perform that review yourself as a separate pass after the last close. Ledger `Final review: self-review (no subagent tool)` and say so in your final message: a self-review by the author is weaker than a fresh reviewer, and your human partner decides whether that is enough before merge.
+**Without a subagent tool:** read `code-reviewer.md` and perform that review yourself as a separate pass after the last close. Ledger `Final review: self-review (no subagent tool)` and say so in your final message: a self-review by the author is weaker than a fresh reviewer, and your human partner decides whether that is enough before merge. A Critical or security fix needs a fresh-context re-review this path cannot provide: it escalates to your human partner before merge.
 
-Sort the findings before you act. The reviewer's severity labels are advice; the gate is yours. Its `### Declined to judge` list is yours too: every line there is a ruling you make and ledger, exactly like a plan conflict — `Final: Ruling: <behavior set aside> — <what a reasonable person using this software gets, and why that stands or is now a finding> — <cost if wrong>` — or, where the spec does not settle it, an escalation. Re-grade first, by effect: the spec is a vision document, and a finding's grade is what a reasonable person using this software gets if it ships, not whether the spec names the trigger. Then:
+Sort the findings before you act. The reviewer's severity labels are advice; the gate is yours. Its `### Declined to judge` list is yours too: every line there is a ruling you make and ledger, exactly like a plan conflict — `Final: Ruling: <behavior set aside> — settled by <spec §> — <effect on a reasonable person> — <cost if wrong>`, where the effect is what a reasonable person using this software gets, and why that stands or is now a finding. Where the spec does not settle it — no citable spec § — it is an escalation. Re-grade first, by effect: the spec is a vision document, and a finding's grade is what a reasonable person using this software gets if it ships, not whether the spec names the trigger. **Re-grading never lowers a security finding:** it stays Critical, enters the fix pass, gets the scoped re-review, and is never deferred or ruled. Then:
 
 - **Critical and Important** enter the fix pass.
 - **Minor** goes to the ledger as `Final: minor (deferred): <one-liner>` and to your final message under "Deferred minors". Minors never enter the fix pass and never become rulings.
@@ -151,7 +153,7 @@ When the final review is clean and its fixes are committed, delete this plan's w
 
 ## When to Stop and Ask for Help
 
-The stops above are the only reasons to stop. When one fires, classify the blocker and use the matching response — this is how continuous execution escalates without guessing:
+The stops above are the only reasons to stop the run; a blocker on a single task follows the table below. Either way, classify the blocker and use the matching response — this is how continuous execution escalates without guessing:
 
 | Blocker type | Action | Command |
 |---|---|---|

@@ -11,7 +11,8 @@
 #     is shared, so signature-presence (`grep -qF`) is the correct check (the fragment IS the
 #     whole shared unit; kernels are per-site by design).
 # Any missing/divergent copy is DRIFT. Guard-the-guards: tests/install-shape/selftest.sh
-# (Mutations 13-16).
+# (Mutations 13-16); CB-6 and CB-7 are covered by this script's own --self-test (no
+# selftest.sh mutation).
 #
 # Usage:
 #   scripts/check-convention-sync.sh            # verify all sites (exit 1 on drift)
@@ -71,6 +72,10 @@ CB5_SITES=(
 CB7_ANCHOR="**Every ruling cites its authority**"
 CB7_ENDRE='Fill-or-fail, not a judgment call[.]'
 CB7_SEC_SIG="is NEVER rulable and never parkable"
+# The adjudication boundary and its precedence: presence-checked at both sites, so a
+# softened boundary ("reasonably suggests it") or precedence is DRIFT.
+CB7_ADJ_SIG="You MAY rule when the spec unambiguously settles it. Everything else escalates."
+CB7_PREC_SIG="**Precedence: must-stop wins**"
 CB7_SITES=(
   skills/subagent-driven-development/SKILL.md
   skills/executing-plans/SKILL.md
@@ -263,6 +268,22 @@ self_test() {
         echo "self-test FAIL: CB-7 byte-identity check did NOT catch a one-character mutation"; ok=0
       fi
     fi
+    # Adjudication boundary + precedence: both must be present unmutated, and a
+    # weakened copy ("reasonably suggests it" / "may-rule wins") must be DRIFT.
+    local c7pair c7s c7from c7to
+    for c7pair in "$CB7_ADJ_SIG|unambiguously settles it|reasonably suggests it" \
+                  "$CB7_PREC_SIG|must-stop wins|may-rule wins"; do
+      c7s="${c7pair%%|*}"; c7from="${c7pair#*|}"; c7to="${c7from#*|}"; c7from="${c7from%%|*}"
+      if ! grep -qF -- "$c7s" "$c7src"; then
+        echo "self-test FAIL: CB-7 signature missing from unmutated source: $c7s"; ok=0; continue
+      fi
+      sed "s/$c7from/$c7to/" "$c7src" > "$tmp/cb7-weakened.md"
+      if cmp -s "$c7src" "$tmp/cb7-weakened.md"; then
+        echo "self-test FAIL: CB-7 weakening '$c7from' did not change the file (fixture stale)"; ok=0
+      elif ! (check_block "CB-7 self-test" "$c7s" "$tmp/cb7-weakened.md" 2>&1) | grep -q "DRIFT"; then
+        echo "self-test FAIL: CB-7 detector did NOT catch '$c7from' -> '$c7to'"; ok=0
+      fi
+    done
   fi
 
   rm -rf "$tmp"
@@ -284,6 +305,8 @@ check_block "CB-5 Reviewer security floor" "$CB5_SIG" "${CB5_SITES[@]}"
 assert_block_identical "CB-5 Reviewer security floor (byte-identity)" "$CB5_ANCHOR" "$CB5_ENDRE" "${CB5_SITES[@]}"
 assert_block_identical "CB-7 ruling citation (byte-identity)" "$CB7_ANCHOR" "$CB7_ENDRE" "${CB7_SITES[@]}"
 check_block "CB-7 security never rulable" "$CB7_SEC_SIG" "${CB7_SITES[@]}"
+check_block "CB-7 adjudication boundary" "$CB7_ADJ_SIG" "${CB7_SITES[@]}"
+check_block "CB-7 precedence: must-stop wins" "$CB7_PREC_SIG" "${CB7_SITES[@]}"
 check_kernels
 
 if [ "$FAIL" -eq 0 ]; then
