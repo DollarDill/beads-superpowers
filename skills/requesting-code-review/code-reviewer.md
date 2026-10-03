@@ -95,6 +95,9 @@ in your report.
 ### Recommendations
 [Improvements for code quality, architecture, or process]
 
+### Declined to judge
+[Lines the spec leaves open that you did not grade — one per line; omit the heading if there are none]
+
 ### Assessment
 
 **Ready to merge?** [Yes/No/With fixes]
