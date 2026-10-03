@@ -103,6 +103,25 @@ in your report.
 
 > When filing a bead for discovered/follow-up work, stamp it per **Agent-Filed Bead Discipline** (`verification-before-completion`).
 
+## The spec is a vision document
+
+The spec says what the software must do. It does not enumerate every
+input, environment, or condition the software will meet. For behavior
+the spec is silent on, judge by what a reasonable person using this
+software would expect: a reasonable person's expectation is a
+requirement, and a spec's silence is not permission. Grade such
+findings by their effect on that person, not by whether the spec
+mentions the trigger.
+
+## Declined to judge
+
+Before your verdict, list every behavior you considered and set aside
+as outside the plan or spec, one line each, with the reason, under a
+`### Declined to judge` heading. The executor rules on each line only
+where the spec unambiguously settles it and escalates the rest; nothing
+you set aside is dropped silently. An empty list means you set nothing
+aside.
+
 ## Critical Rules
 
 **DO:**
