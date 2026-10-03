@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # SessionStart hook for beads-superpowers plugin
 # This hook subsumes both superpowers skill injection AND beads context (bd prime).
-# If bd prime is already registered as a hook elsewhere (e.g. bd setup claude),
-# we skip our bd prime call to avoid duplicate context injection.
+# If bd's own prime hook is also registered (bd setup claude, or bd init's Cursor
+# hooks), we keep our curated context and emit a one-line notice naming the remedy
+# (Claude Code: top-level systemMessage, because exit-0 stderr is never shown;
+# Cursor: stderr).
 
 set -euo pipefail
 
@@ -267,19 +269,34 @@ if [ -d "$legacy_skills_dir" ]; then
 <important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **WARNING:** Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead. To make this message go away, remove ~/.config/superpowers/skills</important-reminder>"
 fi
 
-# Detect if bd prime is already registered as a hook elsewhere (e.g. bd setup claude).
-# Check project and global settings files — if found, skip our bd prime call.
-bd_prime_already_hooked=0
-for settings_file in \
-    ".claude/settings.json" \
-    ".claude/settings.local.json" \
-    "${HOME}/.claude/settings.json" \
-    "${HOME}/.claude/settings.local.json"; do
-    if [ -f "$settings_file" ] 2>/dev/null && grep -q '"bd prime"' "$settings_file" 2>/dev/null; then
-        bd_prime_already_hooked=1
-        break
-    fi
-done
+# Detect bd's own prime hook registered alongside ours. Harness-scoped (a Claude
+# settings file seen under Cursor, or vice versa, is not ours to report) and
+# matched on bd v1.3.1's real shapes: Claude `"command": "bd prime --hook-json"`
+# (optionally --stealth; cmd/bd/setup/claude.go), Cursor
+# `{"command": "bd cursor-hook sessionStart"}` (cmd/bd/setup/cursor.go).
+# Notice only — our curated context is always kept. Read by the notice block below.
+bd_own_hook=""
+if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+    [ "$BSP_EMIT_PLAIN" = "1" ] || for settings_file in ".cursor/hooks.json" "${HOME}/.cursor/hooks.json"; do
+        if [ -f "$settings_file" ] && grep -qE '"command"[[:space:]]*:[[:space:]]*"bd cursor-hook ' "$settings_file" 2>/dev/null; then
+            bd_own_hook=cursor
+            break
+        fi
+    done
+elif [ "$BSP_EMIT_PLAIN" != "1" ] && [ -z "${CODEX_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ] \
+     && { [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] || [ -n "${CLAUDE_PROJECT_DIR:-}" ]; }; then
+    # CLAUDE_PROJECT_DIR: the hook's CWD is not guaranteed to be the project root.
+    for settings_file in \
+        "${CLAUDE_PROJECT_DIR:-.}/.claude/settings.json" \
+        "${CLAUDE_PROJECT_DIR:-.}/.claude/settings.local.json" \
+        "${HOME}/.claude/settings.json" \
+        "${HOME}/.claude/settings.local.json"; do
+        if [ -f "$settings_file" ] && grep -qE '"command"[[:space:]]*:[[:space:]]*"bd prime[ "]' "$settings_file" 2>/dev/null; then
+            bd_own_hook=claude
+            break
+        fi
+    done
+fi
 
 # Read using-superpowers content
 using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>/dev/null) || using_superpowers_content="beads-superpowers: using-superpowers skill unreadable"
@@ -310,9 +327,8 @@ ${warning_message_raw}
 # Compose beads section AFTER measuring the bootstrap side — the beads side gets
 # exactly the remainder of the total envelope budget (ADR-0052). min() lives HERE,
 # in the caller; bsp_compose_memories keeps its plain <ceiling> signature.
-# (Skipped if an external bd prime hook owns injection.)
 beads_context=""
-if [ "$bd_prime_already_hooked" -eq 0 ] && command -v bd &>/dev/null && bd memories --json >/dev/null 2>&1; then
+if command -v bd &>/dev/null && bd memories --json >/dev/null 2>&1; then
     bsp_pointer="$(bsp_bd_pointer)"
     bsp_allowance=$(( BSP_ENVELOPE_BUDGET - $(printf '%s' "$session_context_raw" | wc -c) \
                       - $(printf '%s' "$bsp_pointer" | wc -c) - BSP_WRAP_OVERHEAD ))
@@ -344,7 +360,11 @@ if [ "$BSP_EMIT_PLAIN" = "1" ]; then
 elif [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
   printf '{\n  "additional_context": "%s"\n}\n' "$(escape_for_json "$session_context_raw")"
 elif { [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] || [ -n "${CODEX_PLUGIN_ROOT:-}" ] || [ -n "${CLAUDE_PROJECT_DIR:-}" ]; } && [ -z "${COPILOT_CLI:-}" ]; then
-  printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$(escape_for_json "$session_context_raw")"
+  printf '{\n'
+  if [ "$bd_own_hook" = "claude" ]; then
+    printf '  "systemMessage": "%s",\n' "$(escape_for_json "notice: bd's own SessionStart hook (bd prime) is also registered, so beads context is injected twice. To keep only the plugin's curated context, run: bd setup claude --remove (add --global if it is in ~/.claude)")"
+  fi
+  printf '  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$(escape_for_json "$session_context_raw")"
 else
   printf '{\n  "additionalContext": "%s"\n}\n' "$(escape_for_json "$session_context_raw")"
 fi
@@ -352,6 +372,11 @@ fi
 # bd-absent hint (non-fatal, one line to stderr)
 if ! command -v bd >/dev/null 2>&1; then
   printf '%s\n' "beads not found — install bd to enable persistent task memory: https://github.com/DollarDill/beads-superpowers#prerequisites" >&2
+fi
+
+# bd's own Cursor hook also registered (no verified Cursor user-visible field)
+if [ "$bd_own_hook" = "cursor" ]; then
+  printf '%s\n' "notice: bd's own Cursor hook (bd cursor-hook) is also registered, so beads context is injected twice. To keep only the plugin's curated context, remove the \"bd cursor-hook\" entries from .cursor/hooks.json (or ~/.cursor/hooks.json)" >&2
 fi
 
 # upstream-superpowers coexistence collision warning (best-effort, non-fatal)
