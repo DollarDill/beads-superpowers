@@ -4,8 +4,9 @@
 # through the controller's context.
 #
 # Usage: task-brief PLAN_FILE TASK_NUMBER [OUTFILE]
-# Default OUTFILE: <repo-root>/.internal/sdd/<plan-basename>/task-<N>-brief.md
-# (per plan, per worktree — two plans in one tree never share a brief).
+# Default OUTFILE: task-<N>-brief.md inside the plan's workspace, as resolved by
+# sdd-workspace (per plan, per worktree — two plans in one tree never share a
+# brief, even when their basenames match).
 set -euo pipefail
 
 if [ $# -lt 2 ] || [ $# -gt 3 ]; then
@@ -20,7 +21,9 @@ n=$2
 if [ $# -eq 3 ]; then
   out=$3
 else
-  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
+  # Invoke via bash rather than direct exec: some extractors (Python zipfile)
+  # strip Unix exec bits when unpacking marketplace packages (#2040).
+  dir=$("${BASH:-bash}" "$(cd "$(dirname "$0")" && pwd)/sdd-workspace" "$plan")
   out="$dir/task-${n}-brief.md"
 fi
 

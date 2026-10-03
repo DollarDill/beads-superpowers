@@ -13,7 +13,7 @@ Agent tool (subagent_type: "general-purpose"):
     ## Task Description
 
     Read your task brief first: [BRIEF_FILE] — it is your requirements. (The controller
-    writes it with `scripts/task-brief <plan-file> <N>`; see the skill's File Handoffs section.)
+    writes it with `bash scripts/task-brief <plan-file> <N>`; see the skill's File Handoffs section.)
 
     ## Context
 

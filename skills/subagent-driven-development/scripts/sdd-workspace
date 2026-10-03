@@ -35,5 +35,37 @@ printf '*\n' > "$base/.gitignore"
 slug=$(basename "$plan")
 slug=${slug%.md}
 dir="$base/$slug"
-mkdir -p "$dir"
-cd "$dir" && pwd
+
+# Normalize the plan path (physical directory, so relative/absolute/../
+# spellings of one plan compare equal) and express it as the marker value:
+# repo-relative when the plan lives under the repo root, absolute otherwise.
+plan_dir=$(CDPATH='' cd -- "$(dirname "$plan")" && pwd -P)
+plan_abs="$plan_dir/$(basename "$plan")"
+case "$plan_abs" in
+  "$root"/*) plan_id=${plan_abs#"$root"/} ;;
+  *)         plan_id=$plan_abs ;;
+esac
+
+# True when the workspace at $1 is (or becomes) this plan's: an existing
+# marker must name this plan; a missing marker means a new workspace or a
+# pre-marker legacy one, and either way the plan claims it by writing one.
+owns() {
+  if [ -e "$1/plan-path" ]; then
+    [ "$(cat "$1/plan-path")" = "$plan_id" ]
+  else
+    mkdir -p "$1"
+    printf '%s\n' "$plan_id" > "$1/plan-path"
+  fi
+}
+
+if ! owns "$dir"; then
+  parent=$(basename "$plan_dir")
+  dir="$base/$slug-$parent"
+  if ! owns "$dir"; then
+    n=2
+    while ! owns "$base/$slug-$parent-$n"; do n=$((n + 1)); done
+    dir="$base/$slug-$parent-$n"
+  fi
+fi
+
+CDPATH='' cd -- "$dir" && pwd
