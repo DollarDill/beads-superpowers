@@ -30,7 +30,7 @@ is NEVER rulable and never parkable**, whatever the plan or spec says (`../subag
 <what it costs if wrong>`. No citable spec location means it is **by definition not spec-settled**:
 escalate. Fill-or-fail, not a judgment call.
 
-**Ruling budget:** the third ruling in one run stops you — surface every ruling so far with its cost-if-wrong and continue only on approval. A plan that needs a fourth is "every path forward is a guess".
+**Ruling budget:** the third ruling in one run stops you — surface every ruling so far with its cost-if-wrong and continue only on approval. A plan that needs a fourth is "every path forward is a guess". The budget counts task-loop rulings only: `Final:` rulings from the final review do not count toward it, every one is still listed under "Rulings I made", and a `Final:` item with no citable spec § still escalates.
 
 **The stops.** Irreversible or destructive operations; security-sensitive actions; side effects outside this worktree (a merge, a push to a shared branch, a publish); a plan so broken every path forward is a guess; the ruling budget. Stopping is beads-native — the blocker table under "When to Stop" says how.
 
@@ -129,7 +129,7 @@ A red run closes nothing; the task is not complete. Then `bd ready --parent <epi
 
 Final Review starts only when `bd list --parent <epic-id> --status open,in_progress,blocked,deferred` lists no children. An open, in-progress, deferred or flagged child is a task not yet done: finish it, or stop and surface it — never review around it.
 
-Run `bash ../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the commit the branch started from, e.g. `git merge-base main HEAD`) and append to the file it prints the closed beads' completion lines (`bd list --parent <epic-id> --status closed --long`) and the path of the test logs, so the reviewer can cross-check each claim against its artifact.
+Run `bash ../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the commit the branch started from: the branch's integration base, e.g. `git merge-base <target-branch> HEAD`) and append to the file it prints the closed beads' completion lines (`bd list --parent <epic-id> --status closed --long`) and the path of the test logs, so the reviewer can cross-check each claim against its artifact.
 
 **With a subagent tool:** dispatch the reviewer on the most capable available tier — the whole-branch review is a judgment task — using beads-superpowers:requesting-code-review's `code-reviewer.md`, with the package path, the plan and spec paths, the plan's `## Review Focus` section verbatim if it has one, and a pointer to the epic's notes so it can weigh the rulings you made. Name the tier explicitly; an omitted tier inherits the session's. This is the one fresh context the whole run buys. Do not skip it, and do not replace it with your own read of the diff.
 

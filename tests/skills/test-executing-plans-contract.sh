@@ -40,6 +40,22 @@ pin 'bd ready --parent <epic-id> --claim'
 pin '## Red Flags'
 pin 'most capable'
 pin 'Final: Ruling: <behavior set aside> — settled by <spec §> — <effect on a reasonable person> — <cost if wrong>'
+# CHANGE-DETECTOR (convert: plugin-eval executing-plans case, s9xyx) — the ruling budget counts task-loop rulings only; Final: rulings are listed exhaustively and still escalate without a spec §
+pin 'The budget counts task-loop rulings only'
+pin 'rulings from the final review do not count toward it'
+pin 'with no citable spec § still escalates'
+# absence-of-defect — the MERGE_BASE example must not assume main (work integrates on a target branch such as dev)
+absent 'git merge-base main HEAD'
+pin 'git merge-base <target-branch> HEAD'
+# absence-of-defect — no sibling skill or doc may describe the per-task/batch cadence executing-plans no longer has
+for stale in "$ROOT/skills/requesting-code-review/SKILL.md|review after each task or at natural checkpoints" \
+             "$ROOT/README.md|executes in batches with human checkpoints" \
+             "$ROOT/README.md|Batch plan execution in a single session with checkpoints" \
+             "$ROOT/CLAUDE.md|Batch execution in single session"; do
+  if grep -qF -- "${stale#*|}" "${stale%%|*}"; then echo "FAIL: stale executing-plans description in ${stale%%|*}: ${stale#*|}"; fail=1; fi
+done
+# CHANGE-DETECTOR (convert: plugin-eval executing-plans case, s9xyx) — requesting-code-review states the real cadence
+grep -qF -- '**executing-plans** — one whole-branch review after the last task (most capable tier)' "$ROOT/skills/requesting-code-review/SKILL.md" || { echo "FAIL: requesting-code-review lacks the executing-plans cadence line"; fail=1; }
 # CB-7 ruling-format block byte-identical with SDD (three physical lines)
 if ! diff -q <(grep -A2 -F '**Every ruling cites its authority**' "$S") <(grep -A2 -F '**Every ruling cites its authority**' "$F") >/dev/null; then echo "FAIL: CB-7 ruling block diverges from SDD"; fail=1; fi
 # guardrail floor: Red Flags table has at least 12 rows

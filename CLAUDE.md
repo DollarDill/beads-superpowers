@@ -170,7 +170,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 | stress-test                    | Adversarial design interrogation with recommended answers                                                                   |
 | writing-plans                  | Bite-sized task plans — each task becomes a bead                                                                            |
 | subagent-driven-development    | Fresh agent per task + single task review (spec + quality verdicts); parallel batch mode for independent tasks              |
-| executing-plans                | Batch execution in single session                                                                                           |
+| executing-plans                | Continuous inline execution on the beads ledger; one final whole-branch review                                              |
 | test-driven-development        | RED-GREEN-REFACTOR — Iron Law: no code without failing test                                                                 |
 | systematic-debugging           | 4-phase root cause analysis before proposing fixes                                                                          |
 | verification-before-completion | Evidence before claims — bd close requires evidence                                                                         |

@@ -36,4 +36,10 @@ absent() { if grep -qF -- "$1" "$F"; then echo "FAIL: still present: $1"; fail=1
 absent '## No Placeholders'
 absent '2-5 minutes'
 absent 'questionable taste'
+# absence-of-defect — a template header that pre-selects a method disables the handoff heuristics
+absent 'subagent-driven-development (recommended)'
+# CHANGE-DETECTOR (convert: plugin-eval handoff case, s9xyx) — the template header defers the method to the handoff
+pin 'chosen at the Execution Handoff'
+# CHANGE-DETECTOR (convert: plugin-eval handoff case, s9xyx) — only a header naming ONE method pre-selects it
+pin 'a plan header naming only one method'
 [ "$fail" -eq 0 ] && echo "PASS: writing-plans contract" || exit 1

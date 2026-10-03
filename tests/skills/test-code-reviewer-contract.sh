@@ -14,7 +14,8 @@ check_exact() {  # fixed-string, must be present
 # CHANGE-DETECTOR (convert: plugin-eval review-output case, s9xyx)
 check_exact "## The spec is a vision document"
 # CHANGE-DETECTOR (convert: plugin-eval review-output case, s9xyx)
-check_exact "## Declined to judge"
+# Whole-line match: a substring pin is also satisfied by the template's '### Declined to judge'.
+if grep -qx -- "## Declined to judge" "$FILE"; then echo "PASS: ## Declined to judge (whole line)"; else echo "FAIL: missing whole line — ## Declined to judge"; fail=1; fi
 
 # CHANGE-DETECTOR (convert: plugin-eval review-output case, s9xyx)
 # The Output Format template must carry a '### Declined to judge' slot before its '### Assessment'.
