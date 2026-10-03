@@ -33,12 +33,22 @@ database (per upstream changelog v1.1.0: the provably-safe same-version case aut
 else stops). When the gate blocks you, pick ONE:
 
 - **You are the designated migrator** (one machine per team, by agreement): back up first —
-  `bd export --all -o backup.jsonl` — then `BD_ALLOW_REMOTE_MIGRATE=1 bd migrate`, then `bd dolt push`.
+  `bd export --all -o backup.jsonl` — then `bd migrate --force` (the CLI twin of
+  `BD_ALLOW_REMOTE_MIGRATE=1`; single designated migrator only), then `bd dolt push`.
 - **Any other machine:** do NOT migrate. Adopt the already-migrated database: `bd bootstrap`.
 
 Never set `BD_ALLOW_REMOTE_MIGRATE=1` outside the designated-migrator role — independently migrated
 clones fork the schema and break `bd dolt pull`. `BD_SMART_GATE=0` disables the smart gate entirely;
 discouraged for the same reason.
+
+**Observed vs documented (flagged, unresolved):** on embedded storage bd has been seen to
+auto-migrate as a "safe first-mover", yet `bd migrate --help` says bd "refuses to migrate in
+place" on a remote-backed database with pending migrations. These contradict; do not rely on
+either. Treat the gate as possible and follow the two options above.
+
+If a pull conflicts and the auto-resolver declines it, `bd dolt pull --strategy ours|theirs`
+resolves it (embedded storage only; `bd dolt pull --help`). Pick the side deliberately — the
+other side's changes are discarded.
 
 If a pull/push fails with Dolt's "cannot merge because table X has different primary keys" refusal,
 bd prints the bootstrap-from-canonical recovery recipe — follow it (upstream playbook:

@@ -56,4 +56,15 @@ echo "$out" | grep -q "ADR-0057" || { echo "FAIL: WARNING missing ADR-0057 refer
 printf 'dolt_mode: embedded\n' > .beads/config.yaml
 out2=$(PATH="/usr/bin:/bin" bash "$SCRIPT")
 echo "$out2" | grep -q "UNAVAILABLE" || { echo "FAIL: no UNAVAILABLE hint without bd"; exit 1; }
+# gitignore section: .beads.gate.lock must be ignored (bd 1.3.x drops it at repo root)
+echo "$out" | grep -q "== gitignore ==" || { echo "FAIL: section gitignore missing"; exit 1; }
+G="$TMP/gi"; mkdir -p "$G" && ( cd "$G" && git init -q . )
+outg=$(cd "$G" && PATH="/usr/bin:/bin" bash "$SCRIPT")
+echo "$outg" | grep -qF "WARNING: *.gate.lock* is not gitignored - bd 1.3.x drops .beads.gate.lock at the repo root; add '*.gate.lock*' to .gitignore (bd doctor cannot add it in embedded mode)" || { echo "FAIL: no gate.lock WARNING without .gitignore"; exit 1; }
+printf '*.gate.lock*\n' > "$G/.gitignore"
+outg=$(cd "$G" && PATH="/usr/bin:/bin" bash "$SCRIPT")
+echo "$outg" | grep -qF "gitignore: gate.lock ignored" || { echo "FAIL: gate.lock ignored line missing"; exit 1; }
+N="$TMP/nogit"; mkdir -p "$N"
+outn=$(cd "$N" && GIT_CEILING_DIRECTORIES="$TMP" PATH="/usr/bin:/bin" bash "$SCRIPT")
+echo "$outn" | grep -qF "gitignore: SKIP (not a git repo)" || { echo "FAIL: no SKIP outside git repo"; exit 1; }
 echo "PASS: diagnose.sh"

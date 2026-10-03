@@ -15,23 +15,27 @@ description: Use when beads/Dolt database initialization fails, when bd commands
 NEVER run bd init --force (deprecated in v1.0.4). Use the named-intent alternatives: bd init --reinit-local (preserves remote) or bd init --discard-remote (explicit destruction).
 ```
 
-## Version floor: NEVER install bd v1.2.0 or v1.2.1
+## Version floor: bd v1.3.1 minimum. NEVER install v1.2.0 or v1.2.1
 
-**Safe versions: v1.1.2 or v1.2.2.** Check with `bd version` before any init, bootstrap or
+**Minimum supported: bd v1.3.1.** Check with `bd version` before any init, bootstrap or
 recovery — including on a machine you are only *adding* to an existing setup.
 
-v1.2.0 and v1.2.1 were published by accident on 2026-08-11 without release testing and are
-retracted in `go.mod`. Running either **once** migrates the local Dolt schema **v53 → v65**, after
-which every other bd binary refuses to start with `schema version mismatch: database is at v65,
-binary knows up to v53`.
+- **v1.1.2 and v1.2.2 are unsupported — upgrade.** Skills assume the 1.3-only flags
+  `--merged-into`, `bd heartbeat`, `--destroy-token`, `migrate --force` and `dolt pull --strategy`,
+  and a remote migrated by 1.3.x is unreadable by older bd.
+- **v1.3.0 — upgrade.** Its smart-migrate gate can wedge ([beads #6575](https://github.com/gastownhall/beads/issues/6575)); fixed in v1.3.1.
+- **v1.2.0 and v1.2.1 remain poisoned.** They were published by accident on 2026-08-11 without
+  release testing and are retracted in `go.mod`. Running either **once** migrates the local Dolt
+  schema **v53 → v65**, after which every other bd binary refuses to start with `schema version
+  mismatch: database is at v65, binary knows up to v53`.
 
-If it has already happened: upgrade **every** machine and clone to a safe version *first* — a
+If it has already happened: upgrade **every** machine and clone to v1.3.1 *first* — a
 leftover 1.2.1 binary silently re-migrates — then follow
 [`docs/RECOVERY-1.2.1.md`](https://github.com/gastownhall/beads/blob/v1.2.2/docs/RECOVERY-1.2.1.md)
 (roll the schema cursor back to v53; `BD_IGNORE_SCHEMA_SKEW=1 bd <command>` is a verified stopgap).
+Upstream runbook: [beads.gascity.com/recovery/accidental-1-2-1-release](https://beads.gascity.com/recovery/accidental-1-2-1-release).
 
-v1.2.2 re-releases the tested v1.1.2 code under a higher version number, so it is safe but carries
-**no** new capability — never read a bd version bump as evidence that a feature or fix has landed.
+The first bd command after upgrading runs the in-place v53→v66 schema migration — run any bd command once in a terminal before starting an agent session.
 
 **Why:** Issue #2363 documents an AI agent that destroyed 247 issues via `bd init --force` cascade. The root cause was misdiagnosing "server can't connect" as "database missing". `bd init --force` is a nuclear option that should ONLY be run by a human who explicitly types it.
 
@@ -44,7 +48,7 @@ This Iron Law is the Production-Grade Doctrine applied to your data ledger: neve
 | `bd doctor --fix --yes` | ✅ Safe | Database exists but seems broken |
 | `bd init --force` | ❌ **NEVER** | **Deprecated (v1.0.4) — do NOT use** |
 | `bd init --reinit-local` | ⚠️ Recovery only | Reinitialize local state, preserve remote data |
-| `bd init --discard-remote` | ⚠️ Recovery only | Discard remote data and reinitialize (explicit destruction) |
+| `bd init --discard-remote` | ⚠️ Recovery only | Discard remote data and reinitialize (explicit destruction); requires `--destroy-token DESTROY-<prefix>` non-interactively |
 
 ## Diagnostic Phase (Always Run First)
 
@@ -87,8 +91,8 @@ git origin; see "Multi-Repo / Private Beads Remote" below.
 ## Path A: Fresh Initialization (New Project)
 
 ```bash
-# 1. Initialize beads
-bd init
+# 1. Initialize beads (--skip-agents: this plugin already supplies the agent context)
+bd init --skip-agents
 
 # 2. Verify
 bd list                    # Should work (empty is fine)
@@ -97,12 +101,16 @@ bd list                    # Should show the test bead
 bd close <test-id> --reason "Init verification"
 
 # 3. Add remote (if syncing) — RECOMMENDED: a dedicated beads remote (private for public projects),
-#    separate from the code repo (ADR-0057; bd releases after v1.1.0 refuse a code-repo URL without --allow-git-origin)
+#    separate from the code repo (ADR-0057; bd v1.3.0+ refuses a code-repo URL without --allow-git-origin)
 bd dolt remote add origin git+ssh://git@github.com/<owner>/<repo>-beads.git
 
 # 4. First push
 bd dolt push
 ```
+
+**Note:** `bd init` (v1.3.0+) writes and git-adds agent files (`.cursor/`, `.agents/skills/beads/`,
+`.claude/settings.json` hooks); this plugin already supplies the context, so pass `--skip-agents`.
+If they already exist, the session-start notice names the remedy.
 
 Done when: `bd list` shows the test bead created and closed, and (if a remote was added) `bd dolt push` succeeds.
 
@@ -128,30 +136,48 @@ Open `references/recovery.md` (open when push is rejected) for the v1.1.0 remote
 
 ## Path D: Database Exists but Broken
 
+Check `dolt_mode` in `.beads/metadata.json` first. Embedded is the default.
+
+**Server mode:**
+
 ```bash
-# 1. Run doctor (non-destructive diagnostics + auto-fix)
+# 1. Run doctor (non-destructive diagnostics + auto-fix) — server mode only
 bd doctor --fix --yes
 
 # 2. If doctor fixes it:
 bd list                    # Verify
 
-# 3. If still broken, restart the Dolt server
+# 3. If still broken, restart the Dolt server (server mode only)
 bd dolt stop
 bd dolt start
 bd list                    # Retry
 
-# 4. If still broken, check circuit breaker
+# 4. If still broken, check circuit breaker (server mode only)
 rm -f /tmp/beads-dolt-circuit-*.json
 bd dolt stop
 bd dolt start
 bd list                    # Retry
 ```
 
+**Embedded mode (default):** full `bd doctor` diagnostics need server mode (`bd doctor --help`:
+embedded supports only `--check=artifacts`, `--check=conventions`, `--check=pollution`). Run those,
+then check state:
+
+```bash
+bd doctor --check=artifacts
+bd doctor --check=conventions
+bd doctor --check=pollution
+bd vc status
+bd list                    # Retry
+```
+
+If `bd list` still fails: Path F when the remote has data, otherwise Path B.
+
 ## Path E: Add Remote to Existing Database
 
 ```bash
 # 1. Add the remote — RECOMMENDED: a dedicated beads remote (private for public projects),
-#    separate from the code repo (ADR-0057; bd releases after v1.1.0 refuse a code-repo URL without --allow-git-origin)
+#    separate from the code repo (ADR-0057; bd v1.3.0+ refuses a code-repo URL without --allow-git-origin)
 bd dolt remote add origin git+ssh://git@github.com/<owner>/<repo>-beads.git
 
 # 2. Push to establish remote
@@ -168,7 +194,7 @@ git ls-remote git+ssh://git@github.com/<owner>/<repo>-beads.git | grep dolt    #
 bd export -o /tmp/beads-backup.jsonl 2>/dev/null
 
 # 2. Remove and re-bootstrap
-bd dolt stop 2>/dev/null
+bd dolt stop 2>/dev/null     # server mode only
 rm -rf .beads/
 bd bootstrap
 
@@ -217,8 +243,9 @@ This clones the database from the dedicated private remote in one step and persi
 `sync.remote` — no separate `bd bootstrap` needed (live rehearsal: hydrated 1,854
 records with the private remote correctly wired).
 
-⚠️ **Zero-remote trap (v1.1.0):** with NO Dolt remote configured, `bd dolt push`
-silently adopts the git origin. Never leave zero-remote as a resting state — when
+⚠️ **Zero-remote trap (bd v1.1.0–v1.2.2):** with NO Dolt remote configured, `bd dolt push`
+silently adopts the git origin. On v1.3.0+ adoption prompts and fails closed non-interactively
+(`--no-adopt` / `BD_NO_REMOTE_ADOPT=1` disables it). Never leave zero-remote as a resting state — when
 swapping remotes, always chain the change in one command:
 `bd dolt remote remove origin && bd dolt remote add origin <url>`.
 
@@ -236,9 +263,16 @@ If it still shows the old (or code-repo) URL, fix it directly:
 bd config set sync.remote "git+ssh://git@github.com/<owner>/<project>-beads.git"
 ```
 
-**Collision guard (forward-compat):** bd releases after v1.1.0 refuse `bd dolt remote
-add` when the URL matches the git origin, unless `--allow-git-origin` is passed —
-making same-repo an explicit opt-in rather than an accident.
+**Collision guard (bd v1.3.0+):** `bd dolt remote add` refuses a URL that matches the git
+origin unless `--allow-git-origin` is passed — making same-repo an explicit opt-in rather than an
+accident.
+
+**`bd serve` (v1.3.0+):** an HTTP API for automation clients; it refuses embedded mode and needs
+server or proxied mode. Embedded is bd's default and the plugin works in every mode, so skip
+this unless you run a server. Caveats: no TLS; a token grants the whole surface including
+destructive `issues:delete` / `issues:sweep`; `actor` is caller-asserted, not authenticated;
+hooks do not fire on HTTP writes; `--allow-non-loopback` requires `--auth-token-file`
+(`bd serve --help`).
 
 ## Configuration Validation
 
@@ -257,6 +291,12 @@ bd dolt remote list
 # Check for config drift
 bd config drift 2>/dev/null
 ```
+
+**`bd backup`:** bare `bd backup` takes no backup — it prints help and exits 0. Configure with
+`bd backup init <path-or-dolthub-url>`, then `bd backup sync`. Embedded auto-backup is on when a
+git remote exists. A `bd backup sync` that fails after upgrading means the backup is already in
+the manifest-ahead state and has to be re-seeded (beads CHANGELOG v1.3.1: "backups already in the
+manifest-ahead state are not repaired by upgrading").
 
 ## Red Flags
 
