@@ -1,5 +1,3 @@
-<p align="center"><strong>English</strong> · <a href="README.zh-CN.md">中文</a></p>
-
 <p align="center">
   <img src="assets/banner.svg" alt="beads-superpowers - Process discipline and persistent memory for AI coding agents" width="100%" />
 </p>

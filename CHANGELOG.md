@@ -32,6 +32,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Beads 1.3.0 changed `bd prime` so a custom `PRIME.md` no longer replaces the whole output — persistent memories are appended to it regardless. That silently undid the session hook's safety net, whose job is to stop a `bd prime` call the hook doesn't control from dumping your whole memory store into a context budget the hook is already managing. On beads 1.3.0+ the net now pairs the file with a memory cap, so what leaks is bounded by your largest single memory rather than by the size of your store. Installs that already had a `PRIME.md` are covered, as is upgrading to 1.3.0 from an older `bd`, and your own cap is left alone if you've set one.
 - Two beads gotchas in `CLAUDE.md` asserted things that beads 1.3.0 has made false: that no released `bd` carries the git-origin collision guard, and that a zero-remote `bd dolt push` silently adopts git origin. Both are now version-scoped and re-verified against the 1.3.0 binary — the guard is live from 1.3.0 on, and remote adoption is consent-gated and fails closed in a non-interactive shell.
 
+### Removed
+
+- **Chinese (zh) docs removed.** `README.zh-CN.md`, `docs/zh/` and the zh-parity guard (`scripts/check-zh-docs.sh`) are gone; maintaining 1:1 translations was more overhead than it returned. English docs are the single source.
+
 ## [0.16.0] - 2026-07-27
 
 ### Added

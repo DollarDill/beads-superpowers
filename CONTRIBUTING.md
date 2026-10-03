@@ -17,7 +17,7 @@ git switch -c feat/my-improvement
 - **Commits:** Conventional prefixes (`feat:`, `fix:`, `docs:`, `chore:`), small and focused
 - **Task tracking (maintainer-side):** this repo runs on [`bd` (beads)](https://github.com/gastownhall/beads). The beads database is private — **you don't need `bd` to contribute.** External PRs are judged on code and tests; bead IDs in commit messages are maintainer discipline, not a requirement for you.
 - **Skills:** Markdown only. Don't soften bright-line rules, don't remove anti-rationalization tables or Iron Laws. See "Modifying Skills" in `CLAUDE.md`.
-- **Docs and translations:** Not yours to carry. Write your PR in English against the files you're changing; the maintainer handles the `docs/` site pages and their Chinese siblings. If a change makes a docs page wrong, mentioning it in the PR is plenty.
+- **Docs and translations:** Not yours to carry. Write your PR in English against the files you're changing; the maintainer handles the `docs/` site pages. If a change makes a docs page wrong, mentioning it in the PR is plenty.
 
 ## Making changes
 

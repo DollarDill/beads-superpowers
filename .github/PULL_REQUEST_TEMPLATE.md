@@ -28,7 +28,7 @@
 - [ ] If I added or modified a skill, I did NOT remove anti-rationalization tables, Iron Laws, or Red Flags
 - [ ] If I changed plugin metadata, I bumped the version via `scripts/bump-version.sh` (never by hand)
 - [ ] I updated `CHANGELOG.md` under `## [Unreleased]`
-- [ ] I updated `README.md` (and `README.zh-CN.md`) if user-facing behaviour changed
+- [ ] I updated `README.md` if user-facing behaviour changed
 
 ## Validation (run before submitting)
 
