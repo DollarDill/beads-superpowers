@@ -7,9 +7,7 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
-
-Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
+Write implementation plans for an engineer who has not seen this codebase or this spec. Assume they write idiomatic code in the project's language once they know the exact interface and the exact test, and that they will make a reasonable choice wherever the plan leaves one open. What they cannot know is what you decided: which files, which names and signatures, which values from the spec, which tests prove each task. Document those. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
@@ -50,9 +48,9 @@ independently testable deliverable.
 
 In beads terms, a right-sized task is one bead (`bd create -t task --parent <epic-id>`): claimable, verifiable, and closeable on its own.
 
-## Bite-Sized Task Granularity
+## Step Granularity
 
-**Each step is one action (2-5 minutes):**
+**Each step is one action with a checkable result:**
 - "Write the failing test" - step
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
@@ -83,6 +81,18 @@ argues from the spec, so the spec travels with it; executors read both]
 naming and copy rules, platform requirements — one line each, with exact
 values copied verbatim from the spec. Every task's requirements implicitly
 include this section.]
+
+## Review Focus
+
+[The five input classes or failure modes the spec implies but no task's
+tests exercise that are most likely to bite a person using this software
+— one line each, naming the input or condition and the behavior a
+reasonable person would expect, most likely first. The spec is a vision
+document: it says what the software must do, not everything it will
+meet, and its silence on an input is not permission for that input to
+break the program. Write the list here, once, with the spec in front of
+you. Then, for each line, add the test that pins it to the task that
+owns the code, in that task's own step style.]
 
 ---
 ```
@@ -120,12 +130,11 @@ def test_specific_behavior():
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: FAIL with "function not defined"
 
-- [ ] **Step 3: Write minimal implementation**
+- [ ] **Step 3: Implement `function(input: InputType) -> ResultType` in `exact/path/to/file.py`**
 
-```python
-def function(input):
-    return expected
-```
+One line on the approach when the signature and the test leave a choice
+(which library call, which data structure); a code block only for an
+algorithm they do not determine.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -146,15 +155,32 @@ git commit -m "feat: add specific feature"
 
 **Required bead-body sections:** `bd lint` (Self-Review step 0) requires `## Success Criteria` in the epic bead's description and `## Acceptance Criteria` in each task bead's description. Include them at creation time — embed them in each bead's `description` in the import JSONL (or use the `acceptance_criteria` field). The epic's Success Criteria derive from the plan's **Goal**; each task's copy from its **Acceptance Criteria** block.
 
-## No Placeholders
+## What a Step Contains
 
-Every step must contain the actual content an engineer needs. These are **plan failures** — never write them:
-- "TBD", "TODO", "implement later", "fill in details"
-- "Add appropriate error handling" / "add validation" / "handle edge cases"
-- "Write tests for the above" (without actual test code)
-- "Similar to Task N" (repeat the code — the engineer may be reading tasks out of order)
-- Steps that describe what to do without showing how (code blocks required for code steps)
-- References to types, functions, or methods not defined in any task
+A step is done when the implementer can write exactly one reasonable thing
+from it. That is the whole requirement: unambiguous, not complete. Each kind
+of step carries what makes it unambiguous and nothing more:
+
+- **A test step:** the test's name and its assertions, as code, with the
+  spec's exact values in them.
+- **A code step:** the exact signature (name, parameters, return type), the
+  file it lives in, and the specific values the spec pins. The implementer
+  writes the body. A body appears only for an algorithm the signature and
+  tests do not determine, or for exact copy the spec fixes.
+- **A verification step:** the command to run and the output that means it
+  passed.
+- **A reference to another task:** that task's Interfaces block says what
+  to use; the plan does not repeat that task's code.
+
+For a prose or Markdown edit, the decisions are the target file and anchor, the exact text of any rule, bright line or pinned phrase, and the contract-test assertion that pins it; connecting prose is left to the implementer.
+
+A plan is the set of decisions the implementer cannot make alone. A plan
+longer than the code it describes has written the code instead. Lines that
+decide nothing ("TBD", "TODO", "implement later", "fill in details",
+"handle edge cases", "add appropriate validation", "write tests for the
+above", "Similar to Task N" with no Interfaces block to point at, a type or
+function no task defines) are the opposite failure, and the self-review
+catches both.
 
 ## Self-Review
 
@@ -170,9 +196,13 @@ bd ready --parent <epic-id> --explain                                # confirm d
 
 **1. Spec coverage:** Skim each requirement in the spec. Every one MUST map to a task — point to it. A requirement with no task is either added as a task or surfaced to the user as an explicit, acknowledged cut. Silent omission is a plan failure.
 
-**2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
+**2. Step scan:** Every step must let the implementer write exactly one reasonable thing, and no step may carry more than that: a line that decides nothing is a gap, a function body the signature and tests already determine is a transcript. Fix both.
 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
+
+**4. Review Focus:** For each input class or failure mode the spec implies, is there a task whose tests exercise it? The five uncovered ones most likely to bite a person go in the Review Focus section, and each line there gets its test added to the owning task. An empty section means you checked and found none, not that you skipped the check.
+
+**5. Proportion:** Compare the plan's length to the spec's. A plan several times longer than the spec it implements is a transcript of the program, not a plan. If code blocks are most of the document, replace bodies with signatures, test names and assertions, and check that each step is still unambiguous.
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
@@ -246,7 +276,15 @@ Route on the answer. **Record the decision / Both** → this writes an ADR, so f
 
 ## Execution Handoff
 
-After the plan is approved, **use your structured question tool** to offer the execution choice:
+After the plan is approved, recommend a method from the plan itself, then **use your structured question tool** to offer the choice. State the recommendation as two heuristics your human partner overrides at the gate:
+
+- **Length** — more than about eight tasks, or any task whose brief plus expected test output would not fit one uncompacted stretch → Subagent-Driven.
+- **Sensitivity** — the plan touches auth, secrets, permissions, input validation or data deletion → Subagent-Driven (a fresh reviewer per task is worth its cost there).
+- Otherwise → Inline Execution.
+
+**"For this plan I recommend <method>, because <one sentence from the plan: task count, interface coupling, sensitivity>."**
+
+If the plan header or your human partner already names an execution method, present it as the default and ask only for review confirmation.
 
 ```json
 {
@@ -256,11 +294,11 @@ After the plan is approved, **use your structured question tool** to offer the e
     "options": [
       {
         "label": "Subagent-Driven (Recommended)",
-        "description": "Fresh subagent per task with a single task review between tasks — fast iteration, high quality"
+        "description": "A fresh implementer and a fresh reviewer per task, then a whole-branch review — most thorough; costs a fresh context per task and per review"
       },
       {
         "label": "Inline Execution",
-        "description": "Execute tasks in this session using executing-plans — batch execution with checkpoints"
+        "description": "This session implements every task itself, continuously, with beads as the ledger and one final whole-branch review on the most capable tier — cheaper; one context plus one reviewer"
       }
     ],
     "multiSelect": false
@@ -268,13 +306,15 @@ After the plan is approved, **use your structured question tool** to offer the e
 }
 ```
 
+Put the recommended option first and mark it "(Recommended)" — swap the labels when the heuristics point at inline.
+
 **If Subagent-Driven chosen:**
 - **REQUIRED SUB-SKILL:** Use beads-superpowers:subagent-driven-development
-- Fresh subagent per task + single task review (spec + quality verdicts)
+- Fresh implementer and reviewer per task, single task review between tasks (spec + quality verdicts)
 
 **If Inline Execution chosen:**
 - **REQUIRED SUB-SKILL:** Use beads-superpowers:executing-plans
-- Batch execution with checkpoints for review
+- Continuous inline execution on the beads ledger; one final whole-branch review
 
 ## Integration
 
