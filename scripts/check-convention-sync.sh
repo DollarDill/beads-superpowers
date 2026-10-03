@@ -4,14 +4,14 @@
 # site that carries them. Free-form duplication rots (bd-6814 ADR-strip missed skills/; the
 # TodoWrite gate drifted across 4 sites). Two tiers:
 #   * Canonical BLOCKS — CB-3 (Capture gate), CB-4 (memory convention), CB-5 (Reviewer
-#     security floor), CB-6 (one bead owner per plan) and CB-7 (ruling citation) must be
+#     security floor), CB-6 (one bead owner per plan), CB-7 (ruling citation) and CB-8 (leases) must be
 #     BYTE-IDENTICAL at every site: enforced by extract-and-diff (assert_block_identical / assert_line_identical),
 #     backstopped by an ASCII signature-presence grep.
 #   * Per-site FRAGMENT (KB read-depth) and KERNELS — only a fixed sentence / per-skill line
 #     is shared, so signature-presence (`grep -qF`) is the correct check (the fragment IS the
 #     whole shared unit; kernels are per-site by design).
 # Any missing/divergent copy is DRIFT. Guard-the-guards: tests/install-shape/selftest.sh
-# (Mutations 13-16); CB-6 and CB-7 are covered by this script's own --self-test (no
+# (Mutations 13-16); CB-6, CB-7 and CB-8 are covered by this script's own --self-test (no
 # selftest.sh mutation).
 #
 # Usage:
@@ -54,6 +54,19 @@ CB6_SIG="One bead owner per plan"
 CB6_SITES=(
   skills/using-superpowers/SKILL.md
   CLAUDE.md
+)
+# CB-8 (leases, bd v1.3.1): byte-identical whole line at both plan-execution sites; the
+# never-reclaim sentence is additionally presence-checked at all three (incl. finishing).
+CB8_SIG="**Leases (bd v1.3.1).**"
+CB8_SITES=(
+  skills/subagent-driven-development/SKILL.md
+  skills/executing-plans/SKILL.md
+)
+CB8_RECLAIM_SIG="another actor's claim without your human partner's consent"
+CB8_RECLAIM_SITES=(
+  skills/subagent-driven-development/SKILL.md
+  skills/executing-plans/SKILL.md
+  skills/finishing-a-development-branch/SKILL.md
 )
 # CB-5 (Reviewer security floor): the task-reviewer's security-floor paragraph is
 # duplicated verbatim into the re-review prompt (scoped re-review after a fix round)
@@ -244,6 +257,21 @@ self_test() {
     fi
   fi
 
+  # CB-8 self-test: assert_line_identical must FAIL on a one-character tail mutation.
+  local c8src="skills/subagent-driven-development/SKILL.md" c8sig="**Leases (bd v1.3.1).**"
+  if [ ! -f "$c8src" ]; then echo "self-test FAIL: CB-8 fixture missing"; ok=0; else
+    if ! grep -qF -- "$c8sig" "$c8src"; then
+      echo "self-test FAIL: CB-8 signature missing from unmutated source"; ok=0
+    else
+      grep -F -- "$c8sig" "$c8src" | sed 's/consent\./consenl./' > "$tmp/cb8-mutated.md"
+      if cmp -s <(grep -F -- "$c8sig" "$c8src") "$tmp/cb8-mutated.md"; then
+        echo "self-test FAIL: CB-8 tail mutation did not change the line (fixture stale)"; ok=0
+      elif ! (assert_line_identical "CB-8 self-test" "$c8sig" "$c8src" "$tmp/cb8-mutated.md" 2>&1) | grep -q "DRIFT"; then
+        echo "self-test FAIL: CB-8 byte-identity check did NOT catch a tail mutation"; ok=0
+      fi
+    fi
+  fi
+
   # CB-7 self-test: the unmutated source must carry the security clause and the
   # ruling-citation block; stripping the clause must defeat the presence check, and
   # assert_block_identical must FAIL on a copy with a one-character mutation in the block.
@@ -299,6 +327,8 @@ check_block "CB-4 memory convention" "$CB4_SIG" "${CB4_SITES[@]}"
 assert_line_identical "CB-4 memory convention (byte-identity)" "$CB4_SIG" "${CB4_SITES[@]}"
 check_block "CB-6 one bead owner per plan" "$CB6_SIG" "${CB6_SITES[@]}"
 assert_line_identical "CB-6 one bead owner per plan (byte-identity)" "$CB6_SIG" "${CB6_SITES[@]}"
+assert_line_identical "CB-8 leases (byte-identity)" "$CB8_SIG" "${CB8_SITES[@]}"
+check_block "CB-8 never-reclaim" "$CB8_RECLAIM_SIG" "${CB8_RECLAIM_SITES[@]}"
 assert_block_identical "CB-3 Capture gate (byte-identity)" "$CB3_ANCHOR" '^```$' "${CB3_SITES[@]}"
 check_block "KB read-depth fragment" "$KB_SIG" "${KB_SITES[@]}"
 check_block "CB-5 Reviewer security floor" "$CB5_SIG" "${CB5_SITES[@]}"
