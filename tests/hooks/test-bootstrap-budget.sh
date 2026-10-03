@@ -7,7 +7,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 HOOK="$ROOT/hooks/session-start"
 SKILL="$ROOT/skills/using-superpowers/SKILL.md"
-# Raised 6144 -> 6400 on 2026-09-26 for the CB-6 one-owner rule (ADR-0068). The file is a proxy: the full injected envelope measured 8,981 B against the hook's 9,500 B budget that day.
+# Raised 6144 -> 6400 on 2026-09-26 for the CB-6 one-owner rule (ADR-0068). The file is a proxy: the full injected envelope measured 9,292 B (2026-10-03, at this task's head) against the hook's 9,500 B budget, ~208 B headroom.
 CEILING=6400
 WRAPPER_CEILING=1024
 fail=0
