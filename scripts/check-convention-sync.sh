@@ -3,9 +3,10 @@
 # check-convention-sync.sh — keep the cross-cutting convention blocks in sync across every
 # site that carries them. Free-form duplication rots (bd-6814 ADR-strip missed skills/; the
 # TodoWrite gate drifted across 4 sites). Two tiers:
-#   * Canonical BLOCKS — CB-3 (Capture gate) and CB-4 (memory convention) must be
-#     BYTE-IDENTICAL at every site: enforced by extract-and-diff (assert_block_identical /
-#     assert_line_identical), backstopped by an ASCII signature-presence grep.
+#   * Canonical BLOCKS — CB-3 (Capture gate), CB-4 (memory convention), CB-5 (Reviewer
+#     security floor) and CB-6 (one bead owner per plan) must be BYTE-IDENTICAL at every
+#     site: enforced by extract-and-diff (assert_block_identical / assert_line_identical),
+#     backstopped by an ASCII signature-presence grep.
 #   * Per-site FRAGMENT (KB read-depth) and KERNELS — only a fixed sentence / per-skill line
 #     is shared, so signature-presence (`grep -qF`) is the correct check (the fragment IS the
 #     whole shared unit; kernels are per-site by design).
@@ -46,6 +47,12 @@ CB4_SITES=(
   skills/document-release/SKILL.md
   skills/write-documentation/SKILL.md
   skills/verification-before-completion/SKILL.md
+)
+# CB-6 (one bead owner per plan, ADR-0068): byte-identical whole line at both sites.
+CB6_SIG="One bead owner per plan"
+CB6_SITES=(
+  skills/using-superpowers/SKILL.md
+  CLAUDE.md
 )
 # CB-5 (Reviewer security floor): the task-reviewer's security-floor paragraph is
 # duplicated verbatim into the re-review prompt (scoped re-review after a fix round)
@@ -206,6 +213,22 @@ self_test() {
     fi
   fi
 
+  # CB-6 self-test (ADR-0025): the unmutated source must carry the signature, and
+  # assert_line_identical must FAIL on a copy with a one-character TAIL mutation.
+  local c6src="skills/using-superpowers/SKILL.md" c6sig="One bead owner per plan"
+  if [ ! -f "$c6src" ]; then echo "self-test FAIL: CB-6 fixture missing"; ok=0; else
+    if ! grep -qF -- "$c6sig" "$c6src"; then
+      echo "self-test FAIL: CB-6 signature missing from unmutated source"; ok=0
+    else
+      grep -F -- "$c6sig" "$c6src" | sed 's/meanwhile\./meanwhiIe./' > "$tmp/cb6-mutated.md"
+      if cmp -s <(grep -F -- "$c6sig" "$c6src") "$tmp/cb6-mutated.md"; then
+        echo "self-test FAIL: CB-6 tail mutation did not change the line (fixture stale)"; ok=0
+      elif ! (assert_line_identical "CB-6 self-test" "$c6sig" "$c6src" "$tmp/cb6-mutated.md" 2>&1) | grep -q "DRIFT"; then
+        echo "self-test FAIL: CB-6 byte-identity check did NOT catch a tail mutation"; ok=0
+      fi
+    fi
+  fi
+
   rm -rf "$tmp"
   if [ "$ok" -eq 1 ]; then echo "self-test OK: detector matches correct, rejects mutated"; return 0; else return 1; fi
 }
@@ -217,6 +240,8 @@ fi
 check_block "CB-3 Capture gate"    "$CB3_SIG" "${CB3_SITES[@]}"
 check_block "CB-4 memory convention" "$CB4_SIG" "${CB4_SITES[@]}"
 assert_line_identical "CB-4 memory convention (byte-identity)" "$CB4_SIG" "${CB4_SITES[@]}"
+check_block "CB-6 one bead owner per plan" "$CB6_SIG" "${CB6_SITES[@]}"
+assert_line_identical "CB-6 one bead owner per plan (byte-identity)" "$CB6_SIG" "${CB6_SITES[@]}"
 assert_block_identical "CB-3 Capture gate (byte-identity)" "$CB3_ANCHOR" '^```$' "${CB3_SITES[@]}"
 check_block "KB read-depth fragment" "$KB_SIG" "${KB_SITES[@]}"
 check_block "CB-5 Reviewer security floor" "$CB5_SIG" "${CB5_SITES[@]}"

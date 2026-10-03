@@ -13,11 +13,14 @@ PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 BSP_MEM_CEILING=1550
 # Gates the COMPOSED entry (body + "### <key>\n" header + "\n\n" scaffolding —
 # hooks/session-start's bsp_compose_memories `entry=` block), not the raw
-# recalled body. Live continuation memory measures ~1256B body / ~1302B
-# composed; 1550 leaves ~250B of deliberate headroom above that so ordinary
-# growth doesn't evict it — never size a budget to today's measurement. Stays
-# below the 1623B worst-case bsp_allowance (bootstrap at its 6144B ceiling,
-# pointer + wrap overhead), so it can never be clamped by the min() below.
+# recalled body. Live continuation memory measured 600B (via `bd recall`,
+# 2026-10-03) — never size a budget to today's measurement. This ceiling is NOT
+# the effective cap: with the bootstrap at its 6400B ceiling the nominal
+# worst-case bsp_allowance is ≈1129B (9500 envelope − 6400 SKILL.md ceiling − ~239 wrapper − ~964 pointer − 768 wrap overhead, warnings excluded) (the live measured
+# allowance is ~1311B — the hook prints "1311-byte budget"), so the min() below
+# DOES clamp, and the effective memory cap is that allowance, not 1550. An
+# over-budget continuation is not truncated: it degrades to the
+# `continuation over budget — bd recall <key>` pointer line.
 # Bulk memory surfacing lives in scripts/orient.sh (getting-up-to-speed skill,
 # no byte envelope, on demand); this ceiling only needs to hold the
 # continuation memory plus the retrieval hint below.

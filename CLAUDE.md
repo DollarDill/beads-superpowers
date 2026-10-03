@@ -156,7 +156,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 
 - Use `bd` for ALL task tracking — never TodoWrite, TaskCreate, or markdown TODOs
 - Never guess bd syntax — on first use of a command or flag this session, read `bd <cmd> --help` (the binary is SSOT)
-- Only the orchestrating agent manages beads — subagents do NOT touch beads
+- One bead owner per plan: the session by default; implementers and reviewers never touch beads. A WHOLE plan may be delegated to one orchestrator subagent (where the harness supports nested subagents), which then owns its beads until it returns; the session touches none meanwhile.
 - Include bead IDs in commit messages: `git commit -m "Add feature (bd-a1b2)"`
 - Every session ends with Land the Plane: `bd close` → `bd dolt push` → `git push` (work lands on `dev`; `main` only advances at release cut)
 - Beads *policy* is embedded where it's read — using-superpowers' Beads section plus inline own-operation kernels (no dedicated policy skill); bd *commands* defer to `bd human` — don't restate command tables in skills

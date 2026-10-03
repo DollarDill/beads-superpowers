@@ -7,7 +7,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 HOOK="$ROOT/hooks/session-start"
 SKILL="$ROOT/skills/using-superpowers/SKILL.md"
-CEILING=6144
+# Raised 6144 -> 6400 on 2026-09-26 for the CB-6 one-owner rule (ADR-0068). The file is a proxy: the full injected envelope measured 9,292 B (2026-10-03, at this task's head) against the hook's 9,500 B budget, ~208 B headroom.
+CEILING=6400
 WRAPPER_CEILING=1024
 fail=0
 size=$(wc -c < "$SKILL")
@@ -75,7 +76,7 @@ read -r BUDGET WRAP PTR < <(BSP_SOURCED=1 . "$HOOK"; printf '%s %s %s\n' "$BSP_E
 [ -n "${BUDGET:-}" ] || { echo "FAIL: BSP_ENVELOPE_BUDGET not defined pre-seam"; fail=1; }
 sz=$(printf '{"session_id":"budget-a","source":"startup"}' | bash "$HOOK" --emit-plain | wc -c)
 [ "$sz" -le "${BUDGET:-0}" ] || { echo "FAIL: composed output ${sz}B > envelope budget ${BUDGET:-unset}B under overflow fixture"; fail=1; }
-# floor deadlock guard: worst-case bootstrap (SKILL.md at its 6144B ceiling) must
+# floor deadlock guard: worst-case bootstrap (SKILL.md at its CEILING) must
 # still leave room for the beads wrapper + pointer (stress-test B5 arithmetic)
 [ $((BUDGET - CEILING - WRAP - PTR)) -ge 0 ] || { echo "FAIL: floor deadlock — budget cannot fit max bootstrap + pointer"; fail=1; }
 if [ "$fail" = 0 ]; then

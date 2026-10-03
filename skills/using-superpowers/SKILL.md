@@ -56,21 +56,21 @@ When a decision is hard to reverse, surprising without context, and a genuine tr
 
 ## Beads
 
-`bd` (beads) is the task tracker for ALL work — TodoWrite is forbidden, as are TaskCreate and markdown TODOs. Only the orchestrating agent manages beads — subagents never touch them. Include bead IDs in commit messages. If beads context wasn't injected this session, run `bd prime`. Session close = land the plane: `bd close` → `bd dolt push` → `git push`.
+`bd` (beads) is the task tracker for ALL work — TodoWrite is forbidden, as are TaskCreate and markdown TODOs.
+
+- One bead owner per plan: the session by default; implementers and reviewers never touch beads. A WHOLE plan may be delegated to one orchestrator subagent (where the harness supports nested subagents), which then owns its beads until it returns; the session touches none meanwhile.
+
+Include bead IDs in commit messages. If beads context wasn't injected this session, run `bd prime`. Session close = land the plane: `bd close` → `bd dolt push` → `git push`.
 
 ## Skill Name Resolution
 
-Skill references in these skills use the canonical namespaced form
-`beads-superpowers:<skill>`. Depending on install channel, your skill list may
-show them bare (`brainstorming`) or namespaced (`beads-superpowers:brainstorming`)
-— they are the same skills. Invoke whichever form your skill list shows; if a
-reference errors as unknown, match it to the closest name in your list and
-retry with that.
+Cross-skill references use the canonical namespaced form `beads-superpowers:<skill>`. Your skill list may show them bare (`brainstorming`) or namespaced; they are the same skills — invoke whichever form your list shows, and if a reference errors as unknown, match it to the closest listed name and retry.
 
 ## Platform Adaptation
 
-If your harness appears here, read `references/<file>` for special instructions:
+If your harness is listed, read `references/<file>`:
 
+- Claude Code: `claude-code-tools.md`
 - Codex: `codex-tools.md`
 - OpenCode: `opencode-tools.md`
 - Copilot CLI: `copilot-tools.md`
