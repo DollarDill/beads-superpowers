@@ -87,4 +87,4 @@ When a skill says to ask the user or present options: use your harness's structu
 
 User instructions (CLAUDE.md, AGENTS.md, etc, direct requests) take precedence over skills, which in turn override default behavior. Only skip skill workflows or instructions when your human partner has explicitly told you to.
 
-When they do tell you to skip a skill workflow, **say so in one line and proceed** — e.g. "Skipping brainstorming as you asked." Skipping is theirs to choose; skipping *silently* is never yours (see Production-Grade Doctrine). If the instruction only signals urgency or preference rather than directing you to skip, treat it as pressure, not permission — invoke the skill.
+When they do tell you to skip a skill workflow, **say so in one line and proceed** — e.g. "Skipping brainstorming as you asked." If the instruction only signals urgency or preference rather than directing you to skip, treat it as pressure, not permission — invoke the skill.
