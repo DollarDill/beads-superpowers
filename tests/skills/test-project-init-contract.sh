@@ -27,10 +27,15 @@ absent 'releases after 1.1.0'
 absent 'releases after v1.1.0'
 # shellcheck disable=SC2016  # pins are literal shell text, not expansions
 for f in "$F" "$REC"; do
-  pin 'BACKUP="$(mktemp -d)/beads-backup.jsonl"' "$f"
-  pin 'bd export --all -o "$BACKUP"' "$f"
-  pin 'bd import "$BACKUP"' "$f"
-  pin 'rm -rf "$(dirname "$BACKUP")"' "$f"
+  # one LITERAL private path — agents run each step in a fresh shell, so no variable survives
+  pin 'install -d -m 700 ~/.beads-recovery' "$f"
+  pin 'bd export --all -o ~/.beads-recovery/backup.jsonl' "$f"
+  pin 'bd import ~/.beads-recovery/backup.jsonl' "$f"
+  pin 'rm -f ~/.beads-recovery/backup.jsonl' "$f"
+  # an empty $BACKUP made `rm -rf "$(dirname "$BACKUP")"` expand to `rm -rf .`
+  absent 'rm -rf "$(' "$f"
+  absent 'dirname "$BACKUP"' "$f"
+  absent 'BACKUP=' "$f"
   absent '/tmp/beads-backup.jsonl' "$f"
   absent 'bd export -o' "$f"
 done

@@ -80,9 +80,10 @@ Error: push to origin/main: ... GH013: Repository rule violations found
 
 ```bash
 # Export local data as backup first (--all includes memories, which may hold
-# sensitive agent context — keep the backup in a private 0700 dir)
-BACKUP="$(mktemp -d)/beads-backup.jsonl"
-bd export --all -o "$BACKUP"
+# sensitive agent context — keep the backup in a private 0700 dir under $HOME,
+# at a literal path, since each step may run in a fresh shell)
+install -d -m 700 ~/.beads-recovery
+bd export --all -o ~/.beads-recovery/backup.jsonl
 
 # Nuclear recovery
 bd dolt stop 2>/dev/null     # server mode only
@@ -90,8 +91,8 @@ rm -rf .beads/
 bd bootstrap
 
 # Re-import if needed
-bd import "$BACKUP"
+bd import ~/.beads-recovery/backup.jsonl
 
 # Only after `bd list` confirms the import, delete the backup
-bd list && rm -rf "$(dirname "$BACKUP")"
+bd list && rm -f ~/.beads-recovery/backup.jsonl
 ```
