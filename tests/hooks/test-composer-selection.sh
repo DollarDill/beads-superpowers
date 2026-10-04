@@ -182,4 +182,15 @@ FIX
 out=$(bsp_compose_memories 8192)
 echo "$out" | grep -q "^2 memories stored" || { echo "FAIL: schema_version counted as a memory: $out"; exit 1; }
 
+# 12. curated path: "schema_version" beside a real @salience=5 memory is not counted
+cat > "$TMP/fixtures/memories.json" <<'FIX'
+{
+  "schema_version": 1,
+  "real-lesson": "@type=semantic:lesson @created=2026-07-09 @salience=5 real body"
+}
+FIX
+echo "real body" > "$TMP/fixtures/recall-real-lesson.txt"
+out=$(bsp_compose_memories 8192)
+echo "$out" | grep -q "core memories: 1 of 1 injected" || { echo "FAIL: schema_version counted in injected-of-N line: $out"; exit 1; }
+
 echo "PASS: composer selection/ceiling"

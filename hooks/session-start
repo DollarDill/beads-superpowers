@@ -41,8 +41,9 @@ BSP_ENVELOPE_BUDGET=9500
 BSP_WRAP_OVERHEAD=768
 
 # Selection input is `bd memories --json`: one `"key": "body"` entry per line
-# (verified shape, bd v1.3.1; a non-memory "schema_version" key is excluded from counts) with the FULL body inline — immune to the plain
-# listing's preview truncation, which can hide a late @salience token.
+# (verified shape, bd v1.3.1; a non-memory "schema_version" key is excluded
+# from counts) with the FULL body inline — immune to the plain listing's
+# preview truncation, which can hide a late @salience token.
 # Emits "<salience>\t<key>" for @salience=4|5 entries. Anchored to the
 # `@type=…` header run (before the first `\n`) so a body mention of
 # `@salience=` cannot false-select.

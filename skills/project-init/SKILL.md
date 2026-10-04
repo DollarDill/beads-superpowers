@@ -194,8 +194,10 @@ git ls-remote git+ssh://git@github.com/<owner>/<repo>-beads.git | grep dolt    #
 ## Path F: Corrupt Local, Remote Has Data
 
 ```bash
-# 1. Export what we can (may fail if truly corrupt)
-bd export --all -o /tmp/beads-backup.jsonl 2>/dev/null
+# 1. Export what we can (may fail if truly corrupt). --all includes memories,
+#    which may hold sensitive agent context — keep the backup in a private (0700) dir.
+BACKUP="$(mktemp -d)/beads-backup.jsonl"
+bd export --all -o "$BACKUP" 2>/dev/null
 
 # 2. Remove and re-bootstrap
 bd dolt stop 2>/dev/null     # server mode only
@@ -207,7 +209,10 @@ bd list
 bd vc status
 
 # 4. Re-import exported data if needed
-bd import /tmp/beads-backup.jsonl 2>/dev/null
+bd import "$BACKUP" 2>/dev/null
+
+# 5. Only after `bd list` confirms the import, delete the backup
+bd list && rm -rf "$(dirname "$BACKUP")"
 ```
 
 ## Multi-Repo / Private Beads Remote

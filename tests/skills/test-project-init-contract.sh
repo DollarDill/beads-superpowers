@@ -25,8 +25,13 @@ absent 'Safe versions: v1.1.2 or v1.2.2'
 absent 'forward-compat'
 absent 'releases after 1.1.0'
 absent 'releases after v1.1.0'
-pin 'bd export --all -o /tmp/beads-backup.jsonl'
-pin 'bd export --all -o /tmp/beads-backup.jsonl' "$REC"
-absent 'bd export -o /tmp/beads-backup.jsonl'
-absent 'bd export -o /tmp/beads-backup.jsonl' "$REC"
+# shellcheck disable=SC2016  # pins are literal shell text, not expansions
+for f in "$F" "$REC"; do
+  pin 'BACKUP="$(mktemp -d)/beads-backup.jsonl"' "$f"
+  pin 'bd export --all -o "$BACKUP"' "$f"
+  pin 'bd import "$BACKUP"' "$f"
+  pin 'rm -rf "$(dirname "$BACKUP")"' "$f"
+  absent '/tmp/beads-backup.jsonl' "$f"
+  absent 'bd export -o' "$f"
+done
 [ "$fail" -eq 0 ] && echo "PASS: project-init contract" || exit 1
