@@ -222,7 +222,7 @@ digraph parallel_batch {
 7. For each task that passes review:
      cd .worktrees/<epic-name>
      git merge feature/<epic>/<task>
-     bd worktree remove .worktrees/<task-name>
+     bd worktree remove .worktrees/<task-name> --merged-into <epic-branch>
      bd close <task-id> --reason "Completed: reviews passed"
 
 8. Run full test suite on epic worktree (integration check):

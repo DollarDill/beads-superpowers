@@ -13,14 +13,14 @@ states exactly when to open each section below.
 bd init --skip-agents                      # Creates empty .beads/
 bd dolt stop 2>/dev/null                   # Stop server if running
 DB_NAME=$(python3 -c "import json; print(json.load(open('.beads/metadata.json')).get('dolt_database','beads'))" 2>/dev/null || echo "beads")
-rm -rf ".beads/embeddeddolt/$DB_NAME/"     # Remove empty database
+rm -rf ".beads/embeddeddolt/${DB_NAME:?DB_NAME unset — run the previous line in the same shell}/"     # Remove empty database
 cd .beads/embeddeddolt
-dolt clone git@github.com:<owner>/<repo>.git "$DB_NAME"
+dolt clone git@github.com:<owner>/<repo>-beads.git "${DB_NAME:?DB_NAME unset — run the DB_NAME line in the same shell}"  # dedicated beads remote
 cd ../..
 bd migrate --yes                           # Apply pending migrations — do NOT silence stderr: on a
                                            # remote-backed clone the v1.1.0 gate may refuse; if it does,
                                            # STOP and read "The v1.1.0 remote-migrate gate" (Path C)
-bd dolt remote add origin git+ssh://git@github.com/<owner>/<repo>.git 2>/dev/null  # May already exist
+bd dolt remote add origin git+ssh://git@github.com/<owner>/<repo>-beads.git  # "already exists" is fine; any other refusal is not
 bd list                                    # Verify
 ```
 
@@ -33,8 +33,11 @@ database (per upstream changelog v1.1.0: the provably-safe same-version case aut
 else stops). When the gate blocks you, pick ONE:
 
 - **You are the designated migrator** (one machine per team, by agreement): back up first —
-  `bd export --all -o backup.jsonl` — then `bd migrate --force` (the CLI twin of
-  `BD_ALLOW_REMOTE_MIGRATE=1`; single designated migrator only), then `bd dolt push`.
+  `install -d -m 700 ~/.beads-recovery && bd export --all -o ~/.beads-recovery/pre-migrate.jsonl`
+  (`--all` includes memories, so the backup goes in a private dir, never the repo root) — then
+  `bd migrate --force` (the CLI twin of `BD_ALLOW_REMOTE_MIGRATE=1`; single designated migrator
+  only), then `bd dolt push`. Delete the backup once the migrated store is verified:
+  `rm -f ~/.beads-recovery/pre-migrate.jsonl`.
 - **Any other machine:** do NOT migrate. Adopt the already-migrated database: `bd bootstrap`.
 
 Never set `BD_ALLOW_REMOTE_MIGRATE=1` or run `bd migrate --force` outside the designated-migrator role — independently migrated
@@ -79,10 +82,12 @@ Error: push to origin/main: ... GH013: Repository rule violations found
 **If local data should be discarded (remote is authoritative):**
 
 ```bash
-# Export local data as backup first (--all includes memories, which may hold
+# 1. Export local data as backup first (--all includes memories, which may hold
 # sensitive agent context — keep the backup in a private 0700 dir under $HOME,
-# at a literal path, since each step may run in a fresh shell)
+# at a literal path, since each step may run in a fresh shell). Clear any stale
+# backup from an earlier recovery FIRST, then export with errors visible.
 install -d -m 700 ~/.beads-recovery
+rm -f ~/.beads-recovery/backup.jsonl
 bd export --all -o ~/.beads-recovery/backup.jsonl
 
 # Nuclear recovery
@@ -90,7 +95,8 @@ bd dolt stop 2>/dev/null     # server mode only
 rm -rf .beads/
 bd bootstrap
 
-# Re-import if needed (a failed import must stay visible — no 2>/dev/null)
+# Re-import: import ONLY if step 1's export succeeded in THIS recovery (if it failed,
+# there is no backup — skip the import). A failed import must stay visible — no 2>/dev/null.
 bd import ~/.beads-recovery/backup.jsonl
 
 # Verify the restore

@@ -27,7 +27,7 @@ claude plugin install beads-superpowers@beads-superpowers-marketplace
 # /plugin marketplace add DollarDill/beads-superpowers
 # /plugin install beads-superpowers@beads-superpowers-marketplace
 # Then in your project directory:
-bd init                               # 2. Bootstrap the Dolt database for this project
+bd init --skip-agents                 # 2. Bootstrap the Dolt database for this project
 ```
 
 Start a new Claude Code session and type "where are we" - the agent will load your `bd` context and pick up where you left off.

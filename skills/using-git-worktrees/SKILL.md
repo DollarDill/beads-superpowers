@@ -30,7 +30,7 @@ Raw `git worktree add` misses `.gitignore` setup and safety checks — while bea
 |--------|----------|----------|
 | Create worktree | `bd worktree create .worktrees/<name>` | ~~`git worktree add`~~ |
 | List worktrees | `bd worktree list` | ~~`git worktree list`~~ |
-| Remove worktree | `bd worktree remove .worktrees/<name>` (if the safety check flags the local-only branch as unpushed, verify the merge landed, then add --force) | ~~`git worktree remove`~~ |
+| Remove worktree | `bd worktree remove .worktrees/<name> --merged-into <base-or-epic-branch>` | ~~`git worktree remove`~~ |
 | Worktree info | `bd worktree info` | ~~(no equivalent)~~ |
 
 > **Note:** Claude Code provides a native `EnterWorktree` tool for worktree management. For non-beads projects, this is a viable alternative. For beads-integrated projects, `bd worktree create` remains mandatory — it handles database sharing and `.gitignore` management that `EnterWorktree` does not provide.
@@ -186,8 +186,7 @@ bd worktree create .worktrees/<task-name> --branch feature/<epic>/<task>
 # 4. After task passes review — orchestrator merges and cleans up:
 cd .worktrees/<epic-name>
 git merge feature/<epic>/<task>
-bd worktree remove .worktrees/<task-name>
-# (if the safety check flags the local-only branch as unpushed, verify the merge landed, then add --force)
+bd worktree remove .worktrees/<task-name> --merged-into <epic-branch>   # the epic worktree's branch; bd verifies the merge landed
 ```
 
 **Constraints:**

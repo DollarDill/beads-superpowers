@@ -322,10 +322,11 @@ for f in .internal/testing.md .internal/windows/polyglot-hooks.md; do
 done
 ```
 
-**Check 7.7 — Upstream Beads docs links in docs/ resolve (visible SKIP offline; ADR-0041-era descope net):**
+**Check 7.7 — Upstream Beads docs links in docs/, CLAUDE.md, README.md and skills/ resolve (visible SKIP offline; ADR-0041-era descope net):**
 ```bash
-# Probe every beads.gascity.com URL linked from docs/en — NOT the host root: the old root returned 200 while every subpage 404'd.
-urls=$(grep -rhoE 'https://beads\.gascity\.com[^") ]*' docs/en/*.md 2>/dev/null | sort -u)
+# Probe every beads.gascity.com URL linked from docs/en, CLAUDE.md, README.md and skills (SKILL.md + references/)
+# — NOT the host root: the old root returned 200 while every subpage 404'd.
+urls=$(grep -hoE 'https://beads\.gascity\.com[^") ]*' docs/en/*.md CLAUDE.md README.md skills/*/SKILL.md skills/*/references/*.md 2>/dev/null | sort -u)
 if [ -z "$urls" ]; then
   echo "FAIL: no upstream docs links found — check the glob"
 elif ! command -v curl >/dev/null 2>&1; then

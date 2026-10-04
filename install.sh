@@ -949,7 +949,7 @@ print_next_steps() {
     echo "  3. Install beads for persistent task tracking:"
     echo "       brew install beads          # macOS (Homebrew)"
     echo "       npm install -g @beads/bd   # any platform (npm)"
-    echo "  4. In each project: bd init"
+    echo "  4. In each project: bd init --skip-agents"
   fi
   if [ "$HAS_CODEX" = 1 ]; then
     echo

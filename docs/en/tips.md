@@ -72,7 +72,7 @@ See [Getting Started - Troubleshooting](getting-started.md#troubleshooting) for 
 
 **`bd: command not found`** - `brew install beads` or `npm install -g @beads/bd`.
 
-**Double context injection** - When bd's own prime hook is also registered, the plugin keeps its curated context and prints a one-line notice naming the remedy; same-event double-firing is suppressed by a dedup marker. To keep only the plugin's context, run `bd setup claude --remove`.
+**Double context injection** - When bd's own prime hook is also registered, the plugin keeps its curated context and prints a one-line notice naming the remedy; same-event double-firing is suppressed by a dedup marker. To keep only the plugin's context, run `bd setup claude --remove` (add `--global` if the hook is in `~/.claude`), or under Cursor remove the `bd cursor-hook` entries from `.cursor/hooks.json` (or `~/.cursor/hooks.json`).
 
 **`bd dolt push` fails** - No beads remote configured. Harmless if you don't need remote sync.
 

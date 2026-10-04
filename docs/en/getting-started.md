@@ -18,7 +18,7 @@ brew install beads          # macOS / Linux
 npm install -g @beads/bd    # any platform
 ```
 
-Verify with `bd version` — **bd v1.3.1 or newer is required**. The first bd command after upgrading runs the in-place v53→v66 schema migration — run any bd command once in a terminal before starting an agent session. Back up first with the bd you have now (after upgrading, `bd export` auto-migrates before exporting), and finish any `bd dolt push/pull` before installing: remote-backed stores keep the designated-migrator gate, and push/pull are refused until the store is migrated. Then install the plugin (see below), then run `bd init` in each project.
+Verify with `bd version` — **bd v1.3.1 or newer is required**. The first bd command after upgrading runs the in-place v53→v66 schema migration — run any bd command once in a terminal before starting an agent session. Back up first with the bd you have now, `install -d -m 700 ~/.beads-recovery && bd export --all -o ~/.beads-recovery/pre-upgrade.jsonl` (plain `bd export` drops memories; after upgrading, `bd export` auto-migrates before exporting), and finish any `bd dolt push/pull` before upgrading bd: remote-backed stores keep the designated-migrator gate, and push/pull are refused until the store is migrated. Then install the plugin (see below), then run `bd init` in each project.
 
 **Note:** Native plugin install (Tier 1) installs skills automatically for all three. Hooks come along too for Claude Code and OpenCode - Codex needs the scripted installer to wire its SessionStart hook (see Codex CLI below). None of the three runs `bd init` for you - do that yourself per project.
 
@@ -136,10 +136,10 @@ Initialise beads in your project:
 
 ```bash
 cd your-project
-bd init
+bd init --skip-agents
 ```
 
-This creates `.beads/` (config, metadata, git hooks), `CLAUDE.md`, and `AGENTS.md`. If bd's own prime hook is also registered (`bd setup claude`, or bd's Cursor hooks), the plugin's session-start hook keeps its curated beads context and prints a one-line notice naming the remedy.
+This creates `.beads/` (config, metadata, git hooks). Since bd v1.3.0, `bd init` also writes agent files (`AGENTS.md` and Claude/Codex/Cursor setup) unless you pass `--skip-agents`; the plugin supplies that context, so skip them. If bd's own prime hook is also registered (`bd setup claude`, or bd's Cursor hooks), the plugin's session-start hook keeps its curated beads context and prints a one-line notice naming the remedy.
 
 ### Add a dedicated beads remote
 
@@ -248,7 +248,7 @@ To override a skill's behaviour, add instructions to your project's `CLAUDE.md` 
 
 **`bd: command not found`** - Beads isn't installed or isn't on your PATH. Run `brew install beads` or `npm install -g @beads/bd`, then verify with `bd version`.
 
-**No `.beads` directory** - Run `bd init` in your project directory. The plugin automatically handles duplicate hook detection.
+**No `.beads` directory** - Run `bd init --skip-agents` in your project directory. If bd's own prime hook is also registered, the plugin keeps its curated context and shows a one-line notice naming the remedy (see Double context injection below).
 
 **Double context injection** - When bd's own prime hook is registered in project or global settings (`bd setup claude`, or bd's Cursor hooks), the plugin keeps its curated context and prints a one-line notice naming the remedy; same-event double-firing under multi-scope hook registration is suppressed by a dedup marker. To keep only the plugin's context, run `bd setup claude --remove` (add `--global` if the hook is in `~/.claude`), or under Cursor remove the `bd cursor-hook` entries from `.cursor/hooks.json`.
 

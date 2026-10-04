@@ -20,7 +20,8 @@ NEVER run bd init --force (deprecated in v1.0.4). Use the named-intent alternati
 **Minimum supported: bd v1.3.1.** Check with `bd version` before any init, bootstrap or
 recovery — including on a machine you are only *adding* to an existing setup.
 
-**Upgrading from an older bd:** back up first with the bd you have now (after upgrading, `bd export`
+**Upgrading from an older bd:** back up first with the bd you have now —
+`install -d -m 700 ~/.beads-recovery && bd export --all -o ~/.beads-recovery/pre-upgrade.jsonl` (plain `bd export` drops memories; after upgrading, `bd export`
 auto-migrates before exporting), and finish `bd dolt push/pull` before installing — remote-backed
 stores keep the designated-migrator gate, and push/pull are refused until the store is migrated
 (beads CHANGELOG [1.3.0] upgrade notes).
@@ -197,8 +198,10 @@ git ls-remote git+ssh://git@github.com/<owner>/<repo>-beads.git | grep dolt    #
 # 1. Export what we can (may fail if truly corrupt). --all includes memories,
 #    which may hold sensitive agent context — keep the backup in a private (0700) dir
 #    under $HOME, at a literal path (each step may run in a fresh shell).
+#    Clear any stale backup from an earlier recovery FIRST, then export with errors visible.
 install -d -m 700 ~/.beads-recovery
-bd export --all -o ~/.beads-recovery/backup.jsonl 2>/dev/null
+rm -f ~/.beads-recovery/backup.jsonl
+bd export --all -o ~/.beads-recovery/backup.jsonl
 
 # 2. Remove and re-bootstrap
 bd dolt stop 2>/dev/null     # server mode only
@@ -209,7 +212,8 @@ bd bootstrap
 bd list
 bd vc status
 
-# 4. Re-import exported data if needed (no 2>/dev/null — a failed import must be visible)
+# 4. Re-import: import ONLY if step 1's export succeeded in THIS recovery (if it failed,
+#    there is no backup — skip the import). No 2>/dev/null — a failed import must be visible.
 bd import ~/.beads-recovery/backup.jsonl
 
 # 5. Verify the restore
