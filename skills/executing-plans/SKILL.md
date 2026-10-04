@@ -68,7 +68,7 @@ Spec: <spec file path or 'none reachable'>
 EOF
    ```
 
-   Confirm the import output shows no `Skipped dependency`. `bd lint` requires `## Success Criteria` in the epic and `## Acceptance Criteria` in each task.
+   Confirm the import output shows no `Skipped dependency`.
 
    > **Wire task ordering (`blocks`) after the import.** `parent-child` rides the import, but inter-task `blocks` deps do not. Capture the ids **scoped to the parent**, then wire ordering atomically:
    > ```bash
@@ -87,7 +87,7 @@ Everything you print, and every tool result, stays resident in your context. Red
 
 ### 1. Take the task
 
-- `bd ready --parent <epic-id> --claim` claims the next task in one call (`bd ready --explain` if the ordering is unclear). Then `bash ../subagent-driven-development/scripts/task-brief PLAN_FILE N` prints the brief path; `BASE=$(git rev-parse HEAD)` is the commit the task's range is cut from. Read the brief for every task, including ones you remember from setup: what you remember is a summary, the brief has the exact values.
+- `bd ready --parent <epic-id> --claim` claims the next task in one call (`bd ready --help` if the ordering is unclear). Then `bash ../subagent-driven-development/scripts/task-brief PLAN_FILE N` prints the brief path; `BASE=$(git rev-parse HEAD)` is the commit the task's range is cut from. Read the brief for every task, including ones you remember from setup: what you remember is a summary, the brief has the exact values.
 - **Check description quality** before implementing: a bare title with no actionable steps means STOP — the task is now claimed, so flag it (`bd label add <task-id> human`, per the blocker table) and surface what the description is missing.
 
 > **`--claim` consent boundary.** This skill's autonomous take-next flow is the one place `bd ready --claim` is legitimate. That autonomous `--claim` is FORBIDDEN wherever the user picks the work (orientation, brainstorming, session close) — the consent gate binds even when this skill is not loaded.
@@ -155,7 +155,7 @@ When the final review is clean and its fixes are committed, delete this plan's w
 
 ## When to Stop and Ask for Help
 
-The stops above are the only reasons to stop the run; a blocker on a single task follows the table below. Either way, classify the blocker and use the matching response — this is how continuous execution escalates without guessing:
+The stops above are the only reasons to stop the run; a blocker on a single task follows the table below. Either way, classify the blocker and use the matching response:
 
 | Blocker type | Action | Command |
 |---|---|---|
@@ -168,8 +168,6 @@ The stops above are the only reasons to stop the run; a blocker on a single task
 **Ask for clarification rather than guessing.**
 
 ## Remember
-- Follow plan steps exactly; run every verification; read every output
-- Rule only where the spec settles it, and ledger it; escalate the rest
 - Never start implementation on main/master branch without explicit user consent
 - **Production-Grade Doctrine:** never skip a verification or drop a task to make progress — `bd defer`/`bd human` are for genuine blockers, never a quiet way to descope required work. Never weaken, bypass, or remove a security control — a security regression is never acceptable.
 
