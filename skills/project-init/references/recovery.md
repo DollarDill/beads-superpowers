@@ -90,9 +90,13 @@ bd dolt stop 2>/dev/null     # server mode only
 rm -rf .beads/
 bd bootstrap
 
-# Re-import if needed
+# Re-import if needed (a failed import must stay visible — no 2>/dev/null)
 bd import ~/.beads-recovery/backup.jsonl
 
-# Only after `bd list` confirms the import, delete the backup
-bd list && rm -f ~/.beads-recovery/backup.jsonl
+# Verify the restore
+bd list
+bd memories
+
+# Delete the backup as a separate step, only after `bd list` and `bd memories` show the restored issues and memories
+rm -f ~/.beads-recovery/backup.jsonl
 ```

@@ -209,11 +209,15 @@ bd bootstrap
 bd list
 bd vc status
 
-# 4. Re-import exported data if needed
-bd import ~/.beads-recovery/backup.jsonl 2>/dev/null
+# 4. Re-import exported data if needed (no 2>/dev/null — a failed import must be visible)
+bd import ~/.beads-recovery/backup.jsonl
 
-# 5. Only after `bd list` confirms the import, delete the backup
-bd list && rm -f ~/.beads-recovery/backup.jsonl
+# 5. Verify the restore
+bd list
+bd memories
+
+# 6. Delete the backup as a separate step, only after `bd list` and `bd memories` show the restored issues and memories
+rm -f ~/.beads-recovery/backup.jsonl
 ```
 
 ## Multi-Repo / Private Beads Remote

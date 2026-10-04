@@ -31,7 +31,12 @@ for f in "$F" "$REC"; do
   pin 'install -d -m 700 ~/.beads-recovery' "$f"
   pin 'bd export --all -o ~/.beads-recovery/backup.jsonl' "$f"
   pin 'bd import ~/.beads-recovery/backup.jsonl' "$f"
-  pin 'rm -f ~/.beads-recovery/backup.jsonl' "$f"
+  # the delete is its own bare line, run only after bd list + bd memories show the restore
+  grep -qxF -- 'rm -f ~/.beads-recovery/backup.jsonl' "$f" || { echo "FAIL: missing bare line: rm -f ~/.beads-recovery/backup.jsonl ($f)"; fail=1; }
+  pin 'only after `bd list` and `bd memories` show the restored issues and memories' "$f"
+  # `bd list` succeeds after re-bootstrap even when the import failed — never gate the delete on it
+  absent 'bd list && rm -f' "$f"
+  absent 'bd import ~/.beads-recovery/backup.jsonl 2>/dev/null' "$f"
   # an empty $BACKUP made `rm -rf "$(dirname "$BACKUP")"` expand to `rm -rf .`
   absent 'rm -rf "$(' "$f"
   absent 'dirname "$BACKUP"' "$f"
