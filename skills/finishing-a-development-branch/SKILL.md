@@ -268,7 +268,7 @@ Worktree removal refused — these files were never committed:
 Which?
 ```
 
-Carry out their choice, then remove the worktree. Note the two refusals are different: unpushed *commits* are recoverable from the branch, but modified/untracked *files* are not recoverable from anywhere.
+Carry out their choice, then remove the worktree. The two refusals differ: unpushed *commits* are recoverable from the branch; modified/untracked *files* are recoverable from nowhere.
 
 **Capture what you learned.** At close, record durable, evidence-backed insights (still true next month, tied to a file, test, or command). Never record guesses, one-offs, or secrets (tokens, keys, PII — every memory is injected into all future sessions). Update in place (`bd remember --key <key>`) rather than adding a near-duplicate.
 
@@ -285,7 +285,7 @@ Work is NOT complete until `git push` succeeds.
 ```bash
 # 1. Close completed task beads with reasons
 bd close <task-id-1> <task-id-2> ... --reason "Completed: description of what was done"
-# Multi-id close exits non-zero if any id is refused (v1.3.1): the closable ids still close;
+# Multi-id close exits non-zero if any id is refused: the closable ids still close;
 # read the `Error: N of M issues failed to close` line and resolve the refused ids.
 ```
 
@@ -338,8 +338,7 @@ If selected, invoke `Skill(beads-superpowers:memory-curator)` (it proposes a rev
 ```bash
 # 4. Push beads to Dolt remote
 bd dolt push
-# `bd sync` is an alternative (pull, conflict check, push in one verb): exit 2 = merge conflict,
-# resolve by hand; exit 3 = transient, retry; exit 4 = stuck working set, not retryable, investigate (`bd sync --help`).
+# `bd sync` is an alternative (pull, conflict check, push in one verb); read `bd sync --help` for its exit codes first.
 
 # 5. Push code to git remote
 git pull --ff-only && git push
