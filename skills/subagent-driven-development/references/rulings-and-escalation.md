@@ -1,8 +1,7 @@
 # Rulings and Escalation — the full boundary
 
 Open this when a conflict, ambiguity, or plan defect surfaces and you need to decide whether it is
-yours to rule on. The kernel — the rule itself, the precedence clause, and the ledger format —
-lives in `SKILL.md`; this file carries the enumerated lists.
+yours to rule on.
 
 ## You may rule
 

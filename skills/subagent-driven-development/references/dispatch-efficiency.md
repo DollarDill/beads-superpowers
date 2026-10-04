@@ -1,8 +1,7 @@
 # Dispatch Efficiency — batching and waiting
 
 Open this before dispatching a run with several small tasks, or whenever you are about to wait on
-children. Both rules exist because the default behaviour is expensive in ways that do not show up
-as errors.
+children.
 
 ## Batch small same-shape work
 
@@ -18,7 +17,7 @@ reject one item while approving its neighbour.
 **When you batch, the review changes shape too.** The reviewer must check the diff against the
 brief's file list *file by file*: every listed file must have a corresponding hunk, and a listed
 file the diff never touches is a **Missing** finding no matter how clean the rest of the batch
-looks. Without that check a batched dispatch can silently drop items.
+looks.
 
 ## Waiting on dispatched subagents
 

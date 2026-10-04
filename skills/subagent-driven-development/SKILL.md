@@ -62,13 +62,11 @@ scan for conflicts:
 - tasks that contradict each other or the plan's Global Constraints
 - anything the plan explicitly mandates that the review rubric treats as a defect (a test that asserts nothing, verbatim duplication of a logic block)
 
-Sort what you find by the test in **Rulings and Escalation**. Conflicts the spec unambiguously
-settles: rule on them, record each as `Ruling: … — settled by … — …` in the ledger, and proceed.
+Conflicts the spec unambiguously settles: rule on them, record each as `Ruling: … — settled by … — …` in the ledger, and proceed.
 Everything else — anything the spec does not settle, and anything on the must-stop list — goes to
 your human partner as **one batched structured question**, each finding beside the plan text that
 mandates it, asking which governs. Ask before execution begins, not one interrupt per discovery
-mid-plan. If the scan is clean and every conflict was spec-settled, proceed without comment. The
-review loop remains the net for conflicts that only emerge from implementation.
+mid-plan. The review loop remains the net for conflicts that only emerge from implementation.
 
 ## The Process (Sequential Mode)
 
@@ -340,7 +338,7 @@ Reports are the only non-regenerable artifact — delete once the record is dura
 
 Hand task text and review diffs to subagents as **files**, not pasted context — this keeps large text out of your own context and gives subagents a single thing to read.
 
-- Before dispatching an implementer, run `bash scripts/task-brief <plan-file> <N>` → writes `.internal/sdd/<plan-basename>/task-<N>-brief.md`. Pass that path to the implementer as "read this first — it is your requirements."
+- Before dispatching an implementer, run `bash scripts/task-brief <plan-file> <N>` → writes `.internal/sdd/<plan-basename>/task-<N>-brief.md`.
 - The implementer writes its full report to `.internal/sdd/<plan-basename>/task-<N>-report.md` (you name the path via `[REPORT_FILE]`); the reviewer reads it as a file. Fix rounds **append** to it.
 - Before dispatching the reviewer, run `bash scripts/review-package <plan-file> <BASE> <HEAD>` → writes `.internal/sdd/<plan-basename>/review-<base7>..<head7>.diff`. `BASE` is the commit recorded before the implementer ran — never `HEAD~1`.
 - The reviewer is **read-only**: it must not mutate the working tree, the index, HEAD, or branch state.
