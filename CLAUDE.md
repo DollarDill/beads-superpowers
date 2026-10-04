@@ -77,7 +77,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Project Overview
 
-A plugin for Claude Code, Codex, and OpenCode (verified) plus 9 best-effort harnesses — Cursor, Gemini CLI, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, Pi, Devin CLI, and Hermes Agent — that merges [Superpowers](https://github.com/obra/superpowers) skills (v6.3.0) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.2.2). It gives AI coding agents composable process-discipline skills (TDD, brainstorming, systematic debugging, code review, verification) plus persistent task memory via a Dolt-backed database.
+A plugin for Claude Code, Codex, and OpenCode (verified) plus 9 best-effort harnesses — Cursor, Gemini CLI, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, Pi, Devin CLI, and Hermes Agent — that merges [Superpowers](https://github.com/obra/superpowers) skills (v6.4.2) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.3.1). It gives AI coding agents composable process-discipline skills (TDD, brainstorming, systematic debugging, code review, verification) plus persistent task memory via a Dolt-backed database.
 
 **Repository:** <https://github.com/DollarDill/beads-superpowers>
 **Version:** 0.16.0
@@ -285,8 +285,8 @@ The `example-workflow/` directory provides a ready-to-use development workflow:
 
 | Source                                                    | Version           | What We Track                               |
 | --------------------------------------------------------- | ----------------- | ------------------------------------------- |
-| [obra/superpowers](https://github.com/obra/superpowers)   | v6.3.0 (baseline) | Skill content, new skills, hook changes     |
-| [gastownhall/beads](https://github.com/gastownhall/beads) | v1.2.2 (baseline) | CLI commands, new features, bd prime format |
+| [obra/superpowers](https://github.com/obra/superpowers)   | v6.4.2 (baseline) | Skill content, new skills, hook changes     |
+| [gastownhall/beads](https://github.com/gastownhall/beads) | v1.3.1 (baseline) | CLI commands, new features, bd prime format |
 | [garrytan/gstack](https://github.com/garrytan/gstack) `document-release` | snapshot 2026-07-17 | document-release skill lineage |
 | [mattpocock/skills](https://github.com/mattpocock/skills) `productivity/grilling` | snapshot 2026-07-17 | stress-test skill lineage |
 | [mattpocock/skills](https://github.com/mattpocock/skills) `productivity/handoff` | snapshot 2026-07-17 | session-handoff skill lineage |
