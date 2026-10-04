@@ -190,7 +190,7 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 ```bash
 bd lint <epic-id>                                                    # required-section check on the epic
-bd list --parent <epic-id> --json | jq -r '.[].id' | xargs -n1 bd lint   # same check on each child task
+bd list --parent <epic-id> --json -n 0 | jq -r '.[].id' | xargs -n1 bd lint   # same check on each child task
 bd ready --parent <epic-id> --explain                                # confirm dependency ordering
 ```
 

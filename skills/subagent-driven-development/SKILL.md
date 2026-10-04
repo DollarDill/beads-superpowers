@@ -369,7 +369,7 @@ You: I'm using Subagent-Driven Development to execute this plan.
 [  bd create "Epic: <name>" -t epic -p 2 -d "<goal>, then 'Plan: <plan path>' and 'Spec: <spec path>' lines, then '## Success Criteria' on its own line"  -> note epic id]
 [  Author tasks as JSONL, one per line, id OMITTED, each with a parent-child dep to the epic]
 [    and "## Acceptance Criteria" in description; pipe to: bd import -]
-[    (schema: bd import --help / bd export <id>; confirm output has no "Skipped dependency")]
+[    (schema: bd import --help / bd export | jq -c 'select(.id=="<id>")'; confirm output has no "Skipped dependency")]
 [  Wire task ordering (blocks): bd ready --parent <epic-id> --json -> child ids, then]
 [  printf 'dep add <t3> <t1> blocks\ndep add <t3> <t2> blocks\n' | bd batch]
 

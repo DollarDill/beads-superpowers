@@ -80,7 +80,7 @@ Error: push to origin/main: ... GH013: Repository rule violations found
 
 ```bash
 # Export local data as backup first
-bd export -o /tmp/beads-backup.jsonl
+bd export --all -o /tmp/beads-backup.jsonl
 
 # Nuclear recovery
 bd dolt stop 2>/dev/null     # server mode only

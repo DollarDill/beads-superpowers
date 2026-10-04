@@ -171,4 +171,15 @@ out=$(bsp_compose_memories 60)
 echo "$out" | grep -q "yyyy" && { echo "FAIL: section over ceiling injected — accounting ignores scaffolding"; exit 1; }
 echo "$out" | grep -q "core memories: 0 of 1 injected" || { echo "FAIL: scaffolding-test disclosure wrong"; exit 1; }
 
+# 11. total_count excludes bd 1.3.1's non-memory "schema_version" key
+cat > "$TMP/fixtures/memories.json" <<'FIX'
+{
+  "schema_version": 1,
+  "plain-a": "uncurated body a",
+  "plain-b": "uncurated body b"
+}
+FIX
+out=$(bsp_compose_memories 8192)
+echo "$out" | grep -q "^2 memories stored" || { echo "FAIL: schema_version counted as a memory: $out"; exit 1; }
+
 echo "PASS: composer selection/ceiling"

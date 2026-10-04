@@ -60,7 +60,7 @@ Spec: <spec file path or 'none reachable'>
    # 2. Author the tasks as JSONL — one issue per line, id OMITTED (auto-assigned;
    #    a supplied colliding id would overwrite that bead and reset its omitted fields).
    #    Parent each to the epic; embed the bd lint-required '## Acceptance Criteria' in
-   #    'description'. Read `bd import --help` on first use; `bd export <id>` round-trips
+   #    'description'. Read `bd import --help` on first use; `bd export | jq -c 'select(.id=="<id>")'` round-trips
    #    a real bead as a schema template.
    cat <<'EOF' | bd import -
 {"title":"Task 1: <title>","issue_type":"task","priority":2,"description":"<summary>\n\n## Acceptance Criteria\n- <outcome>","dependencies":[{"depends_on_id":"<epic-id>","type":"parent-child"}]}

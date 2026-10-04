@@ -195,7 +195,7 @@ git ls-remote git+ssh://git@github.com/<owner>/<repo>-beads.git | grep dolt    #
 
 ```bash
 # 1. Export what we can (may fail if truly corrupt)
-bd export -o /tmp/beads-backup.jsonl 2>/dev/null
+bd export --all -o /tmp/beads-backup.jsonl 2>/dev/null
 
 # 2. Remove and re-bootstrap
 bd dolt stop 2>/dev/null     # server mode only

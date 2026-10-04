@@ -41,7 +41,7 @@ BSP_ENVELOPE_BUDGET=9500
 BSP_WRAP_OVERHEAD=768
 
 # Selection input is `bd memories --json`: one `"key": "body"` entry per line
-# (verified shape, bd v1.1.0) with the FULL body inline — immune to the plain
+# (verified shape, bd v1.3.1; a non-memory "schema_version" key is excluded from counts) with the FULL body inline — immune to the plain
 # listing's preview truncation, which can hide a late @salience token.
 # Emits "<salience>\t<key>" for @salience=4|5 entries. Anchored to the
 # `@type=…` header run (before the first `\n`) so a body mention of
@@ -74,7 +74,7 @@ bsp_compose_memories() {
     local ceiling="$1" listing total_count selected cont section="" used=0 skipped=0 injected=0
     listing=$(bd memories --json 2>/dev/null) || listing=""
     [ -z "$listing" ] && return 0
-    total_count=$(printf '%s\n' "$listing" | grep -cE '^[[:space:]]*"[^"]+":' || true)
+    total_count=$(printf '%s\n' "$listing" | grep -E '^[[:space:]]*"[^"]+":' | grep -cvE '^[[:space:]]*"schema_version":' || true)
 
     # Pure-bash probe — a `printf | grep -q` pipeline here SIGPIPEs under
     # pipefail when the listing exceeds the 64KB pipe buffer and matches early

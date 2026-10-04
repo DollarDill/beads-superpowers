@@ -25,4 +25,8 @@ absent 'Safe versions: v1.1.2 or v1.2.2'
 absent 'forward-compat'
 absent 'releases after 1.1.0'
 absent 'releases after v1.1.0'
+pin 'bd export --all -o /tmp/beads-backup.jsonl'
+pin 'bd export --all -o /tmp/beads-backup.jsonl' "$REC"
+absent 'bd export -o /tmp/beads-backup.jsonl'
+absent 'bd export -o /tmp/beads-backup.jsonl' "$REC"
 [ "$fail" -eq 0 ] && echo "PASS: project-init contract" || exit 1
