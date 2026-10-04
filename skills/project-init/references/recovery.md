@@ -47,8 +47,8 @@ discouraged for the same reason.
 **Observed vs documented (flagged, unresolved):** the documented position is the bright line above:
 only the designated migrator forces a migration. Separately, on embedded storage bd has been
 observed to auto-migrate as a "safe first-mover", which appears to contradict `bd migrate --help`
-("refuses to migrate in place" on a remote-backed database with pending migrations). Not resolved
-here; the flag stays and neither side is chosen. Follow the two options above.
+("refuses to migrate in place" on a remote-backed database with pending migrations). Follow the
+two options above.
 
 If a pull conflicts and the auto-resolver declines it, `bd dolt pull --strategy ours|theirs`
 resolves it (embedded storage only; `bd dolt pull --help`). Pick the side deliberately — the

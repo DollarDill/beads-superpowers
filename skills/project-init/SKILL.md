@@ -141,7 +141,7 @@ Open `references/recovery.md` (open when push is rejected) for the v1.1.0 remote
 
 ## Path D: Database Exists but Broken
 
-Check `dolt_mode` in `.beads/metadata.json` first. Embedded is the default.
+Check `dolt_mode` in `.beads/metadata.json` first.
 
 **Server mode:**
 
@@ -280,10 +280,6 @@ If it still shows the old (or code-repo) URL, fix it directly:
 ```bash
 bd config set sync.remote "git+ssh://git@github.com/<owner>/<project>-beads.git"
 ```
-
-**Collision guard (bd v1.3.0+):** `bd dolt remote add` refuses a URL that matches the git
-origin unless `--allow-git-origin` is passed — making same-repo an explicit opt-in rather than an
-accident.
 
 **`bd serve` (v1.3.0+):** an HTTP API for automation clients; it refuses embedded mode and needs
 server or proxied mode. Embedded is bd's default and the plugin works in every mode, so skip
