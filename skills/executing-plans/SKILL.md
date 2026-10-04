@@ -45,7 +45,7 @@ Prefer subagent-driven development when the plan has more than about eight tasks
 ## Setup
 
 1. Isolated workspace first — use beads-superpowers:using-git-worktrees. Never start on a main/master branch without your human partner's explicit consent.
-2. Plan workspace: `bash ../subagent-driven-development/scripts/sdd-workspace PLAN_FILE` prints this plan's git-ignored directory under `.internal/sdd/` — briefs, review packages and test logs live there. Shared with subagent-driven development, so a plan can change executors mid-flight.
+2. Plan workspace: `bash ../subagent-driven-development/scripts/sdd-workspace PLAN_FILE` prints this plan's git-ignored directory under `.internal/sdd/` — briefs, review packages and test logs live there. Another plan's directory is never yours to read or write. Shared with subagent-driven development, so a plan can change executors mid-flight.
 3. Find or create the ledger. Locate an existing epic by its `Plan:` anchor, which lives in the description (`bd search` matches titles only): `bd list -t epic --status open --desc-contains "Plan: <plan file path>"`. **Resuming:** first `bd list --parent <epic-id> --status in_progress` — a task interrupted mid-flight is still claimed, and `bd ready` excludes it. Check its commits against `git log` before redoing anything, then finish it through the Task Loop from step 2. Then `bd ready --parent <epic-id>` is the remaining work; a closed child's completion line names its commit range — check it against `git log` before touching anything, and trust bd and git over your recollection. **Fresh:** create the epic, then import the tasks:
 
    ```bash
@@ -78,8 +78,8 @@ EOF
    > Note: `bd batch create` does not support `--description`/`--parent`/`--acceptance` — that is why task *creation* uses `bd import`, not `bd batch`.
 
 4. Read the plan once — its context and Global Constraints — and the Spec it names: the spec is the authority the plan argues from, and conflicts inside the plan resolve against it. No reachable spec → `bd update <epic-id> --append-notes "No spec reachable — rulings are provisional"`.
-5. **REQUIRED SUB-SKILL:** load beads-superpowers:test-driven-development now, before Task 1. It governs every step of every task below.
-6. Pre-flight scan: for every task that consumes what an earlier task produces, one row — the two tasks, what one produces against what the other consumes, what you found — appended with `bd update <epic-id> --append-notes "Pre-flight: <row>"`. Tasks that share nothing get no row; a plan whose tasks share nothing gets the single line `Pre-flight: no shared interfaces`. Rule on each conflict the spec settles; escalate the rest. Record each ruling beside its row.
+5. **REQUIRED SUB-SKILL:** load beads-superpowers:test-driven-development now, before Task 1. It governs every step of every task below; a plan whose steps already say "write the failing test first" does not exempt you from reading it.
+6. Pre-flight scan: for every task that consumes what an earlier task produces, one row — the two tasks, what one produces against what the other consumes, what you found — appended with `bd update <epic-id> --append-notes "Pre-flight: <row>"`. Tasks that share nothing get no row; a plan whose tasks share nothing gets the single line `Pre-flight: no shared interfaces`. Rule on each conflict the spec settles; escalate the rest. Record each ruling beside its row. Each task's own text is checked when you read its brief, not here.
 
 ## The Task Loop
 
@@ -98,7 +98,7 @@ Every tool call is a turn that re-reads your whole context. Bookkeeping rides al
 
 ### 2. Work the steps
 
-The plan's steps are already in RED-GREEN order; follow them under beads-superpowers:test-driven-development. A test step's code is written first and run first. Watching it fail is a step, not a formality.
+The plan's steps are already in RED-GREEN order; follow them under beads-superpowers:test-driven-development. A test step's code is written first and run first. Watching it fail is a step, not a formality — a test that passes before the implementation exists is a finding about the test.
 
 Every step that runs a command has an `Expected:` line. Run it, read the output, compare. Three outcomes:
 
@@ -133,7 +133,7 @@ Final Review starts only when `bd list --parent <epic-id> --status open,in_progr
 
 Run `bash ../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the commit the branch started from: the branch's integration base, e.g. `git merge-base <target-branch> HEAD`) and append to the file it prints the closed beads' completion lines (`bd list --parent <epic-id> --status closed --long`) and the path of the test logs, so the reviewer can cross-check each claim against its artifact.
 
-**With a subagent tool:** dispatch the reviewer on the most capable available tier — the whole-branch review is a judgment task — using beads-superpowers:requesting-code-review's `code-reviewer.md`, with the package path, the plan and spec paths, the plan's `## Review Focus` section verbatim if it has one, and a pointer to the epic's notes so it can weigh the rulings you made. Name the tier explicitly; an omitted tier inherits the session's. This is the one fresh context the whole run buys. Do not skip it, and do not replace it with your own read of the diff.
+**With a subagent tool:** dispatch the reviewer on the most capable available tier — the whole-branch review is a judgment task — using beads-superpowers:requesting-code-review's `code-reviewer.md`, with the package path, the plan and spec paths, the plan's `## Review Focus` section verbatim if it has one (the input classes and failure modes the plan's tests do not exercise — the reviewer checks each deliberately), and a pointer to the epic's notes so it can weigh the rulings you made. Name the tier explicitly; an omitted tier inherits the session's. This is the one fresh context the whole run buys. Do not skip it, and do not replace it with your own read of the diff.
 
 **Without a subagent tool:** read `code-reviewer.md` and perform that review yourself as a separate pass after the last close. Ledger `Final review: self-review (no subagent tool)` and say so in your final message: a self-review by the author is weaker than a fresh reviewer, and your human partner decides whether that is enough before merge. A Critical or security fix needs a fresh-context re-review this path cannot provide: it escalates to your human partner before merge.
 
@@ -148,7 +148,7 @@ Fix Critical and Important findings yourself in ONE pass, each verified by TDD: 
 
 Before you delete anything, collect from the epic's notes every line containing `Ruling:` into your final message under "Rulings I made" (in order, each with its cost if wrong), every `minor (deferred)` line under "Deferred minors", and every `Final: fixed` line under "Fixes applied" with its test name and suite result. All three lists are exhaustive: your final message is the only place the decisions you took on your human partner's behalf reach them.
 
-When the final review is clean and its fixes are committed, delete this plan's workspace directory — git and beads are the record now. Then:
+When the final review is clean and its fixes are committed, delete this plan's workspace directory — git and beads are the record now. Sibling directories belong to other plans; leave them alone. Then:
 
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use beads-superpowers:finishing-a-development-branch — it owns the **Land the Plane** session close (`bd close` → `bd dolt push` → `git push` → `git status`).
@@ -172,6 +172,59 @@ The stops above are the only reasons to stop the run; a blocker on a single task
 - Rule only where the spec settles it, and ledger it; escalate the rest
 - Never start implementation on main/master branch without explicit user consent
 - **Production-Grade Doctrine:** never skip a verification or drop a task to make progress — `bd defer`/`bd human` are for genuine blockers, never a quiet way to descope required work. Never weaken, bypass, or remove a security control — a security regression is never acceptable.
+
+## Example Workflow
+
+```
+You: I'm using the executing-plans skill to implement this plan inline.
+
+[Setup: feature branch verified; workspace .internal/sdd/feature-plan/ resolved — sibling plan directories left alone]
+[No open epic anchored "Plan: .internal/plans/feature-plan.md" — fresh: epic created, 5 tasks imported, ordering wired]
+[Read plan once; spec read; test-driven-development loaded]
+[Pre-flight scan: 2 shared-interface rows, clean; appended to the epic's notes]
+
+Task 1: Hook installation script
+
+[bd ready --parent <epic-id> --claim → Task 1; brief read; BASE a1b2c3d]
+[Step 1: write failing test — written]
+[Step 2: run it — FAIL: install_hook not defined. Matches Expected.]
+[Step 3: implement — written]
+[Step 4: run it — PASS 1/1. Matches Expected.]
+[Step 5: commit — d4e5f6a]
+[Contract: tests ran, output read, no deviations]
+[npm test -- hooks → task-1-tests.log, 1/1 pass; bd close: complete (commits a1b2c3d..d4e5f6a, tests: npm test -- hooks → 1/1 pass; rulings: 0)]
+
+Task 2: Recovery modes
+
+[Claimed; heartbeat on regaining control; brief read; BASE d4e5f6a]
+[Step 2: run failing test — FAIL, but on an import error: Task 1 exported
+ installHook, the brief consumes install_hook]
+[Ruling: use installHook — settled by spec §Hook API, which names installHook — cost if wrong: one rename; appended to the epic's notes]
+[Steps 2-5 as planned; commit b7c8d9e]
+[npm test -- recovery → task-2-tests.log, 8/8 pass; bd close: complete (commits d4e5f6a..b7c8d9e, tests: npm test -- recovery → 8/8 pass; rulings: 1)]
+
+...
+
+[No open children under the epic: review-package plan MERGE_BASE HEAD, completion lines appended; dispatch code-reviewer on the most capable tier]
+Reviewer: One Important finding — progress reporting interval hardcoded. Two Minor.
+[Re-grade by effect: Important stands; minors → epic notes as deferred]
+[Fix pass: test_progress_interval_configurable RED → extract PROGRESS_INTERVAL → GREEN; suite 12/12; commit]
+[Epic notes: Final: fixed hardcoded interval — test_progress_interval_configurable RED→GREEN, suite 12/12]
+
+Rulings I made:
+- Task 2: install_hook → installHook — settled by spec §Hook API — cost if wrong: one rename
+
+Deferred minors:
+- README lacks a usage example
+- recovery.js could split verify/repair into two files
+
+Fixes applied:
+- hardcoded progress interval — test_progress_interval_configurable RED→GREEN, suite 12/12
+
+[Delete this plan's workspace — git and beads are the record now; sibling plan directories untouched]
+
+Using beads-superpowers:finishing-a-development-branch.
+```
 
 ## Red Flags
 

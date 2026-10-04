@@ -58,6 +58,14 @@ done
 grep -qF -- '**executing-plans** — one whole-branch review after the last task (most capable tier)' "$ROOT/skills/requesting-code-review/SKILL.md" || { echo "FAIL: requesting-code-review lacks the executing-plans cadence line"; fail=1; }
 # CB-7 ruling-format block byte-identical with SDD (three physical lines)
 if ! diff -q <(grep -A2 -F '**Every ruling cites its authority**' "$S") <(grep -A2 -F '**Every ruling cites its authority**' "$F") >/dev/null; then echo "FAIL: CB-7 ruling block diverges from SDD"; fail=1; fi
+# upstream v6.4.1 parity — passages never adopted at the original port, restored by user ruling (0.17.0 quality gate, beads-superpowers-cxwy4)
+pin "Another plan's directory is never yours to read or write."
+pin 'Sibling directories belong to other plans; leave them alone.'
+pin 'a test that passes before the implementation exists is a finding about the test.'
+pin 'does not exempt you from reading it.'
+pin "Each task's own text is checked when you read its brief, not here."
+pin 'the reviewer checks each deliberately'
+pin '## Example Workflow'
 # guardrail floor: Red Flags table has at least 12 rows
 rows=$(awk '/^## Red Flags/{f=1;next} f&&/^## /{f=0} f&&/^\|/{c++} END{print c+0}' "$F")
 [ "$rows" -ge 14 ] || { echo "FAIL: Red Flags table has $rows lines (< header+separator+12 rows)"; fail=1; }
