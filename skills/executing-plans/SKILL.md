@@ -197,7 +197,7 @@ Task 2: Recovery modes
 [Claimed; heartbeat on regaining control; brief read; BASE d4e5f6a]
 [Step 2: run failing test — FAIL, but on an import error: Task 1 exported
  installHook, the brief consumes install_hook]
-[Ruling: use installHook — settled by spec §Hook API, which names installHook — cost if wrong: one rename; appended to the epic's notes]
+[Task 2: Ruling: use installHook — settled by spec §Hook API, which names installHook — cost if wrong: one rename; appended to the epic's notes]
 [Steps 2-5 as planned; commit b7c8d9e]
 [npm test -- recovery → task-2-tests.log, 8/8 pass; bd close: complete (commits d4e5f6a..b7c8d9e, tests: npm test -- recovery → 8/8 pass; rulings: 1)]
 
@@ -217,7 +217,7 @@ Deferred minors:
 - recovery.js could split verify/repair into two files
 
 Fixes applied:
-- hardcoded progress interval — test_progress_interval_configurable RED→GREEN, suite 12/12
+- hardcoded interval — test_progress_interval_configurable RED→GREEN, suite 12/12
 
 [Delete this plan's workspace — git and beads are the record now; sibling plan directories untouched]
 
