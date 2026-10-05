@@ -232,7 +232,7 @@ Fix any issues inline. No need to re-review — just fix and move on.
 **User Review Gate:**
 After the spec review loop passes, **open the spec file in the user's editor** so they can review it, then gate progression with your structured question tool (content below; shape shown in Claude Code schema — adapt to your tool):
 
-**User's preferred editor:** !`echo ${VISUAL:-${EDITOR:-not-configured}}`
+**User's preferred editor:** [run this first, exactly as written, and use its output: `echo ${VISUAL:-${EDITOR:-not-configured}}`]
 
 **⚠️ Run the open command as a standalone Bash call** — never chain it after `bd` commands in the same invocation (e.g., `bd close <id> && open file.md`). The combination hangs.
 

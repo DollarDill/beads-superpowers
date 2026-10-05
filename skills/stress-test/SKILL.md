@@ -154,7 +154,7 @@ Alternatively, record as a `bd note` on the parent bead if the source doc should
 - Create `.internal/stress-tests/YYYY-MM-DD-<topic>.md` with the full findings template above.
 - Open in user's editor for review:
 
-**User's preferred editor:** !`echo ${VISUAL:-${EDITOR:-not-configured}}`
+**User's preferred editor:** [run this first, exactly as written, and use its output: `echo ${VISUAL:-${EDITOR:-not-configured}}`]
 
 ```bash
 # Open in user's preferred editor, with platform fallbacks
