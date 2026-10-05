@@ -75,7 +75,7 @@ Agent tool (subagent_type: "general-purpose"):
     For each task:
 
     ```text
-    1. Read the task requirements from the plan
+    1. Read your task brief ([BRIEF_FILE])
     2. Invoke Skill(beads-superpowers:test-driven-development) — write failing test FIRST
     3. Implement the minimum code to pass the test
     4. If tests fail unexpectedly → Invoke Skill(beads-superpowers:systematic-debugging)

@@ -184,7 +184,7 @@ After all 3 pass review:
   git merge feature/epic/task-a (in epic worktree)
   git merge feature/epic/task-b
   git merge feature/epic/task-c
-  for w in .worktrees/task-a .worktrees/task-b .worktrees/task-c; do bd worktree remove "$w" --merged-into <integration-branch>; done
+  for w in .worktrees/task-a .worktrees/task-b .worktrees/task-c; do bd worktree remove "$w" --merged-into <epic-branch>; done
   Run full test suite → integration check
 ```
 
