@@ -201,7 +201,7 @@ Start a fresh session in your CLI of choice, then:
 1. **Check skills loaded:** Type `/skills` (Claude Code/Codex) or check the skill list in OpenCode - you should see {{ skill_count }} skills prefixed with `beads-superpowers:`
 2. **Check beads works:** Run `bd ready` and `bd stats` in the terminal
 
-If skills aren't showing, the plugin may not be installed for your CLI. If `bd ready` fails, beads isn't initialised in this project (`bd init`).
+If skills aren't showing, the plugin may not be installed for your CLI. If `bd ready` fails, beads isn't initialised in this project (`bd init --skip-agents`).
 
 ## Your first session
 
@@ -211,7 +211,7 @@ See [Memory & Sessions](memory.md) for what gets curated and how the knowledge s
 
 ## How the hooks work
 
-Claude Code and Codex share one hook script - **SessionStart** - registered via `hooks/hooks.json` for Claude Code and wired by `install.sh` for Codex. It fires on every session start, clear, and compact: it reads the `using-superpowers` skill, then composes the beads context described above. If `bd prime` is already registered as a hook elsewhere, the beads half is skipped automatically to avoid injecting it twice.
+Claude Code and Codex share one hook script - **SessionStart** - registered via `hooks/hooks.json` for Claude Code and wired by `install.sh` for Codex. It fires on every session start, clear, and compact: it reads the `using-superpowers` skill, then composes the beads context described above. If bd's own `bd prime` hook is also registered, the hook keeps its curated beads context and shows a one-time notice naming the remedy.
 
 ```mermaid
 sequenceDiagram

@@ -46,7 +46,7 @@ Using a different agent? Jump to install for [Codex CLI](#codex-cli), [OpenCode]
 
 5. **stress-test** (again) - The same adversarial pass against the plan itself: task boundaries, parallel-safety, failure modes.
 
-6. **subagent-driven-development** or **executing-plans** - Dispatches a fresh subagent per task, each in its own isolated worktree (implementers follow **test-driven-development**), or has the session implement every task itself, continuously, with beads as the ledger and one whole-branch review at the end.
+6. **subagent-driven-development** or **executing-plans** - Dispatches a fresh subagent per task, with parallel batches each in their own isolated worktree (implementers follow **test-driven-development**), or has the session implement every task itself, continuously, with beads as the ledger and one whole-branch review at the end.
 
 7. **requesting-code-review** - Task-level and whole-branch reviews against the plan. Critical findings block progress.
 

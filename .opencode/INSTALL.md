@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - [OpenCode.ai](https://opencode.ai) installed
-- `bd` (beads) CLI — `npm install -g @beads/bd` — required for persistent task memory
+- `bd` (beads) CLI — `npm install -g @beads/bd` (v1.3.1 or newer) — required for persistent task memory
 
 ## Installation
 

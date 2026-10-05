@@ -71,7 +71,7 @@ The first change was mechanical: every `TodoWrite` call across the original 14 S
 | Mark task as completed | `bd close <task-id> --reason "Implemented login"` |
 | "More tasks remain?" | `bd ready --parent <epic-id>` |
 
-The replacement works at two levels. Execution skills track plan tasks as beads. Checklist-heavy skills like brainstorming (10 steps) create a bead for each internal step. Both levels persist, because if checklist tracking is ephemeral while task tracking is persistent, agents learn that some tracking is optional.
+The replacement works at two levels. Execution skills track plan tasks as beads. Checklist-heavy skills like brainstorming (10 steps on its architectural path) create a bead for each internal step. Both levels persist, because if checklist tracking is ephemeral while task tracking is persistent, agents learn that some tracking is optional.
 
 Subsequent changes went further:
 
@@ -81,7 +81,7 @@ Subsequent changes went further:
 
 **Parallel batch mode.** When `bd ready --parent` returns multiple unblocked tasks, `subagent-driven-development` executes them concurrently (max 5 per batch), each in its own `bd worktree`.
 
-**Orchestrator-only design.** Only the orchestrating agent creates, claims, and closes beads. Subagents focus on their job. The one exception is `implementer-prompt.md`, which is beads-aware by design — it includes bead lifecycle commands, mandatory skill invocations, and LSP-first code navigation.
+**One bead owner per plan.** The session owns a plan's beads by default; a whole plan may be delegated to one orchestrator subagent, which owns them until it returns. Implementers and reviewers never touch beads: `implementer-prompt.md` is beads-aware but reports a suggested close reason, and the controller closes the bead. It keeps mandatory skill invocations and LSP-first code navigation.
 
 **Skill discovery.** Every skill's YAML `description` field states only a trigger condition, never a workflow summary: "use when task X happens," not "does Y then Z." A description that reads like a summary gets followed on its own, and the steps that live in the full skill body get skipped. See [Research](research.md) for how that was found.
 
@@ -148,7 +148,7 @@ See [Memory & Sessions](memory.md) for what gets injected at session start, how 
 
 The literature and measurements behind the choices on this page are collected in [Research](research.md).
 
-Why the plugin is built this way, not just how it runs, lives on [Philosophy](philosophy.md): the design-before-code gate, evidence before claims, the orchestrator-only rule, curated injection instead of context dumps, and keeping skills as plain Markdown. This page tracks the mechanism those choices produced, not the case for them.
+Why the plugin is built this way, not just how it runs, lives on [Philosophy](philosophy.md): the design-before-code gate, evidence before claims, the one-bead-owner-per-plan rule, curated injection instead of context dumps, and keeping skills as plain Markdown. This page tracks the mechanism those choices produced, not the case for them.
 
 ## Sources
 

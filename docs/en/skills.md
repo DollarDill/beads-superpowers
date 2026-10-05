@@ -136,7 +136,7 @@ The agent must run verification commands and show actual output - not assert fro
 
 **Trigger:** Before any creative work - features, components, or behavior changes.
 
-Socratic design exploration. Asks structured questions to surface requirements, constraints, and design alternatives. Produces a committed design spec. Ends by invoking `writing-plans`, not by jumping to code.
+Socratic design exploration. Asks structured questions to surface requirements, constraints, and design alternatives. Classifies the work as a spike, bounded, or architectural path, each with its own approval gate. The architectural path produces a committed design spec and ends by invoking `writing-plans`, not by jumping to code.
 
 ### stress-test
 
@@ -158,9 +158,9 @@ Dispatches a fresh subagent per task with a single read-only task review between
 
 ### executing-plans
 
-**Trigger:** When executing a plan in a single session with review checkpoints.
+**Trigger:** When you execute a plan inline as the implementer yourself: you chose inline at the writing-plans handoff, or no subagent tool is available.
 
-Runs a multi-phase plan sequentially: claim, implement, verify against acceptance criteria, close, next phase. Designed to complement `writing-plans` output directly.
+Runs the plan inline, task by task, on the beads ledger: claim, implement under TDD, verify, close, next. No per-task subagents; one fresh-context review of the whole branch at the end. A third ruling in one run stops for approval. Designed to complement `writing-plans` output directly.
 
 ### dispatching-parallel-agents
 
@@ -230,11 +230,11 @@ Decomposes the topic into sub-questions, dispatches one researcher per sub-quest
 
 **Trigger:** When `bd` commands fail, setting up beads in a new project, or recovering from diverged Dolt history.
 
-Three paths: fresh init, bootstrap from remote, or recovery when Dolt history has diverged.
+Six paths (A–F): fresh init, bootstrap from remote, diverged history, broken database (including embedded mode), adding a remote, and corrupt local with remote data. Requires bd v1.3.1+.
 
 ## Beads commands
 
-Skills use `bd` commands to track work. Only the orchestrating agent manages beads - subagents don't touch them.
+Skills use `bd` commands to track work. One bead owner per plan: the session by default, or one orchestrator subagent the whole plan is delegated to. Implementers and reviewers never touch beads.
 
 | Action | Command | Used in |
 |---|---|---|
@@ -242,7 +242,7 @@ Skills use `bd` commands to track work. Only the orchestrating agent manages bea
 | Create task | `bd create "Task: name" -t task --parent <epic>` | SDD, executing-plans |
 | Atomic plan creation | `bd import` (JSONL, after `bd create` epic) | writing-plans, SDD |
 | Quick capture | `bd q "title"` | any skill |
-| Claim work | `bd update <id> --claim` | executing-plans |
+| Claim work | `bd ready --parent <epic-id> --claim` (take-next; heartbeat the lease) | executing-plans, subagent-driven-development |
 | Complete work | `bd close <id> --reason "why"` | all execution skills |
 | Check remaining | `bd ready --parent <epic>` | SDD, executing-plans |
 | Compound query | `bd query "status=open AND priority<=1"` | getting-up-to-speed (replaces `bd list` + jq) |
@@ -250,7 +250,7 @@ Skills use `bd` commands to track work. Only the orchestrating agent manages bea
 | Add dependency | `bd dep add <child> <parent>` | SDD, writing-plans |
 | Store learning | `bd remember "insight"` | most of the {{ skill_count }} skills prompt for this |
 | Attach evidence | `bd note <id> "context"` | verification |
-| Explain dependencies | `bd ready --explain` | systematic-debugging, executing-plans |
+| Explain dependencies | `bd ready --explain` | systematic-debugging, writing-plans |
 | Sync to remote | `bd dolt push` | finishing-a-development-branch |
 
 !!! info "Go deeper - upstream Beads docs"

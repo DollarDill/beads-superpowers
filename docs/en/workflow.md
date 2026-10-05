@@ -102,7 +102,7 @@ The same adversarial pass runs again once the plan is written, this time against
 
 ### Implement
 
-Once the plan clears its stress-test gate (or skips it), the orchestrator picks how to run it: subagent-driven-development stays in this session, dispatching a fresh subagent per task inside an isolated worktree under TDD (red-green-refactor); executing-plans instead runs the same plan in a separate session, task by task, without subagent dispatch. Either way, the orchestrator creates an epic bead with task children and dependency chains before dispatching.
+Once the plan clears its stress-test gate (or skips it), the orchestrator picks how to run it: subagent-driven-development stays in this session, dispatching a fresh subagent per task inside an isolated worktree under TDD (red-green-refactor); executing-plans instead runs the same plan inline in this session, task by task, with no per-task subagents and one final whole-branch review. Either way, the orchestrator creates an epic bead with task children and dependency chains before dispatching.
 
 Before creating the worktree, the skill runs pre-flight checks: it confirms the agent isn't already inside a worktree or a submodule, and asks for consent when a human, rather than the SDD automation, kicked it off.
 
@@ -174,6 +174,6 @@ Two interrupts can fire at any point. They suspend the current step, handle the 
 
 ## Session protocol
 
-**Start:** The SessionStart hook fires automatically, injecting skill context plus a composed beads context - a `bd` command pointer and the highest-salience persistent memories. Run `bd ready` to surface unblocked beads and in-progress work from previous sessions. Orient before claiming; claim before implementing. When starting work on a bead, process skills come first - brainstorming and planning before any implementation skill; a bead with an existing spec or plan proceeds straight to its planned skill.
+**Start:** The SessionStart hook fires automatically, injecting skill context plus a composed beads context - the latest continuation memory plus pointers to the on-demand memory digest and the knowledge store. Run `bd ready` to surface unblocked beads and in-progress work from previous sessions. Orient before claiming; claim before implementing. When starting work on a bead, process skills come first - brainstorming and planning before any implementation skill; a bead with an existing spec or plan proceeds straight to its planned skill.
 
 **End:** Finish for code paths, Session close for non-branch paths. Close every bead with evidence; if the session produced several new memories, offer a `memory-curator` pass before the push. Push the beads remote, push git, verify a clean tree. A session with uncommitted work or unpushed commits hasn't landed - the push is what completion means.

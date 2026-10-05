@@ -89,7 +89,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 9 best-effort harn
 - `.codex-plugin/` — Codex CLI plugin manifest (`plugin.json`) and marketplace config (`marketplace.json`). Mirrors `.claude-plugin/` for Codex compatibility. The repo-root `.agents/plugins/marketplace.json` (version-less) is the Codex marketplace source manifest — without it, Codex marketplace sources find zero installable plugins.
 - `skills/` — one skill per `skills/<name>/SKILL.md` directory. Some include prompt templates (`implementer-prompt.md`, `researcher-prompt.md`) or helper scripts. Auto-discovered by Claude Code — do NOT declare in `plugin.json`.
 - `agents/` — Removed in v0.6.0. Code-reviewer is now dispatched via `skills/requesting-code-review/code-reviewer.md` prompt template. Subagents (implementer, researcher) use prompt templates inside their skills, not standalone agent files.
-- `hooks/` — `session-start` (SessionStart: injects `using-superpowers` + composed beads context — curated memories + a `bd prime` pointer), the single recurring hook. Multi-format output supports Claude Code, Codex, Cursor, and generic CLIs. Registered in `hooks/hooks.json` (Claude Code) and `hooks/codex-hooks.json` (Codex). Auto-discovered.
+- `hooks/` — `session-start` (SessionStart: injects `using-superpowers` + composed beads context — curated memories + a `bd prime` pointer), the single recurring hook. Multi-format output supports Claude Code, Codex, Cursor, and generic CLIs. Registered in `hooks/hooks.json` (Claude Code), `hooks/codex-hooks.json` (Codex) and `hooks/hooks-cursor.json` (Cursor). Auto-discovered.
 - `.opencode/` — OpenCode plugin (`plugins/beads-superpowers.js`, upstream-parity base + beads graft) + `INSTALL.md`. Git-install only via the opencode.json plugin spec; `install.sh` no longer copies OpenCode artifacts (its `--uninstall` still cleans pre-0.12 copies).
 - `.hermes-plugin/` — Hermes Agent plugin: `plugin.yaml` (the only **YAML** manifest — registered in `.version-bump.json`'s `prose[]`, not `files[]`, which is jq-only) + `__init__.py` (upstream-parity base + beads graft). The only best-effort harness with a **runtime component**: its `pre_llm_call` hook execs `hooks/session-start --emit-plain` and injects the result, the same delta the OpenCode plugin carries in JS. All selection/degradation policy stays in the composer — never reimplemented here. Anti-fork guard: `tests/hooks/test-hermes-injection.sh`.
 - `example-workflow/` — Ready-to-use project template: `agents/yegge.md` (lean router — triages requests and routes to skills). `install.sh --with-yegge` installs `yegge.md` globally (opt-in; not installed by default).
@@ -97,8 +97,8 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 9 best-effort harn
 - `docs/decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs, `.internal/sdd/` (SDD scratch), and `.internal/brainstorm/` (brainstorm server sessions).
 - `tests/` — deterministic suites (hooks, manifests, skills contracts, install-shape, installer docker/podman E2E, brainstorm-server Node tests) run via the `just` surface. (The 4 LLM-driven suites were removed in the 2026-07 fat audit — successor: the external eval-harness project.)
-- `scripts/` — `bump-version.sh` (sync version across all surfaces declared in `.version-bump.json` — JSON manifests + prose), `check-skill-count.sh` (guard: forbid hardcoded skill counts + structural self-consistency), `check-agent-bead-stamp.sh`, `check-convention-sync.sh` (verify shared convention blocks are byte-identical across skills), `lint-shell.sh` (shellcheck gate over tracked `.sh` with committed baseline; visible SKIP when shellcheck absent), `check-askuser-genericization.sh` (guard: skills use generic question-tool phrasing — ADR-0041), `check-model-genericization.sh` (guard: no hardcoded Claude model names in harness-neutral content — capability tiers only), `check-guardrail-floor.sh` (guard: ADR-0049's "never remove to zero" made mechanical — counts guardrail lines per skill against the committed `guardrail-floor-baseline.txt` and fails on a drop to zero or an unjustified decrease; a recorded `0` is a legitimate, disclosed zero for capability skills with no bright lines).
-- `install.sh` — curl installer with 3-tier fallback chain (plugin system → npx → tarball/git clone). SHA-256 checksum validation, atomic rollback via staging directory, lazy prerequisites. Auto-detects Claude Code, Codex, OpenCode, and 7 more CLIs (Cursor, Copilot, Droid, Antigravity, Kimi, Pi, Gemini).
+- `scripts/` — `bump-version.sh` (sync version across all surfaces declared in `.version-bump.json` — JSON manifests + prose), `check-skill-count.sh` (guard: forbid hardcoded skill counts + structural self-consistency), `check-agent-bead-stamp.sh`, `check-convention-sync.sh` (verify shared convention blocks are byte-identical across skills), `lint-shell.sh` (shellcheck gate over tracked `.sh` with committed baseline; visible SKIP when shellcheck absent), `check-askuser-genericization.sh` (guard: skills use generic question-tool phrasing — ADR-0041), `check-model-genericization.sh` (guard: no hardcoded Claude model names in harness-neutral content — capability tiers only), `check-guardrail-floor.sh` (guard: ADR-0049's "never remove to zero" made mechanical — counts guardrail lines per skill against the committed `guardrail-floor-baseline.txt` and fails on a drop to zero or an unjustified decrease; a recorded `0` is a legitimate, disclosed zero for capability skills with no bright lines), `check-doctrine-floor.sh` (guard: the skills that implement keep their own Production-Grade Doctrine floor), `check-secret-echo.sh` (guard: no example in `skills/` or `hooks/` prints a secret's value — presence-only idioms).
+- `install.sh` — curl installer with 3-tier fallback chain (plugin system → npx → tarball/git clone). SHA-256 checksum validation, atomic rollback via staging directory, lazy prerequisites. Auto-detects Claude Code, Codex, OpenCode, and 9 more CLIs (Cursor, Copilot, Droid, Antigravity, Kimi, Pi, Gemini, Devin, Hermes).
 
 ## Key Design Decisions
 
@@ -216,7 +216,8 @@ Pre-commit covers commit-time hygiene; nothing here is CI-enforced by design.
 just            # = just check: guards + hooks + manifests + contracts + shape
 just guards     # all guard scripts (todowrite, bead-stamp, convention-sync,
                 #   skill-count + KNOWN_SKILLS drift, version sync, frontmatter, shell lint,
-                #   askuser-genericization, model-genericization, guardrail floor)
+                #   askuser-genericization, model-genericization, guardrail floor,
+                #   doctrine floor, secret echo)
 just lint       # shellcheck gate alone (tracked .sh, baseline'd; SKIPs if shellcheck absent)
 just hooks      # tests/hooks/* (node tests SKIP visibly if node absent)
 just shape      # install-shape: 12 harnesses (Tier A full artifacts; Tier B hint+manifest)
@@ -261,6 +262,7 @@ Version surfaces are declared in `.version-bump.json` and must stay in sync:
 - `.cursor-plugin/plugin.json`
 - `.kimi-plugin/plugin.json`
 - `.devin-plugin/plugin.json`
+- `gemini-extension.json`
 - `.hermes-plugin/plugin.yaml` (YAML — registered in `prose[]`, not `files[]`)
 - `CLAUDE.md` (`**Version:**` line — prose entry)
 

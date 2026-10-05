@@ -14,7 +14,7 @@ Every session starts from zero context and ends with the process gone. What surv
 
 A `SessionStart` hook runs before the agent sees your first message. It reads the `using-superpowers` skill (the bootstrap that routes to every other skill), then composes a beads context alongside it: the latest continuation memory, a pointer to the on-demand memory digest, and a pointer to the knowledge store. All of it lands in the agent's context before you type anything.
 
-The hook keeps this injected slice small on purpose, capped to fit one continuation memory rather than a tour of the whole store, so a session that has accumulated hundreds of memories doesn't open them all at once. The fuller set — every high-salience or hazard-class memory, deduped — is generated on demand instead: the `getting-up-to-speed` skill's orientation script builds it when a session actually asks. If another hook already registered `bd prime` for this project, the SessionStart hook detects it and yields, so beads context is never injected twice.
+The hook keeps this injected slice small on purpose, capped to fit one continuation memory rather than a tour of the whole store, so a session that has accumulated hundreds of memories doesn't open them all at once. The fuller set — every high-salience or hazard-class memory, deduped — is generated on demand instead: the `getting-up-to-speed` skill's orientation script builds it when a session actually asks. If bd's own `bd prime` hook is also registered for this project, the SessionStart hook keeps its curated context and shows a one-time notice naming how to remove the duplicate hook.
 
 ```mermaid
 sequenceDiagram
@@ -24,14 +24,12 @@ sequenceDiagram
   participant A as Agent
 
   H->>SH: Session starts
-  SH->>SH: Check for an already-registered `bd prime` hook
-  alt bd prime already registered elsewhere
-    SH-->>A: Inject skills bootstrap only (yields to avoid duplicate memory injection)
-  else
-    SH->>BD: Request latest continuation memory + thread/knowledge-store pointers
-    BD-->>SH: Continuation memory and pointers
-    SH->>SH: Compose skills bootstrap + continuation memory + digest pointer + knowledge-store pointer
-    SH-->>A: Inject composed context, capped to a byte budget
+  SH->>BD: Request latest continuation memory + thread/knowledge-store pointers
+  BD-->>SH: Continuation memory and pointers
+  SH->>SH: Compose skills bootstrap + continuation memory + digest pointer + knowledge-store pointer
+  SH-->>A: Inject composed context, capped to a byte budget
+  opt bd's own prime hook is also registered
+    SH-->>H: One-time notice naming the remedy
   end
   Note over A: Agent starts oriented: skills loaded, prior state in view; full digest is one command away
 ```

@@ -25,7 +25,7 @@ What actually happened, including any error messages.
 
 ## Environment
 
-- Which CLI / agent? (Claude Code / Codex / OpenCode / Cursor / Gemini CLI / GitHub Copilot CLI / Kimi Code / Antigravity / Factory Droid / Pi)
+- Which CLI / agent? (Claude Code / Codex / OpenCode / Cursor / Gemini CLI / GitHub Copilot CLI / Kimi Code / Antigravity / Factory Droid / Pi / Devin CLI / Hermes Agent)
 - OS: (e.g. macOS 15.1, Ubuntu 24.04, Windows 11 + WSL2)
 - CLI version: (run your CLI's `--version`, e.g. `claude --version`)
 - Beads version: (run `bd --version`)

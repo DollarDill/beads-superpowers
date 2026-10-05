@@ -20,7 +20,7 @@ recovery, coordination - lives in the upstream reference linked below.
 | `bd show <id>` | Full details for one bead |
 | `bd query "status=open AND priority<=1"` | Compound query - replaces `bd list` + jq |
 | `bd count --by-status` | Grouped counts (`--by-priority` / `--by-type`) |
-| `bd epic status <id>` / `--eligible-only` | Completion status for that epic / only epics eligible to close |
+| `bd list --parent <epic-id> --status open,in_progress,blocked,deferred` | What's still open under that epic |
 | `bd create "Epic: name" -t epic -p 2` | New epic at priority 2 |
 | `bd create "Task: title" -t task --parent <epic>` | Task under an epic |
 | `bd worktree create .worktrees/<name>` | Worktree at a set path - a bare `<name>` lands at `./<name>`, sibling to your files. Resolves relative to your current directory, so run it from the repo root |

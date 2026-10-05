@@ -28,7 +28,7 @@ Each step invokes the skill that owns it; the skill carries its own detail, gate
 1. **Research** the unknowns — `Skill(beads-superpowers:research-driven-development)` (skip if already well understood; pass the `nested` marker here — it's a sub-step, so findings return without the end-gate).
 2. **Brainstorm** the design — `Skill(beads-superpowers:brainstorming)` → spec + user approval gate.
 3. **Plan** it — `Skill(beads-superpowers:writing-plans)` → task plan + user approval gate.
-4. **Implement** in isolation — `Skill(beads-superpowers:using-git-worktrees)`, then `Skill(beads-superpowers:test-driven-development)` (single task) or `Skill(beads-superpowers:subagent-driven-development)` (multi-task). Before merging sub-agent work: re-run the full suite yourself (don't trust the sub-agent's run), scan the diff for scope creep / debug artifacts, invoke `Skill(beads-superpowers:requesting-code-review)`, and reject + re-delegate if any gate fails.
+4. **Implement** in isolation — `Skill(beads-superpowers:using-git-worktrees)`, then `Skill(beads-superpowers:test-driven-development)` (single task), or for a multi-task plan the method `writing-plans` recommended at its handoff — `Skill(beads-superpowers:subagent-driven-development)` or `Skill(beads-superpowers:executing-plans)`. Before merging sub-agent work: re-run the full suite yourself (don't trust the sub-agent's run), scan the diff for scope creep / debug artifacts, invoke `Skill(beads-superpowers:requesting-code-review)`, and reject + re-delegate if any gate fails.
 5. **Verify** — `Skill(beads-superpowers:verification-before-completion)`. Evidence before any "done", on every path.
 6. **Document** — `Skill(beads-superpowers:document-release)`.
 7. **Finish** — `Skill(beads-superpowers:finishing-a-development-branch)`.
@@ -54,7 +54,7 @@ Invoke each as `Skill(beads-superpowers:<name>)`. Core (routine work):
 |-----------|-------|
 | New feature / behavior change / any design | brainstorming |
 | Have a spec, need a task plan | writing-plans |
-| Executing a plan task-by-task | subagent-driven-development |
+| Executing a plan task-by-task | subagent-driven-development or executing-plans |
 | Writing code or a bugfix | test-driven-development |
 | Bug, test failure, unexpected behavior | systematic-debugging |
 | Multi-file work needing isolation | using-git-worktrees |
@@ -65,7 +65,7 @@ Invoke each as `Skill(beads-superpowers:<name>)`. Core (routine work):
 | Branch complete, integrating | finishing-a-development-branch |
 | Orient on the project ("catch me up") | getting-up-to-speed |
 
-Less routine — invoke by name when the trigger arises: `stress-test` (adversarial design review), `dispatching-parallel-agents` (2+ independent tasks), `write-documentation` (human-facing prose), `executing-plans` (inline plan execution), `project-init` (beads/Dolt setup), `memory-curator` (session-close memory sweep / on-demand consolidation).
+Less routine — invoke by name when the trigger arises: `stress-test` (adversarial design review), `dispatching-parallel-agents` (2+ independent tasks), `write-documentation` (human-facing prose), `project-init` (beads/Dolt setup), `memory-curator` (session-close memory sweep / on-demand consolidation).
 
 ## Session
 
