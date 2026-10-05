@@ -237,8 +237,9 @@ grep -r "bd create\|bd close\|bd ready" skills/ | wc -l
 For a quick, no-Docker installer smoke test outside the `just` surface: `bash install.sh --test`
 (installs to `/tmp`, verifies, cleans up).
 
-Skill *behavior* testing lives in the external eval-harness project (the in-repo LLM suites
-were removed in the 2026-07 fat audit).
+Skill *behaviour* evals live in `evals/` (`claude plugin eval` native cases; `evals/results/` is gitignored).
+Run: `claude plugin eval . --tag <tag> --scaffold --judge-model opus --no-publish` (add `--allow-tools Write Edit`
+only for `--tag grant-write`; never grant Bash). Each case pins `model: sonnet`; the judge must not be the agent model.
 
 **Release process (no GHA):** run the `document-release` docs audit **on dev** (release cuts bypass the finishing-branch Step 3.5 docs gate) → `./scripts/bump-version.sh <ver>` + update CHANGELOG, committed **on dev** →
 `git switch main && git merge --ff-only dev` (fails loudly if anything ever landed on main directly — that's the invariant working) → tag `v<ver>` on main → `git push --tags` → **publish the GitHub Release**:
