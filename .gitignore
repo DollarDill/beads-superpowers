@@ -74,3 +74,4 @@ issues.jsonl
 # cache
 .cache/
 npx-testing/
+evals/results/
