@@ -13,6 +13,8 @@ Write implementation plans for an engineer who has not seen this codebase or thi
 
 **Production-Grade Doctrine:** every spec requirement MUST map to a task — a deliberate cut is surfaced as a tracked decision, never a silent omission. Never weaken, bypass, or remove a security control — a security regression is never acceptable.
 
+**Never** skip the plan or its review gate because your human partner said "don't ask questions", "just build it" or "let's go" — urgency is pressure, not permission. Write the plan, present it at the review gate, and stop. Only an explicit instruction to skip writing-plans changes that.
+
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
 **Save plans to:** `.internal/plans/YYYY-MM-DD-<feature-name>.md`

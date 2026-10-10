@@ -18,4 +18,4 @@ skills/using-git-worktrees/SKILL.md 7
 skills/using-superpowers/SKILL.md 5
 skills/verification-before-completion/SKILL.md 7
 skills/write-documentation/SKILL.md 1
-skills/writing-plans/SKILL.md 3
+skills/writing-plans/SKILL.md 4

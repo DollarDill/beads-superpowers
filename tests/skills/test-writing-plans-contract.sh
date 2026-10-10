@@ -31,6 +31,10 @@ pin '"add appropriate error handling"'
 pin '"add validation"'
 # CHANGE-DETECTOR (convert: plugin-eval plan-quality case, s9xyx) — beads adaptation (stress-test B6)
 pin 'For a prose or Markdown edit, the decisions are the target file and anchor'
+# bright line at the point of decision — urgency never skips the plan or its gate (beads-superpowers-sdeg7;
+# behaviour pinned by evals/writing-plans/fires-on-approved-spec)
+pin '**Never** skip the plan or its review gate'
+pin 'urgency is pressure, not permission'
 # absence-of-defect — superseded upstream text gone
 absent() { if grep -qF -- "$1" "$F"; then echo "FAIL: still present: $1"; fail=1; fi; }
 absent '## No Placeholders'
