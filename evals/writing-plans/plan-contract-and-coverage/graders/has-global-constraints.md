@@ -1,0 +1,8 @@
+---
+type: regex
+target:
+  source: file
+  path: .internal/plans/habit-export.md
+pattern: '^## Global Constraints'
+flags: m
+---
