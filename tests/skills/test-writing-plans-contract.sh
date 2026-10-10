@@ -35,6 +35,7 @@ pin 'For a prose or Markdown edit, the decisions are the target file and anchor'
 # behaviour pinned by evals/writing-plans/fires-on-approved-spec)
 pin '**Never** skip the plan or its review gate'
 pin 'urgency is pressure, not permission'
+pin 'presenting the plan for review is not a question you may drop'
 # absence-of-defect — superseded upstream text gone
 absent() { if grep -qF -- "$1" "$F"; then echo "FAIL: still present: $1"; fail=1; fi; }
 absent '## No Placeholders'

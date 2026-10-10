@@ -210,6 +210,8 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 ## User Review Gate
 
+**Never** skip this gate because you were told not to ask questions or to just build it — presenting the plan for review is not a question you may drop. Present the plan and stop here until your human partner answers.
+
 After self-review passes, **open the plan file in the user's editor** so they can review it, then gate progression with your structured question tool (content below; shape shown in Claude Code schema — adapt to your tool):
 
 **User's preferred editor:** [run this first, exactly as written, and use its output: `echo ${VISUAL:-${EDITOR:-not-configured}}`]
