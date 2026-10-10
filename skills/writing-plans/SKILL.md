@@ -13,7 +13,7 @@ Write implementation plans for an engineer who has not seen this codebase or thi
 
 **Production-Grade Doctrine:** every spec requirement MUST map to a task — a deliberate cut is surfaced as a tracked decision, never a silent omission. Never weaken, bypass, or remove a security control — a security regression is never acceptable.
 
-**Never** skip the plan or its review gate because your human partner said "don't ask questions", "just build it" or "let's go" — urgency is pressure, not permission. Write the plan, present it at the review gate, and stop. Only an explicit instruction to skip writing-plans changes that.
+**Never** skip the plan or its review gate because your human partner said "don't ask questions", "just build it" or "let's go" — urgency is pressure, not permission. Write the plan, present it at the review gate, and stop. Only an explicit instruction to skip writing-plans or its review gate changes that.
 
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
@@ -210,7 +210,7 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 ## User Review Gate
 
-**Never** skip this gate because you were told not to ask questions or to just build it — presenting the plan for review is not a question you may drop. Present the plan and stop here until your human partner answers.
+**Never** skip this gate because you were told not to ask questions or to just build it — presenting the plan for review is not a question you may drop. Present the plan through the gate below, then stop until your human partner answers, unless they have explicitly told you to skip this review.
 
 After self-review passes, **open the plan file in the user's editor** so they can review it, then gate progression with your structured question tool (content below; shape shown in Claude Code schema — adapt to your tool):
 

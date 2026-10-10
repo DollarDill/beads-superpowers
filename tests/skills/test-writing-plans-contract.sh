@@ -36,6 +36,9 @@ pin 'For a prose or Markdown edit, the decisions are the target file and anchor'
 pin '**Never** skip the plan or its review gate'
 pin 'urgency is pressure, not permission'
 pin 'presenting the plan for review is not a question you may drop'
+# explicit skip of the gate is honoured, matching using-superpowers § User Instructions (final review, s9xyx.2)
+pin 'explicit instruction to skip writing-plans or its review gate'
+pin 'unless they have explicitly told you to skip this review'
 # absence-of-defect — superseded upstream text gone
 absent() { if grep -qF -- "$1" "$F"; then echo "FAIL: still present: $1"; fail=1; fi; }
 absent '## No Placeholders'
