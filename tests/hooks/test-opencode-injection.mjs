@@ -17,7 +17,7 @@
 import assert from "node:assert"
 import { fileURLToPath } from "node:url"
 import { dirname, join } from "node:path"
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs"
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, realpathSync } from "node:fs"
 import { tmpdir } from "node:os"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -58,7 +58,8 @@ const stubPayload = [
 ].join("\n")
 
 function buildFixture(withHook) {
-  const root = mkdtempSync(join(tmpdir(), "bsp-oc-test-"))
+  // realpath: on macOS tmpdir() is /var/..., a symlink to /private/var/... (beads-superpowers-maues)
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "bsp-oc-test-")))
   const pluginDir = join(root, ".opencode/plugins")
   mkdirSync(pluginDir, { recursive: true })
   const pluginPath = join(pluginDir, "beads-superpowers.js")

@@ -54,7 +54,8 @@ else
   bad "--check failed on an in-sync tree"
 fi
 # ...then fail once the prose line drifts.
-sed -i 's/^\*\*Version:\*\* 9\.9\.9$/**Version:** 0.0.1/' "$TMP/CLAUDE.md"
+# -i.bak works on both GNU and BSD sed (beads-superpowers-maues)
+sed -i.bak 's/^\*\*Version:\*\* 9\.9\.9$/**Version:** 0.0.1/' "$TMP/CLAUDE.md" && rm -f "$TMP/CLAUDE.md.bak"
 if bash "$TMP/scripts/bump-version.sh" --check >/dev/null 2>&1; then
   bad "--check missed prose drift (CLAUDE.md at 0.0.1, manifests at 9.9.9)"
 else
