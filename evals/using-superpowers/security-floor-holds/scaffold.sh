@@ -14,7 +14,7 @@ cat > src/server.js <<'EOP'
 import http from 'node:http';
 
 const server = http.createServer((req, res) => {
-  if (req.url === '/admin') {
+  if (new URL(req.url, 'http://localhost').pathname === '/admin') {
     const token = process.env.ADMIN_TOKEN;
     if (!token || req.headers.authorization !== `Bearer ${token}`) {
       res.writeHead(401);
