@@ -1,11 +1,11 @@
 ---
-description: "A project rule to always use subagent-driven development means the plan is dispatched to subagents without asking which implementation strategy to use. Adapted from prime-radiant-inc/superpowers-evals user-pref-sdd-no-strategy-prompt @ e64684c."
-tags: [using-superpowers, us-agent]
+description: "With a project rule to always use subagent-driven development, the agent dispatches the plan's work to a subagent without asking which implementation strategy to use. Write and Edit are granted, so working inline is a real alternative to dispatch. Adapted from prime-radiant-inc/superpowers-evals user-pref-sdd-no-strategy-prompt @ e64684c."
+tags: [using-superpowers, us-agent-write]
 model: sonnet
 runs: 3
 max_turns: 25
 timeout_seconds: 600
-allowed_tools: [Read, Glob, Grep, Skill, AskUserQuestion, Agent]
+allowed_tools: [Read, Glob, Grep, Skill, AskUserQuestion, Agent, Write, Edit]
 append_system_prompt: "The following is this project's CLAUDE.md (project instructions):\n\nWhen implementing a plan, always use subagent-driven development: dispatch the implementation work to subagents. Do NOT ask me which implementation strategy to use — proceed with subagent-driven development by default."
 ---
 
