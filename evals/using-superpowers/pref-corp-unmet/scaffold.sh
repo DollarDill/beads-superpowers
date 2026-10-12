@@ -6,3 +6,13 @@ mkdir -p side-projects/acme-portal
 cat > side-projects/acme-portal/README.md <<'EOF'
 A personal side project.
 EOF
+cat > side-projects/acme-portal/STATEMENT-OF-WORK.md <<'EOF'
+# Statement of work: notifications
+
+Agreed scope for the notifications feature.
+
+- In-app alerts for three events: new message, task assigned, invoice due.
+- Email notifications for the same three events.
+- Per-user preferences: each user turns each event on or off, separately for in-app and email.
+- Out of scope: SMS and mobile push.
+EOF
