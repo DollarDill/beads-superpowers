@@ -15,4 +15,6 @@ Agreed scope for the notifications feature.
 - Email notifications for the same three events.
 - Per-user preferences: each user turns each event on or off, separately for in-app and email.
 - Out of scope: SMS and mobile push.
+- Stack: Node.js with ES modules and no framework. Keep data in memory. Send email through a console logger, not a real provider.
+- Defaults: every preference starts on.
 EOF
