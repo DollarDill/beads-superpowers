@@ -71,6 +71,9 @@ expect_fail "no evals dir" '^MISSING x: core-fire,core-nofire,core-behaviour$' 1
 stage; case_md d 'tags: [x, core-no-fire]'
 expect_fail "unknown-core-tag" '^EVAL-GATE ERROR: evals/x/d/prompt\.md: unknown core tag core-no-fire$' 1
 
+stage; case_md d 'tags: [x, core_fire]'
+expect_fail "underscore-typo (core_fire)" '^EVAL-GATE ERROR: evals/x/d/prompt\.md: unknown core tag core_fire$' 1
+
 stage; case_md d 'tags:
   - core-fire'
 expect_fail "block-style-tags" '^EVAL-GATE ERROR: evals/x/d/prompt\.md: unsupported tags format$' 1

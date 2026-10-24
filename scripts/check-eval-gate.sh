@@ -57,7 +57,7 @@ while IFS= read -r skill; do
         core-nofire) nofire=1 ;;
         core-behaviour) behaviour=1 ;;
         core-security) ;;
-        core-*) echo "EVAL-GATE ERROR: $rel: unknown core tag $tag"; rc=1 ;;
+        [Cc][Oo][Rr][Ee]*) echo "EVAL-GATE ERROR: $rel: unknown core tag $tag"; rc=1 ;;
       esac
     done < <(frontmatter_tags "$prompt")
   done

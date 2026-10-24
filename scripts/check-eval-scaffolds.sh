@@ -28,6 +28,22 @@ else
 fi
 
 rc=0
+# The eval runs whatever case.yaml's scaffold_script names, so a tracked case
+# may only name scaffold.sh — the file this guard actually checks.
+if [ $# -eq 0 ]; then
+  if ! cases="$(git -C "$REPO_ROOT" ls-files -- 'evals/*/*/case.yaml')"; then
+    echo "FAIL: git ls-files failed under $REPO_ROOT"; exit 1
+  fi
+  while IFS= read -r c; do
+    [ -n "$c" ] || continue
+    awk -v F="$c" '
+      /^[ \t]*scaffold_script:/ {
+        v = $0; sub(/^[ \t]*scaffold_script:[ \t]*/, "", v); gsub(/^["\047]|["\047][ \t]*$|[ \t]+$/, "", v)
+        if (v != "scaffold.sh") { printf "EVAL-SCAFFOLD: %s:%d: scaffold_script must be scaffold.sh (got %s)\n", F, NR, v; bad = 1 }
+      }
+      END { exit bad }' "$REPO_ROOT/$c" || rc=1
+  done <<< "$cases"
+fi
 for f in "${files[@]}"; do
   if [ ! -f "$f" ]; then echo "EVAL-SCAFFOLD: $f:0: no such file"; rc=1; continue; fi
   label="${f#"$REPO_ROOT"/}"
@@ -41,7 +57,7 @@ for f in "${files[@]}"; do
       return 1
     }
     inhd { if ($0 == term) inhd = 0; next }
-    NR == 1 && $0 == "#!/usr/bin/env bash" { next }
+    NR == 1 { if ($0 != "#!/usr/bin/env bash") bad("line 1 must be #!/usr/bin/env bash"); next }
     /^[ \t]*$/ || /^[ \t]*#/ { next }
     $0 == "set -euo pipefail" { next }
     $1 == "mkdir" && $2 == "-p" && NF >= 3 { for (i = 3; i <= NF; i++) path_ok($i); next }

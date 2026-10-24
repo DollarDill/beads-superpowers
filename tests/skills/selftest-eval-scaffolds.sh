@@ -63,6 +63,11 @@ mutate 'mkdir -p "$HOME/x"'
 expect_fail "dollar-in-path" "$(want 'expansion in path')"
 stage; printf "cat > b <<'EOF'\nnever closed\n" >> "$FIX/$S"
 expect_fail "unterminated heredoc" "$(want 'unterminated heredoc')"
+# Line 1 must be exactly the bash shebang: a comment-shaped line 1 can name any interpreter.
+stage
+# shellcheck disable=SC2016  # literal fixture text, never expanded
+{ printf '%s\n' '#!/bin/sh -c touch${IFS}PWNED'; tail -n +2 "$FIX/$S"; } > "$FIX/$S.new" && mv -f "$FIX/$S.new" "$FIX/$S"
+expect_fail "shebang (any interpreter on line 1)" "$(want 'line 1 must be')"
 
 # No-argument production path: the guard anchors to its own repo and scans
 # tracked scaffolds only (git ls-files), never gitignored or untracked ones.
@@ -77,6 +82,12 @@ mkdir -p "$FIX/evals/x/untracked"; printf 'git init\n' > "$FIX/evals/x/untracked
 expect_pass "no args: untracked bad scaffold ignored" in_repo
 mutate 'git init'
 expect_fail "no args: tracked dirty scaffold scanned" "$(want 'disallowed command')" in_repo
+# The eval runs whatever case.yaml's scaffold_script names, not just scaffold.sh.
+gitc checkout -q -- "$S"   # undo the previous mutation: this one must fail on case.yaml alone
+printf 'schema_version: "1.1"\nname: c\ncontext:\n  scaffold_script: setup.sh\n' > "$FIX/evals/x/c/case.yaml"
+gitc add evals/x/c/case.yaml
+expect_fail "no args: case.yaml names a script other than scaffold.sh" '^EVAL-SCAFFOLD: evals/x/c/case\.yaml:[0-9]+: scaffold_script must be scaffold\.sh' in_repo
+gitc rm -q --cached evals/x/c/case.yaml
 gitc rm -q --cached "$S"
 expect_fail "no args: zero tracked scaffolds is never a PASS" '^FAIL: no scaffolds scanned' in_repo
 
