@@ -28,7 +28,7 @@ trap 'rm -rf "$FIX"' EXIT
 # Re-stage a pristine fixture (fresh temp dir) before each mutation.
 stage() {
   rm -rf "$FIX"; FIX="$(mktemp -d)"
-  ( cd "$ROOT" && cp --parents "${FILES[@]}" "$FIX"/ )
+  ( cd "$ROOT" && tar -cf - "${FILES[@]}" ) | tar -xf - -C "$FIX"
 }
 expect_pass() {  # label
   if MANIFEST_ROOT="$FIX" bash "$TEST" >/dev/null 2>&1; then
@@ -64,7 +64,7 @@ stage; jq_set "$FIX/.agents/plugins/marketplace.json" '.plugins[0].version="0.14
 expect_fail "M3 .agents marketplace given a version"
 
 # M4 — .pi extension loses its export default -> structural grep.
-stage; sed -i 's/export default //' "$FIX/.pi/extensions/superpowers.ts"
+stage; sed -i.bak 's/export default //' "$FIX/.pi/extensions/superpowers.ts" && rm -f "$FIX/.pi/extensions/superpowers.ts.bak"
 expect_fail "M4 .pi missing export default"
 
 exit $fails

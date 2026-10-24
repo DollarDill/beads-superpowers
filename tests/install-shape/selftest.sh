@@ -297,7 +297,7 @@ rm -rf "$SB12"
 # preserving relative paths; the real tree is never touched. Setup failures
 # are rig breakage, NOT a caught mutation.
 SB13=$(mktemp -d)
-if ! (cd "$REPO_ROOT" && git ls-files -z skills .claude/skills hooks CLAUDE.md scripts/check-convention-sync.sh | xargs -0 -I{} cp --parents {} "$SB13"/); then
+if ! (cd "$REPO_ROOT" && git ls-files -z skills .claude/skills hooks CLAUDE.md scripts/check-convention-sync.sh | tar --null -T - -cf - | tar -xf - -C "$SB13"); then
   echo "SELFTEST FAIL: mutation-13 setup copy failed (rig broken, not a caught mutation)"; rc=1
 else
   grep -v -- "hits are pointers, not knowledge" "$SB13/skills/brainstorming/SKILL.md" > "$SB13/skills/brainstorming/SKILL.md.tmp" \
@@ -314,7 +314,7 @@ rm -rf "$SB13"
 # must fail RED (proves assert_line_identical catches full-line drift, not just the signature
 # slice). Same fixture-isolation as Mutation 13; the real tree is never touched.
 SB14=$(mktemp -d)
-if ! (cd "$REPO_ROOT" && git ls-files -z skills .claude/skills hooks CLAUDE.md scripts/check-convention-sync.sh | xargs -0 -I{} cp --parents {} "$SB14"/); then
+if ! (cd "$REPO_ROOT" && git ls-files -z skills .claude/skills hooks CLAUDE.md scripts/check-convention-sync.sh | tar --null -T - -cf - | tar -xf - -C "$SB14"); then
   echo "SELFTEST FAIL: mutation-14 setup copy failed (rig broken, not a caught mutation)"; rc=1
 else
   # Reword the non-signature 'near-duplicate' tail of the CB-4 line at ONE site.
@@ -337,7 +337,7 @@ rm -rf "$SB14"
 # Mutation 15: CB-3 Capture-gate block — a NON-signature line reworded at one site must fail
 # RED (proves assert_block_identical catches block drift beyond the signature line).
 SB15=$(mktemp -d)
-if ! (cd "$REPO_ROOT" && git ls-files -z skills .claude/skills hooks CLAUDE.md scripts/check-convention-sync.sh | xargs -0 -I{} cp --parents {} "$SB15"/); then
+if ! (cd "$REPO_ROOT" && git ls-files -z skills .claude/skills hooks CLAUDE.md scripts/check-convention-sync.sh | tar --null -T - -cf - | tar -xf - -C "$SB15"); then
   echo "SELFTEST FAIL: mutation-15 setup copy failed (rig broken, not a caught mutation)"; rc=1
 else
   # Reword the non-signature 'Both' option description inside the Capture-gate JSON at ONE site.
@@ -359,7 +359,7 @@ rm -rf "$SB15"
 # Mutation 16: strip the CB-3 start-anchor line at ALL CB-3 sites — extraction yields empty at
 # every site; the guard must NOT pass vacuously. Must fail RED (anti-vacuous guard).
 SB16=$(mktemp -d)
-if ! (cd "$REPO_ROOT" && git ls-files -z skills .claude/skills hooks CLAUDE.md scripts/check-convention-sync.sh | xargs -0 -I{} cp --parents {} "$SB16"/); then
+if ! (cd "$REPO_ROOT" && git ls-files -z skills .claude/skills hooks CLAUDE.md scripts/check-convention-sync.sh | tar --null -T - -cf - | tar -xf - -C "$SB16"); then
   echo "SELFTEST FAIL: mutation-16 setup copy failed (rig broken, not a caught mutation)"; rc=1
 else
   for s in brainstorming writing-plans stress-test systematic-debugging; do
