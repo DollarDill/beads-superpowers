@@ -32,6 +32,9 @@
 # before its first run), worktrees under .worktrees/, untracked targets of a
 # tracked symlink outside evals trees, and a clone whose path has an `evals`
 # ancestor. Run --scaffold only from a checkout whose untracked content you trust.
+# It also assumes the eval targets the repo root (`claude plugin eval .`):
+# aiming it at a subdirectory with its own .claude-plugin/plugin.json makes
+# that directory the plugin root, and its manifest is not checked here.
 set -uo pipefail
 # Byte-wise comparisons everywhere: a UTF-8 locale lets awk treat invisible
 # characters (U+200B, U+FEFF, U+00AD, U+2060) as equal to nothing.
