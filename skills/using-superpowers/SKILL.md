@@ -45,7 +45,7 @@ These thoughts mean STOP—you're rationalizing. They are **your** thoughts — 
 | "I remember this skill" | Skills evolve. Read current version. |
 | "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
 | "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
-| "This bead is specified enough — I'll just implement it" | **Spec-backed**: name the spec/plan file, or brainstorm first. |
+| "This bead is specified enough — I'll just implement it" | **Spec-backed**: approved plan or bounded bead, else brainstorm. |
 
 ## Production-Grade Doctrine
 
