@@ -32,7 +32,7 @@ Process skills come first — they set the approach, implementation skills carry
 - "Let's build X" → beads-superpowers:brainstorming first, then implementation skills.
 - "Fix this bug" → beads-superpowers:systematic-debugging first, then domain skills.
 - No plan or bead yet, and it's more than a typo? Brainstorm before you edit.
-- An approved spec? writing-plans — never straight to code.
+- Handed an approved design? Invoke brainstorming at its next stage. An approved spec? writing-plans — never straight to code.
 
 ## Red Flags
 

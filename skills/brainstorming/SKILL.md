@@ -34,6 +34,8 @@ that understanding instead of asking the same questions again. Keep the
 note concise; its accuracy and the opportunity to correct it matter.
 On the bounded path the agreed understanding is carried in the task bead's description; on the architectural path, in the spec.
 
+A design your partner hands over as already approved is the agreed understanding: write it into the path's artifact without re-confirming it, but still surface any security gap or dropped requirement you see (Production-Grade Doctrine); the artifact's own review gate still applies.
+
 <HARD-GATE>
 Before taking any implementation action, including invoking an implementation skill, writing product code, scaffolding, installing product dependencies, or creating an external project, you MUST complete the selected path's prerequisites:
 
