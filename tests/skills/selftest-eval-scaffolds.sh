@@ -82,11 +82,50 @@ mkdir -p "$FIX/evals/x/untracked"; printf 'git init\n' > "$FIX/evals/x/untracked
 expect_pass "no args: untracked bad scaffold ignored" in_repo
 mutate 'git init'
 expect_fail "no args: tracked dirty scaffold scanned" "$(want 'disallowed command')" in_repo
-# The eval runs whatever case.yaml's scaffold_script names, not just scaffold.sh.
-gitc checkout -q -- "$S"   # undo the previous mutation: this one must fail on case.yaml alone
-printf 'schema_version: "1.1"\nname: c\ncontext:\n  scaffold_script: setup.sh\n' > "$FIX/evals/x/c/case.yaml"
-gitc add evals/x/c/case.yaml
-expect_fail "no args: case.yaml names a script other than scaffold.sh" '^EVAL-SCAFFOLD: evals/x/c/case\.yaml:[0-9]+: scaffold_script must be scaffold\.sh' in_repo
+# The eval runs whatever case.yaml's scaffold_script names. Every tracked
+# case.yaml must be byte-for-byte the canonical form, so no YAML spelling
+# (flow mapping, quoted/escaped/explicit keys, JSON, invisible Unicode) can
+# name a script the guard never scanned — each bypass below was reproduced
+# against the eval tool's own YAML parser in the re-review of c4e27c4.
+gitc checkout -q -- "$S"   # undo the previous mutation: these must fail on case.yaml alone
+CY="$FIX/evals/x/c/case.yaml"
+canon() { printf 'schema_version: "1.1"\nname: c\ncontext:\n  scaffold_script: scaffold.sh\n' > "$CY"; }
+canon; gitc add evals/x/c/case.yaml
+expect_pass "no args: canonical case.yaml (control)" in_repo
+CYRE='^EVAL-SCAFFOLD: evals/x/c/case\.yaml:0: not the canonical case\.yaml'
+yaml_case() {  # label printf-%b-content
+  printf '%b' "$2" > "$CY"
+  expect_fail "no args: case.yaml $1" "$CYRE" in_repo
+  canon
+}
+yaml_case "block form, other script" 'schema_version: "1.1"\nname: c\ncontext:\n  scaffold_script: setup.sh\n'
+yaml_case "flow mapping"             'schema_version: "1.1"\nname: c\ncontext: {scaffold_script: setup.sh}\n'
+yaml_case "double-quoted key"        'schema_version: "1.1"\nname: c\ncontext:\n  "scaffold_script": setup.sh\n'
+yaml_case "single-quoted key"        "schema_version: \"1.1\"\nname: c\ncontext:\n  'scaffold_script': setup.sh\n"
+yaml_case "space before colon"       'schema_version: "1.1"\nname: c\ncontext:\n  scaffold_script : setup.sh\n'
+yaml_case "explicit key"             'schema_version: "1.1"\nname: c\ncontext:\n  ? scaffold_script\n  : setup.sh\n'
+yaml_case "JSON form"                '{"schema_version": "1.1", "name": "c", "context": {"scaffold_script": "setup.sh"}}\n'
+yaml_case "escaped key"              'schema_version: "1.1"\nname: c\ncontext:\n  "scaffold\\x5fscript": setup.sh\n'
+yaml_case "zero-width suffix value"  'schema_version: "1.1"\nname: c\ncontext:\n  scaffold_script: scaffold.sh\0342\0200\0213\n'
+# The file such a case.yaml would run: a tracked path with a non-ASCII byte.
+ZW="$(printf 'scaffold.sh\342\200\213')"
+printf 'touch PWNED\n' > "$FIX/evals/x/c/$ZW"; gitc add "evals/x/c/$ZW"
+expect_fail "no args: non-ASCII tracked path" '^EVAL-SCAFFOLD: .*: non-ASCII byte in tracked path' in_repo
+gitc rm -q --cached "evals/x/c/$ZW"; rm -f "$FIX/evals/x/c/$ZW"
+# Cases one level below evals/ are discovered by the tool, so they are scanned too.
+mkdir -p "$FIX/evals/shallow"
+printf 'schema_version: "1.1"\nname: shallow\ncontext:\n  scaffold_script: setup.sh\n' > "$FIX/evals/shallow/case.yaml"
+printf 'git init\n' > "$FIX/evals/shallow/setup.sh"
+gitc add evals/shallow
+expect_fail "no args: shallow case.yaml scanned" '^EVAL-SCAFFOLD: evals/shallow/case\.yaml:0: not the canonical case\.yaml' in_repo
+printf 'schema_version: "1.1"\nname: shallow\ncontext:\n  scaffold_script: scaffold.sh\n' > "$FIX/evals/shallow/case.yaml"
+printf '#!/usr/bin/env bash\ngit init\n' > "$FIX/evals/shallow/scaffold.sh"; gitc add evals/shallow
+expect_fail "no args: shallow scaffold.sh scanned" '^EVAL-SCAFFOLD: evals/shallow/scaffold\.sh:2: disallowed command' in_repo
+gitc rm -q -r --cached evals/shallow; rm -rf "$FIX/evals/shallow"
+# Explicit-path mode also checks a case.yaml sitting beside the named scaffold.
+printf 'context: {scaffold_script: setup.sh}\n' > "$CY"
+expect_fail "explicit file: sibling case.yaml checked" '^EVAL-SCAFFOLD: .*case\.yaml:0: not the canonical case\.yaml' bash "$GUARD" "$FIX/$S"
+canon
 gitc rm -q --cached evals/x/c/case.yaml
 gitc rm -q --cached "$S"
 expect_fail "no args: zero tracked scaffolds is never a PASS" '^FAIL: no scaffolds scanned' in_repo

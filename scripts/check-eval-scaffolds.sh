@@ -8,42 +8,61 @@
 # <rel> = [A-Za-z0-9._/-] only: no leading /, no .. segment, no $ or backtick.
 # Heredoc bodies are file content and are not inspected.
 #
+#
+# The eval runs whatever case.yaml's context.scaffold_script names, and reads
+# case.yaml with a full YAML parser. So no YAML spelling is parsed here: every
+# case.yaml must be byte-for-byte the canonical text
+#   schema_version: "1.1" / name: <its dir> / context: / scaffold_script: scaffold.sh
+# which names the scaffold.sh beside it — a file this guard scans.
+#
 # Usage: check-eval-scaffolds.sh [FILE...]
-#   no args: the TRACKED scaffolds of this repo (git ls-files) — never
-#   gitignored probes, which are checked by explicit path before first run.
+#   no args: every TRACKED file under evals/, at any depth (git ls-files):
+#     each case.yaml must be canonical, each scaffold.sh is scanned, and any
+#     path with a non-ASCII byte is rejected. Gitignored probes are never
+#     scanned implicitly; they are checked by explicit path before first run.
+#   FILE...: those scaffolds, plus any case.yaml beside each one.
 set -uo pipefail
+# Byte-wise comparisons everywhere: a UTF-8 locale lets awk treat invisible
+# characters (U+200B, U+FEFF, U+00AD, U+2060) as equal to nothing.
+export LC_ALL=C
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+rc=0
+check_case_yaml() {  # file label
+  local dir; dir="$(basename "$(dirname "$1")")"
+  if ! printf 'schema_version: "1.1"\nname: %s\ncontext:\n  scaffold_script: scaffold.sh\n' "$dir" | cmp -s - "$1"; then
+    echo "EVAL-SCAFFOLD: $2:0: not the canonical case.yaml (schema_version \"1.1\", name: $dir, context.scaffold_script: scaffold.sh)"
+    rc=1
+  fi
+}
 
 files=()
 if [ $# -gt 0 ]; then
-  files=("$@")
+  for f in "$@"; do
+    files+=("$f")
+    sib="$(dirname "$f")/case.yaml"
+    if [ -f "$sib" ]; then check_case_yaml "$sib" "${sib#"$REPO_ROOT"/}"; fi
+  done
 else
-  if ! listed="$(git -C "$REPO_ROOT" ls-files -- 'evals/*/*/scaffold.sh')"; then
+  if ! git -C "$REPO_ROOT" ls-files -- evals/ >/dev/null; then
     echo "FAIL: git ls-files failed under $REPO_ROOT"; exit 1
   fi
-  while IFS= read -r f; do [ -n "$f" ] && files+=("$REPO_ROOT/$f"); done <<< "$listed"
+  tracked=()
+  mapfile -d '' tracked < <(git -C "$REPO_ROOT" ls-files -z -- evals/)
+  for p in "${tracked[@]}"; do
+    if [ -n "$(printf '%s' "$p" | tr -d ' -~')" ]; then
+      echo "EVAL-SCAFFOLD: $p:0: non-ASCII byte in tracked path"; rc=1; continue
+    fi
+    case "$p" in
+      */case.yaml) check_case_yaml "$REPO_ROOT/$p" "$p" ;;
+      */scaffold.sh) files+=("$REPO_ROOT/$p") ;;
+    esac
+  done
   if [ "${#files[@]}" -eq 0 ]; then
     echo "FAIL: no scaffolds scanned under $REPO_ROOT"; exit 1
   fi
 fi
 
-rc=0
-# The eval runs whatever case.yaml's scaffold_script names, so a tracked case
-# may only name scaffold.sh — the file this guard actually checks.
-if [ $# -eq 0 ]; then
-  if ! cases="$(git -C "$REPO_ROOT" ls-files -- 'evals/*/*/case.yaml')"; then
-    echo "FAIL: git ls-files failed under $REPO_ROOT"; exit 1
-  fi
-  while IFS= read -r c; do
-    [ -n "$c" ] || continue
-    awk -v F="$c" '
-      /^[ \t]*scaffold_script:/ {
-        v = $0; sub(/^[ \t]*scaffold_script:[ \t]*/, "", v); gsub(/^["\047]|["\047][ \t]*$|[ \t]+$/, "", v)
-        if (v != "scaffold.sh") { printf "EVAL-SCAFFOLD: %s:%d: scaffold_script must be scaffold.sh (got %s)\n", F, NR, v; bad = 1 }
-      }
-      END { exit bad }' "$REPO_ROOT/$c" || rc=1
-  done <<< "$cases"
-fi
 for f in "${files[@]}"; do
   if [ ! -f "$f" ]; then echo "EVAL-SCAFFOLD: $f:0: no such file"; rc=1; continue; fi
   label="${f#"$REPO_ROOT"/}"
