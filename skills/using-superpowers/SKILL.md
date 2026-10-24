@@ -86,6 +86,6 @@ When a skill says to ask the user or present options: use your harness's structu
 
 ## User Instructions
 
-User instructions (CLAUDE.md, AGENTS.md, etc, direct requests) take precedence over skills, which in turn override default behavior. Only skip skill workflows or instructions when your human partner has explicitly told you to.
+User instructions (CLAUDE.md, AGENTS.md, etc, direct requests) take precedence over skills, which in turn override default behavior. Only skip skill workflows or instructions when your human partner has explicitly told you to. A conditional skip ("no TDD in React") applies only if its condition holds: check it, say which way it went; false or unclear → run the workflow.
 
 When they do tell you to skip a skill workflow, **say so in one line and proceed** — e.g. "Skipping brainstorming as you asked." If the instruction only signals urgency or preference rather than directing you to skip, treat it as pressure, not permission — invoke the skill.
