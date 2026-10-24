@@ -16,10 +16,13 @@
 # which names the scaffold.sh beside it — a file this guard scans.
 #
 # Usage: check-eval-scaffolds.sh [FILE...]
-#   no args: every TRACKED file under evals/, at any depth (git ls-files):
-#     each case.yaml must be canonical, each scaffold.sh is scanned, and any
-#     path with a non-ASCII byte is rejected. Gitignored probes are never
-#     scanned implicitly; they are checked by explicit path before first run.
+#   no args: every TRACKED entry in the repo (git ls-files -s), because the
+#     eval discovers any directory named evals anywhere in the plugin. Paths
+#     must be printable ASCII; inside any evals/ tree (any depth, any case) no
+#     symlink or gitlink, no case-variant of case.yaml/scaffold.sh, each
+#     case.yaml canonical, each scaffold.sh scanned; and the manifest may not
+#     set experimental.evals. Gitignored probes are never scanned implicitly;
+#     they are checked by explicit path before first run.
 #   FILE...: those scaffolds, plus any case.yaml beside each one.
 set -uo pipefail
 # Byte-wise comparisons everywhere: a UTF-8 locale lets awk treat invisible
@@ -44,18 +47,40 @@ if [ $# -gt 0 ]; then
     if [ -f "$sib" ]; then check_case_yaml "$sib" "${sib#"$REPO_ROOT"/}"; fi
   done
 else
-  if ! git -C "$REPO_ROOT" ls-files -- evals/ >/dev/null; then
+  # The eval discovers cases far beyond top-level evals/ (2.1.310): any
+  # directory named evals anywhere in the plugin (16 levels deep), symlinked
+  # directories, a case.yaml opened case-insensitively on APFS, and an eval dir
+  # moved by the manifest. So scan every tracked entry in the repo.
+  man="$REPO_ROOT/.claude-plugin/plugin.json"
+  if [ -f "$man" ] && ! python3 -I -c 'import json,sys; d=json.load(open(sys.argv[1])); e=d.get("experimental"); sys.exit(1 if isinstance(e, dict) and "evals" in e else 0)' "$man"; then
+    echo "EVAL-SCAFFOLD: .claude-plugin/plugin.json:0: manifest sets experimental.evals (moves the eval dir out of the guard's view)"; rc=1
+  fi
+  if ! git -C "$REPO_ROOT" ls-files -s -- . >/dev/null; then
     echo "FAIL: git ls-files failed under $REPO_ROOT"; exit 1
   fi
-  tracked=()
-  mapfile -d '' tracked < <(git -C "$REPO_ROOT" ls-files -z -- evals/)
-  for p in "${tracked[@]}"; do
-    if [ -n "$(printf '%s' "$p" | tr -d ' -~')" ]; then
-      echo "EVAL-SCAFFOLD: $p:0: non-ASCII byte in tracked path"; rc=1; continue
+  entries=()
+  mapfile -d '' entries < <(git -C "$REPO_ROOT" ls-files -s -z -- .)
+  for e in "${entries[@]}"; do
+    mode="${e%% *}"; p="${e#*$'\t'}"
+    # Delete every printable ASCII byte (0x20-0x7E); anything left is bad. The
+    # 'x' sentinel is appended AFTER tr, so a leftover trailing newline is not
+    # stripped by $(...).
+    if [ "$(printf '%s' "$p" | tr -d ' -~'; printf x)" != x ]; then
+      echo "EVAL-SCAFFOLD: $(printf '%q' "$p"):0: non-printable or non-ASCII byte in tracked path"; rc=1; continue
     fi
-    case "$p" in
-      */case.yaml) check_case_yaml "$REPO_ROOT/$p" "$p" ;;
-      */scaffold.sh) files+=("$REPO_ROOT/$p") ;;
+    in_tree=0
+    case "/$(printf '%s' "$p" | tr '[:upper:]' '[:lower:]')/" in */evals/*) in_tree=1 ;; esac
+    [ "$in_tree" = 1 ] || continue
+    if [ "$mode" = 120000 ] || [ "$mode" = 160000 ]; then
+      echo "EVAL-SCAFFOLD: $p:0: symlink or gitlink inside an eval tree"; rc=1; continue
+    fi
+    base="${p##*/}"; lower="$(printf '%s' "$base" | tr '[:upper:]' '[:lower:]')"
+    case "$base" in
+      case.yaml) check_case_yaml "$REPO_ROOT/$p" "$p" ;;
+      scaffold.sh) files+=("$REPO_ROOT/$p") ;;
+      *) if [ "$lower" = case.yaml ] || [ "$lower" = scaffold.sh ]; then
+           echo "EVAL-SCAFFOLD: $p:0: case-variant of case.yaml or scaffold.sh"; rc=1
+         fi ;;
     esac
   done
   if [ "${#files[@]}" -eq 0 ]; then

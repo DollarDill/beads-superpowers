@@ -110,7 +110,7 @@ yaml_case "zero-width suffix value"  'schema_version: "1.1"\nname: c\ncontext:\n
 # The file such a case.yaml would run: a tracked path with a non-ASCII byte.
 ZW="$(printf 'scaffold.sh\342\200\213')"
 printf 'touch PWNED\n' > "$FIX/evals/x/c/$ZW"; gitc add "evals/x/c/$ZW"
-expect_fail "no args: non-ASCII tracked path" '^EVAL-SCAFFOLD: .*: non-ASCII byte in tracked path' in_repo
+expect_fail "no args: non-ASCII tracked path" '^EVAL-SCAFFOLD: .*: non-printable or non-ASCII byte in tracked path' in_repo
 gitc rm -q --cached "evals/x/c/$ZW"; rm -f "$FIX/evals/x/c/$ZW"
 # Cases one level below evals/ are discovered by the tool, so they are scanned too.
 mkdir -p "$FIX/evals/shallow"
@@ -127,6 +127,37 @@ printf 'context: {scaffold_script: setup.sh}\n' > "$CY"
 expect_fail "explicit file: sibling case.yaml checked" '^EVAL-SCAFFOLD: .*case\.yaml:0: not the canonical case\.yaml' bash "$GUARD" "$FIX/$S"
 canon
 gitc rm -q --cached evals/x/c/case.yaml
+# Discovery is wider than top-level evals/ (re-review of 78b9e9d, from the
+# 2.1.310 binary): any directory named evals anywhere in the plugin, symlinked
+# directories, case-insensitive filesystems, and the manifest's eval dir.
+mkdir -p "$FIX/skills/demo/evals/h1"
+printf 'schema_version: "1.1"\nname: h1\ncontext:\n  scaffold_script: pwn.sh\n' > "$FIX/skills/demo/evals/h1/case.yaml"
+gitc add skills/demo
+expect_fail "N1: nested evals dir case.yaml scanned" '^EVAL-SCAFFOLD: skills/demo/evals/h1/case\.yaml:0: not the canonical case\.yaml' in_repo
+printf 'schema_version: "1.1"\nname: h1\ncontext:\n  scaffold_script: scaffold.sh\n' > "$FIX/skills/demo/evals/h1/case.yaml"
+printf '#!/usr/bin/env bash\ngit init\n' > "$FIX/skills/demo/evals/h1/scaffold.sh"; gitc add skills/demo
+expect_fail "N1: nested evals dir scaffold.sh scanned" '^EVAL-SCAFFOLD: skills/demo/evals/h1/scaffold\.sh:2: disallowed command' in_repo
+gitc rm -q -r --cached skills/demo; rm -rf "$FIX/skills/demo"
+mkdir -p "$FIX/fixtures/h2"; ln -s ../fixtures/h2 "$FIX/evals/h2link"; gitc add evals/h2link
+expect_fail "N2: symlink inside an eval tree" '^EVAL-SCAFFOLD: evals/h2link:0: symlink or gitlink inside an eval tree' in_repo
+gitc rm -q --cached evals/h2link; rm -f "$FIX/evals/h2link"; rm -rf "$FIX/fixtures"
+mkdir -p "$FIX/evals/h3"; printf 'x\n' > "$FIX/evals/h3/Case.yaml"; gitc add evals/h3
+expect_fail "N3: case-variant case.yaml" '^EVAL-SCAFFOLD: evals/h3/Case\.yaml:0: case-variant of case\.yaml or scaffold\.sh' in_repo
+gitc rm -q -r --cached evals/h3; rm -rf "$FIX/evals/h3"
+mkdir -p "$FIX/evals/h3b"; printf 'git init\n' > "$FIX/evals/h3b/Scaffold.sh"; gitc add evals/h3b
+expect_fail "N3: case-variant scaffold.sh" '^EVAL-SCAFFOLD: evals/h3b/Scaffold\.sh:0: case-variant of case\.yaml or scaffold\.sh' in_repo
+gitc rm -q -r --cached evals/h3b; rm -rf "$FIX/evals/h3b"
+mkdir -p "$FIX/.claude-plugin"; printf '{"name": "x"}\n' > "$FIX/.claude-plugin/plugin.json"; gitc add .claude-plugin
+expect_pass "N4: manifest without experimental.evals (control)" in_repo
+printf '{"name": "x", "experimental": {"evals": "qa"}}\n' > "$FIX/.claude-plugin/plugin.json"
+expect_fail "N4: manifest moves the eval dir" '^EVAL-SCAFFOLD: \.claude-plugin/plugin\.json:0: manifest sets experimental\.evals' in_repo
+gitc rm -q -r --cached .claude-plugin; rm -rf "$FIX/.claude-plugin"
+gitc update-index --add --cacheinfo "160000,$(gitc rev-parse HEAD),evals/sub"
+expect_fail "N5: gitlink inside an eval tree" '^EVAL-SCAFFOLD: evals/sub:0: symlink or gitlink inside an eval tree' in_repo
+gitc rm -q --cached evals/sub
+NL="$(printf 'evals/x/c/a\nb')"; printf 'x\n' > "$FIX/$NL"; gitc add "$NL"
+expect_fail "control byte (newline) in tracked path" '^EVAL-SCAFFOLD: .*: non-printable or non-ASCII byte in tracked path' in_repo
+gitc rm -q --cached "$NL"; rm -f "$FIX/$NL"
 gitc rm -q --cached "$S"
 expect_fail "no args: zero tracked scaffolds is never a PASS" '^FAIL: no scaffolds scanned' in_repo
 
