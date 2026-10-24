@@ -21,9 +21,17 @@
 #     must be printable ASCII; inside any evals/ tree (any depth, any case) no
 #     symlink or gitlink, no case-variant of case.yaml/scaffold.sh, each
 #     case.yaml canonical, each scaffold.sh scanned; and the manifest may not
-#     set experimental.evals. Gitignored probes are never scanned implicitly;
-#     they are checked by explicit path before first run.
+#     set experimental.evals. Also: .claude-plugin/plugin.json must exist (a
+#     root plugin.json is checked too), no gitlink anywhere, and every
+#     canonical case.yaml's scaffold.sh must be tracked.
 #   FILE...: those scaffolds, plus any case.yaml beside each one.
+#
+# Scope: this guards TRACKED content, i.e. what a commit can introduce. The
+# eval also walks untracked files on disk, which this guard does not see:
+# gitignored probes (.internal/evals/calib — check each by explicit path
+# before its first run), worktrees under .worktrees/, untracked targets of a
+# tracked symlink outside evals trees, and a clone whose path has an `evals`
+# ancestor. Run --scaffold only from a checkout whose untracked content you trust.
 set -uo pipefail
 # Byte-wise comparisons everywhere: a UTF-8 locale lets awk treat invisible
 # characters (U+200B, U+FEFF, U+00AD, U+2060) as equal to nothing.
@@ -51,10 +59,22 @@ else
   # directory named evals anywhere in the plugin (16 levels deep), symlinked
   # directories, a case.yaml opened case-insensitively on APFS, and an eval dir
   # moved by the manifest. So scan every tracked entry in the repo.
-  man="$REPO_ROOT/.claude-plugin/plugin.json"
-  if [ -f "$man" ] && ! python3 -I -c 'import json,sys; d=json.load(open(sys.argv[1])); e=d.get("experimental"); sys.exit(1 if isinstance(e, dict) and "evals" in e else 0)' "$man"; then
-    echo "EVAL-SCAFFOLD: .claude-plugin/plugin.json:0: manifest sets experimental.evals (moves the eval dir out of the guard's view)"; rc=1
+  # The tool reads .claude-plugin/plugin.json, else a root plugin.json (when
+  # the first is absent or .claude-plugin is a file); either may set
+  # experimental.evals. Require the first and check both.
+  check_manifest() {  # file label
+    if ! python3 -I -c 'import json,sys; d=json.load(open(sys.argv[1])); e=d.get("experimental"); sys.exit(1 if isinstance(e, dict) and "evals" in e else 0)' "$1" 2>/dev/null; then
+      echo "EVAL-SCAFFOLD: $2:0: manifest sets experimental.evals or is unreadable (moves the eval dir out of the guard's view)"; rc=1
+    fi
+  }
+  if [ -f "$REPO_ROOT/.claude-plugin/plugin.json" ]; then
+    check_manifest "$REPO_ROOT/.claude-plugin/plugin.json" .claude-plugin/plugin.json
+  else
+    echo "EVAL-SCAFFOLD: .claude-plugin/plugin.json:0: manifest missing (the eval would fall back to a root plugin.json)"; rc=1
   fi
+  if [ -e "$REPO_ROOT/plugin.json" ]; then check_manifest "$REPO_ROOT/plugin.json" plugin.json; fi
+  declare -A tracked_scaffold=()
+  case_dirs=()
   if ! git -C "$REPO_ROOT" ls-files -s -- . >/dev/null; then
     echo "FAIL: git ls-files failed under $REPO_ROOT"; exit 1
   fi
@@ -70,18 +90,32 @@ else
     fi
     in_tree=0
     case "/$(printf '%s' "$p" | tr '[:upper:]' '[:lower:]')/" in */evals/*) in_tree=1 ;; esac
-    [ "$in_tree" = 1 ] || continue
+    if [ "$in_tree" = 0 ]; then
+      # A gitlink anywhere hides its submodule's files (and any evals/ tree
+      # inside it) from git ls-files, while the eval walks the checkout.
+      if [ "$mode" = 160000 ]; then
+        echo "EVAL-SCAFFOLD: $p:0: gitlink (submodule): its files are invisible to this guard"; rc=1
+      fi
+      continue
+    fi
     if [ "$mode" = 120000 ] || [ "$mode" = 160000 ]; then
       echo "EVAL-SCAFFOLD: $p:0: symlink or gitlink inside an eval tree"; rc=1; continue
     fi
     base="${p##*/}"; lower="$(printf '%s' "$base" | tr '[:upper:]' '[:lower:]')"
     case "$base" in
-      case.yaml) check_case_yaml "$REPO_ROOT/$p" "$p" ;;
-      scaffold.sh) files+=("$REPO_ROOT/$p") ;;
+      case.yaml) check_case_yaml "$REPO_ROOT/$p" "$p"; case_dirs+=("${p%/*}") ;;
+      scaffold.sh) files+=("$REPO_ROOT/$p"); tracked_scaffold["$p"]=1 ;;
       *) if [ "$lower" = case.yaml ] || [ "$lower" = scaffold.sh ]; then
            echo "EVAL-SCAFFOLD: $p:0: case-variant of case.yaml or scaffold.sh"; rc=1
          fi ;;
     esac
+  done
+  # A canonical case.yaml runs the scaffold.sh beside it: that file must be
+  # tracked, or the guard never read what would run.
+  for d in "${case_dirs[@]}"; do
+    if [ -z "${tracked_scaffold["$d/scaffold.sh"]:-}" ]; then
+      echo "EVAL-SCAFFOLD: $d/case.yaml:0: its scaffold.sh is not tracked"; rc=1
+    fi
   done
   if [ "${#files[@]}" -eq 0 ]; then
     echo "FAIL: no scaffolds scanned under $REPO_ROOT"; exit 1

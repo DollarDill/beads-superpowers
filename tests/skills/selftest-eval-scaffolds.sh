@@ -76,8 +76,9 @@ gitc() { GIT_CONFIG_GLOBAL=/dev/null git -C "$FIX" -c user.name=selftest \
   -c init.defaultBranch=main -c core.hooksPath=/dev/null "$@"; }
 # shellcheck disable=SC2317,SC2329  # invoked indirectly, as a command word of expect_*
 in_repo() { bash "$FIX/scripts/check-eval-scaffolds.sh"; }
-stage; mkdir -p "$FIX/scripts"; cp -f "$GUARD" "$FIX/scripts/"
-gitc init -q; gitc add evals scripts; gitc commit -qm init
+stage; mkdir -p "$FIX/scripts" "$FIX/.claude-plugin"; cp -f "$GUARD" "$FIX/scripts/"
+printf '{"name": "x"}\n' > "$FIX/.claude-plugin/plugin.json"
+gitc init -q; gitc add evals scripts .claude-plugin; gitc commit -qm init
 mkdir -p "$FIX/evals/x/untracked"; printf 'git init\n' > "$FIX/evals/x/untracked/scaffold.sh"
 expect_pass "no args: untracked bad scaffold ignored" in_repo
 mutate 'git init'
@@ -147,17 +148,36 @@ gitc rm -q -r --cached evals/h3; rm -rf "$FIX/evals/h3"
 mkdir -p "$FIX/evals/h3b"; printf 'git init\n' > "$FIX/evals/h3b/Scaffold.sh"; gitc add evals/h3b
 expect_fail "N3: case-variant scaffold.sh" '^EVAL-SCAFFOLD: evals/h3b/Scaffold\.sh:0: case-variant of case\.yaml or scaffold\.sh' in_repo
 gitc rm -q -r --cached evals/h3b; rm -rf "$FIX/evals/h3b"
-mkdir -p "$FIX/.claude-plugin"; printf '{"name": "x"}\n' > "$FIX/.claude-plugin/plugin.json"; gitc add .claude-plugin
+MAN="$FIX/.claude-plugin/plugin.json"
 expect_pass "N4: manifest without experimental.evals (control)" in_repo
-printf '{"name": "x", "experimental": {"evals": "qa"}}\n' > "$FIX/.claude-plugin/plugin.json"
+printf '{"name": "x", "experimental": {"evals": "qa"}}\n' > "$MAN"
 expect_fail "N4: manifest moves the eval dir" '^EVAL-SCAFFOLD: \.claude-plugin/plugin\.json:0: manifest sets experimental\.evals' in_repo
-gitc rm -q -r --cached .claude-plugin; rm -rf "$FIX/.claude-plugin"
+printf '{"name": "x"}\n' > "$MAN"
+# R2 (re-review of 2e1310f): the tool falls back to a root plugin.json when
+# .claude-plugin/plugin.json is absent (or .claude-plugin is a file).
+printf '{"name": "x", "experimental": {"evals": "qa"}}\n' > "$FIX/plugin.json"; gitc add plugin.json
+expect_fail "R2: root plugin.json moves the eval dir" '^EVAL-SCAFFOLD: plugin\.json:0: manifest sets experimental\.evals' in_repo
+gitc rm -q --cached plugin.json; rm -f "$FIX/plugin.json"
+mv -f "$MAN" "$FIX/plugin.json.aside"
+expect_fail "R2: .claude-plugin/plugin.json missing" '^EVAL-SCAFFOLD: \.claude-plugin/plugin\.json:0: manifest missing' in_repo
+mv -f "$FIX/plugin.json.aside" "$MAN"
 gitc update-index --add --cacheinfo "160000,$(gitc rev-parse HEAD),evals/sub"
 expect_fail "N5: gitlink inside an eval tree" '^EVAL-SCAFFOLD: evals/sub:0: symlink or gitlink inside an eval tree' in_repo
 gitc rm -q --cached evals/sub
 NL="$(printf 'evals/x/c/a\nb')"; printf 'x\n' > "$FIX/$NL"; gitc add "$NL"
 expect_fail "control byte (newline) in tracked path" '^EVAL-SCAFFOLD: .*: non-printable or non-ASCII byte in tracked path' in_repo
 gitc rm -q --cached "$NL"; rm -f "$FIX/$NL"
+# R1 (re-review of 2e1310f): a gitlink anywhere hides a submodule's files,
+# including any evals/ tree inside it, from git ls-files.
+gitc update-index --add --cacheinfo "160000,$(gitc rev-parse HEAD),vendor/sub"
+expect_fail "R1: gitlink outside any eval tree" '^EVAL-SCAFFOLD: vendor/sub:0: gitlink' in_repo
+gitc rm -q --cached vendor/sub
+# A canonical case.yaml runs the scaffold.sh beside it, so that file must be tracked.
+mkdir -p "$FIX/evals/y/d"
+printf 'schema_version: "1.1"\nname: d\ncontext:\n  scaffold_script: scaffold.sh\n' > "$FIX/evals/y/d/case.yaml"; gitc add evals/y/d/case.yaml
+printf 'git init\n' > "$FIX/evals/y/d/scaffold.sh"
+expect_fail "case.yaml beside an untracked scaffold.sh" '^EVAL-SCAFFOLD: evals/y/d/case\.yaml:0: its scaffold\.sh is not tracked' in_repo
+gitc rm -q -r --cached evals/y; rm -rf "$FIX/evals/y"
 gitc rm -q --cached "$S"
 expect_fail "no args: zero tracked scaffolds is never a PASS" '^FAIL: no scaffolds scanned' in_repo
 
