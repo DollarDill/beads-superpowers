@@ -1,6 +1,6 @@
 ---
 description: "Routes a failing-test bug to systematic-debugging before any Edit. Ours (Skill Priority)."
-tags: [using-superpowers, us-grant-write]
+tags: [using-superpowers, us-grant-write, core-fire]
 model: sonnet
 runs: 3
 max_turns: 25

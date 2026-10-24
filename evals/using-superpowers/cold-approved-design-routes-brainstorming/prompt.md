@@ -1,6 +1,6 @@
 ---
 description: "A cold approved design (no brainstorm this session) is routed through brainstorming's spec step: spec lands in .internal/specs/, not docs/, and the reply stops at the spec-review gate. Ours (c87v4)."
-tags: [using-superpowers, us-grant-write]
+tags: [using-superpowers, us-grant-write, core-fire]
 model: sonnet
 runs: 3
 max_turns: 25

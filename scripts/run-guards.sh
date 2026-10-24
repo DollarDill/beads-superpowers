@@ -28,4 +28,5 @@ run "kb doc reconciliation" bash scripts/check-kb-doc-reconciliation.sh
 run "guardrail floor"       bash scripts/check-guardrail-floor.sh
 run "doctrine floor"        bash scripts/check-doctrine-floor.sh
 run "secret echo"           bash scripts/check-secret-echo.sh
+run "eval scaffolds"        bash scripts/check-eval-scaffolds.sh
 exit "$rc"

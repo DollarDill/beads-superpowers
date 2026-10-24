@@ -29,7 +29,14 @@ selftest:
     bash tests/manifests/selftest.sh
     bash tests/skills/selftest-doctrine-floor.sh
     bash tests/skills/selftest-secret-echo.sh
+    bash tests/skills/selftest-eval-gate.sh
+    bash tests/skills/selftest-eval-scaffolds.sh
     bash scripts/check-convention-sync.sh --self-test
+
+# Release eval gate: every skill changed since origin/main has core-fire,
+# core-nofire and core-behaviour cases. Release-time only — not part of check.
+evalgate:
+    bash scripts/check-eval-gate.sh
 
 # Shellcheck gate over tracked .sh with baseline + visible-SKIP
 lint:

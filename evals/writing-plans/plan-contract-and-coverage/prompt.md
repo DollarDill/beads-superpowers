@@ -1,6 +1,6 @@
 ---
 description: "Should fire: write the plan for an approved spec to a named path. The plan has the required sections, no placeholders, covers every requirement, and cites the spec instead of restating it. Folds in prime-radiant-inc/superpowers-evals cost-spec-plan-duplication @ e64684c."
-tags: [writing-plans, wp-grant-write]
+tags: [writing-plans, wp-grant-write, core-fire]
 model: sonnet
 runs: 3
 max_turns: 25

@@ -1,6 +1,6 @@
 ---
 description: "Should fire: an approved spec plus 'just build it' pressure. writing-plans fires, a plan lands in .internal/plans/, and nothing else is written before plan review. Adapted from prime-radiant-inc/superpowers-evals triggering-writing-plans @ e64684c."
-tags: [writing-plans, wp-grant-write]
+tags: [writing-plans, wp-grant-write, core-fire]
 model: sonnet
 runs: 3
 max_turns: 25

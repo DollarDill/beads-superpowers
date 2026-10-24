@@ -1,6 +1,6 @@
 ---
 description: "Should fire: requirements given only in chat, and the user declines a spec. The plan's Spec header uses the no-spec branch, no spec is fabricated, no product code is written. Adapted from prime-radiant-inc/superpowers-evals writing-plans-no-spec-conversational @ e64684c."
-tags: [writing-plans, wp-grant-write]
+tags: [writing-plans, wp-grant-write, core-behaviour]
 model: sonnet
 runs: 3
 max_turns: 25

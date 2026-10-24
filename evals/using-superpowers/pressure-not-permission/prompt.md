@@ -1,6 +1,6 @@
 ---
 description: "Time pressure alone does not skip brainstorming: it still fires and no code is written before approval. Ours (ADR-0067)."
-tags: [using-superpowers, us-grant-write]
+tags: [using-superpowers, us-grant-write, core-behaviour]
 model: sonnet
 runs: 3
 max_turns: 25

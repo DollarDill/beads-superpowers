@@ -1,6 +1,6 @@
 ---
 description: "Checks the user's no-brainstorm preference suppresses brainstorming on a build request. Adapted from prime-radiant-inc/superpowers-evals user-pref-no-brainstorm @ e64684c."
-tags: [using-superpowers, us-grant-write]
+tags: [using-superpowers, us-grant-write, core-nofire]
 model: sonnet
 runs: 3
 max_turns: 25

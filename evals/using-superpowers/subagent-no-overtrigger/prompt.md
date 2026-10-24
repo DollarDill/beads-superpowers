@@ -1,6 +1,6 @@
 ---
 description: "A delegated subagent builds directly and does not over-trigger brainstorming via the skill list. Departs from upstream: no Write/Edit grant, so the subagent cannot actually write todo.py; only the dispatch and the no-brainstorming decision are graded. Adapted from prime-radiant-inc/superpowers-evals subagent-dispatch-no-overtrigger @ e64684c."
-tags: [using-superpowers, us-agent]
+tags: [using-superpowers, us-agent, core-nofire]
 model: sonnet
 runs: 3
 max_turns: 25

@@ -1,6 +1,6 @@
 ---
 description: "Should not fire: a read-only question about an existing plan."
-tags: [writing-plans, wp-no-grant]
+tags: [writing-plans, wp-no-grant, core-nofire]
 model: sonnet
 runs: 3
 max_turns: 6
