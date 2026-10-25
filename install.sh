@@ -760,7 +760,7 @@ write_hook_script() {
 # registration has always emitted (settings.json / codex_hooks consumers).
 BSP_ROOT="$canon_root"
 export CLAUDE_PLUGIN_ROOT="\${CLAUDE_PLUGIN_ROOT:-\$BSP_ROOT}"
-exec "\$BSP_ROOT/hooks/session-start" "\$@"
+exec "\${BASH:-bash}" "\$BSP_ROOT/hooks/session-start" "\$@"
 HOOKEOF
   else
     cat > "$HOOK_SCRIPT" << 'HOOKEOF'
@@ -771,6 +771,21 @@ HOOKEOF
 # policy-free by design: skill injection plus static bd pointers — no bd prime
 # capture, no memory selection. That logic lives in hooks/session-start.
 set -euo pipefail
+
+# Keep only absolute PATH entries (as hooks/session-start does): an empty or relative one runs commands from the cwd.
+bsp_safe_path=""
+IFS=: read -r -a bsp_path_parts <<<"${PATH:-}"
+for bsp_p in ${bsp_path_parts[@]+"${bsp_path_parts[@]}"}; do
+    # shellcheck disable=SC2088 # literal ~ entries: bash expands them at lookup
+    case "$bsp_p" in
+        /*) ;;
+        "~"|"~/"*)
+            if [[ "${HOME:-}" == /* ]]; then bsp_p="${HOME}${bsp_p#\~}"; else continue; fi ;;
+        *) continue ;;
+    esac
+    bsp_safe_path="${bsp_safe_path:+$bsp_safe_path:}$bsp_p"
+done
+PATH="${bsp_safe_path:-/usr/bin:/bin}"; export PATH
 
 SKILL_CONTENT=""
 for dir in "$HOME/.claude/skills" "$HOME/.agents/skills"; do

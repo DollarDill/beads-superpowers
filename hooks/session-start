@@ -8,9 +8,40 @@
 
 set -euo pipefail
 
-# Determine plugin root directory
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# Keep only absolute PATH entries (a literal ~ or ~/x becomes $HOME, as bash
+# itself would expand it): an empty or relative entry, or PATH="", makes bash
+# look commands up in the current directory, which for a hook is an untrusted
+# project. Pure bash, before any external command runs.
+bsp_safe_path=""
+IFS=: read -r -a bsp_path_parts <<<"${PATH:-}"
+for bsp_p in ${bsp_path_parts[@]+"${bsp_path_parts[@]}"}; do
+    # shellcheck disable=SC2088 # literal ~ entries: bash expands them at lookup
+    case "$bsp_p" in
+        /*) ;;
+        "~"|"~/"*)
+            if [[ "${HOME:-}" == /* ]]; then bsp_p="${HOME}${bsp_p#\~}"; else continue; fi ;;
+        *) continue ;;
+    esac
+    bsp_safe_path="${bsp_safe_path:+$bsp_safe_path:}$bsp_p"
+done
+PATH="${bsp_safe_path:-/usr/bin:/bin}"; export PATH
+
+# Determine plugin root directory.
+# Splits $0 on its last / or \ (run-hook.cmd's cmd half passes a Windows
+# path), with no separator meaning the current directory. This avoids
+# dirname because a SessionStart:startup hook can run with a broken/empty
+# PATH (anthropics/claude-code#43127) before any PATH-repairing sibling hook
+# in the same startup batch takes effect.
+case "$0" in
+  */*|*\\*) SCRIPT_DIR="$(cd "${0%[/\\]*}" && pwd)" ;;
+  *) SCRIPT_DIR="$(pwd)" ;;
+esac
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+# PATH independence (anthropics/claude-code#43127): the bootstrap uses only bash
+# builtins, so an empty PATH still injects using-superpowers. Beads context, the
+# dedup marker and the bd safety net need external tools (bd, sed, mkdir, find,
+# wc) and are skipped when those cannot be found: accepted by design (0.17.0 spec
+# §4 A). Do not reimplement them in bash.
 
 BSP_MEM_CEILING=1550
 # Gates the COMPOSED entry (body + "### <key>\n" header + "\n\n" scaffolding —
@@ -167,15 +198,16 @@ if [ ! -t 0 ]; then
     done
     bsp_stdin="${bsp_stdin}${bsp_line}"   # capture final unterminated line (read rc=1 leaves partial content)
 fi
-bsp_sid=$(printf '%s' "$bsp_stdin" | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | tr -cd 'a-zA-Z0-9_-' | cut -c1-64)
-bsp_src=$(printf '%s' "$bsp_stdin" | sed -n 's/.*"source"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'     | tr -cd 'a-zA-Z0-9_-' | cut -c1-32)
+bsp_sid=$(printf '%s' "$bsp_stdin" | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | tr -cd 'a-zA-Z0-9_-' | cut -c1-64) || bsp_sid=""
+bsp_src=$(printf '%s' "$bsp_stdin" | sed -n 's/.*"source"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'     | tr -cd 'a-zA-Z0-9_-' | cut -c1-32) || bsp_src=""
 # PPID-keyed fallback: duplicate registrations for the SAME event share a parent
 # (the harness process) → still dedup; different sessions = different harness
 # processes (different PPIDs) → never collide on one global "nosid" bucket.
 [ -z "$bsp_sid" ] && bsp_sid="nosid-$PPID"
 [ -z "$bsp_src" ] && bsp_src="unknown"
 
-bsp_marker_dir="${XDG_RUNTIME_DIR:-/tmp}/beads-superpowers-$(id -u)"
+bsp_uid=$(id -u 2>/dev/null) || bsp_uid="$UID"
+bsp_marker_dir="${XDG_RUNTIME_DIR:-/tmp}/beads-superpowers-${bsp_uid}"
 bsp_marker="$bsp_marker_dir/m-${bsp_sid}-${bsp_src}"
 bsp_suppress=0
 if mkdir -p "$bsp_marker_dir" 2>/dev/null && chmod 700 "$bsp_marker_dir" 2>/dev/null; then
@@ -299,8 +331,14 @@ elif [ "$BSP_EMIT_PLAIN" != "1" ] && [ -z "${CODEX_PLUGIN_ROOT:-}" ] && [ -z "${
     done
 fi
 
-# Read using-superpowers content
-using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>/dev/null) || using_superpowers_content="beads-superpowers: using-superpowers skill unreadable"
+# Read using-superpowers content via bash's builtin $(< file) instead of
+# cat, for the same PATH-independence reason.
+skill_md="${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md"
+if [ -r "$skill_md" ]; then
+  using_superpowers_content="$(<"$skill_md")"
+else
+  using_superpowers_content="beads-superpowers: using-superpowers skill unreadable"
+fi
 
 # Escape string for JSON embedding using bash parameter substitution.
 escape_for_json() {
@@ -356,18 +394,40 @@ fi
 # CLAUDE_PROJECT_DIR covers settings.json-registered hooks (Claude Code sets it
 # on every hook invocation; plugin-channel invocations also get CLAUDE_PLUGIN_ROOT).
 # Copilot CLI (v1.0.11+) and others expect additionalContext (top-level, SDK standard).
+#
+# emit_json pipes its argument through `cat` when cat is on PATH, to absorb
+# EPIPE on Windows. On Windows + Git Bash, the harness can close the hook's
+# stdout before printf finishes, and Git Bash's printf reports that EPIPE as
+# "printf: write error: Permission denied", which `set -euo pipefail` lets
+# escape as a startup diagnostic every session. Letting cat receive the EPIPE
+# keeps it out of the hook's error path (#1612). When PATH is broken and cat
+# can't be found (#2310), it falls back to printf alone so context still
+# gets injected. It takes one finished JSON string, written verbatim.
+emit_json() {
+  if command -v cat >/dev/null 2>&1; then
+    printf '%s' "$1" | cat
+  else
+    printf '%s' "$1"
+  fi
+}
+
 if [ "$BSP_EMIT_PLAIN" = "1" ]; then
   printf '%s\n' "$session_context_raw"
 elif [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
-  printf '{\n  "additional_context": "%s"\n}\n' "$(escape_for_json "$session_context_raw")"
+  printf -v bsp_json '{\n  "additional_context": "%s"\n}\n' "$(escape_for_json "$session_context_raw")"
+  emit_json "$bsp_json"
 elif { [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] || [ -n "${CODEX_PLUGIN_ROOT:-}" ] || [ -n "${CLAUDE_PROJECT_DIR:-}" ]; } && [ -z "${COPILOT_CLI:-}" ]; then
-  printf '{\n'
+  printf -v bsp_json '{\n'
   if [ "$bd_own_hook" = "claude" ]; then
-    printf '  "systemMessage": "%s",\n' "$(escape_for_json "notice: bd's own SessionStart hook (bd prime) is also registered, so beads context is injected twice. To keep only the plugin's curated context, run: bd setup claude --remove (add --global if it is in ~/.claude)")"
+    printf -v bsp_msg '  "systemMessage": "%s",\n' "$(escape_for_json "notice: bd's own SessionStart hook (bd prime) is also registered, so beads context is injected twice. To keep only the plugin's curated context, run: bd setup claude --remove (add --global if it is in ~/.claude)")"
+    bsp_json="${bsp_json}${bsp_msg}"
   fi
-  printf '  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$(escape_for_json "$session_context_raw")"
+  printf -v bsp_hso '  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$(escape_for_json "$session_context_raw")"
+  bsp_json="${bsp_json}${bsp_hso}"
+  emit_json "$bsp_json"
 else
-  printf '{\n  "additionalContext": "%s"\n}\n' "$(escape_for_json "$session_context_raw")"
+  printf -v bsp_json '{\n  "additionalContext": "%s"\n}\n' "$(escape_for_json "$session_context_raw")"
+  emit_json "$bsp_json"
 fi
 
 # bd-absent hint (non-fatal, one line to stderr)
