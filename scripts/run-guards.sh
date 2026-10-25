@@ -26,6 +26,7 @@ run "agents symlink"        bash scripts/check-agents-symlink.sh
 run "kb label vocab"        bash scripts/check-kb-labels.sh
 run "kb doc reconciliation" bash scripts/check-kb-doc-reconciliation.sh
 run "guardrail floor"       bash scripts/check-guardrail-floor.sh
+run "skill size"            bash scripts/check-skill-size.sh
 run "doctrine floor"        bash scripts/check-doctrine-floor.sh
 run "secret echo"           bash scripts/check-secret-echo.sh
 run "eval scaffolds"        bash scripts/check-eval-scaffolds.sh
