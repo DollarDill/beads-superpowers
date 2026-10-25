@@ -226,6 +226,63 @@ if [ "$(tail -n 1 "$T/whs.sh")" = "}" ] && grep -q 'HOOKEOF' "$T/whs.sh"; then
     seen="$seen$sh_bin "
     fresh; run / /nonexistent /usr/bin/env BASH="$bash_bin" "$sh_bin" "$T/hookhome/shim.sh"
     silent_check "shim: cwd / refuses \$BASH ($sh_bin)"
+    # With a project root elsewhere, only the cwd half of the pattern holds.
+    fresh; run / /nonexistent /usr/bin/env BASH="$bash_bin" CLAUDE_PROJECT_DIR="$T/proj" "$sh_bin" "$T/hookhome/shim.sh"
+    silent_check "shim: cwd /, CLAUDE_PROJECT_DIR elsewhere, refuses \$BASH ($sh_bin)"
+  done
+  # Containment shapes under dash, bash 3.2 and bash 5.3, with no bash on
+  # the cleaned PATH. Under bash, $BASH is <cwd>/../bash, built from $PWD for
+  # argv0 "bash" and a relative ".." entry; under dash it is set to that string.
+  # shim_cont <shell> <cwd> <$BASH for dash> [VAR=value...]
+  shim_cont() {
+    local sh_bin="$1" dir="$2" dash_bash="$3"; shift 3
+    fresh
+    # shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
+    case "$sh_bin" in
+      */dash) run "$dir" /nonexistent /usr/bin/env BASH="$dash_bash" "$@" "$sh_bin" "$T/hookhome/shim.sh" ;;
+      *) run "$dir" "/nonexistent:.." /usr/bin/env "$@" "$bash_bin" -c 'exec -a bash "$0" "$@"' "$sh_bin" "$T/hookhome/shim.sh" ;;
+    esac
+  }
+  for t in cp gp gf gn; do
+    mkdir -p "$T/$t/proj/sub"
+    printf '#!/bin/sh\n: > "%s/ran-contbash"\n' "$T" >"$T/$t/proj/bash"
+    chmod +x "$T/$t/proj/bash"
+  done
+  mkdir -p "$T/gp/proj/.git"
+  printf 'gitdir: /elsewhere\n' >"$T/gf/proj/.git"
+  # gn: a nested .git the project can plant must not shrink the root.
+  mkdir -p "$T/gn/proj/.git"
+  printf 'gitdir: /elsewhere\n' >"$T/gn/proj/sub/.git"
+  C="$T/cp/proj"
+  seen=" "
+  for sh_bin in /bin/dash /bin/bash /opt/homebrew/bin/bash "$bash_bin"; do
+    if [ ! -x "$sh_bin" ]; then continue; fi
+    case "$seen" in *" $sh_bin "*) continue ;; esac
+    seen="$seen$sh_bin "
+    # A leading // survives cd -P and pwd -P in bash (dash collapses it).
+    shim_cont "$sh_bin" "$C/sub" "$C/sub/../bash" CLAUDE_PROJECT_DIR=/
+    silent_check "shim: CLAUDE_PROJECT_DIR=/ contains \$BASH ($sh_bin)"
+    shim_cont "$sh_bin" "$C/sub" "$C/sub/../bash" CLAUDE_PROJECT_DIR="/$C"
+    silent_check "shim: CLAUDE_PROJECT_DIR=//<proj> contains \$BASH ($sh_bin)"
+    shim_cont "$sh_bin" "$C/sub" "/$C/sub/../bash" PWD="/$C/sub" CLAUDE_PROJECT_DIR="$C"
+    silent_check "shim: inherited PWD=//<proj>/sub, \$BASH=//<proj>/bash ($sh_bin)"
+    # Control: an outside bash still runs under a //-spelled root.
+    fresh; run "$C/sub" /nonexistent /usr/bin/env BASH="$bash_bin" CLAUDE_PROJECT_DIR="/$C" "$sh_bin" "$T/hookhome/shim.sh"
+    planted_check "shim: outside \$BASH runs under CLAUDE_PROJECT_DIR=//<proj> ($sh_bin)"
+    # A relative root variable fails closed, even for an outside bash.
+    for pv in CLAUDE_PROJECT_DIR CURSOR_PROJECT_DIR; do
+      shim_cont "$sh_bin" "$C/sub" "$C/sub/../bash" "$pv=proj"
+      silent_check "shim: relative $pv refuses \$BASH ($sh_bin)"
+      fresh; run "$C/sub" /nonexistent /usr/bin/env BASH="$bash_bin" "$pv=proj" "$sh_bin" "$T/hookhome/shim.sh"
+      silent_check "shim: relative $pv refuses an outside \$BASH ($sh_bin)"
+    done
+    # No root variable: the nearest ancestor holding .git is a root too.
+    for t in gp gf gn; do
+      shim_cont "$sh_bin" "$T/$t/proj/sub" "$T/$t/proj/sub/../bash"
+      silent_check "shim: no root variable, \$BASH inside the .git ancestor ($t) ($sh_bin)"
+    done
+    fresh; run "$T/gp/proj/sub" /nonexistent /usr/bin/env BASH="$bash_bin" "$sh_bin" "$T/hookhome/shim.sh"
+    planted_check "shim: outside \$BASH runs below a .git ancestor ($sh_bin)"
   done
   # $BASH naming the shim itself is refused (no self re-exec).
   if [ -x /bin/dash ]; then

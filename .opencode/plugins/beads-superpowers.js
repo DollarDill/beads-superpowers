@@ -34,10 +34,8 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
   // anything else relative is dropped, fallback /usr/bin:/bin). An empty or
   // relative entry, or PATH="", makes a lookup search the cwd, an untrusted
   // project; the composer's #!/usr/bin/env bash and `bd` are both looked up
-  // before the hook's own clean-up runs. Not on Windows, where PATH entries
-  // are drive paths and cmd.exe searches the cwd first regardless.
+  // before the hook's own clean-up runs.
   const childEnv = () => {
-    if (process.platform === 'win32') return process.env;
     const home = process.env.HOME ?? '';
     const keep = [];
     for (let p of (process.env.PATH ?? '').split(':')) {
@@ -52,10 +50,16 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
     return { ...process.env, PATH: keep.join(':') || '/usr/bin:/bin' };
   };
 
-  // Exec the canonical composer. Returns null on failure OR on the composer's
-  // event-dedup yielding an empty rapid re-run — a real payload always carries
-  // the <EXTREMELY_IMPORTANT> injection marker.
+  // On Windows the plugin starts no child: CreateProcess and cmd.exe
+  // (execSync's shell) search the cwd before PATH, and no env can change that,
+  // so a bash.exe or bd.exe in the project would run.
+  const noChildren = () => process.platform === 'win32';
+
+  // Exec the canonical composer. Returns null on failure, on Windows, OR on
+  // the composer's event-dedup yielding an empty rapid re-run — a real payload
+  // always carries the <EXTREMELY_IMPORTANT> injection marker.
   const composeBootstrap = () => {
+    if (noChildren()) return null;
     try {
       const text = execSync(
         `"${path.join(packageRoot, 'hooks/session-start')}" --emit-plain 2>/dev/null`,
@@ -79,10 +83,12 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
     // Policy-free pointer fallback (composer missing/failed). Wrapped in the
     // marker so the transform guard below stays idempotent.
     let memLine = '';
-    try {
-      memLine = execSync('bd memories 2>/dev/null', { encoding: 'utf8', timeout: 5000, env: childEnv() }).split('\n')[0] ?? '';
-    } catch {
-      // bd absent
+    if (!noChildren()) {
+      try {
+        memLine = execSync('bd memories 2>/dev/null', { encoding: 'utf8', timeout: 5000, env: childEnv() }).split('\n')[0] ?? '';
+      } catch {
+        // bd absent
+      }
     }
     _bootstrapCache = [
       '<EXTREMELY_IMPORTANT>',

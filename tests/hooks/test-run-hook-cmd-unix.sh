@@ -177,6 +177,71 @@ for sh_bin in /opt/homebrew/bin/bash /usr/local/bin/bash /bin/bash /bin/dash "$b
   seen="$seen$sh_bin "
   out=$(cd / && env -i HOME="$TMP" PWD=/ PATH=/nonexistent BASH="$bash_bin" "$sh_bin" "$L" probe-ok </dev/null 2>&1); rc=$?
   if [ "$rc" = 0 ] && [ -z "$out" ]; then report "cwd / refuses \$BASH ($sh_bin)" 0 ""; else report "cwd / refuses \$BASH ($sh_bin)" 1 "rc=$rc out=$out"; fi
+  # With a project root elsewhere, only the cwd half of the pattern holds.
+  out=$(cd / && env -i HOME="$TMP" PWD=/ PATH=/nonexistent BASH="$bash_bin" CLAUDE_PROJECT_DIR="$TMP/proj" "$sh_bin" "$L" probe-ok </dev/null 2>&1); rc=$?
+  if [ "$rc" = 0 ] && [ -z "$out" ]; then report "cwd /, CLAUDE_PROJECT_DIR elsewhere, refuses \$BASH ($sh_bin)" 0 ""; else report "cwd /, CLAUDE_PROJECT_DIR elsewhere, refuses \$BASH ($sh_bin)" 1 "rc=$rc out=$out"; fi
+done
+
+# --- containment shapes under dash, bash 3.2 and bash 5.3 ---
+# No bash on the cleaned PATH, so the $BASH fallback decides. Under bash,
+# $BASH comes from argv0 "bash" and a relative ".." entry: bash builds it from
+# $PWD as <cwd>/../bash. Under dash, which leaves $BASH alone, it is set to
+# that same string.
+# cont_run <shell> <cwd> <$BASH for dash> [VAR=value...]: sets rc, out, ran.
+cont_run() {
+  local sh_bin="$1" dir="$2" dash_bash="$3"; shift 3
+  # shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
+  case "$sh_bin" in
+    */dash) out=$(cd "$dir" && env -i HOME="$TMP" PATH=/nonexistent BASH="$dash_bash" "$@" "$sh_bin" "$L" probe-ok </dev/null 2>&1); rc=$? ;;
+    *) out=$(cd "$dir" && env -i HOME="$TMP" PATH=/nonexistent:.. "$@" "$bash_bin" -c 'exec -a bash "$0" "$@"' "$sh_bin" "$L" probe-ok </dev/null 2>&1); rc=$? ;;
+  esac
+  ran=$(planted_ran)
+}
+cont_refused() { # name
+  if [ "$rc" = 0 ] && [ -z "$ran" ] && [ -z "$out" ]; then report "$1 (refused, silent exit)" 0 ""; else report "$1 (refused, silent exit)" 1 "rc=$rc planted ran:[$ran] out=$out"; fi
+}
+for t in cp gp gf gn; do
+  mkdir -p "$TMP/$t/proj/sub"
+  printf '#!/bin/sh\n: > "%s/ran-contbash"\n' "$TMP" >"$TMP/$t/proj/bash"
+  chmod +x "$TMP/$t/proj/bash"
+done
+mkdir -p "$TMP/gp/proj/.git"
+printf 'gitdir: /elsewhere\n' >"$TMP/gf/proj/.git"
+# gn: a nested .git the project itself can plant (or a submodule) must not
+# shrink the root to the subdirectory.
+mkdir -p "$TMP/gn/proj/.git"
+printf 'gitdir: /elsewhere\n' >"$TMP/gn/proj/sub/.git"
+C="$TMP/cp/proj"
+seen=" "
+for sh_bin in /bin/dash /bin/bash /opt/homebrew/bin/bash "$bash_bin"; do
+  if [ ! -x "$sh_bin" ]; then continue; fi
+  case "$seen" in *" $sh_bin "*) continue ;; esac
+  seen="$seen$sh_bin "
+  # A leading // survives cd -P and pwd -P in bash (dash collapses it).
+  cont_run "$sh_bin" "$C/sub" "$C/sub/../bash" CLAUDE_PROJECT_DIR=/
+  cont_refused "CLAUDE_PROJECT_DIR=/ contains \$BASH ($sh_bin)"
+  cont_run "$sh_bin" "$C/sub" "$C/sub/../bash" CLAUDE_PROJECT_DIR="/$C"
+  cont_refused "CLAUDE_PROJECT_DIR=//<proj> contains \$BASH ($sh_bin)"
+  cont_run "$sh_bin" "$C/sub" "/$C/sub/../bash" PWD="/$C/sub" CLAUDE_PROJECT_DIR="$C"
+  cont_refused "inherited PWD=//<proj>/sub, \$BASH=//<proj>/bash ($sh_bin)"
+  # Control: an outside bash still runs under a //-spelled root.
+  out=$(cd "$C/sub" && env -i HOME="$TMP" PATH=/nonexistent BASH="$bash_bin" CLAUDE_PROJECT_DIR="/$C" "$sh_bin" "$L" probe-ok </dev/null 2>&1); rc=$?
+  if [ "$rc" = 0 ] && [[ "$out" == *probe-ran* ]]; then report "outside \$BASH runs under CLAUDE_PROJECT_DIR=//<proj> ($sh_bin)" 0 ""; else report "outside \$BASH runs under CLAUDE_PROJECT_DIR=//<proj> ($sh_bin)" 1 "rc=$rc out=$out"; fi
+  # A relative root variable fails closed, even for an outside bash.
+  for pv in CLAUDE_PROJECT_DIR CURSOR_PROJECT_DIR; do
+    cont_run "$sh_bin" "$C/sub" "$C/sub/../bash" "$pv=proj"
+    cont_refused "relative $pv refuses \$BASH ($sh_bin)"
+    out=$(cd "$C/sub" && env -i HOME="$TMP" PATH=/nonexistent BASH="$bash_bin" "$pv=proj" "$sh_bin" "$L" probe-ok </dev/null 2>&1); rc=$?
+    ran=$(planted_ran)
+    cont_refused "relative $pv refuses an outside \$BASH ($sh_bin)"
+  done
+  # No root variable: the nearest ancestor holding .git is a root too.
+  for t in gp gf gn; do
+    cont_run "$sh_bin" "$TMP/$t/proj/sub" "$TMP/$t/proj/sub/../bash"
+    cont_refused "no root variable, \$BASH inside the .git ancestor ($t) ($sh_bin)"
+  done
+  out=$(cd "$TMP/gp/proj/sub" && env -i HOME="$TMP" PATH=/nonexistent BASH="$bash_bin" "$sh_bin" "$L" probe-ok </dev/null 2>&1); rc=$?
+  if [ "$rc" = 0 ] && [[ "$out" == *probe-ran* ]]; then report "outside \$BASH runs below a .git ancestor ($sh_bin)" 0 ""; else report "outside \$BASH runs below a .git ancestor ($sh_bin)" 1 "rc=$rc out=$out"; fi
 done
 
 # --- no self re-exec (M2): an ENOEXEC fallback sets $BASH to the launcher ---

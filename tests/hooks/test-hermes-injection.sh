@@ -330,6 +330,34 @@ try:
     ran = planted_ran()
     check(ran == ["tildebash"], f"PATH='~/bin' resolves bash in $HOME/bin; ran: {ran}")
     check(text == STUB, "composer payload injected (PATH='~/bin')")
+
+    # --- Windows spawns nothing (P1) ---
+    # CreateProcess searches the cwd before PATH, which env cannot change, so
+    # on win32 register() must start no child and inject the static pointer,
+    # without a memory line. sys.platform is forced; subprocess.run records.
+    for with_hooks in (True, False):
+        tmp, pdir = build_fixture("sibling", with_hooks=with_hooks)
+        mod = load(pdir)
+        calls = []
+
+        def recorder(*a, **kw):
+            calls.append(a[0] if a else kw.get("args"))
+            raise OSError("spawn attempted")
+
+        saved_run, saved_platform = mod.subprocess.run, sys.platform
+        mod.subprocess.run, sys.platform = recorder, "win32"
+        try:
+            ctx = FakeCtx()
+            mod.register(ctx)
+            text = ctx.hooks["pre_llm_call"](is_first_turn=True)["context"]
+        finally:
+            mod.subprocess.run, sys.platform = saved_run, saved_platform
+            shutil.rmtree(tmp)
+        what = "composer present" if with_hooks else "composer absent"
+        check(calls == [], f"win32 spawns no child ({what}); spawned: {calls}")
+        check(BOOT_MARK in text and "session composer unavailable" in text,
+              f"win32 injects the static pointer ({what})")
+        check("Memories" not in text, f"win32 pointer has no memory line ({what})")
 finally:
     shutil.rmtree(evil)
     shutil.rmtree(markers)

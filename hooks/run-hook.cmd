@@ -57,8 +57,10 @@ CMDBLOCK
 #    everything else, and fall back to /usr/bin:/bin.
 # 2. Use `command -v bash` on that PATH. Only if it finds none, use $BASH when
 #    it is absolute, outside both the current directory tree and the project
-#    root (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR, when absolute; the cwd
-#    can be a subdirectory of it), and not this launcher.
+#    root (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR; with neither set, the
+#    highest .git ancestor of the cwd; the cwd can be a subdirectory of it),
+#    and not this launcher. A root variable that is relative or unresolvable
+#    refuses $BASH.
 #    $BASH alone is not safe: dash leaves it unset, bash fills it by a PATH
 #    search that can land in the cwd, and an ENOEXEC fallback (a harness
 #    execing this shebang-less file) sets it to this launcher, which would
@@ -104,23 +106,45 @@ if [ -z "$bsp_bash" ]; then
       # different symlinks. cd -P hands the path to chdir unchanged, so the
       # kernel resolves it as exec will: a symlink before the ".." after it
       # (a plain cd would cancel lnk/.. as text first).
+      # bash keeps a leading // through cd -P and pwd -P (dash collapses it),
+      # and //x never matches a /x prefix: each resolved path has a leading
+      # run of slashes collapsed to one.
       bsp_cwd=$(pwd -P 2>/dev/null) || bsp_cwd=""
+      case $bsp_cwd in //*) bsp_cwd=/${bsp_cwd#"${bsp_cwd%%[!/]*}"} ;; esac
+      # The root is CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR. Either one
+      # set but not absolute, or a named root that does not resolve: refuse.
+      bsp_ok=1
       bsp_root=""
       case "${CLAUDE_PROJECT_DIR:-}" in
+        "") ;;
         /*) bsp_root=$CLAUDE_PROJECT_DIR ;;
-        *)
-          case "${CURSOR_PROJECT_DIR:-}" in
-            /*) bsp_root=$CURSOR_PROJECT_DIR ;;
-          esac ;;
+        *) bsp_ok=0 ;;
       esac
-      # A named root that does not resolve leaves bsp_root empty: refuse.
+      case "${CURSOR_PROJECT_DIR:-}" in
+        "") ;;
+        /*) if [ -z "$bsp_root" ]; then bsp_root=$CURSOR_PROJECT_DIR; fi ;;
+        *) bsp_ok=0 ;;
+      esac
       if [ -n "$bsp_root" ]; then
         bsp_root=$(cd -P "$bsp_root/" 2>/dev/null && pwd -P) || bsp_root=""
-      else
+        case $bsp_root in //*) bsp_root=/${bsp_root#"${bsp_root%%[!/]*}"} ;; esac
+        if [ -z "$bsp_root" ]; then bsp_ok=0; fi
+      elif [ "$bsp_ok" = 1 ]; then
+        # No root variable (Codex sets none): the root is the highest
+        # ancestor of the cwd holding a .git entry, else the cwd. Highest,
+        # not nearest, so a .git the project plants deeper cannot shrink it.
         bsp_root=$bsp_cwd
+        bsp_d=$bsp_cwd
+        while [ -n "$bsp_d" ]; do
+          if [ -e "${bsp_d%/}/.git" ]; then bsp_root=$bsp_d; fi
+          if [ "$bsp_d" = / ]; then break; fi
+          bsp_d=${bsp_d%/*}
+          if [ -z "$bsp_d" ]; then bsp_d=/; fi
+        done
       fi
       bsp_bash_dir=$(cd -P "${BASH%/*}/" 2>/dev/null && pwd -P) || bsp_bash_dir=""
-      if [ -n "$bsp_cwd" ] && [ -n "$bsp_root" ] && [ -n "$bsp_bash_dir" ]; then
+      case $bsp_bash_dir in //*) bsp_bash_dir=/${bsp_bash_dir#"${bsp_bash_dir%%[!/]*}"} ;; esac
+      if [ "$bsp_ok" = 1 ] && [ -n "$bsp_cwd" ] && [ -n "$bsp_root" ] && [ -n "$bsp_bash_dir" ]; then
         # Strip the trailing / into a variable first: at cwd / the prefix is
         # empty, and bash 5.3 does not match "${v%/}"/* when the expansion
         # is empty (dash and bash 3.2 do); "$v"/* matches in all three.

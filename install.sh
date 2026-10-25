@@ -775,9 +775,10 @@ export CLAUDE_PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$BSP_ROOT}"
 #    absolute, drop everything else, fall back to /usr/bin:/bin.
 # 2. Use the bash on that PATH. Only if there is none, use $BASH when it is
 #    absolute, physically outside both the cwd tree and the project root
-#    (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR, when absolute), and not
-#    this shim. bash fills $BASH by a PATH search when started with a
-#    slash-less argv0, which can land in the cwd.
+#    (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR; with neither set, the
+#    highest .git ancestor of the cwd), and not this shim. A relative or
+#    unresolvable root variable refuses $BASH. bash fills $BASH by a PATH
+#    search when started with a slash-less argv0, which can land in the cwd.
 # 3. No usable bash: exit 0 silently.
 bsp_safe_path=""
 bsp_old_ifs=$IFS
@@ -808,23 +809,40 @@ esac
 if [ -z "$bsp_bash" ]; then
   case "${BASH:-}" in
     /*)
+      # bash keeps a leading // through cd -P and pwd -P: collapse it.
       bsp_cwd=$(pwd -P 2>/dev/null) || bsp_cwd=""
+      case $bsp_cwd in //*) bsp_cwd=/${bsp_cwd#"${bsp_cwd%%[!/]*}"} ;; esac
+      # A root variable that is relative or does not resolve: refuse.
+      bsp_ok=1
       bsp_root=""
       case "${CLAUDE_PROJECT_DIR:-}" in
+        "") ;;
         /*) bsp_root=$CLAUDE_PROJECT_DIR ;;
-        *)
-          case "${CURSOR_PROJECT_DIR:-}" in
-            /*) bsp_root=$CURSOR_PROJECT_DIR ;;
-          esac ;;
+        *) bsp_ok=0 ;;
       esac
-      # A named root that does not resolve leaves bsp_root empty: refuse.
+      case "${CURSOR_PROJECT_DIR:-}" in
+        "") ;;
+        /*) if [ -z "$bsp_root" ]; then bsp_root=$CURSOR_PROJECT_DIR; fi ;;
+        *) bsp_ok=0 ;;
+      esac
       if [ -n "$bsp_root" ]; then
         bsp_root=$(cd -P "$bsp_root/" 2>/dev/null && pwd -P) || bsp_root=""
-      else
+        case $bsp_root in //*) bsp_root=/${bsp_root#"${bsp_root%%[!/]*}"} ;; esac
+        if [ -z "$bsp_root" ]; then bsp_ok=0; fi
+      elif [ "$bsp_ok" = 1 ]; then
+        # No root variable: the highest .git ancestor of the cwd, else the cwd.
         bsp_root=$bsp_cwd
+        bsp_d=$bsp_cwd
+        while [ -n "$bsp_d" ]; do
+          if [ -e "${bsp_d%/}/.git" ]; then bsp_root=$bsp_d; fi
+          if [ "$bsp_d" = / ]; then break; fi
+          bsp_d=${bsp_d%/*}
+          if [ -z "$bsp_d" ]; then bsp_d=/; fi
+        done
       fi
       bsp_bash_dir=$(cd -P "${BASH%/*}/" 2>/dev/null && pwd -P) || bsp_bash_dir=""
-      if [ -n "$bsp_cwd" ] && [ -n "$bsp_root" ] && [ -n "$bsp_bash_dir" ]; then
+      case $bsp_bash_dir in //*) bsp_bash_dir=/${bsp_bash_dir#"${bsp_bash_dir%%[!/]*}"} ;; esac
+      if [ "$bsp_ok" = 1 ] && [ -n "$bsp_cwd" ] && [ -n "$bsp_root" ] && [ -n "$bsp_bash_dir" ]; then
         # Prefixes go through variables: bash 5.3 does not match "${v%/}"/*
         # when the expansion is empty (cwd /).
         bsp_cwd_pfx=${bsp_cwd%/}

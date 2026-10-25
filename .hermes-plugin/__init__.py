@@ -14,6 +14,7 @@ Anti-fork guard: tests/hooks/test-hermes-injection.sh.
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 BOOTSTRAP_MARKER = "EXTREMELY_IMPORTANT"
@@ -83,11 +84,8 @@ def _child_env():
     relative entry, or PATH="", makes a lookup search the cwd, an untrusted
     project; the composer's #!/usr/bin/env bash and `bd` are both looked up
     before the hook's own clean-up runs. Exec hygiene, not composition policy.
-    Not on Windows, where PATH entries are drive paths.
     """
     env = dict(os.environ)
-    if os.name == "nt":
-        return env
     home = env.get("HOME", "")
     keep = []
     for p in env.get("PATH", "").split(":"):
@@ -102,8 +100,19 @@ def _child_env():
     return env
 
 
+def _no_children():
+    """True on native Windows: start no child there.
+
+    CreateProcess searches the cwd before PATH, and no env can change that, so
+    a bash.exe or bd.exe in the project would run. Exec hygiene, not policy.
+    """
+    return sys.platform == "win32"
+
+
 def _compose_bootstrap():
-    """Exec the canonical composer. None on any failure."""
+    """Exec the canonical composer. None on any failure, and on Windows."""
+    if _no_children():
+        return None
     composer = _composer_path()
     if composer is None:
         return None
@@ -126,18 +135,19 @@ def _compose_bootstrap():
 def _fallback_bootstrap():
     """Policy-free, DISCLOSING pointer. Never the full bd prime dump."""
     mem_line = ""
-    try:
-        proc = subprocess.run(
-            ["bd", "memories"],
-            capture_output=True, text=True, timeout=5, check=False,
-            env=_child_env(),
-        )
-        first = (proc.stdout or "").split("\n")[0].strip()
-        if _MEM_HEADER_RE.match(first):
-            mem_line = (f"{first} - search: bd memories <keyword>, "
-                        "fetch: bd recall <key>")
-    except (OSError, subprocess.SubprocessError):
-        pass
+    if not _no_children():
+        try:
+            proc = subprocess.run(
+                ["bd", "memories"],
+                capture_output=True, text=True, timeout=5, check=False,
+                env=_child_env(),
+            )
+            first = (proc.stdout or "").split("\n")[0].strip()
+            if _MEM_HEADER_RE.match(first):
+                mem_line = (f"{first} - search: bd memories <keyword>, "
+                            "fetch: bd recall <key>")
+        except (OSError, subprocess.SubprocessError):
+            pass
     lines = [
         "<EXTREMELY_IMPORTANT>",
         "beads-superpowers: session composer unavailable in this environment.",

@@ -221,6 +221,54 @@ try {
   assert.deepStrictEqual(plantedRan(), ["tildebash"], "PATH='~/bin' resolves bash in $HOME/bin")
   assert.strictEqual(text, stubPayload, "composer payload injected (PATH='~/bin')")
   console.log("PASS: a ~/bin PATH entry maps to $HOME/bin")
+
+  // --- Windows spawns nothing (P1) ---
+  // CreateProcess and cmd.exe search the cwd before PATH, which no env can
+  // change, so on win32 the plugin must start no child at all and inject the
+  // static pointer, without a memory line. The platform is forced. Any spawn
+  // shows up as a marker: through comspec (the shell Node picks on win32), or
+  // through the composer stub and a `bd` on an absolute PATH entry otherwise.
+  const wbin = realpathSync(mkdtempSync(join(tmpdir(), "bsp-oc-wbin-")))
+  writeFileSync(join(wbin, "comspec"), `#!/bin/sh\n: > "${markers}/ran-comspec"\n`, { mode: 0o755 })
+  writeFileSync(join(wbin, "bd"), `#!/bin/sh\n: > "${markers}/ran-bd"\necho 'Memories (3):'\n`, { mode: 0o755 })
+  const savedPlatform = Object.getOwnPropertyDescriptor(process, "platform")
+  const savedComspec = process.env.comspec
+  for (const withHook of [true, false]) {
+    const fw = buildFixture(withHook)
+    if (withHook) {
+      writeFileSync(join(fw.root, "hooks/session-start"),
+        `#!/bin/sh\n: > "${markers}/ran-composer"\ncat <<'STUBEOF'\n${stubPayload}\nSTUBEOF\n`, { mode: 0o755 })
+    }
+    let textW, compactW
+    Object.defineProperty(process, "platform", { ...savedPlatform, value: "win32" })
+    process.env.comspec = join(wbin, "comspec")
+    process.env.PATH = `${wbin}:/usr/bin:/bin`
+    try {
+      const { BeadsSuperpowersPlugin: PluginW } = await import(fw.pluginPath)
+      const hooksW = await PluginW({ client: {}, directory: fw.root })
+      const outW = { messages: [{ info: { role: "user" }, parts: [{ type: "text", text: "hi" }] }] }
+      await hooksW["experimental.chat.messages.transform"]({}, outW)
+      textW = outW.messages[0].parts[0].text
+      const compaction = { context: [] }
+      await hooksW["experimental.session.compacting"]({}, compaction)
+      compactW = compaction.context[0]
+    } finally {
+      Object.defineProperty(process, "platform", savedPlatform)
+      if (savedComspec === undefined) delete process.env.comspec
+      else process.env.comspec = savedComspec
+      process.env.PATH = savedPath
+      rmSync(fw.root, { recursive: true, force: true })
+    }
+    const what = withHook ? "composer present" : "composer absent"
+    assert.deepStrictEqual(plantedRan(), [], `win32 spawned a child (${what})`)
+    assert.ok(textW.includes("EXTREMELY_IMPORTANT") && textW.includes("session composer unavailable"),
+      `win32 injects the static pointer (${what}): ${textW}`)
+    assert.ok(!textW.includes("Memories"), `win32 pointer has no memory line (${what}): ${textW}`)
+    assert.strictEqual(compactW, "beads-superpowers is installed. Run skills via the skill tool.",
+      `win32 compaction pushes the static line (${what})`)
+    console.log(`PASS: win32 spawns no child and injects the static pointer (${what})`)
+  }
+  rmSync(wbin, { recursive: true, force: true })
 } finally {
   rmSync(evil, { recursive: true, force: true })
   rmSync(markers, { recursive: true, force: true })
