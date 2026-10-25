@@ -982,7 +982,9 @@ hook_bash() {
 }
 
 register_hook() {
-  python3 - "$SETTINGS_FILE" "$HOOK_SCRIPT" "$HOOK_BASH" << 'PYEOF'
+  local rc=0
+  # `|| rc=$?` keeps the capture alive under `set -e` whatever the caller does.
+  python3 - "$SETTINGS_FILE" "$HOOK_SCRIPT" "$HOOK_BASH" << 'PYEOF' || rc=$?
 import json, os, shlex, sys
 
 sf, hs, hb = sys.argv[1:4]
@@ -993,10 +995,12 @@ if os.path.exists(sf):
     try:
         with open(sf) as f:
             settings = json.load(f)
-    except ValueError:
-        # Not valid JSON (an empty or whitespace-only file included): leave it
-        # byte-for-byte alone. Exit 3 tells the shell to repeat the warning.
-        print(f"beads-superpowers: {sf} is not valid JSON; SessionStart hook "
+    except (ValueError, OSError):
+        # Not valid JSON (an empty or whitespace-only file included) or not
+        # readable (permission denied, a directory): leave it byte-for-byte
+        # alone. Exit 3 tells the shell to repeat the warning. Neither the
+        # error text nor the content is printed.
+        print(f"beads-superpowers: {sf} is not readable or not valid JSON; SessionStart hook "
               "NOT registered. Repair or move the file, then re-run the installer.",
               file=sys.stderr)
         sys.exit(3)
@@ -1062,9 +1066,8 @@ with open(sf, "w") as f:
     json.dump(settings, f, indent=2)
     f.write("\n")
 PYEOF
-  local rc=$?
   if [ "$rc" = 3 ]; then
-    SETTINGS_WARNING="$SETTINGS_FILE is not valid JSON: the SessionStart hook was NOT registered. Repair or move the file, then re-run the installer."
+    SETTINGS_WARNING="$SETTINGS_FILE is not readable or not valid JSON: the SessionStart hook was NOT registered. Repair or move the file, then re-run the installer."
     return 0
   fi
   return "$rc"
