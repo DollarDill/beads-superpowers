@@ -73,6 +73,7 @@ INSTALL_TIER=""
 # shellcheck disable=SC2034  # STAGING_DIR used in later install tiers
 STAGING_DIR=""
 VERSION=""
+SETTINGS_WARNING=""  # set when the settings file is not valid JSON; repeated in the summary
 HOOK_BASH=""  # absolute bash the registered hook names (setup_hooks)
 agent_count=0
 
@@ -981,7 +982,9 @@ hook_bash() {
 }
 
 register_hook() {
-  python3 - "$SETTINGS_FILE" "$HOOK_SCRIPT" "$HOOK_BASH" << 'PYEOF'
+  local rc=0
+  # `|| rc=$?` keeps the capture alive under `set -e` whatever the caller does.
+  python3 - "$SETTINGS_FILE" "$HOOK_SCRIPT" "$HOOK_BASH" << 'PYEOF' || rc=$?
 import json, os, shlex, sys
 
 sf, hs, hb = sys.argv[1:4]
@@ -989,8 +992,18 @@ cmd = f"{shlex.quote(hb)} {shlex.quote(hs)}"
 shim_name = os.path.basename(hs)
 
 if os.path.exists(sf):
-    with open(sf) as f:
-        settings = json.load(f)
+    try:
+        with open(sf) as f:
+            settings = json.load(f)
+    except (ValueError, OSError):
+        # Not valid JSON (an empty or whitespace-only file included) or not
+        # readable (permission denied, a directory): leave it byte-for-byte
+        # alone. Exit 3 tells the shell to repeat the warning. Neither the
+        # error text nor the content is printed.
+        print(f"beads-superpowers: {sf} is not readable or not valid JSON; SessionStart hook "
+              "NOT registered. Repair or move the file, then re-run the installer.",
+              file=sys.stderr)
+        sys.exit(3)
 else:
     os.makedirs(os.path.dirname(sf), exist_ok=True)
     settings = {}
@@ -1053,6 +1066,11 @@ with open(sf, "w") as f:
     json.dump(settings, f, indent=2)
     f.write("\n")
 PYEOF
+  if [ "$rc" = 3 ]; then
+    SETTINGS_WARNING="$SETTINGS_FILE is not readable or not valid JSON: the SessionStart hook was NOT registered. Repair or move the file, then re-run the installer."
+    return 0
+  fi
+  return "$rc"
 }
 
 cleanup_stale_reminder() {
@@ -1065,6 +1083,10 @@ cleanup_stale_reminder() {
   if [ "$HAS_PYTHON3" = 0 ]; then
     warn "python3 not found — cannot clean the stale UserPromptSubmit hook"
     warn "Manual fix: remove the UserPromptSubmit entry referencing superpowers-reminder.sh from $settings"
+    return 0
+  fi
+  if ! python3 -c 'import json, sys; json.load(open(sys.argv[1]))' "$settings" 2>/dev/null; then
+    warn "$settings is not valid JSON — leaving it untouched; the stale UserPromptSubmit hook was not cleaned"
     return 0
   fi
   cp -f "$settings" "${settings}.bak-$(date +%Y%m%d-%H%M%S)"
@@ -1134,6 +1156,10 @@ assert any('beads-superpowers' in json.dumps(e) for e in d.get('hooks',{}).get('
 print_next_steps() {
   local count
   count=$(find "$SKILLS_DIR" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+  if [ -n "$SETTINGS_WARNING" ]; then
+    echo
+    warn "$SETTINGS_WARNING"
+  fi
   echo
   success "beads-superpowers v$VERSION installed ($count skills via $INSTALL_TIER)"
   echo
