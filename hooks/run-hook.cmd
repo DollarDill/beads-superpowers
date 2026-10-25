@@ -47,16 +47,76 @@ REM exit code.
 exit /b %ERRORLEVEL%
 CMDBLOCK
 
-# Unix: run the named script directly
-# Splits $0 on its last / or \ (cmd passes Windows paths) instead of calling
-# dirname, and uses $BASH (bash's own absolute path, always set once bash is
-# running) instead of a PATH lookup for bash, so this keeps working when
-# Claude Code spawns the SessionStart hook with a broken/empty PATH
-# (anthropics/claude-code#43127).
+# Unix: run the named script with a bash that never comes from the project.
+# An empty or relative PATH entry (or PATH="") makes a command lookup search
+# the current directory, which for a hook is an untrusted project, and Claude
+# Code can spawn hooks with a broken or empty PATH (anthropics/claude-code#43127).
+# POSIX sh, because this half also runs under dash (Linux /bin/sh).
+# 1. Clean PATH before any lookup, with hooks/session-start's rule: keep
+#    absolute entries, map ~ and ~/x to $HOME when $HOME is absolute, drop
+#    everything else, and fall back to /usr/bin:/bin.
+# 2. Use `command -v bash` on that PATH. Only if it finds none, use $BASH when
+#    it is absolute, outside the current directory tree and not this launcher.
+#    $BASH alone is not safe: dash leaves it unset, bash fills it by a PATH
+#    search that can land in the cwd, and an ENOEXEC fallback (a harness
+#    execing this shebang-less file) sets it to this launcher, which would
+#    re-exec itself forever.
+# 3. No usable bash: exit 0 silently, as the Windows half does.
+bsp_safe_path=""
+bsp_old_ifs=$IFS
+IFS=:
+set -f
+for bsp_p in ${PATH:-}; do
+  # shellcheck disable=SC2088 # matches literal ~ entries, mapped to $HOME here
+  case "$bsp_p" in
+    /*) ;;
+    "~"|"~/"*)
+      case "${HOME:-}" in
+        /*) bsp_p="${HOME}${bsp_p#\~}" ;;
+        *) continue ;;
+      esac ;;
+    *) continue ;;
+  esac
+  bsp_safe_path="${bsp_safe_path:+$bsp_safe_path:}$bsp_p"
+done
+set +f
+IFS=$bsp_old_ifs
+PATH="${bsp_safe_path:-/usr/bin:/bin}"; export PATH
+
+# Split $0 on its last / or \ (cmd passes Windows paths) instead of calling
+# dirname.
 case "$0" in
   */*|*\\*) SCRIPT_DIR="$(cd "${0%[/\\]*}" && pwd)" ;;
   *) SCRIPT_DIR="$(pwd)" ;;
 esac
+
+bsp_bash=$(command -v bash 2>/dev/null) || bsp_bash=""
+case "$bsp_bash" in
+  /*) ;;
+  *) bsp_bash="" ;;
+esac
+if [ -z "$bsp_bash" ]; then
+  case "${BASH:-}" in
+    /*)
+      # Compare physical paths: $BASH and $PWD can name the same place through
+      # different symlinks.
+      bsp_cwd=$(pwd -P 2>/dev/null) || bsp_cwd=""
+      bsp_bash_dir=$(cd "${BASH%/*}/" 2>/dev/null && pwd -P) || bsp_bash_dir=""
+      if [ -n "$bsp_cwd" ] && [ -n "$bsp_bash_dir" ]; then
+        case "$bsp_bash_dir/" in
+          "${bsp_cwd%/}"/*) ;;
+          *)
+            if [ ! "$BASH" -ef "${SCRIPT_DIR}/${0##*[/\\]}" ]; then
+              bsp_bash=$BASH
+            fi ;;
+        esac
+      fi ;;
+  esac
+fi
+if [ -z "$bsp_bash" ]; then
+  exit 0
+fi
+
 SCRIPT_NAME="$1"
 shift
-exec "${BASH:-bash}" "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
+exec "$bsp_bash" "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"

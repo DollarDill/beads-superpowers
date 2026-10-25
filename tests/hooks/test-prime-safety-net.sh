@@ -99,6 +99,13 @@ ln -s /etc/hostname .beads/PRIME.md
 run_hook w2c
 [ "$(readlink .beads/PRIME.md)" = "/etc/hostname" ] || { echo "FAIL: symlink replaced"; exit 1; }
 
+# 3f. .beads itself a symlink: never write PRIME.md through it (the fixed text
+#     would land outside the repo)
+mkdir -p "$TMP/w2d" "$TMP/beads-target" && cd "$TMP/w2d"
+ln -s "$TMP/beads-target" .beads
+run_hook w2d
+[ -e "$TMP/beads-target/PRIME.md" ] && { echo "FAIL: PRIME.md written through a symlinked .beads"; exit 1; }
+
 # 4. off-switch respected — for the file AND the cap
 mkdir -p "$TMP/w3/.beads" && cd "$TMP/w3"
 : > "$BSP_SETLOG"

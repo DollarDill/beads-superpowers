@@ -745,7 +745,7 @@ write_hook_script() {
     local canon_root="$HOOKS_DIR/beads-superpowers"
     mkdir -p "$canon_root/hooks"
     cp -f "$source_root/hooks/session-start" "$canon_root/hooks/session-start"
-    chmod +x "$canon_root/hooks/session-start"  # direct exec relies on the bash shebang
+    chmod +x "$canon_root/hooks/session-start"  # for direct runs; the shim below hands it to bash, so its shebang is not used
     # The canonical hook resolves skills relative to its own root
     # (<root>/skills/using-superpowers/SKILL.md) — point <root>/skills at SKILLS_DIR.
     rm -rf "$canon_root/skills"

@@ -77,4 +77,48 @@ outp2=$(printf '{"session_id":"sess-plain","source":"startup"}' | bash "$HOOK" -
 out9=$(timeout 5 bash -c '{ printf "%s" "$0"; sleep 30; } | CLAUDE_PLUGIN_ROOT=x bash "$1"' '{"session_id":"sess-hang","source":"startup"}' "$HOOK") || true
 echo "$out9" | grep -q 'additionalContext' || { echo "FAIL: never-EOF stdin prevented injection (hook hung on stdin)"; exit 1; }
 
+# envelope_ok <file>: the Claude envelope carrying the bootstrap was emitted.
+envelope_ok() {
+  python3 -I -c 'import json,sys; d=json.load(sys.stdin); assert "Production-Grade Doctrine" in d["hookSpecificOutput"]["additionalContext"]' <"$1" 2>/dev/null
+}
+
+# The two checks below report every failure before exiting.
+hard=0
+
+# uid from the environment: with `id` unresolvable the hook falls back to a
+# bash variable, and bash imports UID and EUID from the environment. A value
+# that is not all digits must skip the dedup marker (inject), never build a
+# marker path from it. The PATH dir holds mkdir and chmod but no id.
+mkdir -p "$TMP/noid-bin"
+for t in mkdir chmod; do
+  t_path=$(command -v "$t")
+  ln -s "$t_path" "$TMP/noid-bin/$t"
+done
+for uid_env in "UID=/../../x EUID=" "UID=/../../x EUID=/../../x"; do
+  rm -rf "$TMP/uidbase"; mkdir -p "$TMP/uidbase/rt"
+  # shellcheck disable=SC2086 # uid_env is two assignments, split on purpose
+  env -i HOME="$TMP/home" XDG_RUNTIME_DIR="$TMP/uidbase/rt" CLAUDE_PLUGIN_ROOT=x PATH="$TMP/noid-bin" $uid_env \
+    "$BASH" "$HOOK" </dev/null >"$TMP/uid-out" 2>/dev/null \
+    || { echo "FAIL: hook failed with $uid_env and no id"; hard=1; }
+  outside=$(cd "$TMP/uidbase" && find . -mindepth 1 -maxdepth 1 ! -name rt)
+  [ -z "$outside" ] || { echo "FAIL: $uid_env put a marker dir outside the runtime base: $outside"; hard=1; }
+  envelope_ok "$TMP/uid-out" || { echo "FAIL: $uid_env with no id did not inject"; hard=1; }
+done
+
+# pre-created marker dir that is a symlink (another local user can plant
+# ${XDG_RUNTIME_DIR:-/tmp}/beads-superpowers-<uid> pointing at a directory the
+# victim owns): refuse it (no chmod, no marker written through it), inject.
+mkdir -p "$TMP/lnkrt" "$TMP/victim"
+chmod 755 "$TMP/victim"
+: > "$TMP/victim/keep"
+ln -s "$TMP/victim" "$TMP/lnkrt/beads-superpowers-$(id -u)"
+printf '{"session_id":"sess-dirlnk","source":"startup"}' \
+  | XDG_RUNTIME_DIR="$TMP/lnkrt" CLAUDE_PLUGIN_ROOT=x bash "$HOOK" >"$TMP/dirlnk-out"
+vperms=$(stat -c %a "$TMP/victim" 2>/dev/null || stat -f %Lp "$TMP/victim")
+[ "$vperms" = "755" ] || { echo "FAIL: symlinked marker dir: victim dir mode changed to $vperms"; hard=1; }
+victim_files=$(cd "$TMP/victim" && find . -mindepth 1 | tr '\n' ' ')
+[ "$victim_files" = "./keep " ] || { echo "FAIL: symlinked marker dir: victim dir contents changed: $victim_files"; hard=1; }
+envelope_ok "$TMP/dirlnk-out" || { echo "FAIL: symlinked marker dir did not fail open (inject)"; hard=1; }
+[ "$hard" = 0 ] || exit 1
+
 echo "PASS: dedup marker"

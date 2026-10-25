@@ -124,25 +124,46 @@ tilde=1; if [ -e "$T/tilde-bd-ran" ]; then tilde=0; fi
 check "tilde entry kept (~/bin/bd runs)" "$tilde"
 
 # --- golden: a normal PATH emits the same bytes as the pre-change hook ---
-mkdir -p "$T/old/hooks" "$T/gcwd" "$T/ghome"
+# Base: GOLDEN_BASE (0c5127c), the last commit before sub-project A. Rule: when a
+# later change INTENDS to change the hook's normal-PATH output, move GOLDEN_BASE
+# to the commit just before that change, in the same commit. One cmp per output
+# dialect. A checkout without that commit (shallow clone, tarball) SKIPs.
+mkdir -p "$T/old/hooks" "$T/gcwd" "$T/ghome" "$T/ghome-sm/.claude"
 ln -s "$ROOT/skills" "$T/old/skills"
 printf '{"session_id":"golden","source":"startup"}' >"$T/golden-in"
+printf '{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"bd prime --hook-json"}]}]}}\n' \
+  >"$T/ghome-sm/.claude/settings.json"
+# golden_run <old|new> <dialect>: writes $T/golden-<dialect>-<which> and its .rc
+golden_run() {
+  local which="$1" dialect="$2" groot ghome="$T/ghome"
+  local -a denv
+  if [ "$which" = old ]; then groot="$T/old"; else groot="$ROOT"; fi
+  case "$dialect" in
+    claude) denv=(CLAUDE_PLUGIN_ROOT="$groot") ;;
+    cursor) denv=(CURSOR_PLUGIN_ROOT="$groot") ;;
+    copilot) denv=(COPILOT_CLI=1 CLAUDE_PLUGIN_ROOT="$groot") ;;
+    claude-systemMessage) denv=(CLAUDE_PLUGIN_ROOT="$groot"); ghome="$T/ghome-sm" ;;
+  esac
+  mkdir -p "$T/grt-$dialect-$which"
+  (cd "$T/gcwd" && env -i HOME="$ghome" PATH=/usr/bin:/bin XDG_RUNTIME_DIR="$T/grt-$dialect-$which" "${denv[@]}" \
+    "$bash_bin" "$groot/hooks/session-start" <"$T/golden-in" >"$T/golden-$dialect-$which" 2>/dev/null)
+  echo "$?" >"$T/golden-$dialect-$which.rc"
+}
 if git -C "$ROOT" show "$GOLDEN_BASE:hooks/session-start" >"$T/old/hooks/session-start" 2>"$T/golden-git-err"; then
-  for which in old new; do
-    if [ "$which" = old ]; then groot="$T/old"; else groot="$ROOT"; fi
-    mkdir -p "$T/grt-$which"
-    (cd "$T/gcwd" && env -i HOME="$T/ghome" PATH=/usr/bin:/bin XDG_RUNTIME_DIR="$T/grt-$which" CLAUDE_PLUGIN_ROOT="$groot" \
-      "$bash_bin" "$groot/hooks/session-start" <"$T/golden-in" >"$T/golden-$which" 2>/dev/null)
-    echo "$?" >"$T/golden-$which.rc"
+  for dialect in claude cursor copilot claude-systemMessage; do
+    golden_run old "$dialect"; golden_run new "$dialect"
+    g="$T/golden-$dialect"
+    exercised=0
+    if [ "$dialect" = claude-systemMessage ] && ! grep -q '"systemMessage"' "$g-new"; then exercised=1; fi
+    if [ "$(cat "$g-old.rc")" = 0 ] && [ "$(cat "$g-new.rc")" = 0 ] && [ "$exercised" = 0 ] \
+       && [ -s "$g-new" ] && cmp -s "$g-old" "$g-new"; then
+      report "golden $dialect (normal PATH unchanged since $GOLDEN_BASE)" 0 ""
+    else
+      report "golden $dialect (normal PATH unchanged since $GOLDEN_BASE)" 1 "rc old=$(cat "$g-old.rc") new=$(cat "$g-new.rc") systemMessage-missing=$exercised; $(cmp "$g-old" "$g-new" 2>&1)"
+    fi
   done
-  if [ "$(cat "$T/golden-old.rc")" = 0 ] && [ "$(cat "$T/golden-new.rc")" = 0 ] \
-     && [ -s "$T/golden-new" ] && cmp -s "$T/golden-old" "$T/golden-new"; then
-    report "golden (normal PATH unchanged)" 0 ""
-  else
-    report "golden (normal PATH unchanged)" 1 "rc old=$(cat "$T/golden-old.rc") new=$(cat "$T/golden-new.rc"); $(cmp "$T/golden-old" "$T/golden-new" 2>&1)"
-  fi
 else
-  report "golden (normal PATH unchanged)" 1 "git show $GOLDEN_BASE failed: $(cat "$T/golden-git-err")"
+  echo "SKIP: golden (git show $GOLDEN_BASE failed, e.g. a shallow or tarball checkout: $(head -c 200 "$T/golden-git-err"))"
 fi
 
 # --- install.sh's generated shim and npx fallback ---
