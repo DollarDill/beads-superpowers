@@ -86,7 +86,7 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 
 python3 - "$ROOT" <<'PY' || fail=1
-import os, sys, importlib.util, tempfile, shutil, pathlib
+import glob, os, sys, importlib.util, tempfile, shutil, pathlib
 
 root = sys.argv[1]
 ok_, bad_ = [], []
@@ -105,13 +105,13 @@ def load(plugin_dir):
 
 
 class FakeCtx:
-    """Signature pinned to upstream's call: register_skill(name, Path)."""
+    """Signature pinned to upstream's call; mirrors Hermes's description default."""
 
     def __init__(self):
         self.skills, self.hooks = [], {}
 
-    def register_skill(self, name, path):
-        self.skills.append((name, path))
+    def register_skill(self, name, path, description=""):
+        self.skills.append((name, path, description))
 
     def register_hook(self, event, fn):
         self.hooks[event] = fn
@@ -136,7 +136,7 @@ def build_fixture(layout, with_hooks=True, n_skills=2, env_bash=False):
         d = os.path.join(skills_root, "skills", name)
         os.makedirs(d, exist_ok=True)
         with open(os.path.join(d, "SKILL.md"), "w") as f:
-            f.write("# stub\n")
+            f.write('---\nname: ' + name + '\ndescription: "Use when: a, b"\n---\n# stub\n')
     if with_hooks:
         hd = os.path.join(skills_root, "hooks")
         os.makedirs(hd, exist_ok=True)
@@ -154,9 +154,23 @@ mod = load(pdir)
 ctx = FakeCtx()
 mod.register(ctx)
 check(len(ctx.skills) == 2, "register_skill called once per skill dir")
-check(all(isinstance(p, pathlib.Path) for _, p in ctx.skills),
+check(all(isinstance(p, pathlib.Path) for _, p, _ in ctx.skills),
       "register_skill receives pathlib.Path, not str")
 check("pre_llm_call" in ctx.hooks, "pre_llm_call hook registered")
+check(all(d == "Use when: a, b" for _, _, d in ctx.skills),
+      "register_skill receives the frontmatter description")
+shutil.rmtree(tmp)
+
+# --- real tree: every shipped skill registers its non-empty description ---
+tmp, pdir = build_fixture("sibling", with_hooks=False)
+shutil.rmtree(os.path.join(tmp, "skills"))
+os.symlink(os.path.join(root, "skills"), os.path.join(tmp, "skills"))
+mod = load(pdir)
+ctx = FakeCtx()
+mod.register(ctx)
+real_count = len(glob.glob(os.path.join(root, "skills", "*", "SKILL.md")))
+check(all(d for _, _, d in ctx.skills) and len(ctx.skills) == real_count,
+      "every real skill registers a non-empty description")
 shutil.rmtree(tmp)
 
 # --- fail loud rather than register nothing ---

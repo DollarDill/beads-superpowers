@@ -8,6 +8,7 @@ are ignored and ctx.inject_message refuses from that hook).
 Fork delta (minimal, policy-free): upstream's _build_bootstrap() is replaced by
 an exec of the canonical composer, added in the next task. All selection and
 degradation policy lives in hooks/session-start and is never reimplemented here.
+Skill descriptions: upstream v7.0.1 parity (#2284).
 Anti-fork guard: tests/hooks/test-hermes-injection.sh.
 """
 
@@ -25,6 +26,25 @@ BOOTSTRAP_MARKER = "EXTREMELY_IMPORTANT"
 # secret-shaped, and this degraded path has no redactor, so we fail closed:
 # anything that is not a count header is dropped.
 _MEM_HEADER_RE = re.compile(r"^Memories \(\d+\)")
+
+
+def _frontmatter_value(content: str, key: str) -> str:
+    """Return a flat ``key: value`` scalar from a SKILL.md frontmatter block.
+
+    Hermes reads a skill's description from ``register_skill``'s ``description``
+    argument, which defaults to "" — registering only the path left every stock
+    skill with a blank description in the skill catalogue, so the model had
+    nothing to select on. Stock frontmatter is a flat block of single-line
+    scalars, so a line scan covers it without a YAML dependency.
+    """
+    match = re.match(r"^---\n([\s\S]*?)\n---\n", content)
+    if not match:
+        return ""
+    for line in match.group(1).splitlines():
+        name, sep, value = line.partition(":")
+        if sep and name.strip() == key:
+            return value.strip().strip("\"'")
+    return ""
 
 
 def _here() -> str:
@@ -167,7 +187,9 @@ def register(ctx):
     for name in sorted(os.listdir(skills_dir)):
         skill_md = os.path.join(skills_dir, name, "SKILL.md")
         if os.path.isfile(skill_md):
-            ctx.register_skill(name, Path(skill_md))
+            with open(skill_md, encoding="utf-8") as f:
+                description = _frontmatter_value(f.read(), "description")
+            ctx.register_skill(name, Path(skill_md), description=description)
             registered += 1
 
     # Fail loud rather than register nothing: a plugin that loads with zero
