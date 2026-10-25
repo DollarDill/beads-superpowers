@@ -73,6 +73,7 @@ INSTALL_TIER=""
 # shellcheck disable=SC2034  # STAGING_DIR used in later install tiers
 STAGING_DIR=""
 VERSION=""
+HOOK_BASH=""  # absolute bash the registered hook names (setup_hooks)
 agent_count=0
 
 # --- Colors (TTY-aware) ---
@@ -475,6 +476,11 @@ setup_hooks() {
     return 1
   fi
 
+  if ! HOOK_BASH=$(hook_bash); then
+    warn "no bash found on PATH — cannot register the SessionStart hook"
+    return 1
+  fi
+
   mkdir -p "$HOOKS_DIR"
 
   info "Creating SessionStart hook..."
@@ -751,17 +757,94 @@ write_hook_script() {
     rm -rf "$canon_root/skills"
     ln -s "$SKILLS_DIR" "$canon_root/skills"
 
-    # Unquoted heredoc: $canon_root is substituted at install time (same
-    # mechanism as register_hook's PYEOF); runtime expansions are escaped.
-    cat > "$HOOK_SCRIPT" << HOOKEOF
-#!/usr/bin/env bash
-# beads-superpowers hook shim — canonical logic lives in hooks/session-start.
-# The CLAUDE_PLUGIN_ROOT default preserves the hookSpecificOutput envelope this
-# registration has always emitted (settings.json / codex_hooks consumers).
-BSP_ROOT="$canon_root"
-export CLAUDE_PLUGIN_ROOT="\${CLAUDE_PLUGIN_ROOT:-\$BSP_ROOT}"
-exec "\${BASH:-bash}" "\$BSP_ROOT/hooks/session-start" "\$@"
+    # The two install-time paths are single-quoted for sh; the body is a
+    # quoted heredoc, so nothing in it expands now. The body is POSIX sh.
+    local q="'\\''"
+    {
+      printf '%s\n' '#!/usr/bin/env bash' \
+        '# beads-superpowers hook shim — canonical logic lives in hooks/session-start.' \
+        '# The CLAUDE_PLUGIN_ROOT default preserves the hookSpecificOutput envelope this' \
+        '# registration has always emitted (settings.json / codex_hooks consumers).'
+      printf "BSP_ROOT='%s'\n" "${canon_root//\'/$q}"
+      printf "BSP_SHIM='%s'\n" "${HOOK_SCRIPT//\'/$q}"
+      cat << 'HOOKEOF'
+export CLAUDE_PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$BSP_ROOT}"
+# Run hooks/session-start with a bash that never comes from the project, by
+# hooks/run-hook.cmd's Unix-half rule (its comments give the reasons):
+# 1. Keep absolute PATH entries, map ~ and ~/x to $HOME when $HOME is
+#    absolute, drop everything else, fall back to /usr/bin:/bin.
+# 2. Use the bash on that PATH. Only if there is none, use $BASH when it is
+#    absolute, physically outside both the cwd tree and the project root
+#    (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR, when absolute), and not
+#    this shim. bash fills $BASH by a PATH search when started with a
+#    slash-less argv0, which can land in the cwd.
+# 3. No usable bash: exit 0 silently.
+bsp_safe_path=""
+bsp_old_ifs=$IFS
+IFS=:
+set -f
+for bsp_p in ${PATH:-}; do
+  # shellcheck disable=SC2088 # matches literal ~ entries, mapped to $HOME here
+  case "$bsp_p" in
+    /*) ;;
+    "~"|"~/"*)
+      case "${HOME:-}" in
+        /*) bsp_p="${HOME}${bsp_p#\~}" ;;
+        *) continue ;;
+      esac ;;
+    *) continue ;;
+  esac
+  bsp_safe_path="${bsp_safe_path:+$bsp_safe_path:}$bsp_p"
+done
+set +f
+IFS=$bsp_old_ifs
+PATH="${bsp_safe_path:-/usr/bin:/bin}"; export PATH
+
+bsp_bash=$(command -v bash 2>/dev/null) || bsp_bash=""
+case "$bsp_bash" in
+  /*) ;;
+  *) bsp_bash="" ;;
+esac
+if [ -z "$bsp_bash" ]; then
+  case "${BASH:-}" in
+    /*)
+      bsp_cwd=$(pwd -P 2>/dev/null) || bsp_cwd=""
+      bsp_root=""
+      case "${CLAUDE_PROJECT_DIR:-}" in
+        /*) bsp_root=$CLAUDE_PROJECT_DIR ;;
+        *)
+          case "${CURSOR_PROJECT_DIR:-}" in
+            /*) bsp_root=$CURSOR_PROJECT_DIR ;;
+          esac ;;
+      esac
+      # A named root that does not resolve leaves bsp_root empty: refuse.
+      if [ -n "$bsp_root" ]; then
+        bsp_root=$(cd -P "$bsp_root/" 2>/dev/null && pwd -P) || bsp_root=""
+      else
+        bsp_root=$bsp_cwd
+      fi
+      bsp_bash_dir=$(cd -P "${BASH%/*}/" 2>/dev/null && pwd -P) || bsp_bash_dir=""
+      if [ -n "$bsp_cwd" ] && [ -n "$bsp_root" ] && [ -n "$bsp_bash_dir" ]; then
+        # Prefixes go through variables: bash 5.3 does not match "${v%/}"/*
+        # when the expansion is empty (cwd /).
+        bsp_cwd_pfx=${bsp_cwd%/}
+        bsp_root_pfx=${bsp_root%/}
+        case "$bsp_bash_dir/" in
+          "$bsp_cwd_pfx"/*|"$bsp_root_pfx"/*) ;;
+          *)
+            if [ ! "$BASH" -ef "$BSP_SHIM" ]; then
+              bsp_bash=$BASH
+            fi ;;
+        esac
+      fi ;;
+  esac
+fi
+if [ -z "$bsp_bash" ]; then
+  exit 0
+fi
+exec "$bsp_bash" "$BSP_ROOT/hooks/session-start" "$@"
 HOOKEOF
+    } > "$HOOK_SCRIPT"
   else
     cat > "$HOOK_SCRIPT" << 'HOOKEOF'
 #!/usr/bin/env bash
@@ -846,12 +929,39 @@ HOOKEOF
 }
 
 
-register_hook() {
-  python3 << PYEOF
-import json, os
+# hook_bash: prints the absolute bash the registered hook command names.
+# The harness runs that command through a shell, so a bare `bash` would be
+# looked up on the harness PATH, and an empty or relative entry searches the
+# untrusted project. Resolved now from a copy of PATH cleaned by
+# hooks/session-start's rule (absolute entries only, ~ and ~/x become $HOME).
+hook_bash() {
+  local p safe="" found
+  local -a parts
+  IFS=: read -r -a parts <<<"${PATH:-}"
+  for p in ${parts[@]+"${parts[@]}"}; do
+    # shellcheck disable=SC2088 # literal ~ entries: bash expands them at lookup
+    case "$p" in
+      /*) ;;
+      "~"|"~/"*)
+        if [[ "${HOME:-}" == /* ]]; then p="${HOME}${p#\~}"; else continue; fi ;;
+      *) continue ;;
+    esac
+    safe="${safe:+$safe:}$p"
+  done
+  # Assigning PATH also clears the hash table, so no earlier lookup leaks in.
+  found=$(PATH="${safe:-/usr/bin:/bin}"; command -v bash) || return 1
+  case "$found" in
+    /*) printf '%s\n' "$found" ;;
+    *) return 1 ;;
+  esac
+}
 
-sf = "$SETTINGS_FILE"
-hs = "$HOOK_SCRIPT"
+register_hook() {
+  python3 - "$SETTINGS_FILE" "$HOOK_SCRIPT" "$HOOK_BASH" << 'PYEOF'
+import json, os, shlex, sys
+
+sf, hs, hb = sys.argv[1:4]
+cmd = f"{shlex.quote(hb)} {shlex.quote(hs)}"
 
 if os.path.exists(sf):
     with open(sf) as f:
@@ -862,12 +972,22 @@ else:
 
 hooks = settings.setdefault("hooks", {})
 
-# SessionStart hook
+# SessionStart hook. An earlier registration of this shim (`bash <shim>`,
+# which looks bash up on the harness PATH, or an older absolute bash) is
+# rewritten in place; other hooks are left alone.
 ss = hooks.setdefault("SessionStart", [])
+for e in ss:
+    for h in e.get("hooks", []) if isinstance(e, dict) else []:
+        try:
+            argv = shlex.split(h.get("command", ""))
+        except (AttributeError, ValueError):
+            continue
+        if len(argv) == 2 and argv[1] == hs and (argv[0] == "bash" or argv[0].endswith("/bash")):
+            h["command"] = cmd
 if not any("beads-superpowers" in json.dumps(e) for e in ss):
     ss.append({
         "matcher": "startup|clear|compact",
-        "hooks": [{"type": "command", "command": f"bash {hs}"}]
+        "hooks": [{"type": "command", "command": cmd}]
     })
 
 with open(sf, "w") as f:

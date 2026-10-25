@@ -179,12 +179,67 @@ if [ "$(tail -n 1 "$T/whs.sh")" = "}" ] && grep -q 'HOOKEOF' "$T/whs.sh"; then
   HOOKS_DIR="$T/hookhome" HOOK_SCRIPT="$T/hookhome/shim.sh" SKILLS_DIR="$ROOT/skills" write_hook_script "$ROOT"
   HOOKS_DIR="$T/hookhome" HOOK_SCRIPT="$T/hookhome/fallback.sh" SKILLS_DIR="$ROOT/skills" write_hook_script ""
   # shellcheck disable=SC2016 # the shim's exec line is matched literally
-  want='exec "${BASH:-bash}" "$BSP_ROOT/hooks/session-start" "$@"'
+  want='exec "$bsp_bash" "$BSP_ROOT/hooks/session-start" "$@"'
   last=$(tail -n 1 "$T/hookhome/shim.sh")
-  if [ "$last" = "$want" ]; then report "shim execs \${BASH:-bash}" 0 ""; else report "shim execs \${BASH:-bash}" 1 "last line: $last"; fi
+  if [ "$last" = "$want" ]; then report "shim execs the vetted bash" 0 ""; else report "shim execs the vetted bash" 1 "last line: $last"; fi
 
   fresh; run "$T/evil" "" "$bash_bin" "$T/hookhome/shim.sh"
   planted_check "planted binaries: install.sh shim with PATH=''"
+
+  # The shim picks bash with hooks/run-hook.cmd's rule: the bash on the
+  # cleaned PATH, else $BASH only when absolute, outside the cwd tree and the
+  # project root, and not the shim; else exit 0 silently.
+  # silent_check <name>: refused — rc 0, no output, no planted binary ran.
+  silent_check() {
+    local planted prc
+    planted=$(no_planted); prc=$?
+    if [ "$rc" = 0 ] && [ ! -s "$out" ] && [ "$prc" = 0 ]; then report "$1" 0 ""; else report "$1" 1 "$planted $(detail)"; fi
+  }
+  # bash started with argv0 "bash" fills $BASH by a PATH search, which can
+  # land in the cwd (finding d).
+  fresh
+  # shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
+  run "$T/evil" "" "$bash_bin" -c 'exec -a bash "$0" "$@"' "$bash_bin" "$T/hookhome/shim.sh"
+  planted_check "shim: argv0 bash, PATH='' (cleaned-PATH bash used, not the cwd one)"
+  fresh
+  # shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
+  run "$T/evil" "/nonexistent:" "$bash_bin" -c 'exec -a bash "$0" "$@"' "$bash_bin" "$T/hookhome/shim.sh"
+  silent_check "shim: argv0 bash, PATH='/nonexistent:' (\$BASH in cwd refused)"
+  fresh; run "$T/evil" "/nonexistent" "$bash_bin" "$T/hookhome/shim.sh"
+  planted_check "shim: bash-less PATH falls back to an absolute \$BASH"
+  # Project root: $BASH = <root>/sub/../bash resolves to <root>/bash.
+  mkdir -p "$T/proj/sub"
+  printf '#!/bin/sh\n: > "%s/ran-rootbash"\n' "$T" >"$T/proj/bash"
+  chmod +x "$T/proj/bash"
+  for pv in CLAUDE_PROJECT_DIR CURSOR_PROJECT_DIR; do
+    fresh
+    # shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
+    run "$T/proj/sub" "/nonexistent:.." /usr/bin/env "$pv=$T/proj" "$bash_bin" -c 'exec -a bash "$0" "$@"' "$bash_bin" "$T/hookhome/shim.sh"
+    silent_check "shim: \$BASH inside $pv from a subdirectory cwd (refused)"
+  done
+  # cwd / contains every $BASH; bash 5.3 does not match "${v%/}"/* when the
+  # expansion is empty.
+  seen=" "
+  for sh_bin in /opt/homebrew/bin/bash /usr/local/bin/bash /bin/bash /bin/dash "$bash_bin"; do
+    if [ ! -x "$sh_bin" ]; then continue; fi
+    case "$seen" in *" $sh_bin "*) continue ;; esac
+    seen="$seen$sh_bin "
+    fresh; run / /nonexistent /usr/bin/env BASH="$bash_bin" "$sh_bin" "$T/hookhome/shim.sh"
+    silent_check "shim: cwd / refuses \$BASH ($sh_bin)"
+  done
+  # $BASH naming the shim itself is refused (no self re-exec).
+  if [ -x /bin/dash ]; then
+    fresh; run "$T/plain" /nonexistent /usr/bin/env BASH="$T/hookhome/shim.sh" /bin/dash "$T/hookhome/shim.sh"
+    silent_check "shim: \$BASH = the shim is refused"
+  fi
+  # The generated shim is clean POSIX sh and bash.
+  if command -v shellcheck >/dev/null 2>&1; then
+    for d in sh bash; do
+      if sc_out=$(shellcheck -s "$d" "$T/hookhome/shim.sh" 2>&1); then report "generated shim passes shellcheck -s $d" 0 ""; else report "generated shim passes shellcheck -s $d" 1 "$sc_out"; fi
+    done
+  else
+    echo "SKIP: generated shim shellcheck (shellcheck not found)"
+  fi
 
   fresh
   mkdir -p "$h/.claude/skills"
