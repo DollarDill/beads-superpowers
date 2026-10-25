@@ -112,4 +112,18 @@ brief_path=${out#wrote }; brief_path=${brief_path%: *}
 rc=0; bash ./noexec/review-package plans/alpha-plan.md "$base_sha" "$head_sha" >/dev/null 2>&1 || rc=$?
 [ "$rc" -eq 0 ] || { echo "FAIL: review-package via bash without exec bit exited $rc"; exit 1; }
 
+# 14. a repo's own committed sdd .gitignore is left alone (create-only)
+own=$(mktemp -d); trap 'rm -rf "$TMP" "$own"' EXIT
+git init -q "$own"
+own_ignore=$'*\n!.gitignore\n!*/\n!*/progress.md'
+mkdir -p "$own/.internal/sdd"
+printf '%s\n' "$own_ignore" > "$own/.internal/sdd/.gitignore"
+printf '### Task 1: One\none\n' > "$own/plan.md"
+(cd "$own" && git add -A && git -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -qm init)
+(cd "$own" && "$WS" plan.md >/dev/null)
+[ "$(cat "$own/.internal/sdd/.gitignore")" = "$own_ignore" ] \
+  || { echo "FAIL: existing sdd .gitignore was overwritten"; exit 1; }
+[ -z "$(cd "$own" && git status --porcelain -- .internal/sdd/.gitignore)" ] \
+  || { echo "FAIL: existing sdd .gitignore shows as modified"; exit 1; }
+
 echo "PASS: sdd plan-scoped workspace + callers"
