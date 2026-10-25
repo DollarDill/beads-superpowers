@@ -15,6 +15,7 @@ FILES=(
   .cursor-plugin/plugin.json
   .kimi-plugin/plugin.json
   .devin-plugin/plugin.json
+  .antigravity-plugin/plugin.json
   .hermes-plugin/plugin.yaml
   gemini-extension.json GEMINI.md
   .agents/plugins/marketplace.json
@@ -66,5 +67,17 @@ expect_fail "M3 .agents marketplace given a version"
 # M4 — .pi extension loses its export default -> structural grep.
 stage; sed -i.bak 's/export default //' "$FIX/.pi/extensions/superpowers.ts" && rm -f "$FIX/.pi/extensions/superpowers.ts.bak"
 expect_fail "M4 .pi missing export default"
+
+# M5 — Antigravity logo present but not a PNG -> conditional logo check.
+stage; printf 'x' > "$FIX/logo.png"; jq_set "$FIX/.antigravity-plugin/plugin.json" '.logo="logo.png"'
+expect_fail "M5 antigravity logo is not a square PNG"
+
+# M6 — Antigravity description over 160 characters -> description bound.
+stage; jq_set "$FIX/.antigravity-plugin/plugin.json" '.description=("x" * 161)'
+expect_fail "M6 antigravity description over 160 chars"
+
+# M7 — stray root plugin.json -> agy would read it instead of the manifest.
+stage; printf '{}' > "$FIX/plugin.json"
+expect_fail "M7 stray root plugin.json"
 
 exit $fails

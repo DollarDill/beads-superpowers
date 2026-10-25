@@ -51,7 +51,7 @@ Config validated; not E2E-tested by us. Use with that in mind.
 | Kimi Code | `/plugins install https://github.com/DollarDill/beads-superpowers` (run `/new` after) | - | |
 | Devin CLI | `devin plugins install DollarDill/beads-superpowers` | - | manifest-only; auto-discovers `skills/`, no session hook so the agent self-primes with `bd prime`; config validated by us, not E2E-tested |
 | Hermes Agent | `hermes plugins install DollarDill/beads-superpowers` | - | registers skills natively and injects the bootstrap (including beads context) via `pre_llm_call`; config validated by us, not E2E-tested |
-| Antigravity | `agy plugin install https://github.com/DollarDill/beads-superpowers` | - | reuses the Claude plugin manifest - the same mechanism upstream verified; not E2E-tested by us |
+| Antigravity | `agy plugin install https://github.com/DollarDill/beads-superpowers` | - | native manifest `.antigravity-plugin/plugin.json`; no session-start hook, so it bootstraps through skill discovery (the `using-superpowers` description) and beads context is not injected; not E2E-tested by us, and the manifest has not been validated against `agy` (it ships without the Marketplace logo field) |
 | Factory Droid | `droid plugin marketplace add https://github.com/DollarDill/beads-superpowers` then `droid plugin install beads-superpowers@beads-superpowers-marketplace` | - | reuses the Claude plugin manifest - the same mechanism upstream verified; not E2E-tested by us |
 | Pi | `pi install git:github.com/DollarDill/beads-superpowers` | - | config validated by us; not E2E-tested |
 

@@ -244,7 +244,7 @@ Hermes reads `.hermes-plugin/plugin.yaml` and registers every skill with its nat
 agy plugin install https://github.com/DollarDill/beads-superpowers
 ```
 
-Note: reuses the Claude plugin manifest - the same mechanism upstream verified.
+Antigravity reads the native manifest `.antigravity-plugin/plugin.json`. It has no session-start hook, so the plugin bootstraps through skill discovery: the `using-superpowers` skill description tells the agent to load it at the start of a conversation. Beads context is not injected. Best-effort: not end-to-end tested by us, and the manifest has not been validated against `agy` (it ships without the Marketplace logo field).
 
 ### Factory Droid
 
