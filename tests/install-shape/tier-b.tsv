@@ -1,7 +1,7 @@
 cursor	cursor-agent	.cursor-plugin/plugin.json	Cursor detected — native install: /add-plugin beads-superpowers
 copilot	copilot	-	Copilot CLI detected — native install: copilot plugin marketplace add DollarDill/beads-superpowers
 kimi	kimi	.kimi-plugin/plugin.json	Kimi Code detected — native install: /plugins install https://github.com/DollarDill/beads-superpowers
-antigravity	agy	-	Antigravity detected — native install: agy plugin install https://github.com/DollarDill/beads-superpowers
+antigravity	agy	.antigravity-plugin/plugin.json	Antigravity detected — native install: agy plugin install https://github.com/DollarDill/beads-superpowers
 droid	droid	-	Factory Droid detected — native: droid plugin marketplace add https://github.com/DollarDill/beads-superpowers
 pi	pi	-	Pi detected — native install: pi install git:github.com/DollarDill/beads-superpowers
 gemini	gemini	gemini-extension.json	Gemini CLI detected — native install: gemini extensions install https://github.com/DollarDill/beads-superpowers

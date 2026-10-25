@@ -15,6 +15,7 @@ FILES=(
   .cursor-plugin/plugin.json
   .kimi-plugin/plugin.json
   .devin-plugin/plugin.json
+  .antigravity-plugin/plugin.json
   .hermes-plugin/plugin.yaml
   gemini-extension.json GEMINI.md
   .agents/plugins/marketplace.json
@@ -74,5 +75,17 @@ expect_fail "M5 cursor hook command relative to the cwd"
 # M6 — anchored, but the target does not exist -> need.
 stage; rm -f "$FIX/hooks/run-hook.cmd"
 expect_fail "M6 cursor hook command target missing"
+
+# M7 — Antigravity logo present but not a PNG -> conditional logo check.
+stage; printf 'x' > "$FIX/logo.png"; jq_set "$FIX/.antigravity-plugin/plugin.json" '.logo="logo.png"'
+expect_fail "M7 antigravity logo is not a square PNG"
+
+# M8 — Antigravity description over 160 characters -> description bound.
+stage; jq_set "$FIX/.antigravity-plugin/plugin.json" '.description=("x" * 161)'
+expect_fail "M8 antigravity description over 160 chars"
+
+# M9 — stray root plugin.json -> agy would read it instead of the manifest.
+stage; printf '{}' > "$FIX/plugin.json"
+expect_fail "M9 stray root plugin.json"
 
 exit $fails

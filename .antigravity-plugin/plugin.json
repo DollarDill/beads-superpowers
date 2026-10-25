@@ -1,0 +1,30 @@
+{
+  "name": "beads-superpowers",
+  "displayName": "Beads Superpowers",
+  "description": "Process-discipline skills plus persistent task memory for your coding agent.",
+  "suggestedPrompts": [
+    "I've got an idea for something I'd like to build",
+    "Let's figure out why this broke"
+  ],
+  "version": "0.16.0",
+  "author": {
+    "name": "Dillon Frawley",
+    "email": "dillon@algocents.com"
+  },
+  "homepage": "https://algocents.com/beads-superpowers/",
+  "repository": "https://github.com/DollarDill/beads-superpowers",
+  "license": "MIT",
+  "keywords": [
+    "brainstorming",
+    "subagent-driven-development",
+    "skills",
+    "planning",
+    "tdd",
+    "debugging",
+    "code-review",
+    "workflow",
+    "beads",
+    "issue-tracking"
+  ],
+  "category": "Developer Tools"
+}

@@ -37,7 +37,7 @@ jq_ok() {  # file, filter, label
 }
 # JSON validity: plugin manifests + all three marketplace manifests
 for f in .claude-plugin/plugin.json .codex-plugin/plugin.json .cursor-plugin/plugin.json \
-         hooks/hooks-cursor.json .kimi-plugin/plugin.json .devin-plugin/plugin.json gemini-extension.json \
+         hooks/hooks-cursor.json .kimi-plugin/plugin.json .devin-plugin/plugin.json .antigravity-plugin/plugin.json gemini-extension.json \
          .claude-plugin/marketplace.json .codex-plugin/marketplace.json .agents/plugins/marketplace.json; do
   if [ -f "$f" ]; then
     valid_json "$f"
@@ -48,6 +48,67 @@ done
 ver_match .cursor-plugin/plugin.json '.version'
 ver_match .kimi-plugin/plugin.json '.version'
 ver_match .devin-plugin/plugin.json '.version'
+ver_match .antigravity-plugin/plugin.json '.version'
+# Antigravity native manifest: ships WITHOUT a logo (follow-up bead); the logo
+# check is conditional so adding one later inherits the square-PNG rule.
+if [ -f .antigravity-plugin/plugin.json ]; then
+  if python3 -I - "$PWD" <<'PY'
+import json, re, struct, sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+
+def fail(message):
+    raise SystemExit(f"antigravity FAIL: {message}")
+
+m = json.loads((root / ".antigravity-plugin" / "plugin.json").read_text(encoding="utf-8"))
+for field in ["name", "displayName", "description", "suggestedPrompts", "version",
+              "author", "homepage", "repository", "license", "keywords", "category"]:
+    if not m.get(field):
+        fail(f"field {field!r} is missing or empty")
+if m["name"] != "beads-superpowers":
+    fail(f"name must be 'beads-superpowers', got {m['name']!r}")
+if m["license"] != "MIT":
+    fail("license must be MIT")
+if m["category"] != "Developer Tools":
+    fail("category must be 'Developer Tools'")
+if len(m["description"]) > 160:
+    fail(f"description is {len(m['description'])} characters; at most 160")
+prompts = m["suggestedPrompts"]
+if not isinstance(prompts, list) or not 1 <= len(prompts) <= 3:
+    fail("suggestedPrompts must be a list of 1-3 prompts")
+if not all(isinstance(p, str) and p.strip() for p in prompts):
+    fail("suggestedPrompts entries must be non-empty strings")
+claude = json.loads((root / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+if m["version"] != claude["version"]:
+    fail("version != .claude-plugin version")
+if m["author"] != claude["author"]:
+    fail("author != .claude-plugin author")
+if "logo" in m:
+    logo = root / str(m["logo"])
+    if not logo.is_file():
+        fail(f"logo {m['logo']!r} does not exist")
+    header = logo.read_bytes()[:24]
+    if header[:8] != b"\x89PNG\r\n\x1a\n":
+        fail("logo is not a PNG")
+    w, h = struct.unpack(">II", header[16:24])
+    if w != h or w < 128:
+        fail(f"logo must be square and at least 128x128, got {w}x{h}")
+skill = (root / "skills" / "using-superpowers" / "SKILL.md").read_text(encoding="utf-8")
+fm = re.match(r"---\n(.*?)\n---\n", skill, re.DOTALL)
+d = fm and re.search(r"^description:(.*)$", fm.group(1), re.MULTILINE)
+if not d or "Use when starting any conversation" not in d.group(1):
+    fail("using-superpowers description lost 'Use when starting any conversation'")
+for stray in ["plugin.json", "hooks.json", "rules"]:
+    if (root / stray).exists():
+        fail(f"root {stray} must not exist")
+PY
+  then
+    echo "antigravity manifest OK"
+  else
+    fail=1
+  fi
+fi
 ver_match gemini-extension.json '.version'
 jq -e '.skills=="./skills/"' .cursor-plugin/plugin.json >/dev/null && echo "cursor skills OK" || fail=1
 jq -e '.sessionStart.skill=="using-superpowers"' .kimi-plugin/plugin.json >/dev/null && echo "kimi sessionStart OK" || fail=1

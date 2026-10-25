@@ -263,6 +263,7 @@ Version surfaces are declared in `.version-bump.json` and must stay in sync:
 - `.cursor-plugin/plugin.json`
 - `.kimi-plugin/plugin.json`
 - `.devin-plugin/plugin.json`
+- `.antigravity-plugin/plugin.json`
 - `gemini-extension.json`
 - `.hermes-plugin/plugin.yaml` (YAML — registered in `prose[]`, not `files[]`)
 - `CLAUDE.md` (`**Version:**` line — prose entry)
