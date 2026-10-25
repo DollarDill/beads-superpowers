@@ -122,6 +122,23 @@ done
 # shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
 run_evil "/nonexistent:" "$bash_bin" -c 'exec -a bash "$0" "$@"' "$bash_bin" "$L" probe-ok
 planted_check "planted bash: argv0 bash, PATH='/nonexistent:' (\$BASH in cwd refused)" no
+# $BASH = <cwd>/lnk/../../bash, with lnk -> a/b/c inside the project. Read
+# textually, that is the directory above the cwd; exec resolves the symlink
+# before the "..", so it runs <cwd>/a/bash. The check must agree with exec.
+mkdir -p "$TMP/evil/a/b/c"
+ln -s a/b/c "$TMP/evil/lnk"
+printf '#!/bin/sh\n: > "%s/ran-dotdot"\n' "$TMP" >"$TMP/evil/a/bash"
+chmod +x "$TMP/evil/a/bash"
+# shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
+run_evil "/nonexistent:lnk/../.." "$bash_bin" -c 'exec -a bash "$0" "$@"' "$bash_bin" "$L" probe-ok
+if [ "$rc" = 0 ] && [ -z "$ran" ] && [ -z "$out" ]; then report "planted bash: \$BASH reaches the cwd through a symlink and .. (refused, silent exit)" 0 ""; else report "planted bash: \$BASH reaches the cwd through a symlink and .. (refused, silent exit)" 1 "rc=$rc planted ran:[$ran] out=$out"; fi
+# The PATH clean-up is what stops this one: in POSIX mode bash's `command -v`
+# turns an empty entry's hit into an absolute cwd path, which rule (a) would
+# accept. The real bash sits on an absolute entry after it.
+mkdir -p "$TMP/realbin"
+ln -s "$bash_bin" "$TMP/realbin/bash"
+run_evil ":$TMP/realbin" "$bash_bin" --posix "$L" probe-ok
+planted_check "planted bash: bash --posix launcher, PATH=':<dir with a real bash>'" yes
 # ...while a $BASH outside the cwd is still used when PATH has no bash.
 run_evil "/nonexistent" "$bash_bin" "$L" probe-ok
 planted_check "bash-less PATH falls back to an absolute \$BASH" yes

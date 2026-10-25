@@ -99,9 +99,11 @@ if [ -z "$bsp_bash" ]; then
   case "${BASH:-}" in
     /*)
       # Compare physical paths: $BASH and $PWD can name the same place through
-      # different symlinks.
+      # different symlinks. cd -P hands the path to chdir unchanged, so the
+      # kernel resolves it as exec will: a symlink before the ".." after it
+      # (a plain cd would cancel lnk/.. as text first).
       bsp_cwd=$(pwd -P 2>/dev/null) || bsp_cwd=""
-      bsp_bash_dir=$(cd "${BASH%/*}/" 2>/dev/null && pwd -P) || bsp_bash_dir=""
+      bsp_bash_dir=$(cd -P "${BASH%/*}/" 2>/dev/null && pwd -P) || bsp_bash_dir=""
       if [ -n "$bsp_cwd" ] && [ -n "$bsp_bash_dir" ]; then
         case "$bsp_bash_dir/" in
           "${bsp_cwd%/}"/*) ;;
