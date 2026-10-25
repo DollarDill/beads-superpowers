@@ -317,9 +317,14 @@ if [ "$(tail -n 1 "$T/whs.sh")" = "}" ] && grep -q 'HOOKEOF' "$T/whs.sh"; then
     seen="$seen$sh_bin "
     # bash drops a leading ./ from an entry (./nm/.bin gives
     # <cwd>/nm/.bin/bash) but keeps an inner one: nm/./.bin and nm/.bin/.
-    # give <cwd>/nm/./.bin/bash and <cwd>/nm/.bin/./bash. Such a lookup
-    # always starts with a cwd spelling, so the prefix rule refuses it as
-    # well as the . rule.
+    # give <cwd>/nm/./.bin/bash and <cwd>/nm/.bin/./bash. When the launcher
+    # or shim runs as its own process (as the harness runs it, or via
+    # bash <file> / sh <file>), such a lookup starts with a spelling of the
+    # cwd it compares against, so the prefix rule refuses it as well as the
+    # . rule. The exception is a file sourced (. <file>) after a cd: $BASH
+    # keeps the old cwd, only the . rule refuses nm/./.bin, and plain
+    # nm/.bin runs a planted bash. Sourcing is unsupported and not tested
+    # here.
     for e in .. ../other nm/.bin ./nm/.bin nm/./.bin nm/.bin/.; do
       fresh
       # shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
@@ -354,7 +359,9 @@ if [ "$(tail -n 1 "$T/whs.sh")" = "}" ] && grep -q 'HOOKEOF' "$T/whs.sh"; then
     shim_cont "$sh_bin" "$NG" "$T/ng/proj/other/../bash"
     silent_check "shim: no root, no .git, \$BASH=<proj>/other/../bash outside the cwd ($sh_bin)"
     # The same for a /./ and a trailing /. component: bash keeps an absolute
-    # argv0 verbatim as $BASH, so only the . rule refuses these.
+    # argv0 verbatim as $BASH, so only the . rule refuses these. They use an
+    # absolute argv0 because, for an executed launcher or shim, no lookup
+    # spelling is refused by the . rule alone (see the entry loop).
     shim_cont "$sh_bin" "$NG" "$T/ng/proj/./bash"
     silent_check "shim: no root, no .git, \$BASH=<proj>/./bash outside the cwd ($sh_bin)"
     shim_cont "$sh_bin" "$NG" "$T/ng/proj/other/."
