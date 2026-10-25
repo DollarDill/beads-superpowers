@@ -292,7 +292,11 @@ for sh_bin in /bin/dash /bin/bash /opt/homebrew/bin/bash "$bash_bin"; do
   if [ ! -x "$sh_bin" ]; then continue; fi
   case "$seen" in *" $sh_bin "*) continue ;; esac
   seen="$seen$sh_bin "
-  for e in .. ../other nm/.bin ./nm/.bin; do
+  # bash drops a leading ./ from an entry (./nm/.bin gives <cwd>/nm/.bin/bash)
+  # but keeps an inner one: nm/./.bin and nm/.bin/. give <cwd>/nm/./.bin/bash
+  # and <cwd>/nm/.bin/./bash. Such a lookup always starts with a cwd
+  # spelling, so the prefix rule refuses it as well as the . rule.
+  for e in .. ../other nm/.bin ./nm/.bin nm/./.bin nm/.bin/.; do
     rel_run "$sh_bin" "$e"
     cont_refused "no root, no .git, PATH entry '$e' reaches a planted bash ($sh_bin)"
   done
@@ -312,6 +316,12 @@ for sh_bin in /bin/dash /bin/bash /opt/homebrew/bin/bash "$bash_bin"; do
   # A mid-path /../ with no cwd prefix: only the . and .. rule refuses it.
   cont_run "$sh_bin" "$NG" "$TMP/ng/proj/other/../bash"
   cont_refused "no root, no .git, \$BASH=<proj>/other/../bash outside the cwd ($sh_bin)"
+  # The same for a /./ and a trailing /. component: bash keeps an absolute
+  # argv0 verbatim as $BASH, so only the . rule refuses these.
+  cont_run "$sh_bin" "$NG" "$TMP/ng/proj/./bash"
+  cont_refused "no root, no .git, \$BASH=<proj>/./bash outside the cwd ($sh_bin)"
+  cont_run "$sh_bin" "$NG" "$TMP/ng/proj/other/."
+  cont_refused "no root, no .git, \$BASH=<proj>/other/. outside the cwd ($sh_bin)"
   # $BASH reached through a symlink outside the cwd that points into it, with
   # the root elsewhere: only the cwd half of the final check refuses it.
   cont_run "$sh_bin" "$TMP/ct/cwd" "$TMP/ct/alias/bash" CLAUDE_PROJECT_DIR="$TMP/ct/elsewhere"
