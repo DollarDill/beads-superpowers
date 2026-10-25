@@ -178,7 +178,8 @@ for sh_bin in /opt/homebrew/bin/bash /usr/local/bin/bash /bin/bash /bin/dash "$b
   seen="$seen$sh_bin "
   out=$(cd / && env -i HOME="$TMP" PWD=/ PATH=/nonexistent BASH="$bash_bin" "$sh_bin" "$L" probe-ok </dev/null 2>&1); rc=$?
   if [ "$rc" = 0 ] && [ -z "$out" ]; then report "cwd / refuses \$BASH ($sh_bin)" 0 ""; else report "cwd / refuses \$BASH ($sh_bin)" 1 "rc=$rc out=$out"; fi
-  # With a project root elsewhere, only the cwd half of the pattern holds.
+  # With a project root elsewhere. The cwd-prefix rule now refuses both of
+  # these first; the R1 outside-symlink row pins the final check's cwd half.
   out=$(cd / && env -i HOME="$TMP" PWD=/ PATH=/nonexistent BASH="$bash_bin" CLAUDE_PROJECT_DIR="$TMP/proj" "$sh_bin" "$L" probe-ok </dev/null 2>&1); rc=$?
   if [ "$rc" = 0 ] && [ -z "$out" ]; then report "cwd /, CLAUDE_PROJECT_DIR elsewhere, refuses \$BASH ($sh_bin)" 0 ""; else report "cwd /, CLAUDE_PROJECT_DIR elsewhere, refuses \$BASH ($sh_bin)" 1 "rc=$rc out=$out"; fi
 done
@@ -251,8 +252,9 @@ done
 # The root is then just the cwd, and a relative entry reaches a bash above or
 # beside it: through ".." (<cwd>/../bash, <cwd>/../other/bash), or through a
 # symlink the project ships (nm -> ../evilnm, entry nm/.bin). bash builds
-# $BASH as $PWD/<entry>/bash, so a $BASH with a . or .. component, or one that
-# literally starts with the logical or physical cwd, is refused.
+# $BASH as $PWD/<entry>/bash (bash 5.x: from its canonical cwd), so a $BASH
+# with a . or .. component, or one that literally starts with the logical cwd
+# (as given or canonical) or the physical cwd, is refused.
 mkdir -p "$TMP/ng/proj/sub" "$TMP/ng/proj/other" "$TMP/ng/proj/evilnm/.bin"
 ln -s ../evilnm "$TMP/ng/proj/sub/nm"
 ln -s ng/proj "$TMP/ngl"
@@ -263,6 +265,10 @@ done
 NG="$TMP/ng/proj/sub"
 NGL="$TMP/ngl/sub"
 NGP=$(cd -P "$NG" && pwd -P)
+mkdir -p "$TMP/ct/cwd" "$TMP/ct/elsewhere"
+ln -s cwd "$TMP/ct/alias"
+printf '#!/bin/sh\n: > "%s/ran-ctbash"\necho PLANTED\n' "$TMP" >"$TMP/ct/cwd/bash"
+chmod +x "$TMP/ct/cwd/bash"
 # rel_run <shell> <PATH entry>: from $NG; bash looks itself up through the
 # entry, dash gets $BASH and $PWD as that bash would have them. Sets rc, out,
 # ran.
@@ -286,10 +292,30 @@ for sh_bin in /bin/dash /bin/bash /opt/homebrew/bin/bash "$bash_bin"; do
   if [ ! -x "$sh_bin" ]; then continue; fi
   case "$seen" in *" $sh_bin "*) continue ;; esac
   seen="$seen$sh_bin "
-  for e in .. ../other nm/.bin; do
+  for e in .. ../other nm/.bin ./nm/.bin; do
     rel_run "$sh_bin" "$e"
     cont_refused "no root, no .git, PATH entry '$e' reaches a planted bash ($sh_bin)"
   done
+  # An inherited $PWD spelled non-canonically, from the symlinked cwd: bash
+  # 5.x builds $BASH from its canonical cwd but keeps $PWD as given, so
+  # neither the literal $PWD prefix nor the physical one matches. Under dash
+  # an exported $BASH can carry the canonical spelling the same way.
+  for pw in "$TMP//ngl/sub" "$TMP/./ngl/sub" "$NGL//" "$TMP/ngl//sub/"; do
+    # shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
+    case "$sh_bin" in
+      */dash) out=$(cd "$NGL" && env -i HOME="$TMP" PWD="$pw" PATH=/nonexistent BASH="$NGL/nm/.bin/bash" "$sh_bin" "$L" probe-ok </dev/null 2>&1); rc=$? ;;
+      *) out=$(cd "$NGL" && env -i HOME="$TMP" PWD="$pw" PATH=/nonexistent:nm/.bin "$bash_bin" -c 'exec -a bash "$0" "$@"' "$sh_bin" "$L" probe-ok </dev/null 2>&1); rc=$? ;;
+    esac
+    ran=$(planted_ran)
+    cont_refused "no root, no .git, entry nm/.bin, inherited PWD=${pw#"$TMP"} ($sh_bin)"
+  done
+  # A mid-path /../ with no cwd prefix: only the . and .. rule refuses it.
+  cont_run "$sh_bin" "$NG" "$TMP/ng/proj/other/../bash"
+  cont_refused "no root, no .git, \$BASH=<proj>/other/../bash outside the cwd ($sh_bin)"
+  # $BASH reached through a symlink outside the cwd that points into it, with
+  # the root elsewhere: only the cwd half of the final check refuses it.
+  cont_run "$sh_bin" "$TMP/ct/cwd" "$TMP/ct/alias/bash" CLAUDE_PROJECT_DIR="$TMP/ct/elsewhere"
+  cont_refused "\$BASH in the cwd through an outside symlink, root elsewhere ($sh_bin)"
   # The same symlinked entry from a symlinked (logical) cwd, $PWD inherited.
   # shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
   case "$sh_bin" in

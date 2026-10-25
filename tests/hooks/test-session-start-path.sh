@@ -227,7 +227,8 @@ if [ "$(tail -n 1 "$T/whs.sh")" = "}" ] && grep -q 'HOOKEOF' "$T/whs.sh"; then
     seen="$seen$sh_bin "
     fresh; run / /nonexistent /usr/bin/env BASH="$bash_bin" "$sh_bin" "$T/hookhome/shim.sh"
     silent_check "shim: cwd / refuses \$BASH ($sh_bin)"
-    # With a project root elsewhere, only the cwd half of the pattern holds.
+    # With a project root elsewhere. The cwd-prefix rule now refuses both of
+    # these first; the R1 outside-symlink row pins the final check's cwd half.
     fresh; run / /nonexistent /usr/bin/env BASH="$bash_bin" CLAUDE_PROJECT_DIR="$T/proj" "$sh_bin" "$T/hookhome/shim.sh"
     silent_check "shim: cwd /, CLAUDE_PROJECT_DIR elsewhere, refuses \$BASH ($sh_bin)"
   done
@@ -291,8 +292,9 @@ if [ "$(tail -n 1 "$T/whs.sh")" = "}" ] && grep -q 'HOOKEOF' "$T/whs.sh"; then
   # relative entry reaches a bash above or beside it: through ".."
   # (<cwd>/../bash, <cwd>/../other/bash) or through a symlink the project
   # ships (nm -> ../evilnm, entry nm/.bin). bash builds $BASH as
-  # $PWD/<entry>/bash, so a . or .. component, or a literal logical or
-  # physical cwd prefix, is refused.
+  # $PWD/<entry>/bash (bash 5.x: from its canonical cwd), so a . or ..
+  # component, or a literal logical (as given or canonical) or physical cwd
+  # prefix, is refused.
   mkdir -p "$T/ng/proj/sub" "$T/ng/proj/other" "$T/ng/proj/evilnm/.bin" "$T/rbin"
   ln -s ../evilnm "$T/ng/proj/sub/nm"
   ln -s ng/proj "$T/ngl"
@@ -304,12 +306,16 @@ if [ "$(tail -n 1 "$T/whs.sh")" = "}" ] && grep -q 'HOOKEOF' "$T/whs.sh"; then
   NG="$T/ng/proj/sub"
   NGL="$T/ngl/sub"
   NGP=$(cd -P "$NG" && pwd -P)
+  mkdir -p "$T/ct/cwd" "$T/ct/elsewhere"
+  ln -s cwd "$T/ct/alias"
+  printf '#!/bin/sh\n: > "%s/ran-ctbash"\n' "$T" >"$T/ct/cwd/bash"
+  chmod +x "$T/ct/cwd/bash"
   seen=" "
   for sh_bin in /bin/dash /bin/bash /opt/homebrew/bin/bash "$bash_bin"; do
     if [ ! -x "$sh_bin" ]; then continue; fi
     case "$seen" in *" $sh_bin "*) continue ;; esac
     seen="$seen$sh_bin "
-    for e in .. ../other nm/.bin; do
+    for e in .. ../other nm/.bin ./nm/.bin; do
       fresh
       # shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
       case "$sh_bin" in
@@ -326,6 +332,26 @@ if [ "$(tail -n 1 "$T/whs.sh")" = "}" ] && grep -q 'HOOKEOF' "$T/whs.sh"; then
       *) run "$NGL" /nonexistent:nm/.bin /usr/bin/env PWD="$NGL" "$bash_bin" -c 'exec -a bash "$0" "$@"' "$sh_bin" "$T/hookhome/shim.sh" ;;
     esac
     silent_check "shim: no root, no .git, entry nm/.bin from a symlinked cwd ($sh_bin)"
+    # An inherited $PWD spelled non-canonically, from the symlinked cwd: bash
+    # 5.x builds $BASH from its canonical cwd but keeps $PWD as given, so
+    # neither the literal $PWD prefix nor the physical one matches. Under
+    # dash an exported $BASH can carry the canonical spelling the same way.
+    for pw in "$T//ngl/sub" "$T/./ngl/sub" "$NGL//" "$T/ngl//sub/"; do
+      fresh
+      # shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
+      case "$sh_bin" in
+        */dash) run "$NGL" /nonexistent /usr/bin/env PWD="$pw" BASH="$NGL/nm/.bin/bash" "$sh_bin" "$T/hookhome/shim.sh" ;;
+        *) run "$NGL" /nonexistent:nm/.bin /usr/bin/env PWD="$pw" "$bash_bin" -c 'exec -a bash "$0" "$@"' "$sh_bin" "$T/hookhome/shim.sh" ;;
+      esac
+      silent_check "shim: no root, no .git, entry nm/.bin, inherited PWD=${pw#"$T"} ($sh_bin)"
+    done
+    # A mid-path /../ with no cwd prefix: only the . and .. rule refuses it.
+    shim_cont "$sh_bin" "$NG" "$T/ng/proj/other/../bash"
+    silent_check "shim: no root, no .git, \$BASH=<proj>/other/../bash outside the cwd ($sh_bin)"
+    # $BASH reached through a symlink outside the cwd that points into it,
+    # with the root elsewhere: only the cwd half of the final check refuses.
+    shim_cont "$sh_bin" "$T/ct/cwd" "$T/ct/alias/bash" CLAUDE_PROJECT_DIR="$T/ct/elsewhere"
+    silent_check "shim: \$BASH in the cwd through an outside symlink, root elsewhere ($sh_bin)"
     # Controls: a bash outside the project still runs, as $BASH and through
     # an absolute PATH entry.
     fresh; run "$NG" /nonexistent /usr/bin/env BASH="$bash_bin" "$sh_bin" "$T/hookhome/shim.sh"

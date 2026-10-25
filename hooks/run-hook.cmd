@@ -137,6 +137,9 @@ if [ -z "$bsp_bash" ]; then
       # leading run of slashes collapsed in each and in $BASH. Refuse a match,
       # whatever the root. Accepted over-refusal: a real bash reached through a
       # symlink under the cwd (cwd = $HOME, ~/.nix-profile/bin/bash) is refused.
+      # bash 5.x builds $BASH from its canonical cwd but keeps an inherited
+      # $PWD as spelled (//, /./, doubled /), so also compare with the
+      # canonical logical cwd, from cd "$PWD" && pwd. If that cd fails, refuse.
       bsp_lit=$BASH
       case $bsp_lit in //*) bsp_lit=/${bsp_lit#"${bsp_lit%%[!/]*}"} ;; esac
       bsp_pwd=${PWD:-}
@@ -144,8 +147,16 @@ if [ -z "$bsp_bash" ]; then
       bsp_phys_pfx=${bsp_cwd%/}
       bsp_pwd_pfx=$bsp_phys_pfx
       if [ -n "$bsp_pwd" ]; then bsp_pwd_pfx=${bsp_pwd%/}; fi
+      if [ -n "${PWD:-}" ]; then
+        bsp_can=$(cd "$PWD" 2>/dev/null && pwd) || bsp_can=""
+        case $bsp_can in //*) bsp_can=/${bsp_can#"${bsp_can%%[!/]*}"} ;; esac
+        if [ -z "$bsp_can" ]; then bsp_ok=0; fi
+      else
+        bsp_can=$bsp_cwd
+      fi
+      bsp_can_pfx=${bsp_can%/}
       case "$bsp_lit" in
-        "$bsp_pwd_pfx"/*|"$bsp_phys_pfx"/*) bsp_ok=0 ;;
+        "$bsp_pwd_pfx"/*|"$bsp_phys_pfx"/*|"$bsp_can_pfx"/*) bsp_ok=0 ;;
       esac
       if [ -n "$bsp_root" ]; then
         bsp_root=$(cd -P "$bsp_root/" 2>/dev/null && pwd -P) || bsp_root=""
