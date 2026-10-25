@@ -5,7 +5,8 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 PINNED=d1fcecfe19df2d083994803f73417710f745bd96c0938f594f87096005b1e403
 fail=0
-TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+TMP=$(mktemp -d) || exit 1
+trap 'rm -rf "$TMP"' EXIT
 bash_bin="$(command -v bash)"
 
 root="$TMP/plugin"
@@ -19,8 +20,12 @@ report() { # desc | ok(0/1) | detail
   if [ "$2" = 0 ]; then echo "PASS: $1"; else echo "FAIL: $1"; echo "  $3"; fail=1; fi
 }
 
-actual=$(python3 -I -c 'import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' "$ROOT/hooks/run-hook.cmd")
-if [ "$actual" = "$PINNED" ]; then report "sha256 pin" 0 ""; else report "sha256 pin" 1 "got $actual"; fi
+if command -v python3 >/dev/null 2>&1; then
+  actual=$(python3 -I -c 'import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' "$ROOT/hooks/run-hook.cmd")
+  if [ "$actual" = "$PINNED" ]; then report "sha256 pin" 0 ""; else report "sha256 pin" 1 "got $actual"; fi
+else
+  report "sha256 pin (python3 not found)" 1 "python3 is required to compute the sha256"
+fi
 
 out=$(env -i HOME="$TMP" PATH= "$bash_bin" "$root/hooks/run-hook.cmd" probe-ok 2>&1); rc=$?
 if [ "$rc" = 0 ] && [[ "$out" == *probe-ran* ]]; then report "empty PATH dispatches" 0 ""; else report "empty PATH dispatches" 1 "rc=$rc out=$out"; fi
@@ -28,6 +33,7 @@ if [ "$rc" = 0 ] && [[ "$out" == *probe-ran* ]]; then report "empty PATH dispatc
 out=$(env -i HOME="$TMP" PATH= "$bash_bin" "$root/hooks/run-hook.cmd" probe-exit 2>&1); rc=$?
 if [ "$rc" = 7 ] && [[ "$out" == *probe-ran* ]]; then report "exit code propagates under empty PATH" 0 ""; else report "exit code propagates under empty PATH" 1 "rc=$rc out=$out"; fi
 
+# shellcheck disable=SC2016 # $1/$2 are expanded by the inner bash, not this shell
 out=$("$bash_bin" -c 'cd "$1" && exec "$2" run-hook.cmd probe-ok' _ "$root/hooks" "$bash_bin" 2>&1); rc=$?
 if [ "$rc" = 0 ] && [[ "$out" == *probe-ran* ]]; then report "bare name from hooks/" 0 ""; else report "bare name from hooks/" 1 "rc=$rc out=$out"; fi
 
