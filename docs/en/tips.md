@@ -78,7 +78,7 @@ See [Getting Started - Troubleshooting](getting-started.md#troubleshooting) for 
 
 ## Windows
 
-The SessionStart hook (`hooks/session-start`) is bash. On Windows, the polyglot wrapper `hooks/run-hook.cmd` calls it via Git Bash. The `.cmd` file is valid as both a batch file and a bash script: on Windows, `cmd.exe` finds Git Bash and re-executes; on Unix, the `:` command is a no-op and bash runs the rest. It works without WSL as long as Git for Windows is installed.
+The SessionStart hook (`hooks/session-start`) is bash. On Windows, the polyglot wrapper `hooks/run-hook.cmd` calls it via Git Bash. The `.cmd` file is valid as both a batch file and a bash script: on Windows, `cmd.exe` locates Git Bash and re-executes. The launcher tries four places in order: the two system-wide Program Files paths, the per-user `%LOCALAPPDATA%\Programs\Git` path (only when `LOCALAPPDATA` is set), and a non-WSL `bash` on `PATH` found through `%SystemRoot%\System32\where.exe`. It never runs `bash` or `where` from the current directory, and it exits silently when no bash is found. On Unix, the `:` command is a no-op and bash runs the rest. It works without WSL as long as Git for Windows is installed.
 
 Skills are pure Markdown with no platform-specific code. Only the hook wrapper handles platform differences.
 
