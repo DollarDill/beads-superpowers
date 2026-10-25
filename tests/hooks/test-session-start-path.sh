@@ -307,4 +307,68 @@ else
   report "extract write_hook_script from install.sh" 1 "function body not found"
 fi
 
+# --- install.sh: the bash the hook is registered and run with ---
+awk '/^hook_bash\(\) \{$/,/^}$/' "$ROOT/install.sh" >"$T/hb.sh"
+awk '/^register_hook\(\) \{$/,/^}$/' "$ROOT/install.sh" >"$T/rh.sh"
+if grep -q '^hook_bash() {$' "$T/hb.sh" && grep -q 'PYEOF' "$T/rh.sh" && [ "$(tail -n 1 "$T/rh.sh")" = "}" ]; then
+  # shellcheck source=/dev/null
+  . "$T/hb.sh"
+  # shellcheck source=/dev/null
+  . "$T/rh.sh"
+  # /bin/bash is preferred: an earlier bash on the install-time PATH can be
+  # ephemeral (nix-shell, devbox, mise shims).
+  if [ -x /bin/bash ]; then
+    mkdir -p "$T/ephem"
+    ln -s "$bash_bin" "$T/ephem/bash"
+    got=$(PATH="$T/ephem:/usr/bin:/bin" hook_bash)
+    if [ "$got" = /bin/bash ]; then report "hook_bash prefers /bin/bash over an earlier PATH bash" 0 ""; else report "hook_bash prefers /bin/bash over an earlier PATH bash" 1 "got: $got"; fi
+  else
+    echo "SKIP: hook_bash /bin/bash preference (/bin/bash not found)"
+  fi
+  # reg_case <name> <settings JSON> <python check on d, cmd, hs>: runs
+  # register_hook on that settings file with a shim under a HOME that has a
+  # space and a ', and requires rc 0 and the check.
+  reg_n=0
+  reg_case() {
+    reg_n=$((reg_n + 1))
+    local sf="$T/reg$reg_n.json" hs="$T/ho me'$reg_n/.claude/hooks/beads-superpowers-session-start.sh" rrc
+    python3 -I -c 'import sys; open(sys.argv[1], "w").write(sys.argv[2].replace("@HS@", sys.argv[3]))' "$sf" "$2" "$hs"
+    SETTINGS_FILE="$sf" HOOK_SCRIPT="$hs" HOOK_BASH=/bin/bash register_hook >"$T/reg$reg_n.out" 2>&1
+    rrc=$?
+    if [ "$rrc" = 0 ] && python3 -I -c 'import json, shlex, sys
+sf, hs, check = sys.argv[1:4]
+d = json.load(open(sf))
+cmd = shlex.quote("/bin/bash") + " " + shlex.quote(hs)
+sys.exit(0 if eval(check) else 1)' "$sf" "$hs" "$3" 2>>"$T/reg$reg_n.out"; then
+      report "register_hook: $1" 0 ""
+    else
+      report "register_hook: $1" 1 "rc=$rrc out=$(head -c 300 "$T/reg$reg_n.out") settings=$(head -c 400 "$sf")"
+    fi
+  }
+  # Ours: every beads-superpowers command. A pre-fix `bash <shim>` that
+  # shlex cannot split (a space, a ') is still rewritten.
+  ours='[h["command"] for e in d["hooks"]["SessionStart"] if isinstance(e, dict) for h in e.get("hooks") or [] if isinstance(h, dict) and "beads-superpowers" in str(h.get("command"))]'
+  foreign='{"hooks": [{"type": "command", "command": "bash /somewhere/else.sh"}]}'
+  # The JSON is built by python so the shim path is escaped correctly.
+  reg_case "pre-fix 'bash <shim>' under a HOME with a space and a ' is rewritten" \
+    '{"hooks": {"SessionStart": [{"matcher": "startup|clear|compact", "hooks": [{"type": "command", "command": "bash @HS@"}]}, '"$foreign"']}}' \
+    "$ours == [cmd] and any(h.get(\"command\") == \"bash /somewhere/else.sh\" for e in d[\"hooks\"][\"SessionStart\"] for h in e.get(\"hooks\") or [])"
+  # Hand-edited settings never crash the install: malformed entries are
+  # skipped and kept, a null container counts as empty, and a container of
+  # the wrong type is left untouched.
+  reg_case 'malformed SessionStart entries are skipped and kept' \
+    '{"hooks": {"SessionStart": [{"hooks": null}, "junk", {"hooks": [null, "x", {"command": null}, {"command": 5}]}]}}' \
+    "$ours == [cmd] and len(d[\"hooks\"][\"SessionStart\"]) == 4"
+  reg_case '"hooks": null counts as empty' '{"hooks": null}' "$ours == [cmd]"
+  reg_case '"SessionStart": null counts as empty' '{"hooks": {"SessionStart": null}}' "$ours == [cmd]"
+  reg_case '"hooks" of the wrong type is left untouched' '{"hooks": []}' 'd == {"hooks": []}'
+  reg_case '"SessionStart" of the wrong type is left untouched' '{"hooks": {"SessionStart": {"x": 1}}}' 'd == {"hooks": {"SessionStart": {"x": 1}}}'
+  reg_case 'a non-object top level is left untouched' '[]' 'd == []'
+else
+  report "extract hook_bash and register_hook from install.sh" 1 "function body not found"
+fi
+# install.sh runs the hook (and itself) with the vetted bash, never a bare one.
+bare=$(grep -nE '(^|[[:space:];&|(])bash "\$' "$ROOT/install.sh" | grep -vE '^[0-9]+:[[:space:]]*#')
+if [ -z "$bare" ]; then report "install.sh runs no bare 'bash \"\$...\"'" 0 ""; else report "install.sh runs no bare 'bash \"\$...\"'" 1 "$bare"; fi
+
 exit $fail

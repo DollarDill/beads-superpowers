@@ -952,8 +952,14 @@ HOOKEOF
 # looked up on the harness PATH, and an empty or relative entry searches the
 # untrusted project. Resolved now from a copy of PATH cleaned by
 # hooks/session-start's rule (absolute entries only, ~ and ~/x become $HOME).
+# /bin/bash comes first when it is there: an earlier bash on the install-time
+# PATH can be ephemeral (nix-shell, devbox, mise shims) and vanish later.
 hook_bash() {
   local p safe="" found
+  if [ -x /bin/bash ]; then
+    printf '%s\n' /bin/bash
+    return 0
+  fi
   local -a parts
   IFS=: read -r -a parts <<<"${PATH:-}"
   for p in ${parts[@]+"${parts[@]}"}; do
@@ -980,6 +986,7 @@ import json, os, shlex, sys
 
 sf, hs, hb = sys.argv[1:4]
 cmd = f"{shlex.quote(hb)} {shlex.quote(hs)}"
+shim_name = os.path.basename(hs)
 
 if os.path.exists(sf):
     with open(sf) as f:
@@ -988,19 +995,53 @@ else:
     os.makedirs(os.path.dirname(sf), exist_ok=True)
     settings = {}
 
-hooks = settings.setdefault("hooks", {})
 
-# SessionStart hook. An earlier registration of this shim (`bash <shim>`,
-# which looks bash up on the harness PATH, or an older absolute bash) is
-# rewritten in place; other hooks are left alone.
-ss = hooks.setdefault("SessionStart", [])
+def skip(what):
+    """Hand-edited settings that cannot take our entry without losing data:
+    leave the file alone and never crash the install."""
+    print(f"beads-superpowers: {sf}: {what}; SessionStart hook not registered",
+          file=sys.stderr)
+    sys.exit(0)
+
+
+# A missing or null container counts as empty; one of the wrong type is left.
+if not isinstance(settings, dict):
+    skip("the top level is not an object")
+if settings.get("hooks") is None:
+    settings["hooks"] = {}
+hooks = settings["hooks"]
+if not isinstance(hooks, dict):
+    skip('"hooks" is not an object')
+if hooks.get("SessionStart") is None:
+    hooks["SessionStart"] = []
+ss = hooks["SessionStart"]
+if not isinstance(ss, list):
+    skip('"hooks.SessionStart" is not a list')
+
+
+def ours(c):
+    """An earlier registration of this shim: `bash <shim>`, which looks bash
+    up on the harness PATH, or an older absolute bash. A `bash ` command that
+    names the shim matches whatever shlex makes of it: an unquoted HOME with a
+    space or a ' does not split into two words."""
+    if c.startswith("bash ") and shim_name in c:
+        return True
+    try:
+        argv = shlex.split(c)
+    except ValueError:
+        return False
+    return (len(argv) == 2 and argv[1] == hs
+            and (argv[0] == "bash" or argv[0].endswith("/bash")))
+
+
+# SessionStart hook: ours is rewritten in place; other hooks, and malformed
+# entries, are left alone.
 for e in ss:
-    for h in e.get("hooks", []) if isinstance(e, dict) else []:
-        try:
-            argv = shlex.split(h.get("command", ""))
-        except (AttributeError, ValueError):
-            continue
-        if len(argv) == 2 and argv[1] == hs and (argv[0] == "bash" or argv[0].endswith("/bash")):
+    inner = e.get("hooks") if isinstance(e, dict) else None
+    if not isinstance(inner, list):
+        continue
+    for h in inner:
+        if isinstance(h, dict) and isinstance(h.get("command"), str) and ours(h["command"]):
             h["command"] = cmd
 if not any("beads-superpowers" in json.dumps(e) for e in ss):
     ss.append({
@@ -1066,7 +1107,9 @@ do_verify() {
 
   # Hook checks only for non-plugin tiers (plugin manages its own hooks)
   if [ "$INSTALL_TIER" != "plugin" ]; then
-    if [ -f "$HOOK_SCRIPT" ] && bash "$HOOK_SCRIPT" 2>/dev/null | python3 -m json.tool > /dev/null 2>&1; then
+    local verify_bash="$HOOK_BASH"
+    if [ -z "$verify_bash" ]; then verify_bash=$(hook_bash) || verify_bash=""; fi
+    if [ -f "$HOOK_SCRIPT" ] && [ -n "$verify_bash" ] && "$verify_bash" "$HOOK_SCRIPT" 2>/dev/null | python3 -m json.tool > /dev/null 2>&1; then
       success "Hook produces valid JSON"
     else
       warn "Hook did not produce valid JSON — check $HOOK_SCRIPT"
@@ -1219,7 +1262,11 @@ print_dry_run() {
 
 # --- Test Mode ---
 do_test() {
-  local test_home="/tmp/beads-superpowers-test"
+  local test_home="/tmp/beads-superpowers-test" test_bash
+  if ! test_bash=$(hook_bash); then
+    error "no bash found on PATH"
+    exit 1
+  fi
   rm -rf "$test_home"
 
   info "Test mode: installing to $test_home/"
@@ -1231,7 +1278,7 @@ do_test() {
   local extra_flags=""
   if [ "$FLAG_WITH_YEGGE" = true ]; then extra_flags="--with-yegge"; fi
   # shellcheck disable=SC2086  # word splitting intentional: optional flag
-  BEADS_SUPERPOWERS_SKILLS_DIR="$test_home/skills" HOME="$test_home" bash "$0" --yes --version "$FALLBACK_VERSION" $extra_flags
+  BEADS_SUPERPOWERS_SKILLS_DIR="$test_home/skills" HOME="$test_home" "$test_bash" "$0" --yes --version "$FALLBACK_VERSION" $extra_flags
 
   echo
   info "Running verification checks..."
@@ -1247,7 +1294,7 @@ do_test() {
   fi
 
   # Check SessionStart hook
-  if bash "$test_home/.claude/hooks/beads-superpowers-session-start.sh" 2>/dev/null | python3 -m json.tool > /dev/null 2>&1; then
+  if "$test_bash" "$test_home/.claude/hooks/beads-superpowers-session-start.sh" 2>/dev/null | python3 -m json.tool > /dev/null 2>&1; then
     success "SessionStart hook: valid JSON"; pass=$((pass + 1))
   else
     error "SessionStart hook: invalid JSON"; fail=$((fail + 1))
@@ -1350,7 +1397,7 @@ NOPYEOF
   fi
 
   # Test uninstall
-  BEADS_SUPERPOWERS_SKILLS_DIR="$test_home/skills" HOME="$test_home" bash "$0" --uninstall 2>&1
+  BEADS_SUPERPOWERS_SKILLS_DIR="$test_home/skills" HOME="$test_home" "$test_bash" "$0" --uninstall 2>&1
 
   if [ ! -f "$test_home/.claude/hooks/beads-superpowers-session-start.sh" ] && \
      [ ! -f "$test_home/.claude/hooks/beads-superpowers-reminder.sh" ] && \
