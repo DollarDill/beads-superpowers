@@ -143,6 +143,42 @@ planted_check "planted bash: bash --posix launcher, PATH=':<dir with a real bash
 run_evil "/nonexistent" "$bash_bin" "$L" probe-ok
 planted_check "bash-less PATH falls back to an absolute \$BASH" yes
 
+# --- containment covers the project root, not just the cwd tree ---
+# A hook can run from a subdirectory of the project. With a relative ..
+# entry, $BASH = <root>/sub/../bash, which resolves to <root>/bash: outside
+# the cwd tree, inside the project. The project root is CLAUDE_PROJECT_DIR,
+# else CURSOR_PROJECT_DIR, when absolute.
+mkdir -p "$TMP/proj/sub"
+printf '#!/bin/sh\n: > "%s/ran-rootbash"\n' "$TMP" >"$TMP/proj/bash"
+chmod +x "$TMP/proj/bash"
+for pv in CLAUDE_PROJECT_DIR CURSOR_PROJECT_DIR; do
+  # shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
+  out=$(cd "$TMP/proj/sub" && env -i HOME="$TMP" PWD="$TMP/proj/sub" PATH="/nonexistent:.." "$pv=$TMP/proj" \
+    "$bash_bin" -c 'exec -a bash "$0" "$@"' "$bash_bin" "$L" probe-ok </dev/null 2>&1); rc=$?
+  ran=$(planted_ran)
+  if [ "$rc" = 0 ] && [ -z "$ran" ] && [ -z "$out" ]; then report "\$BASH inside $pv from a subdirectory cwd (refused, silent exit)" 0 ""; else report "\$BASH inside $pv from a subdirectory cwd (refused, silent exit)" 1 "rc=$rc planted ran:[$ran] out=$out"; fi
+done
+# A project root elsewhere still lets an outside $BASH through; a named root
+# that does not resolve refuses it (fail closed).
+out=$(cd "$TMP/evil" && env -i HOME="$TMP" PATH=/nonexistent CLAUDE_PROJECT_DIR="$TMP/proj" "$bash_bin" "$L" probe-ok </dev/null 2>&1); rc=$?
+if [ "$rc" = 0 ] && [[ "$out" == *probe-ran* ]]; then report "\$BASH outside CLAUDE_PROJECT_DIR is used" 0 ""; else report "\$BASH outside CLAUDE_PROJECT_DIR is used" 1 "rc=$rc out=$out"; fi
+out=$(cd "$TMP/evil" && env -i HOME="$TMP" PATH=/nonexistent CLAUDE_PROJECT_DIR="$TMP/no-such-root" "$bash_bin" "$L" probe-ok </dev/null 2>&1); rc=$?
+if [ "$rc" = 0 ] && [ -z "$out" ]; then report "unresolvable CLAUDE_PROJECT_DIR refuses \$BASH" 0 ""; else report "unresolvable CLAUDE_PROJECT_DIR refuses \$BASH" 1 "rc=$rc out=$out"; fi
+
+# --- cwd / contains every $BASH (bash 5.3 pattern quirk) ---
+# The containment pattern strips the cwd's trailing /; at cwd / that leaves
+# an empty prefix, and bash 5.3 does not match "${v%/}"/* when the expansion
+# is empty (dash and bash 3.2 do). With no bash on PATH, an absolute $BASH must
+# still be refused there. Run under every shell we can find.
+seen=" "
+for sh_bin in /opt/homebrew/bin/bash /usr/local/bin/bash /bin/bash /bin/dash "$bash_bin"; do
+  if [ ! -x "$sh_bin" ]; then continue; fi
+  case "$seen" in *" $sh_bin "*) continue ;; esac
+  seen="$seen$sh_bin "
+  out=$(cd / && env -i HOME="$TMP" PWD=/ PATH=/nonexistent BASH="$bash_bin" "$sh_bin" "$L" probe-ok </dev/null 2>&1); rc=$?
+  if [ "$rc" = 0 ] && [ -z "$out" ]; then report "cwd / refuses \$BASH ($sh_bin)" 0 ""; else report "cwd / refuses \$BASH ($sh_bin)" 1 "rc=$rc out=$out"; fi
+done
+
 # --- no self re-exec (M2): an ENOEXEC fallback sets $BASH to the launcher ---
 # bounded <outfile> <command...>: runs it in the background and kills it after
 # 10 s (macOS has no timeout(1)); sets rc (124 on timeout).

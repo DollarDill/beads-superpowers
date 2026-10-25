@@ -56,7 +56,9 @@ CMDBLOCK
 #    absolute entries, map ~ and ~/x to $HOME when $HOME is absolute, drop
 #    everything else, and fall back to /usr/bin:/bin.
 # 2. Use `command -v bash` on that PATH. Only if it finds none, use $BASH when
-#    it is absolute, outside the current directory tree and not this launcher.
+#    it is absolute, outside both the current directory tree and the project
+#    root (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR, when absolute; the cwd
+#    can be a subdirectory of it), and not this launcher.
 #    $BASH alone is not safe: dash leaves it unset, bash fills it by a PATH
 #    search that can land in the cwd, and an ENOEXEC fallback (a harness
 #    execing this shebang-less file) sets it to this launcher, which would
@@ -103,10 +105,29 @@ if [ -z "$bsp_bash" ]; then
       # kernel resolves it as exec will: a symlink before the ".." after it
       # (a plain cd would cancel lnk/.. as text first).
       bsp_cwd=$(pwd -P 2>/dev/null) || bsp_cwd=""
+      bsp_root=""
+      case "${CLAUDE_PROJECT_DIR:-}" in
+        /*) bsp_root=$CLAUDE_PROJECT_DIR ;;
+        *)
+          case "${CURSOR_PROJECT_DIR:-}" in
+            /*) bsp_root=$CURSOR_PROJECT_DIR ;;
+          esac ;;
+      esac
+      # A named root that does not resolve leaves bsp_root empty: refuse.
+      if [ -n "$bsp_root" ]; then
+        bsp_root=$(cd -P "$bsp_root/" 2>/dev/null && pwd -P) || bsp_root=""
+      else
+        bsp_root=$bsp_cwd
+      fi
       bsp_bash_dir=$(cd -P "${BASH%/*}/" 2>/dev/null && pwd -P) || bsp_bash_dir=""
-      if [ -n "$bsp_cwd" ] && [ -n "$bsp_bash_dir" ]; then
+      if [ -n "$bsp_cwd" ] && [ -n "$bsp_root" ] && [ -n "$bsp_bash_dir" ]; then
+        # Strip the trailing / into a variable first: at cwd / the prefix is
+        # empty, and bash 5.3 does not match "${v%/}"/* when the expansion
+        # is empty (dash and bash 3.2 do); "$v"/* matches in all three.
+        bsp_cwd_pfx=${bsp_cwd%/}
+        bsp_root_pfx=${bsp_root%/}
         case "$bsp_bash_dir/" in
-          "${bsp_cwd%/}"/*) ;;
+          "$bsp_cwd_pfx"/*|"$bsp_root_pfx"/*) ;;
           *)
             if [ ! "$BASH" -ef "${SCRIPT_DIR}/${0##*[/\\]}" ]; then
               bsp_bash=$BASH
