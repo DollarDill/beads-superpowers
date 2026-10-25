@@ -364,6 +364,17 @@ sys.exit(0 if eval(check) else 1)' "$sf" "$hs" "$3" 2>>"$T/reg$reg_n.out"; then
   reg_case '"hooks" of the wrong type is left untouched' '{"hooks": []}' 'd == {"hooks": []}'
   reg_case '"SessionStart" of the wrong type is left untouched' '{"hooks": {"SessionStart": {"x": 1}}}' 'd == {"hooks": {"SessionStart": {"x": 1}}}'
   reg_case 'a non-object top level is left untouched' '[]' 'd == []'
+  # Not valid JSON: rc 0, file byte-identical, warning names the file.
+  for bad in '{"hooks": ' 'not json' '' '  '; do
+    bsf="$T/bad.json"; printf '%s' "$bad" >"$bsf"
+    SETTINGS_FILE="$bsf" HOOK_SCRIPT="$T/bad-hs.sh" HOOK_BASH=/bin/bash register_hook >"$T/bad.out" 2>&1
+    brc=$?
+    if [ "$brc" = 0 ] && [ "$(cat "$bsf")" = "$bad" ] && grep -q "$bsf.*NOT registered" "$T/bad.out" && ! grep -q Traceback "$T/bad.out"; then
+      report "register_hook: invalid JSON ($bad) left untouched with a warning" 0 ""
+    else
+      report "register_hook: invalid JSON ($bad) left untouched with a warning" 1 "rc=$brc out=$(head -c 300 "$T/bad.out")"
+    fi
+  done
 else
   report "extract hook_bash and register_hook from install.sh" 1 "function body not found"
 fi

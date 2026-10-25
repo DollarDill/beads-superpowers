@@ -27,6 +27,9 @@ if [ "$TARGET" = "all" ]; then
   echo "═══ source-flag"
   if bash "$HERE/test-source-flag.sh"; then echo "═══ source-flag PASS"; else echo "═══ source-flag FAIL"; total_rc=1; fi
   echo
+  echo "═══ invalid-settings"
+  if bash "$HERE/test-invalid-settings.sh"; then echo "═══ invalid-settings PASS"; else echo "═══ invalid-settings FAIL"; total_rc=1; fi
+  echo
   for h in $TIER_A $TIER_B combo; do run_case "$h"; done
 else
   run_case "$TARGET"
