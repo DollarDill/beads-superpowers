@@ -67,4 +67,12 @@ expect_fail "M3 .agents marketplace given a version"
 stage; sed -i.bak 's/export default //' "$FIX/.pi/extensions/superpowers.ts" && rm -f "$FIX/.pi/extensions/superpowers.ts.bak"
 expect_fail "M4 .pi missing export default"
 
+# M5 — Cursor hook command reverts to a cwd-relative path -> plugin-root anchor.
+stage; jq_set "$FIX/hooks/hooks-cursor.json" '.hooks.sessionStart[0].command="./hooks/run-hook.cmd session-start"'
+expect_fail "M5 cursor hook command relative to the cwd"
+
+# M6 — anchored, but the target does not exist -> need.
+stage; rm -f "$FIX/hooks/run-hook.cmd"
+expect_fail "M6 cursor hook command target missing"
+
 exit $fails

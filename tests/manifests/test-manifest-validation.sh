@@ -80,8 +80,22 @@ need() {
 }
 # .kimi-plugin sessionStart.skill must map to a real skill dir
 need "skills/$(jq -r .sessionStart.skill .kimi-plugin/plugin.json)/SKILL.md"
-# hooks-cursor.json command target (run-hook.cmd) must exist
-need "hooks/run-hook.cmd"
+# hooks-cursor.json: the command names run-hook.cmd through ${CURSOR_PLUGIN_ROOT},
+# like hooks.json's ${CLAUDE_PLUGIN_ROOT}, never a relative path: Cursor may run
+# it with the workspace as cwd, which would execute the project's own file. The
+# prefix resolves to the plugin root, so the target must exist here.
+# shellcheck disable=SC2016 # ${CURSOR_PLUGIN_ROOT} is matched literally
+cursor_pfx='"${CURSOR_PLUGIN_ROOT}/'
+cursor_cmd=$(jq -r '.hooks.sessionStart[0].command' hooks/hooks-cursor.json)
+case "$cursor_cmd" in
+  "$cursor_pfx"*)
+    cursor_target=${cursor_cmd#"$cursor_pfx"}
+    cursor_target=${cursor_target%%\"*}
+    echo "cursor hook command anchored at \${CURSOR_PLUGIN_ROOT}: $cursor_cmd"
+    need "$cursor_target" ;;
+  *)
+    echo "cursor hook command is relative or not anchored at \${CURSOR_PLUGIN_ROOT}: $cursor_cmd"; fail=1 ;;
+esac
 # gemini-extension.json contextFileName must resolve
 need "$(jq -r .contextFileName gemini-extension.json)"
 
