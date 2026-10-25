@@ -14,7 +14,7 @@ fails=0
 
 baseline_for() {  # skill name -> recorded bytes, empty if unlisted
   [ -f "$BASELINE" ] || return 0
-  awk -v n="$1" '$1 !~ /^#/ && $1 == n { print $2; exit }' "$BASELINE"
+  tr -d '\r' < "$BASELINE" | awk -v n="$1" '$1 !~ /^#/ && $1 == n { print $2; exit }'
 }
 
 for f in "$REPO_ROOT"/skills/*/SKILL.md; do
@@ -23,6 +23,7 @@ for f in "$REPO_ROOT"/skills/*/SKILL.md; do
   bytes="$(wc -c < "$f" | tr -d ' ')"
   rec="$(baseline_for "$name")"
   if [ "$bytes" -ge "$LIMIT" ]; then
+    case "$rec" in *[!0-9]*) continue ;; esac  # malformed: reported by the baseline pass below
     if [ -z "$rec" ]; then
       echo "SKILL-SIZE FAIL: skills/$name/SKILL.md is $bytes bytes (limit: under $LIMIT)"
       fails=$((fails + 1))
@@ -38,6 +39,12 @@ done
 if [ -f "$BASELINE" ]; then
   while read -r name rec _; do
     case "$name" in ''|'#'*) continue ;; esac
+    case "$rec" in
+      ''|*[!0-9]*)
+        echo "SKILL-SIZE FAIL: baseline entry $name has a malformed size '$rec'"
+        fails=$((fails + 1))
+        continue ;;
+    esac
     f="$REPO_ROOT/skills/$name/SKILL.md"
     if [ ! -f "$f" ]; then
       echo "SKILL-SIZE FAIL: baseline entry $name is stale (skill missing, $rec recorded): remove it"
@@ -49,7 +56,7 @@ if [ -f "$BASELINE" ]; then
       echo "SKILL-SIZE FAIL: baseline entry $name is stale ($bytes bytes, under $LIMIT): remove it"
       fails=$((fails + 1))
     fi
-  done < "$BASELINE"
+  done < <(tr -d '\r' < "$BASELINE")
 fi
 
 if [ "$fails" -gt 0 ]; then
