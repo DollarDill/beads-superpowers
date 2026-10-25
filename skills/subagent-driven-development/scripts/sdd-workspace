@@ -27,10 +27,15 @@ fi
 plan=$1
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
 
-root=$(git rev-parse --show-toplevel)
+# Physical path, spelled the way pwd -P spells the plan path below: on Git
+# Bash, rev-parse prints C:/Users/... while pwd prints /c/Users/..., and the
+# repo-relative marker check needs both in the same form.
+root=$(CDPATH='' cd -- "$(git rev-parse --show-toplevel)" && pwd -P)
 base="$root/.internal/sdd"
 mkdir -p "$base"
-printf '*\n' > "$base/.gitignore"
+# Create-only: a repo may commit its own .gitignore here (e.g. to version
+# progress.md ledgers); overwriting it would revert that on every run.
+[ -e "$base/.gitignore" ] || printf '*\n' > "$base/.gitignore"
 
 slug=$(basename "$plan")
 slug=${slug%.md}
