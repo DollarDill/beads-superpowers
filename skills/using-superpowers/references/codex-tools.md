@@ -19,6 +19,14 @@ over any table — including this one — when they disagree.**
   the Model Selection rules of the skill you are executing. Setting `model` alone is a trap — the
   child's effort silently resets to that model's default, not yours. Never copy a model name from
   a skill, table, or old session without checking it against your current spawn allowlist.
+  Ask your human partner to add a machine-level backstop to `~/.codex/config.toml` so a spawn that
+  slips through routes to a deliberate tier instead of inheriting the session's most expensive model:
+
+  ```toml
+  [agents]
+  default_subagent_model = "<a mid-tier model from your spawn allowlist>"
+  default_subagent_reasoning_effort = "medium"
+  ```
 - **Lifecycle:** V2 has no `close_agent`; finished children are evicted automatically when slots
   are needed, and leaving them unclosed costs nothing. Only V1 sessions have `close_agent` —
   there, close reviewers when their review returns, and close each implementer after its task's
@@ -40,8 +48,10 @@ costs a tool call — and a context rebill — per poll.
 - When genuinely idle with children outstanding, wait in bounded stretches: `wait_agent` with
   `timeout_ms` 300000–600000 (5–10 minutes). After each stretch — wake or timeout — post one
   status line, run `list_agents`, and chase any child that finished without reporting.
-- A stretch that times out with no activity is your cue to reconcile, not to shorten the next
-  stretch.
+- Completion mail cannot wake an idle controller (it is delivered without triggering a turn), so a
+  controller that goes idle with children outstanding hangs; covering that idle window is
+  `wait_agent`'s only job. A stretch that times out with no activity is your cue to reconcile, not
+  to shorten the next stretch.
 
 ## Environment Detection
 
