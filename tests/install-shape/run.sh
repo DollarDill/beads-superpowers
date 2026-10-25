@@ -30,6 +30,9 @@ if [ "$TARGET" = "all" ]; then
   echo "═══ invalid-settings"
   if bash "$HERE/test-invalid-settings.sh"; then echo "═══ invalid-settings PASS"; else echo "═══ invalid-settings FAIL"; total_rc=1; fi
   echo
+  echo "═══ uninstall-settings"
+  if bash "$HERE/test-uninstall-settings.sh"; then echo "═══ uninstall-settings PASS"; else echo "═══ uninstall-settings FAIL"; total_rc=1; fi
+  echo
   for h in $TIER_A $TIER_B combo; do run_case "$h"; done
 else
   run_case "$TARGET"

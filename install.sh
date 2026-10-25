@@ -1233,22 +1233,50 @@ do_uninstall() {
       rm -rf "$HOOKS_DIR/beads-superpowers"
       info "Removed hook scripts"
 
-      if [ -f "$SETTINGS_FILE" ] && command -v python3 >/dev/null 2>&1; then
-        cp -f "$SETTINGS_FILE" "${SETTINGS_FILE}.backup-$(date +%Y%m%d-%H%M%S)"
-        python3 << PYEOF
-import json
-sf = "$SETTINGS_FILE"
-with open(sf) as f:
-    settings = json.load(f)
-hooks = settings.get("hooks", {})
-for key in ["SessionStart", "UserPromptSubmit"]:
-    if key in hooks:
-        hooks[key] = [e for e in hooks[key] if "beads-superpowers" not in json.dumps(e)]
+      if [ -e "$SETTINGS_FILE" ]; then
+        if command -v python3 >/dev/null 2>&1; then
+          local rc=0
+          # Path on argv, never spliced into source; `|| rc=$?` survives `set -e`.
+          python3 - "$SETTINGS_FILE" << 'PYEOF' || rc=$?
+import json, shutil, sys, time
+
+sf = sys.argv[1]
+try:
+    with open(sf) as f:
+        settings = json.load(f)
+except (ValueError, OSError):
+    # Not valid JSON (an empty or whitespace-only file included) or not
+    # readable (permission denied, a directory): leave it byte-for-byte alone,
+    # make no backup. Neither the error text nor the content is printed.
+    print(f"beads-superpowers: {sf} is not readable or not valid JSON; the "
+          "beads-superpowers hook entries were NOT removed. Repair or move the "
+          "file, then re-run --uninstall.", file=sys.stderr)
+    sys.exit(3)
+
+hooks = settings.get("hooks") if isinstance(settings, dict) else None
+changed = False
+if isinstance(hooks, dict):
+    for key in ["SessionStart", "UserPromptSubmit"]:
+        entries = hooks.get(key)
+        if isinstance(entries, list):
+            kept = [e for e in entries if "beads-superpowers" not in json.dumps(e)]
+            if len(kept) != len(entries):
+                hooks[key] = kept
+                changed = True
+if not changed:
+    sys.exit(4)
+
+shutil.copy2(sf, f"{sf}.backup-{time.strftime('%Y%m%d-%H%M%S')}")
 with open(sf, "w") as f:
     json.dump(settings, f, indent=2)
     f.write("\n")
 PYEOF
-        info "Removed hooks from settings.json"
+          if [ "$rc" = 0 ]; then
+            info "Removed hooks from settings.json"
+          elif [ "$rc" != 3 ] && [ "$rc" != 4 ]; then
+            warn "Could not remove hooks from $SETTINGS_FILE (python exit $rc); it was left as is."
+          fi
+        fi
       fi
       ;;
   esac
