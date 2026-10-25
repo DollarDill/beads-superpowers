@@ -17,7 +17,7 @@
 import assert from "node:assert"
 import { fileURLToPath } from "node:url"
 import { dirname, join } from "node:path"
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, realpathSync } from "node:fs"
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, realpathSync, readdirSync, accessSync, constants } from "node:fs"
 import { tmpdir } from "node:os"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -57,7 +57,7 @@ const stubPayload = [
   "</beads-context>",
 ].join("\n")
 
-function buildFixture(withHook) {
+function buildFixture(withHook, envBash = false) {
   // realpath: on macOS tmpdir() is /var/..., a symlink to /private/var/... (beads-superpowers-maues)
   const root = realpathSync(mkdtempSync(join(tmpdir(), "bsp-oc-test-")))
   const pluginDir = join(root, ".opencode/plugins")
@@ -72,12 +72,13 @@ function buildFixture(withHook) {
   if (withHook) {
     const hooksDir = join(root, "hooks")
     mkdirSync(hooksDir, { recursive: true })
-    // /bin/sh + a heredoc only: no external binaries needed.
-    writeFileSync(
-      join(hooksDir, "session-start"),
-      "#!/bin/sh\ncat <<'STUBEOF'\n" + stubPayload + "\nSTUBEOF\n",
-      { mode: 0o755 }
-    )
+    // /bin/sh + a heredoc only: no external binaries needed. envBash: the
+    // real hook's #!/usr/bin/env bash shebang (bash is looked up on PATH),
+    // and printf, a builtin, so the stub needs nothing from PATH itself.
+    const stub = envBash
+      ? "#!/usr/bin/env bash\nprintf '%s\\n' '" + stubPayload + "'\n"
+      : "#!/bin/sh\ncat <<'STUBEOF'\n" + stubPayload + "\nSTUBEOF\n"
+    writeFileSync(join(hooksDir, "session-start"), stub, { mode: 0o755 })
   }
 
   return { root, pluginPath }
@@ -137,4 +138,92 @@ console.log("PASS: fallback — policy-free pointer injected when composer is un
 
 rmSync(fixtureB.root, { recursive: true, force: true })
 
-console.log("PASS: opencode plugin — config idempotent, inject-once, compaction OK, policy-free fallback OK")
+// --- Scenario C: a bash or bd planted in the host cwd never runs (security) ---
+// An empty or relative PATH entry (or PATH="") makes a command lookup search
+// the cwd, which for a session is an untrusted project. The composer's
+// #!/usr/bin/env bash and the `bd memories` fallback both look a command up,
+// so the plugin must hand its children a PATH of absolute entries only.
+const evil = realpathSync(mkdtempSync(join(tmpdir(), "bsp-oc-evil-")))
+const markers = realpathSync(mkdtempSync(join(tmpdir(), "bsp-oc-mark-")))
+for (const b of ["bash", "bd"]) {
+  writeFileSync(join(evil, b), `#!/bin/sh\n: > "${markers}/ran-${b}"\n`, { mode: 0o755 })
+}
+// Names of the planted binaries that ran; clears the markers.
+const plantedRan = () => {
+  const ran = readdirSync(markers)
+  for (const m of ran) rmSync(join(markers, m), { force: true })
+  return ran.map(m => m.replace(/^ran-/, ""))
+}
+// Whether the cleaned PATH (its absolute entries, else /usr/bin:/bin) holds a
+// bash: then the composer runs; otherwise the plugin falls back (macOS has no
+// /usr/bin/bash, a merged-/usr Linux does).
+const bashOnCleanPath = (p) => {
+  const abs = p.split(":").filter(e => e.startsWith("/"))
+  return (abs.length ? abs : ["/usr/bin", "/bin"]).some(e => {
+    try { accessSync(join(e, "bash"), constants.X_OK); return true } catch { return false }
+  })
+}
+const savedPath = process.env.PATH
+const savedCwd = process.cwd()
+try {
+  for (const p of ["", ".:/usr/bin", ":/usr/bin:/bin"]) {
+    for (const withHook of [true, false]) {
+      const fx = buildFixture(withHook, true)
+      process.chdir(evil)
+      process.env.PATH = p
+      let text
+      try {
+        const { BeadsSuperpowersPlugin: PluginC } = await import(fx.pluginPath)
+        const hooksC = await PluginC({ client: {}, directory: evil })
+        const outC = { messages: [{ info: { role: "user" }, parts: [{ type: "text", text: "hi" }] }] }
+        await hooksC["experimental.chat.messages.transform"]({}, outC)
+        text = outC.messages[0].parts[0].text
+      } finally {
+        process.env.PATH = savedPath
+        process.chdir(savedCwd)
+        rmSync(fx.root, { recursive: true, force: true })
+      }
+      const what = `${withHook ? "composer" : "bd fallback"}, PATH='${p}'`
+      assert.deepStrictEqual(plantedRan(), [], `planted binary ran (${what})`)
+      if (withHook && bashOnCleanPath(p)) {
+        assert.strictEqual(text, stubPayload, `composer payload injected (${what})`)
+      } else {
+        assert.ok(text.includes("EXTREMELY_IMPORTANT") && text.includes("session composer unavailable"),
+          `fallback pointer injected (${what}): ${text}`)
+      }
+      console.log(`PASS: planted bash/bd in the cwd never run (${what})`)
+    }
+  }
+  // A literal ~ or ~/x entry becomes $HOME (bash expands it at lookup), as
+  // hooks/session-start keeps it: a ~/bin/bash wrapper is the bash used.
+  const home = realpathSync(mkdtempSync(join(tmpdir(), "bsp-oc-home-")))
+  mkdirSync(join(home, "bin"))
+  writeFileSync(join(home, "bin/bash"), `#!/bin/sh\n: > "${markers}/ran-tildebash"\nexec /bin/bash "$@"\n`, { mode: 0o755 })
+  const savedHome = process.env.HOME
+  const fx = buildFixture(true, true)
+  process.chdir(evil)
+  process.env.PATH = "~/bin"
+  process.env.HOME = home
+  let text
+  try {
+    const { BeadsSuperpowersPlugin: PluginT } = await import(fx.pluginPath)
+    const hooksT = await PluginT({ client: {}, directory: evil })
+    const outT = { messages: [{ info: { role: "user" }, parts: [{ type: "text", text: "hi" }] }] }
+    await hooksT["experimental.chat.messages.transform"]({}, outT)
+    text = outT.messages[0].parts[0].text
+  } finally {
+    process.env.PATH = savedPath
+    process.env.HOME = savedHome
+    process.chdir(savedCwd)
+    rmSync(fx.root, { recursive: true, force: true })
+    rmSync(home, { recursive: true, force: true })
+  }
+  assert.deepStrictEqual(plantedRan(), ["tildebash"], "PATH='~/bin' resolves bash in $HOME/bin")
+  assert.strictEqual(text, stubPayload, "composer payload injected (PATH='~/bin')")
+  console.log("PASS: a ~/bin PATH entry maps to $HOME/bin")
+} finally {
+  rmSync(evil, { recursive: true, force: true })
+  rmSync(markers, { recursive: true, force: true })
+}
+
+console.log("PASS: opencode plugin — config idempotent, inject-once, compaction OK, policy-free fallback OK, no cwd lookup")

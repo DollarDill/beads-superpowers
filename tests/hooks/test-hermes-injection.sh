@@ -117,8 +117,10 @@ class FakeCtx:
         self.hooks[event] = fn
 
 
-def build_fixture(layout, with_hooks=True, n_skills=2):
-    """layout: 'sibling' (git-clone) or 'flat' (flattened install)."""
+def build_fixture(layout, with_hooks=True, n_skills=2, env_bash=False):
+    """layout: 'sibling' (git-clone) or 'flat' (flattened install).
+    env_bash: the real hook's #!/usr/bin/env bash shebang (bash looked up on
+    PATH) instead of #!/bin/sh."""
     tmp = tempfile.mkdtemp()
     if layout == "sibling":
         plugin_dir = os.path.join(tmp, ".hermes-plugin")
@@ -140,7 +142,7 @@ def build_fixture(layout, with_hooks=True, n_skills=2):
         os.makedirs(hd, exist_ok=True)
         p = os.path.join(hd, "session-start")
         with open(p, "w") as f:
-            f.write('#!/bin/sh\n'
+            f.write(('#!/usr/bin/env bash\n' if env_bash else '#!/bin/sh\n') +
                     'echo "<EXTREMELY_IMPORTANT>STUB PAYLOAD</EXTREMELY_IMPORTANT>"\n')
         os.chmod(p, 0o755)
     return tmp, plugin_dir
@@ -242,6 +244,95 @@ check(mod._MEM_HEADER_RE.match("Memories (220):") is not None,
 check(mod._MEM_HEADER_RE.match(
     "akia1234567890abcdef-appeared-in-the-deploy-log") is None,
       "memory-line pattern REJECTS a bare key (wze77.8 secret-shaped-key class)")
+
+# --- a bash or bd planted in the host cwd never runs (security) ---
+# An empty or relative PATH entry (or PATH="") makes a command lookup search
+# the cwd, which for a session is an untrusted project. The composer's
+# #!/usr/bin/env bash and the `bd memories` fallback both look a command up,
+# so the plugin must hand its children a PATH of absolute entries only.
+evil = os.path.realpath(tempfile.mkdtemp())
+markers = os.path.realpath(tempfile.mkdtemp())
+for b in ("bash", "bd"):
+    bp = os.path.join(evil, b)
+    with open(bp, "w") as f:
+        f.write(f'#!/bin/sh\n: > "{markers}/ran-{b}"\n')
+    os.chmod(bp, 0o755)
+
+
+def planted_ran():
+    ran = sorted(os.listdir(markers))
+    for m in ran:
+        os.remove(os.path.join(markers, m))
+    return [m[len("ran-"):] for m in ran]
+
+
+def bash_on_clean_path(p):
+    # The cleaned PATH: its absolute entries, else /usr/bin:/bin. macOS has
+    # no /usr/bin/bash, a merged-/usr Linux does.
+    ents = [e for e in p.split(":") if e.startswith("/")] or ["/usr/bin", "/bin"]
+    return any(os.access(os.path.join(e, "bash"), os.X_OK) for e in ents)
+
+
+saved_path, saved_cwd = os.environ.get("PATH"), os.getcwd()
+try:
+    for p in ("", ".:/usr/bin", ":/usr/bin:/bin"):
+        for with_hooks in (True, False):
+            tmp, pdir = build_fixture("sibling", with_hooks=with_hooks,
+                                      env_bash=True)
+            os.chdir(evil)
+            os.environ["PATH"] = p
+            try:
+                mod = load(pdir)
+                ctx = FakeCtx()
+                mod.register(ctx)
+                text = ctx.hooks["pre_llm_call"](is_first_turn=True)["context"]
+            finally:
+                if saved_path is None:
+                    os.environ.pop("PATH", None)
+                else:
+                    os.environ["PATH"] = saved_path
+                os.chdir(saved_cwd)
+                shutil.rmtree(tmp)
+            what = f"{'composer' if with_hooks else 'bd fallback'}, PATH='{p}'"
+            ran = planted_ran()
+            check(ran == [], f"no planted binary ran ({what}); ran: {ran}")
+            if with_hooks and bash_on_clean_path(p):
+                check(text == STUB, f"composer payload injected ({what})")
+            else:
+                check(BOOT_MARK in text and "session composer unavailable" in text,
+                      f"fallback pointer injected ({what})")
+    # A literal ~ or ~/x entry becomes $HOME (bash expands it at lookup), as
+    # hooks/session-start keeps it: a ~/bin/bash wrapper is the bash used.
+    home = os.path.realpath(tempfile.mkdtemp())
+    os.makedirs(os.path.join(home, "bin"))
+    wp = os.path.join(home, "bin", "bash")
+    with open(wp, "w") as f:
+        f.write(f'#!/bin/sh\n: > "{markers}/ran-tildebash"\nexec /bin/bash "$@"\n')
+    os.chmod(wp, 0o755)
+    saved_home = os.environ.get("HOME")
+    tmp, pdir = build_fixture("sibling", with_hooks=True, env_bash=True)
+    os.chdir(evil)
+    os.environ["PATH"], os.environ["HOME"] = "~/bin", home
+    try:
+        mod = load(pdir)
+        ctx = FakeCtx()
+        mod.register(ctx)
+        text = ctx.hooks["pre_llm_call"](is_first_turn=True)["context"]
+    finally:
+        for k, v in (("PATH", saved_path), ("HOME", saved_home)):
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        os.chdir(saved_cwd)
+        shutil.rmtree(tmp)
+        shutil.rmtree(home)
+    ran = planted_ran()
+    check(ran == ["tildebash"], f"PATH='~/bin' resolves bash in $HOME/bin; ran: {ran}")
+    check(text == STUB, "composer payload injected (PATH='~/bin')")
+finally:
+    shutil.rmtree(evil)
+    shutil.rmtree(markers)
 
 for m in ok_:
     print(f"   ok:   {m}")

@@ -75,6 +75,33 @@ def _composer_path():
     return None
 
 
+def _child_env():
+    """The env for every child: PATH cut to absolute entries.
+
+    hooks/session-start's rule: ~ and ~/x become $HOME when HOME is absolute,
+    anything else relative is dropped, fallback /usr/bin:/bin. An empty or
+    relative entry, or PATH="", makes a lookup search the cwd, an untrusted
+    project; the composer's #!/usr/bin/env bash and `bd` are both looked up
+    before the hook's own clean-up runs. Exec hygiene, not composition policy.
+    Not on Windows, where PATH entries are drive paths.
+    """
+    env = dict(os.environ)
+    if os.name == "nt":
+        return env
+    home = env.get("HOME", "")
+    keep = []
+    for p in env.get("PATH", "").split(":"):
+        if p == "~" or p.startswith("~/"):
+            if not home.startswith("/"):
+                continue
+            p = home + p[1:]
+        elif not p.startswith("/"):
+            continue
+        keep.append(p)
+    env["PATH"] = ":".join(keep) or "/usr/bin:/bin"
+    return env
+
+
 def _compose_bootstrap():
     """Exec the canonical composer. None on any failure."""
     composer = _composer_path()
@@ -84,6 +111,7 @@ def _compose_bootstrap():
         proc = subprocess.run(
             [composer, "--emit-plain"],
             capture_output=True, text=True, timeout=10, check=False,
+            env=_child_env(),
         )
     except (OSError, subprocess.SubprocessError):
         return None
@@ -102,6 +130,7 @@ def _fallback_bootstrap():
         proc = subprocess.run(
             ["bd", "memories"],
             capture_output=True, text=True, timeout=5, check=False,
+            env=_child_env(),
         )
         first = (proc.stdout or "").split("\n")[0].strip()
         if _MEM_HEADER_RE.match(first):

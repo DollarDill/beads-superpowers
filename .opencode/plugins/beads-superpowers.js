@@ -29,6 +29,29 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
   const packageRoot = path.resolve(__dirname, '../..');
   const skillsDir = path.join(packageRoot, 'skills');
 
+  // The env for every child: PATH cut to absolute entries, with
+  // hooks/session-start's rule (~ and ~/x become $HOME when HOME is absolute,
+  // anything else relative is dropped, fallback /usr/bin:/bin). An empty or
+  // relative entry, or PATH="", makes a lookup search the cwd, an untrusted
+  // project; the composer's #!/usr/bin/env bash and `bd` are both looked up
+  // before the hook's own clean-up runs. Not on Windows, where PATH entries
+  // are drive paths and cmd.exe searches the cwd first regardless.
+  const childEnv = () => {
+    if (process.platform === 'win32') return process.env;
+    const home = process.env.HOME ?? '';
+    const keep = [];
+    for (let p of (process.env.PATH ?? '').split(':')) {
+      if (p === '~' || p.startsWith('~/')) {
+        if (!home.startsWith('/')) continue;
+        p = home + p.slice(1);
+      } else if (!p.startsWith('/')) {
+        continue;
+      }
+      keep.push(p);
+    }
+    return { ...process.env, PATH: keep.join(':') || '/usr/bin:/bin' };
+  };
+
   // Exec the canonical composer. Returns null on failure OR on the composer's
   // event-dedup yielding an empty rapid re-run — a real payload always carries
   // the <EXTREMELY_IMPORTANT> injection marker.
@@ -36,7 +59,7 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
     try {
       const text = execSync(
         `"${path.join(packageRoot, 'hooks/session-start')}" --emit-plain 2>/dev/null`,
-        { encoding: 'utf8', timeout: 10000 }
+        { encoding: 'utf8', timeout: 10000, env: childEnv() }
       ).trim();
       return text.includes('EXTREMELY_IMPORTANT') ? text : null;
     } catch {
@@ -57,7 +80,7 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
     // marker so the transform guard below stays idempotent.
     let memLine = '';
     try {
-      memLine = execSync('bd memories 2>/dev/null', { encoding: 'utf8', timeout: 5000 }).split('\n')[0] ?? '';
+      memLine = execSync('bd memories 2>/dev/null', { encoding: 'utf8', timeout: 5000, env: childEnv() }).split('\n')[0] ?? '';
     } catch {
       // bd absent
     }
