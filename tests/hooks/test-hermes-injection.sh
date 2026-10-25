@@ -169,8 +169,31 @@ mod = load(pdir)
 ctx = FakeCtx()
 mod.register(ctx)
 real_count = len(glob.glob(os.path.join(root, "skills", "*", "SKILL.md")))
-check(all(d for _, _, d in ctx.skills) and len(ctx.skills) == real_count,
-      "every real skill registers a non-empty description")
+check(len(ctx.skills) == real_count, "every real skill registers")
+
+
+def expected_description(skill_md):
+    """Independent of the plugin's parser: the shipped skills use a single-line
+    `description:` scalar, so read that one line and strip matching quotes."""
+    with open(skill_md) as f:
+        head = f.read().split("\n---\n", 1)[0]
+    for line in head.splitlines():
+        if line.startswith("description:"):
+            v = line[len("description:"):].strip()
+            if len(v) >= 2 and v[0] == v[-1] and v[0] in "\"'":
+                v = v[1:-1]
+            return v
+    return None
+
+
+mismatches = []
+for _, path, desc in ctx.skills:
+    want = expected_description(str(path))
+    if not want or desc != want:
+        mismatches.append((path.parent.name, desc, want))
+check(not mismatches,
+      "every real skill registers a non-empty description equal to its "
+      "frontmatter value" + (f" (first mismatch: {mismatches[0]})" if mismatches else ""))
 shutil.rmtree(tmp)
 
 # --- fail loud rather than register nothing ---
