@@ -796,91 +796,9 @@ IFS=$bsp_old_ifs
 PATH="${bsp_safe_path:-/usr/bin:/bin}"; export PATH
 
 # bsp_usable <bash>: the rule in step 2. Exit 0: it may be run.
-bsp_usable() {
-  bsp_c=$1
-  # A . or .. component is the signature of a relative PATH entry: bash
-  # records its lookup unnormalised (<cwd>/../bash), which can land above or
-  # beside a root that is just the cwd. Refuse it, whatever the root.
-  case "$bsp_c" in
-    */./*|*/../*|*/.|*/..) return 1 ;;
-    /*) ;;
-    *) return 1 ;;
-  esac
-  # bash keeps a leading // through cd -P and pwd -P: collapse it.
-  bsp_cwd=$(pwd -P 2>/dev/null) || bsp_cwd=""
-  case $bsp_cwd in //*) bsp_cwd=/${bsp_cwd#"${bsp_cwd%%[!/]*}"} ;; esac
-  # A root variable that is relative or does not resolve: refuse.
-  bsp_ok=1
-  bsp_root=""
-  case "${CLAUDE_PROJECT_DIR:-}" in
-    "") ;;
-    /*) bsp_root=$CLAUDE_PROJECT_DIR ;;
-    *) bsp_ok=0 ;;
-  esac
-  case "${CURSOR_PROJECT_DIR:-}" in
-    "") ;;
-    /*) if [ -z "$bsp_root" ]; then bsp_root=$CURSOR_PROJECT_DIR; fi ;;
-    *) bsp_ok=0 ;;
-  esac
-  # A bash that literally starts with the cwd came from a relative PATH
-  # entry, symlinked or not: bash builds it as $PWD/<entry>/bash. Compare
-  # it with the logical cwd ($PWD, when set) and the physical one, with a
-  # leading run of slashes collapsed in each and in the bash. Refuse a match,
-  # whatever the root. Accepted over-refusal: a real bash reached through a
-  # symlink under the cwd (cwd = $HOME, ~/.nix-profile/bin/bash) is refused.
-  # bash 5.x builds $BASH from its canonical cwd but keeps an inherited
-  # $PWD as spelled (//, /./, doubled /), so also compare with the
-  # canonical logical cwd, from cd "$PWD" && pwd. If that cd fails, refuse.
-  bsp_lit=$bsp_c
-  case $bsp_lit in //*) bsp_lit=/${bsp_lit#"${bsp_lit%%[!/]*}"} ;; esac
-  bsp_pwd=${PWD:-}
-  case $bsp_pwd in //*) bsp_pwd=/${bsp_pwd#"${bsp_pwd%%[!/]*}"} ;; esac
-  bsp_phys_pfx=${bsp_cwd%/}
-  bsp_pwd_pfx=$bsp_phys_pfx
-  if [ -n "$bsp_pwd" ]; then bsp_pwd_pfx=${bsp_pwd%/}; fi
-  if [ -n "${PWD:-}" ]; then
-    bsp_can=$(cd "$PWD" 2>/dev/null && pwd) || bsp_can=""
-    case $bsp_can in //*) bsp_can=/${bsp_can#"${bsp_can%%[!/]*}"} ;; esac
-    if [ -z "$bsp_can" ]; then bsp_ok=0; fi
-  else
-    bsp_can=$bsp_cwd
-  fi
-  bsp_can_pfx=${bsp_can%/}
-  case "$bsp_lit" in
-    "$bsp_pwd_pfx"/*|"$bsp_phys_pfx"/*|"$bsp_can_pfx"/*) bsp_ok=0 ;;
-  esac
-  if [ -n "$bsp_root" ]; then
-    bsp_root=$(cd -P "$bsp_root/" 2>/dev/null && pwd -P) || bsp_root=""
-    case $bsp_root in //*) bsp_root=/${bsp_root#"${bsp_root%%[!/]*}"} ;; esac
-    if [ -z "$bsp_root" ]; then bsp_ok=0; fi
-  elif [ "$bsp_ok" = 1 ]; then
-    # No root variable: the highest .git ancestor of the cwd, else the cwd.
-    bsp_root=$bsp_cwd
-    bsp_d=$bsp_cwd
-    while [ -n "$bsp_d" ]; do
-      if [ -e "${bsp_d%/}/.git" ]; then bsp_root=$bsp_d; fi
-      if [ "$bsp_d" = / ]; then break; fi
-      bsp_d=${bsp_d%/*}
-      if [ -z "$bsp_d" ]; then bsp_d=/; fi
-    done
-  fi
-  bsp_bash_dir=$(cd -P "${bsp_c%/*}/" 2>/dev/null && pwd -P) || bsp_bash_dir=""
-  case $bsp_bash_dir in //*) bsp_bash_dir=/${bsp_bash_dir#"${bsp_bash_dir%%[!/]*}"} ;; esac
-  if [ "$bsp_ok" = 1 ] && [ -n "$bsp_cwd" ] && [ -n "$bsp_root" ] && [ -n "$bsp_bash_dir" ]; then
-    # Prefixes go through variables: bash 5.3 does not match "${v%/}"/*
-    # when the expansion is empty (cwd /).
-    bsp_cwd_pfx=${bsp_cwd%/}
-    bsp_root_pfx=${bsp_root%/}
-    case "$bsp_bash_dir/" in
-      "$bsp_cwd_pfx"/*|"$bsp_root_pfx"/*) ;;
-      *)
-        if [ ! "$bsp_c" -ef "$BSP_SHIM" ]; then
-          return 0
-        fi ;;
-    esac
-  fi
-  return 1
-}
+HOOKEOF
+      printf '%s' "$BSP_USABLE_SH"
+      cat << 'HOOKEOF'
 bsp_bash=""
 bsp_old_ifs=$IFS
 IFS=:
@@ -986,6 +904,97 @@ HOOKEOF
 }
 
 
+# BSP_USABLE_SH: the shim's bash rule, bsp_usable <bash> (step 2 in the
+# shim's comments). One copy: write_hook_script writes it into the shim, and
+# hook_bash evals it to vet the bash it registers.
+IFS= read -r -d '' BSP_USABLE_SH <<'BSPEOF' || true
+bsp_usable() {
+  bsp_c=$1
+  # A . or .. component is the signature of a relative PATH entry: bash
+  # records its lookup unnormalised (<cwd>/../bash), which can land above or
+  # beside a root that is just the cwd. Refuse it, whatever the root.
+  case "$bsp_c" in
+    */./*|*/../*|*/.|*/..) return 1 ;;
+    /*) ;;
+    *) return 1 ;;
+  esac
+  # bash keeps a leading // through cd -P and pwd -P: collapse it.
+  bsp_cwd=$(pwd -P 2>/dev/null) || bsp_cwd=""
+  case $bsp_cwd in //*) bsp_cwd=/${bsp_cwd#"${bsp_cwd%%[!/]*}"} ;; esac
+  # A root variable that is relative or does not resolve: refuse.
+  bsp_ok=1
+  bsp_root=""
+  case "${CLAUDE_PROJECT_DIR:-}" in
+    "") ;;
+    /*) bsp_root=$CLAUDE_PROJECT_DIR ;;
+    *) bsp_ok=0 ;;
+  esac
+  case "${CURSOR_PROJECT_DIR:-}" in
+    "") ;;
+    /*) if [ -z "$bsp_root" ]; then bsp_root=$CURSOR_PROJECT_DIR; fi ;;
+    *) bsp_ok=0 ;;
+  esac
+  # A bash that literally starts with the cwd came from a relative PATH
+  # entry, symlinked or not: bash builds it as $PWD/<entry>/bash. Compare
+  # it with the logical cwd ($PWD, when set) and the physical one, with a
+  # leading run of slashes collapsed in each and in the bash. Refuse a match,
+  # whatever the root. Accepted over-refusal: a real bash reached through a
+  # symlink under the cwd (cwd = $HOME, ~/.nix-profile/bin/bash) is refused.
+  # bash 5.x builds $BASH from its canonical cwd but keeps an inherited
+  # $PWD as spelled (//, /./, doubled /), so also compare with the
+  # canonical logical cwd, from cd "$PWD" && pwd. If that cd fails, refuse.
+  bsp_lit=$bsp_c
+  case $bsp_lit in //*) bsp_lit=/${bsp_lit#"${bsp_lit%%[!/]*}"} ;; esac
+  bsp_pwd=${PWD:-}
+  case $bsp_pwd in //*) bsp_pwd=/${bsp_pwd#"${bsp_pwd%%[!/]*}"} ;; esac
+  bsp_phys_pfx=${bsp_cwd%/}
+  bsp_pwd_pfx=$bsp_phys_pfx
+  if [ -n "$bsp_pwd" ]; then bsp_pwd_pfx=${bsp_pwd%/}; fi
+  if [ -n "${PWD:-}" ]; then
+    bsp_can=$(cd "$PWD" 2>/dev/null && pwd) || bsp_can=""
+    case $bsp_can in //*) bsp_can=/${bsp_can#"${bsp_can%%[!/]*}"} ;; esac
+    if [ -z "$bsp_can" ]; then bsp_ok=0; fi
+  else
+    bsp_can=$bsp_cwd
+  fi
+  bsp_can_pfx=${bsp_can%/}
+  case "$bsp_lit" in
+    "$bsp_pwd_pfx"/*|"$bsp_phys_pfx"/*|"$bsp_can_pfx"/*) bsp_ok=0 ;;
+  esac
+  if [ -n "$bsp_root" ]; then
+    bsp_root=$(cd -P "$bsp_root/" 2>/dev/null && pwd -P) || bsp_root=""
+    case $bsp_root in //*) bsp_root=/${bsp_root#"${bsp_root%%[!/]*}"} ;; esac
+    if [ -z "$bsp_root" ]; then bsp_ok=0; fi
+  elif [ "$bsp_ok" = 1 ]; then
+    # No root variable: the highest .git ancestor of the cwd, else the cwd.
+    bsp_root=$bsp_cwd
+    bsp_d=$bsp_cwd
+    while [ -n "$bsp_d" ]; do
+      if [ -e "${bsp_d%/}/.git" ]; then bsp_root=$bsp_d; fi
+      if [ "$bsp_d" = / ]; then break; fi
+      bsp_d=${bsp_d%/*}
+      if [ -z "$bsp_d" ]; then bsp_d=/; fi
+    done
+  fi
+  bsp_bash_dir=$(cd -P "${bsp_c%/*}/" 2>/dev/null && pwd -P) || bsp_bash_dir=""
+  case $bsp_bash_dir in //*) bsp_bash_dir=/${bsp_bash_dir#"${bsp_bash_dir%%[!/]*}"} ;; esac
+  if [ "$bsp_ok" = 1 ] && [ -n "$bsp_cwd" ] && [ -n "$bsp_root" ] && [ -n "$bsp_bash_dir" ]; then
+    # Prefixes go through variables: bash 5.3 does not match "${v%/}"/*
+    # when the expansion is empty (cwd /).
+    bsp_cwd_pfx=${bsp_cwd%/}
+    bsp_root_pfx=${bsp_root%/}
+    case "$bsp_bash_dir/" in
+      "$bsp_cwd_pfx"/*|"$bsp_root_pfx"/*) ;;
+      *)
+        if [ ! "$bsp_c" -ef "$BSP_SHIM" ]; then
+          return 0
+        fi ;;
+    esac
+  fi
+  return 1
+}
+BSPEOF
+
 # hook_bash: prints the absolute bash the registered hook command names.
 # The harness runs that command through a shell, so a bare `bash` would be
 # looked up on the harness PATH, and an empty or relative entry searches the
@@ -993,8 +1002,12 @@ HOOKEOF
 # hooks/session-start's rule (absolute entries only, ~ and ~/x become $HOME).
 # /bin/bash comes first when it is there: an earlier bash on the install-time
 # PATH can be ephemeral (nix-shell, devbox, mise shims) and vanish later.
+# Otherwise the shim's own choice, made once: the first bash on that PATH that
+# passes bsp_usable, else $BASH if it passes. An absolute entry can sit inside
+# the project install.sh is run from (npm exec's node_modules/.bin, direnv
+# PATH_add), and the bash named here runs every session.
 hook_bash() {
-  local p safe="" found
+  local p safe="" BSP_SHIM="${HOOK_SCRIPT:-}"
   if [ -x /bin/bash ]; then
     printf '%s\n' /bin/bash
     return 0
@@ -1011,12 +1024,19 @@ hook_bash() {
     esac
     safe="${safe:+$safe:}$p"
   done
-  # Assigning PATH also clears the hash table, so no earlier lookup leaks in.
-  found=$(PATH="${safe:-/usr/bin:/bin}"; command -v bash) || return 1
-  case "$found" in
-    /*) printf '%s\n' "$found" ;;
-    *) return 1 ;;
-  esac
+  eval "$BSP_USABLE_SH"
+  IFS=: read -r -a parts <<<"${safe:-/usr/bin:/bin}"
+  for p in "${parts[@]}"; do
+    if [ -f "$p/bash" ] && [ -x "$p/bash" ] && bsp_usable "$p/bash"; then
+      printf '%s\n' "$p/bash"
+      return 0
+    fi
+  done
+  if bsp_usable "${BASH:-}"; then
+    printf '%s\n' "$BASH"
+    return 0
+  fi
+  return 1
 }
 
 # rewrite_settings <op> <backup prefix> <settings file> [op args]: the one

@@ -4,7 +4,8 @@
 # (hooks/run-hook.cmd), hooks/session-start's PATH clean-up (bd, sed and every
 # other tool it calls; run directly and in the harness's launcher shape), and
 # the PATH each plugin hands its own `bd memories` fallback (Hermes and
-# OpenCode). All four must apply one containment rule, so they share the rows.
+# OpenCode), and install.sh's hook_bash, the bash it registers as the hook's
+# interpreter. All must apply one containment rule, so they share the rows.
 #
 # The rule (hooks/run-hook.cmd's bsp_outside): an absolute entry is dropped when
 # it has a . or .. component, literally starts with the cwd (logical, physical
@@ -137,6 +138,14 @@ const out = { messages: [{ info: { role: "user" }, parts: [{ type: "text", text:
 await hooks["experimental.chat.messages.transform"]({}, out);
 console.log(out.messages[0].parts[0].text);'
 
+# install.sh's hook_bash with the shim's rule it evals, as a host without
+# /bin/bash runs it (NixOS, FreeBSD): /bin/bash, when there, is taken first.
+{
+  awk '/^IFS= read -r -d .. BSP_USABLE_SH <</,/^BSPEOF$/' "$ROOT/install.sh"
+  awk '/^hook_bash\(\) \{$/,/^}$/' "$ROOT/install.sh" | sed 's#^  if \[ -x /bin/bash \]; then$#  if [ -x /nonexistent/bin/bash ]; then#'
+} >"$TMP/hb.sh"
+if grep -q -x '  if \[ -x /nonexistent/bin/bash \]; then' "$TMP/hb.sh"; then hb_ok=1; else hb_ok=0; report "extract hook_bash from install.sh" 1 "function body or its /bin/bash line not found"; fi
+
 n=0
 # row_run <cwd> <PWD> <entry> <extras> <command...>: sets rc, out, got.
 row_run() {
@@ -192,7 +201,30 @@ while IFS='|' read -r name dir pw e exp x; do
     row_run "$dir" "$pw" "$e" "$x" "$node_bin" --input-type=module -e "$OC_JS" "$TMP/ocfx/.opencode/plugins/beads-superpowers.js"
     verdict "OpenCode bd fallback [$name]" "$(want "$exp" bd)" "$(has 'session composer unavailable')"
   fi
+  # hook_bash prints the bash it would register: the outside bin's when the
+  # entry is dropped, the entry's when kept, and none (rc 1) when every
+  # candidate, $BASH included, is refused.
+  if [ "$hb_ok" = 1 ]; then
+    # shellcheck disable=SC2016 # $1 is expanded by the inner bash
+    row_run "$dir" "$pw" "$e" "$x" "$bash_bin" -c '. "$1" && hook_bash' _ "$TMP/hb.sh"
+    case "$exp" in
+      drop) hb_want="$OUT/bash"; hb_rc=0 ;;
+      keep) hb_want="${e/#\~/$FH}/bash"; hb_rc=0 ;;
+      all) hb_want=""; hb_rc=1 ;;
+    esac
+    if [ "$rc" = "$hb_rc" ] && [ "$out" = "$hb_want" ] && [ -z "$got" ]; then report "install.sh hook_bash [$name]" 0 ""; else report "install.sh hook_bash [$name]" 1 "rc=$rc out=[$out] want=[$hb_want] rc want $hb_rc markers=[$got]"; fi
+  fi
 done < <(rows)
+# hook_bash with no PATH bash passing: $BASH when it passes, else none (rc 1,
+# and setup_hooks registers no hook).
+if [ "$hb_ok" = 1 ]; then
+  # shellcheck disable=SC2016 # $1 is expanded by the inner bash
+  out=$(cd "$AB" && env -i HOME="$H" PWD="$AB" PATH="$AB/sub" "$bash_bin" -c '. "$1" && hook_bash' _ "$TMP/hb.sh" 2>/dev/null); rc=$?
+  if [ "$rc" = 0 ] && [ "$out" = "$bash_bin" ]; then report "install.sh hook_bash: only an in-project bash on PATH, outside \$BASH used" 0 ""; else report "install.sh hook_bash: only an in-project bash on PATH, outside \$BASH used" 1 "rc=$rc out=[$out]"; fi
+  # shellcheck disable=SC2016 # $1/$2 are expanded by the inner bash
+  out=$(cd "$AB" && env -i HOME="$H" PWD="$AB" PATH="$AB/sub" "$bash_bin" -c 'BASH=$2; . "$1" && hook_bash' _ "$TMP/hb.sh" "$AB/sub/bash" 2>/dev/null); rc=$?
+  if [ "$rc" = 1 ] && [ -z "$out" ]; then report "install.sh hook_bash: in-project PATH bash and \$BASH both refused (rc 1)" 0 ""; else report "install.sh hook_bash: in-project PATH bash and \$BASH both refused (rc 1)" 1 "rc=$rc out=[$out]"; fi
+fi
 if [ -z "$py_bin" ]; then echo "SKIP: Hermes rows (python3 not found)"; fi
 if [ -z "$node_bin" ]; then echo "SKIP: OpenCode rows (node not found)"; fi
 

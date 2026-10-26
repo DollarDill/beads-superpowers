@@ -174,7 +174,11 @@ awk '/^write_hook_script\(\) \{$/ { on = 1 }
      on { print }
      on && /^}$/ && prev ~ /chmod \+x "\$HOOK_SCRIPT"$/ { exit }
      { prev = $0 }' "$ROOT/install.sh" >"$T/whs.sh"
-if [ "$(tail -n 1 "$T/whs.sh")" = "}" ] && grep -q 'HOOKEOF' "$T/whs.sh"; then
+# The shim's bash rule, which write_hook_script writes into it.
+awk '/^IFS= read -r -d .. BSP_USABLE_SH <</,/^BSPEOF$/' "$ROOT/install.sh" >"$T/bsp.sh"
+if [ "$(tail -n 1 "$T/whs.sh")" = "}" ] && grep -q 'HOOKEOF' "$T/whs.sh" && [ "$(tail -n 1 "$T/bsp.sh")" = BSPEOF ]; then
+  # shellcheck source=/dev/null
+  . "$T/bsp.sh"
   # shellcheck source=/dev/null
   . "$T/whs.sh"
   HOOKS_DIR="$T/hookhome" HOOK_SCRIPT="$T/hookhome/shim.sh" SKILLS_DIR="$ROOT/skills" write_hook_script "$ROOT"
@@ -417,7 +421,7 @@ if [ "$(tail -n 1 "$T/whs.sh")" = "}" ] && grep -q 'HOOKEOF' "$T/whs.sh"; then
   run "$T/evil" "" "$bash_bin" "$T/hookhome/fallback.sh"
   planted_check "planted binaries: npx fallback with PATH=''"
 else
-  report "extract write_hook_script from install.sh" 1 "function body not found"
+  report "extract write_hook_script from install.sh" 1 "function body or BSP_USABLE_SH not found"
 fi
 
 # --- install.sh: the bash the hook is registered and run with ---
