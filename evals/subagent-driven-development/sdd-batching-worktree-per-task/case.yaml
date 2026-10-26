@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: sdd-batching-worktree-per-task
+context:
+  scaffold_script: scaffold.sh
