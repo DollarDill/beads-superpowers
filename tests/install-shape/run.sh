@@ -33,6 +33,12 @@ if [ "$TARGET" = "all" ]; then
   echo "═══ uninstall-settings"
   if bash "$HERE/test-uninstall-settings.sh"; then echo "═══ uninstall-settings PASS"; else echo "═══ uninstall-settings FAIL"; total_rc=1; fi
   echo
+  echo "═══ install-settings"
+  if bash "$HERE/test-install-settings.sh"; then echo "═══ install-settings PASS"; else echo "═══ install-settings FAIL"; total_rc=1; fi
+  echo
+  echo "═══ hook-shim-bash"
+  if bash "$HERE/test-hook-shim-bash.sh"; then echo "═══ hook-shim-bash PASS"; else echo "═══ hook-shim-bash FAIL"; total_rc=1; fi
+  echo
   for h in $TIER_A $TIER_B combo; do run_case "$h"; done
 else
   run_case "$TARGET"

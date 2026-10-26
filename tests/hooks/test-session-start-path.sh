@@ -421,8 +421,10 @@ fi
 
 # --- install.sh: the bash the hook is registered and run with ---
 awk '/^hook_bash\(\) \{$/,/^}$/' "$ROOT/install.sh" >"$T/hb.sh"
-awk '/^register_hook\(\) \{$/,/^}$/' "$ROOT/install.sh" >"$T/rh.sh"
-if grep -q '^hook_bash() {$' "$T/hb.sh" && grep -q 'PYEOF' "$T/rh.sh" && [ "$(tail -n 1 "$T/rh.sh")" = "}" ]; then
+# register_hook writes through rewrite_settings and words its warning with
+# settings_problem.
+awk '/^(rewrite_settings|settings_problem|register_hook)\(\) \{$/,/^}$/' "$ROOT/install.sh" >"$T/rh.sh"
+if grep -q '^hook_bash() {$' "$T/hb.sh" && grep -q 'PYEOF' "$T/rh.sh" && [ "$(grep -c -E '^(rewrite_settings|settings_problem|register_hook)\(\) \{$' "$T/rh.sh")" = 3 ] && [ "$(tail -n 1 "$T/rh.sh")" = "}" ]; then
   # shellcheck source=/dev/null
   . "$T/hb.sh"
   # shellcheck source=/dev/null
@@ -510,7 +512,7 @@ sys.exit(0 if eval(check) else 1)' "$sf" "$hs" "$3" 2>>"$T/reg$reg_n.out"; then
     report "register_hook: bare call under set -e survives invalid JSON" 1 "got: $eo"
   fi
 else
-  report "extract hook_bash and register_hook from install.sh" 1 "function body not found"
+  report "extract hook_bash, rewrite_settings, settings_problem and register_hook from install.sh" 1 "function body not found"
 fi
 # install.sh runs the hook (and itself) with the vetted bash, never a bare one.
 bare=$(grep -nE '(^|[[:space:];&|(])bash "\$' "$ROOT/install.sh" | grep -vE '^[0-9]+:[[:space:]]*#')

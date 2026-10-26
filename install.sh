@@ -73,7 +73,8 @@ INSTALL_TIER=""
 # shellcheck disable=SC2034  # STAGING_DIR used in later install tiers
 STAGING_DIR=""
 VERSION=""
-SETTINGS_WARNING=""  # set when the settings file is not valid JSON; repeated in the summary
+SETTINGS_WARNING=""  # set when the hook could not be registered; repeated in the summary
+SETTINGS_BACKUP=""  # the backup register_hook made of the settings file, if any
 HOOK_BASH=""  # absolute bash the registered hook names (setup_hooks)
 agent_count=0
 
@@ -283,16 +284,16 @@ detect_tools() {
 
 detect_upstream_conflict() {
   if [ -f "$PLUGINS_FILE" ]; then
-    if python3 -c "
+    if python3 -I -c '
 import json, sys
 try:
-    d = json.load(open('$PLUGINS_FILE'))
-    if 'superpowers@claude-plugins-official' in d.get('plugins', {}):
+    d = json.load(open(sys.argv[1]))
+    if "superpowers@claude-plugins-official" in d.get("plugins", {}):
         sys.exit(0)
     sys.exit(1)
 except:
     sys.exit(1)
-" 2>/dev/null; then
+' "$PLUGINS_FILE" 2>/dev/null; then
       error "Upstream superpowers plugin detected."
       echo
       echo "  beads-superpowers supersedes the upstream superpowers plugin."
@@ -487,17 +488,13 @@ setup_hooks() {
   info "Creating SessionStart hook..."
   write_hook_script "$source_root"
 
-  if [ -f "$SETTINGS_FILE" ]; then
-    local backup
-    backup="${SETTINGS_FILE}.backup-$(date +%Y%m%d-%H%M%S)"
-    cp -f "$SETTINGS_FILE" "$backup"
-    info "Settings backup: ${backup/$HOME/\~}"
-  fi
-
   cleanup_stale_reminder "$SETTINGS_FILE"
 
   info "Registering hooks in settings.json..."
   register_hook
+  if [ -n "$SETTINGS_BACKUP" ]; then
+    info "Settings backup: ${SETTINGS_BACKUP/$HOME/\~}"
+  fi
 
   return 0
 }
@@ -691,19 +688,11 @@ do_auto_uninstall_previous() {
       rm -f "$HOOK_SCRIPT" "$HOOKS_DIR/beads-superpowers-reminder.sh" 2>/dev/null
       rm -rf "$HOOKS_DIR/beads-superpowers" 2>/dev/null
       if [ -f "$SETTINGS_FILE" ] && [ "$HAS_PYTHON3" = 1 ]; then
-        python3 -c "
-import json
-sf = '$SETTINGS_FILE'
-with open(sf) as f:
-    s = json.load(f)
-h = s.get('hooks', {})
-for k in ['SessionStart', 'UserPromptSubmit']:
-    if k in h:
-        h[k] = [e for e in h[k] if 'beads-superpowers' not in json.dumps(e)]
-with open(sf, 'w') as f:
-    json.dump(s, f, indent=2)
-    f.write('\n')
-" 2>/dev/null || true
+        local rc=0 kept=""
+        kept=$(rewrite_settings unregister backup-previous "$SETTINGS_FILE") || rc=$?
+        if [ "$rc" != 0 ] && [ "$rc" != 4 ]; then
+          warn "$(settings_problem "$rc" "$SETTINGS_FILE" "$kept" "the previous install's hook entries were NOT removed" "re-run the installer")"
+        fi
       fi
       ;;
   esac
@@ -774,14 +763,16 @@ export CLAUDE_PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$BSP_ROOT}"
 # hooks/run-hook.cmd's Unix-half rule (its comments give the reasons):
 # 1. Keep absolute PATH entries, map ~ and ~/x to $HOME when $HOME is
 #    absolute, drop everything else, fall back to /usr/bin:/bin.
-# 2. Use the bash on that PATH. Only if there is none, use $BASH when it is
-#    absolute, has no . or .. component and does not literally start with
-#    the cwd (a relative PATH entry's signatures), lies physically outside
-#    both the cwd tree and the project root
-#    (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR; with neither set, the
-#    highest .git ancestor of the cwd), and not this shim. A relative or
-#    unresolvable root variable refuses $BASH. bash fills $BASH by a PATH
-#    search when started with a slash-less argv0, which can land in the cwd.
+# 2. Use the first bash on that PATH that passes the rule below, else $BASH
+#    if it passes. A bash passes when it is absolute, has no . or ..
+#    component and does not literally start with the cwd (a relative PATH
+#    entry's signatures), lies physically outside both the cwd tree and the
+#    project root (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR; with neither
+#    set, the highest .git ancestor of the cwd), and is not this shim. A
+#    relative or unresolvable root variable refuses it. An absolute PATH
+#    entry can still point into the project (npm exec's node_modules/.bin,
+#    direnv PATH_add). bash fills $BASH by a PATH search when started with a
+#    slash-less argv0, which can land in the cwd.
 # 3. No usable bash: exit 0 silently.
 bsp_safe_path=""
 bsp_old_ifs=$IFS
@@ -804,92 +795,106 @@ set +f
 IFS=$bsp_old_ifs
 PATH="${bsp_safe_path:-/usr/bin:/bin}"; export PATH
 
-bsp_bash=$(command -v bash 2>/dev/null) || bsp_bash=""
-case "$bsp_bash" in
-  /*) ;;
-  *) bsp_bash="" ;;
-esac
-if [ -z "$bsp_bash" ]; then
+# bsp_usable <bash>: the rule in step 2. Exit 0: it may be run.
+bsp_usable() {
+  bsp_c=$1
   # A . or .. component is the signature of a relative PATH entry: bash
   # records its lookup unnormalised (<cwd>/../bash), which can land above or
   # beside a root that is just the cwd. Refuse it, whatever the root.
-  case "${BASH:-}" in
-    */./*|*/../*|*/.|*/..) ;;
-    /*)
-      # bash keeps a leading // through cd -P and pwd -P: collapse it.
-      bsp_cwd=$(pwd -P 2>/dev/null) || bsp_cwd=""
-      case $bsp_cwd in //*) bsp_cwd=/${bsp_cwd#"${bsp_cwd%%[!/]*}"} ;; esac
-      # A root variable that is relative or does not resolve: refuse.
-      bsp_ok=1
-      bsp_root=""
-      case "${CLAUDE_PROJECT_DIR:-}" in
-        "") ;;
-        /*) bsp_root=$CLAUDE_PROJECT_DIR ;;
-        *) bsp_ok=0 ;;
-      esac
-      case "${CURSOR_PROJECT_DIR:-}" in
-        "") ;;
-        /*) if [ -z "$bsp_root" ]; then bsp_root=$CURSOR_PROJECT_DIR; fi ;;
-        *) bsp_ok=0 ;;
-      esac
-      # A $BASH that literally starts with the cwd came from a relative PATH
-      # entry, symlinked or not: bash builds it as $PWD/<entry>/bash. Compare
-      # it with the logical cwd ($PWD, when set) and the physical one, with a
-      # leading run of slashes collapsed in each and in $BASH. Refuse a match,
-      # whatever the root. Accepted over-refusal: a real bash reached through a
-      # symlink under the cwd (cwd = $HOME, ~/.nix-profile/bin/bash) is refused.
-      # bash 5.x builds $BASH from its canonical cwd but keeps an inherited
-      # $PWD as spelled (//, /./, doubled /), so also compare with the
-      # canonical logical cwd, from cd "$PWD" && pwd. If that cd fails, refuse.
-      bsp_lit=$BASH
-      case $bsp_lit in //*) bsp_lit=/${bsp_lit#"${bsp_lit%%[!/]*}"} ;; esac
-      bsp_pwd=${PWD:-}
-      case $bsp_pwd in //*) bsp_pwd=/${bsp_pwd#"${bsp_pwd%%[!/]*}"} ;; esac
-      bsp_phys_pfx=${bsp_cwd%/}
-      bsp_pwd_pfx=$bsp_phys_pfx
-      if [ -n "$bsp_pwd" ]; then bsp_pwd_pfx=${bsp_pwd%/}; fi
-      if [ -n "${PWD:-}" ]; then
-        bsp_can=$(cd "$PWD" 2>/dev/null && pwd) || bsp_can=""
-        case $bsp_can in //*) bsp_can=/${bsp_can#"${bsp_can%%[!/]*}"} ;; esac
-        if [ -z "$bsp_can" ]; then bsp_ok=0; fi
-      else
-        bsp_can=$bsp_cwd
-      fi
-      bsp_can_pfx=${bsp_can%/}
-      case "$bsp_lit" in
-        "$bsp_pwd_pfx"/*|"$bsp_phys_pfx"/*|"$bsp_can_pfx"/*) bsp_ok=0 ;;
-      esac
-      if [ -n "$bsp_root" ]; then
-        bsp_root=$(cd -P "$bsp_root/" 2>/dev/null && pwd -P) || bsp_root=""
-        case $bsp_root in //*) bsp_root=/${bsp_root#"${bsp_root%%[!/]*}"} ;; esac
-        if [ -z "$bsp_root" ]; then bsp_ok=0; fi
-      elif [ "$bsp_ok" = 1 ]; then
-        # No root variable: the highest .git ancestor of the cwd, else the cwd.
-        bsp_root=$bsp_cwd
-        bsp_d=$bsp_cwd
-        while [ -n "$bsp_d" ]; do
-          if [ -e "${bsp_d%/}/.git" ]; then bsp_root=$bsp_d; fi
-          if [ "$bsp_d" = / ]; then break; fi
-          bsp_d=${bsp_d%/*}
-          if [ -z "$bsp_d" ]; then bsp_d=/; fi
-        done
-      fi
-      bsp_bash_dir=$(cd -P "${BASH%/*}/" 2>/dev/null && pwd -P) || bsp_bash_dir=""
-      case $bsp_bash_dir in //*) bsp_bash_dir=/${bsp_bash_dir#"${bsp_bash_dir%%[!/]*}"} ;; esac
-      if [ "$bsp_ok" = 1 ] && [ -n "$bsp_cwd" ] && [ -n "$bsp_root" ] && [ -n "$bsp_bash_dir" ]; then
-        # Prefixes go through variables: bash 5.3 does not match "${v%/}"/*
-        # when the expansion is empty (cwd /).
-        bsp_cwd_pfx=${bsp_cwd%/}
-        bsp_root_pfx=${bsp_root%/}
-        case "$bsp_bash_dir/" in
-          "$bsp_cwd_pfx"/*|"$bsp_root_pfx"/*) ;;
-          *)
-            if [ ! "$BASH" -ef "$BSP_SHIM" ]; then
-              bsp_bash=$BASH
-            fi ;;
-        esac
-      fi ;;
+  case "$bsp_c" in
+    */./*|*/../*|*/.|*/..) return 1 ;;
+    /*) ;;
+    *) return 1 ;;
   esac
+  # bash keeps a leading // through cd -P and pwd -P: collapse it.
+  bsp_cwd=$(pwd -P 2>/dev/null) || bsp_cwd=""
+  case $bsp_cwd in //*) bsp_cwd=/${bsp_cwd#"${bsp_cwd%%[!/]*}"} ;; esac
+  # A root variable that is relative or does not resolve: refuse.
+  bsp_ok=1
+  bsp_root=""
+  case "${CLAUDE_PROJECT_DIR:-}" in
+    "") ;;
+    /*) bsp_root=$CLAUDE_PROJECT_DIR ;;
+    *) bsp_ok=0 ;;
+  esac
+  case "${CURSOR_PROJECT_DIR:-}" in
+    "") ;;
+    /*) if [ -z "$bsp_root" ]; then bsp_root=$CURSOR_PROJECT_DIR; fi ;;
+    *) bsp_ok=0 ;;
+  esac
+  # A bash that literally starts with the cwd came from a relative PATH
+  # entry, symlinked or not: bash builds it as $PWD/<entry>/bash. Compare
+  # it with the logical cwd ($PWD, when set) and the physical one, with a
+  # leading run of slashes collapsed in each and in the bash. Refuse a match,
+  # whatever the root. Accepted over-refusal: a real bash reached through a
+  # symlink under the cwd (cwd = $HOME, ~/.nix-profile/bin/bash) is refused.
+  # bash 5.x builds $BASH from its canonical cwd but keeps an inherited
+  # $PWD as spelled (//, /./, doubled /), so also compare with the
+  # canonical logical cwd, from cd "$PWD" && pwd. If that cd fails, refuse.
+  bsp_lit=$bsp_c
+  case $bsp_lit in //*) bsp_lit=/${bsp_lit#"${bsp_lit%%[!/]*}"} ;; esac
+  bsp_pwd=${PWD:-}
+  case $bsp_pwd in //*) bsp_pwd=/${bsp_pwd#"${bsp_pwd%%[!/]*}"} ;; esac
+  bsp_phys_pfx=${bsp_cwd%/}
+  bsp_pwd_pfx=$bsp_phys_pfx
+  if [ -n "$bsp_pwd" ]; then bsp_pwd_pfx=${bsp_pwd%/}; fi
+  if [ -n "${PWD:-}" ]; then
+    bsp_can=$(cd "$PWD" 2>/dev/null && pwd) || bsp_can=""
+    case $bsp_can in //*) bsp_can=/${bsp_can#"${bsp_can%%[!/]*}"} ;; esac
+    if [ -z "$bsp_can" ]; then bsp_ok=0; fi
+  else
+    bsp_can=$bsp_cwd
+  fi
+  bsp_can_pfx=${bsp_can%/}
+  case "$bsp_lit" in
+    "$bsp_pwd_pfx"/*|"$bsp_phys_pfx"/*|"$bsp_can_pfx"/*) bsp_ok=0 ;;
+  esac
+  if [ -n "$bsp_root" ]; then
+    bsp_root=$(cd -P "$bsp_root/" 2>/dev/null && pwd -P) || bsp_root=""
+    case $bsp_root in //*) bsp_root=/${bsp_root#"${bsp_root%%[!/]*}"} ;; esac
+    if [ -z "$bsp_root" ]; then bsp_ok=0; fi
+  elif [ "$bsp_ok" = 1 ]; then
+    # No root variable: the highest .git ancestor of the cwd, else the cwd.
+    bsp_root=$bsp_cwd
+    bsp_d=$bsp_cwd
+    while [ -n "$bsp_d" ]; do
+      if [ -e "${bsp_d%/}/.git" ]; then bsp_root=$bsp_d; fi
+      if [ "$bsp_d" = / ]; then break; fi
+      bsp_d=${bsp_d%/*}
+      if [ -z "$bsp_d" ]; then bsp_d=/; fi
+    done
+  fi
+  bsp_bash_dir=$(cd -P "${bsp_c%/*}/" 2>/dev/null && pwd -P) || bsp_bash_dir=""
+  case $bsp_bash_dir in //*) bsp_bash_dir=/${bsp_bash_dir#"${bsp_bash_dir%%[!/]*}"} ;; esac
+  if [ "$bsp_ok" = 1 ] && [ -n "$bsp_cwd" ] && [ -n "$bsp_root" ] && [ -n "$bsp_bash_dir" ]; then
+    # Prefixes go through variables: bash 5.3 does not match "${v%/}"/*
+    # when the expansion is empty (cwd /).
+    bsp_cwd_pfx=${bsp_cwd%/}
+    bsp_root_pfx=${bsp_root%/}
+    case "$bsp_bash_dir/" in
+      "$bsp_cwd_pfx"/*|"$bsp_root_pfx"/*) ;;
+      *)
+        if [ ! "$bsp_c" -ef "$BSP_SHIM" ]; then
+          return 0
+        fi ;;
+    esac
+  fi
+  return 1
+}
+bsp_bash=""
+bsp_old_ifs=$IFS
+IFS=:
+set -f
+for bsp_p in $PATH; do
+  if [ -f "$bsp_p/bash" ] && [ -x "$bsp_p/bash" ] && bsp_usable "$bsp_p/bash"; then
+    bsp_bash=$bsp_p/bash
+    break
+  fi
+done
+set +f
+IFS=$bsp_old_ifs
+if [ -z "$bsp_bash" ] && bsp_usable "${BASH:-}"; then
+  bsp_bash=$BASH
 fi
 if [ -z "$bsp_bash" ]; then
   exit 0
@@ -1014,103 +1019,341 @@ hook_bash() {
   esac
 }
 
-register_hook() {
-  local rc=0
-  # `|| rc=$?` keeps the capture alive under `set -e` whatever the caller does.
-  python3 - "$SETTINGS_FILE" "$HOOK_SCRIPT" "$HOOK_BASH" << 'PYEOF' || rc=$?
-import json, os, shlex, sys
+# rewrite_settings <op> <backup prefix> <settings file> [op args]: the one
+# writer of a Claude settings file. <op> is unregister (drop every
+# beads-superpowers SessionStart/UserPromptSubmit entry), unremind (drop the
+# stale superpowers-reminder UserPromptSubmit hook) or register <shim> <bash>
+# (add or update our SessionStart entry; a missing file is created). Path and
+# args go on argv, never into source; -I keeps the cwd off sys.path. No
+# exception text or content is ever printed, on any path. Exit 4: nothing to
+# change. Exit 3: the file was not changed and no backup is left. Exit 6: a
+# failed write was undone with no error, checked byte-for-byte and the backup
+# removed; exit 7: the same, but the backup could not be removed. Exit 5:
+# undoing the write hit an error or does not match; exit 8: closing the file
+# failed after it was written. On 5 and 8 the file may have changed and the
+# backup is kept. Once the backup is verified its suffix is on stdout.
+# Callers capture with `|| rc=$?`, which survives `set -e`.
+rewrite_settings() {
+  python3 -I - "$@" << 'PYEOF'
+import io, json, os, shlex, sys, time
 
-sf, hs, hb = sys.argv[1:4]
-cmd = f"{shlex.quote(hb)} {shlex.quote(hs)}"
-shim_name = os.path.basename(hs)
-
-if os.path.exists(sf):
+def intact(sf, raw):
     try:
-        with open(sf) as f:
-            settings = json.load(f)
-    except (ValueError, OSError):
-        # Not valid JSON (an empty or whitespace-only file included) or not
-        # readable (permission denied, a directory): leave it byte-for-byte
-        # alone. Exit 3 tells the shell to repeat the warning. Neither the
-        # error text nor the content is printed.
-        print(f"beads-superpowers: {sf} is not readable or not valid JSON; SessionStart hook "
-              "NOT registered. Repair or move the file, then re-run the installer.",
-              file=sys.stderr)
-        sys.exit(3)
-else:
-    os.makedirs(os.path.dirname(sf), exist_ok=True)
-    settings = {}
-
-
-def skip(what):
-    """Hand-edited settings that cannot take our entry without losing data:
-    leave the file alone and never crash the install."""
-    print(f"beads-superpowers: {sf}: {what}; SessionStart hook not registered",
-          file=sys.stderr)
-    sys.exit(0)
-
-
-# A missing or null container counts as empty; one of the wrong type is left.
-if not isinstance(settings, dict):
-    skip("the top level is not an object")
-if settings.get("hooks") is None:
-    settings["hooks"] = {}
-hooks = settings["hooks"]
-if not isinstance(hooks, dict):
-    skip('"hooks" is not an object')
-if hooks.get("SessionStart") is None:
-    hooks["SessionStart"] = []
-ss = hooks["SessionStart"]
-if not isinstance(ss, list):
-    skip('"hooks.SessionStart" is not a list')
-
-
-def ours(c):
-    """An earlier registration of this shim: `bash <shim>`, which looks bash
-    up on the harness PATH, or an older absolute bash. A `bash ` command that
-    names the shim matches whatever shlex makes of it: an unquoted HOME with a
-    space or a ' does not split into two words."""
-    if c.startswith("bash ") and shim_name in c:
-        return True
-    try:
-        argv = shlex.split(c)
-    except ValueError:
+        with open(sf, "rb") as f:
+            return f.read() == raw
+    except OSError:
         return False
-    return (len(argv) == 2 and argv[1] == hs
-            and (argv[0] == "bash" or argv[0].endswith("/bash")))
 
+def shut(fd):
+    try:
+        os.close(fd)
+        return True
+    except Exception:
+        return False
 
-# SessionStart hook: ours is rewritten in place; other hooks, and malformed
-# entries, are left alone.
-for e in ss:
-    inner = e.get("hooks") if isinstance(e, dict) else None
-    if not isinstance(inner, list):
-        continue
-    for h in inner:
-        if isinstance(h, dict) and isinstance(h.get("command"), str) and ours(h["command"]):
-            h["command"] = cmd
-if not any("beads-superpowers" in json.dumps(e) for e in ss):
-    ss.append({
-        "matcher": "startup|clear|compact",
-        "hooks": [{"type": "command", "command": cmd}]
-    })
+def flush_drive(fd):
+    # macOS fsync does not flush the drive's cache; F_FULLFSYNC does. Best effort.
+    try:
+        import fcntl
+        fcntl.fcntl(fd, fcntl.F_FULLFSYNC)
+    except Exception:
+        pass
 
-with open(sf, "w") as f:
-    json.dump(settings, f, indent=2)
-    f.write("\n")
+def sync_dir(path):
+    # Best effort: keeps the backup's directory entry across a power loss.
+    try:
+        dfd = os.open(os.path.dirname(path) or ".", os.O_RDONLY)
+    except Exception:
+        return
+    try:
+        os.fsync(dfd)
+        flush_drive(dfd)
+    except Exception:
+        pass
+    shut(dfd)
+
+def put(fd, data):
+    os.lseek(fd, 0, os.SEEK_SET)
+    view = memoryview(data)
+    while view:
+        view = view[os.write(fd, view):]
+    os.ftruncate(fd, len(data))
+    os.fsync(fd)
+
+def get(fd):
+    os.lseek(fd, 0, os.SEEK_SET)
+    chunks = []
+    while True:
+        chunk = os.read(fd, 65536)
+        if not chunk:
+            return b"".join(chunks)
+        chunks.append(chunk)
+
+# Each op changes the parsed settings in place and says whether it changed
+# anything. Entries of an unexpected shape are left as they are.
+def unregister(settings, sf, args):
+    hooks = settings.get("hooks") if isinstance(settings, dict) else None
+    changed = False
+    if isinstance(hooks, dict):
+        for key in ["SessionStart", "UserPromptSubmit"]:
+            entries = hooks.get(key)
+            if isinstance(entries, list):
+                kept = [e for e in entries if "beads-superpowers" not in json.dumps(e)]
+                if len(kept) != len(entries):
+                    hooks[key] = kept
+                    changed = True
+    return changed
+
+def unremind(settings, sf, args):
+    hooks = settings.get("hooks") if isinstance(settings, dict) else None
+    ups = hooks.get("UserPromptSubmit") if isinstance(hooks, dict) else None
+    if not isinstance(ups, list):
+        return False
+    changed = False
+    kept = []
+    for entry in ups:
+        inner = entry.get("hooks") if isinstance(entry, dict) else None
+        if isinstance(inner, list):
+            left = [h for h in inner
+                    if not (isinstance(h, dict) and isinstance(h.get("command"), str)
+                            and "superpowers-reminder" in h["command"])]
+            if len(left) != len(inner):
+                changed = True
+                if not left:
+                    continue
+                entry["hooks"] = left
+        kept.append(entry)
+    if not changed:
+        return False
+    if kept:
+        hooks["UserPromptSubmit"] = kept
+    else:
+        hooks.pop("UserPromptSubmit", None)
+    return True
+
+def register(settings, sf, args):
+    hs, hb = args
+    cmd = f"{shlex.quote(hb)} {shlex.quote(hs)}"
+    shim_name = os.path.basename(hs)
+
+    def skip(what):
+        """Hand-edited settings that cannot take our entry without losing
+        data: leave the file alone and never crash the install."""
+        print(f"beads-superpowers: {sf}: {what}; SessionStart hook not registered",
+              file=sys.stderr)
+        return False
+
+    # A missing or null container counts as empty; one of the wrong type is left.
+    if not isinstance(settings, dict):
+        return skip("the top level is not an object")
+    hooks = settings.get("hooks")
+    if hooks is None:
+        hooks = {}
+    if not isinstance(hooks, dict):
+        return skip('"hooks" is not an object')
+    ss = hooks.get("SessionStart")
+    if ss is None:
+        ss = []
+    if not isinstance(ss, list):
+        return skip('"hooks.SessionStart" is not a list')
+    settings["hooks"] = hooks
+    hooks["SessionStart"] = ss
+
+    def ours(c):
+        """An earlier registration of this shim: `bash <shim>`, which looks bash
+        up on the harness PATH, or an older absolute bash. A `bash ` command that
+        names the shim matches whatever shlex makes of it: an unquoted HOME with a
+        space or a ' does not split into two words."""
+        if c.startswith("bash ") and shim_name in c:
+            return True
+        try:
+            argv = shlex.split(c)
+        except ValueError:
+            return False
+        return (len(argv) == 2 and argv[1] == hs
+                and (argv[0] == "bash" or argv[0].endswith("/bash")))
+
+    # SessionStart hook: ours is rewritten in place; other hooks, and malformed
+    # entries, are left alone.
+    changed = False
+    for e in ss:
+        inner = e.get("hooks") if isinstance(e, dict) else None
+        if not isinstance(inner, list):
+            continue
+        for h in inner:
+            if (isinstance(h, dict) and isinstance(h.get("command"), str)
+                    and ours(h["command"]) and h["command"] != cmd):
+                h["command"] = cmd
+                changed = True
+    if not any("beads-superpowers" in json.dumps(e) for e in ss):
+        ss.append({
+            "matcher": "startup|clear|compact",
+            "hooks": [{"type": "command", "command": cmd}]
+        })
+        changed = True
+    return changed
+
+OPS = {"unregister": unregister, "unremind": unremind, "register": register}
+
+def create(sf, new):
+    # register on a missing file: a new file (never one that appeared since),
+    # removed again if it cannot be written and checked in full.
+    try:
+        os.makedirs(os.path.dirname(sf), exist_ok=True)
+        fd = os.open(sf, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o666)
+    except Exception:
+        return 3
+    try:
+        put(fd, new)
+        done = True
+    except Exception:
+        done = False
+    if shut(fd) and done and intact(sf, new):
+        return 0
+    try:
+        os.remove(sf)
+    except Exception:
+        return 1
+    return 3
+
+def main(op, prefix, sf, args):
+    fresh = op == "register" and not os.path.exists(sf)
+    try:
+        if fresh:
+            raw, settings = None, {}
+        else:
+            with open(sf, "rb") as f:
+                raw = f.read()
+            # Decoded as text, as json.load(open(sf)) decodes it, so a BOM or
+            # a UTF-16/32 file is refused.
+            settings = json.loads(io.TextIOWrapper(io.BytesIO(raw)).read())
+        if not OPS[op](settings, sf, args):
+            return 4
+        new = (json.dumps(settings, indent=2) + "\n").encode()
+    except Exception:
+        # Unreadable, not valid JSON (empty included), or too deeply nested
+        # to write back (RecursionError): nothing has been touched.
+        return 3
+    if fresh:
+        return create(sf, new)
+    # The file is rewritten in place (same inode, through any symlink), so its
+    # owner, group, ACLs, xattrs and hard links are kept. Nothing is written
+    # to it until a backup of the exact bytes parsed has been made, read back
+    # and made durable. O_EXCL: a backup that already has this name is not
+    # ours and is never written or removed. The backup is 0600: it never
+    # carries more access than the file.
+    suffix = prefix + time.strftime("-%Y%m%d-%H%M%S")
+    backup = f"{sf}.{suffix}"
+    made = False
+    try:
+        fd = os.open(sf, os.O_RDWR)  # a read-only file is refused here
+    except Exception:
+        return 3
+    try:
+        if get(fd) != raw:
+            raise OSError("changed since it was parsed")
+        bfd = os.open(backup, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        made = True
+        try:
+            put(bfd, raw)
+            flush_drive(bfd)
+        except Exception:
+            shut(bfd)
+            raise
+        if not shut(bfd) or not intact(backup, raw):
+            raise OSError("backup not verified")
+        sync_dir(backup)
+        print(suffix, flush=True)
+    except Exception:
+        # Nothing was written to the file, so a failed close cannot matter.
+        if made:
+            try:
+                os.remove(backup)
+            except Exception:
+                pass
+        shut(fd)
+        return 3
+    try:
+        put(fd, new)
+        done = get(fd) == new
+    except Exception:
+        done = False
+    if done:
+        return 0 if shut(fd) else 8
+    # Undo: the backup is removed only if writing the original back raised
+    # nothing (write, truncate, fsync), it reads back byte-identical, and the
+    # file closed cleanly. Anything else keeps the backup.
+    try:
+        put(fd, raw)
+        undone = get(fd) == raw
+    except Exception:
+        undone = False
+    if not shut(fd):
+        return 8
+    if not undone or not intact(sf, raw):
+        return 5
+    try:
+        os.remove(backup)
+    except Exception:
+        return 7
+    return 6
+
+try:
+    code = main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4:])
+except BaseException:
+    code = 1
+try:
+    sys.stdout.flush()
+except BaseException:
+    pass
+os._exit(code)
 PYEOF
+}
+
+# settings_problem <rc> <file> <backup suffix> <what was not done> <next step>:
+# prints the warning for a rewrite_settings exit code other than 0 and 4.
+# A backup is named only if it is there now: a run stopped after removing it
+# must not point at a file that does not exist.
+settings_problem() {
+  local rc="$1" f="$2" kept="$3" undone="$4" next="$5" copy="" msg
+  if [ -n "$kept" ] && [ -f "$f.$kept" ]; then copy="$f.$kept"; fi
   if [ "$rc" = 3 ]; then
-    SETTINGS_WARNING="$SETTINGS_FILE is not readable or not valid JSON: the SessionStart hook was NOT registered. Repair or move the file, then re-run the installer."
-    return 0
+    msg="$f could not be read, parsed or rewritten, so it was left unchanged: $undone. Fix the file, its permissions or free disk space, then $next."
+  elif [ "$rc" = 6 ] || [ "$rc" = 7 ]; then
+    msg="$f could not be rewritten, so its original contents were restored and checked byte-for-byte; its contents were left unchanged: $undone."
+    if [ "$rc" = 7 ] && [ -n "$copy" ]; then
+      msg="$msg An identical copy of the file remains at $copy because it could not be deleted; you can delete it."
+    fi
+    msg="$msg Fix the file, its permissions or free disk space, then $next."
+  elif [ "$rc" = 5 ] && [ -n "$copy" ]; then
+    msg="$f could not be rewritten, and its original contents could not be restored or the restore could not be confirmed: $undone. The original is kept in $copy; copy it back over $f, then $next."
+  elif [ "$rc" = 8 ] && [ -n "$copy" ]; then
+    msg="$f was written but closing it failed, so its contents may have changed. Its previous contents are kept in $copy. Check the file; if it is damaged, copy that backup back over it, then $next."
+  else
+    msg="Updating $f stopped unexpectedly: check it, then $next."
+    if [ -n "$copy" ]; then msg="$msg A copy of its previous contents was saved in $copy."; fi
   fi
-  return "$rc"
+  printf '%s\n' "$msg"
+}
+
+register_hook() {
+  local rc=0 kept=""
+  kept=$(rewrite_settings register backup "$SETTINGS_FILE" "$HOOK_SCRIPT" "$HOOK_BASH") || rc=$?
+  if [ -n "$kept" ] && [ -f "$SETTINGS_FILE.$kept" ]; then SETTINGS_BACKUP="$SETTINGS_FILE.$kept"; fi
+  if [ "$rc" != 0 ] && [ "$rc" != 4 ]; then
+    # Said now and again in the summary.
+    SETTINGS_WARNING=$(settings_problem "$rc" "$SETTINGS_FILE" "$kept" "the SessionStart hook was NOT registered" "re-run the installer")
+    printf 'beads-superpowers: %s\n' "$SETTINGS_WARNING" >&2
+  fi
+  return 0
 }
 
 cleanup_stale_reminder() {
-  # ADR-0039 migration: remove UserPromptSubmit entries whose command references
+  # ADR-0039 migration: remove UserPromptSubmit hooks whose command references
   # superpowers-reminder. Structured parser only; narrow match; backup; foreign
-  # hooks preserved; skip with warning if python3 is unavailable.
-  local settings="$1"
+  # hooks and malformed entries preserved; skip with warning if python3 is
+  # unavailable. $2: the step that retries it.
+  local settings="$1" next="${2:-re-run the installer}" rc=0 kept=""
   [ -f "$settings" ] || return 0
   grep -q "superpowers-reminder" "$settings" 2>/dev/null || return 0
   if [ "$HAS_PYTHON3" = 0 ]; then
@@ -1118,35 +1361,12 @@ cleanup_stale_reminder() {
     warn "Manual fix: remove the UserPromptSubmit entry referencing superpowers-reminder.sh from $settings"
     return 0
   fi
-  if ! python3 -c 'import json, sys; json.load(open(sys.argv[1]))' "$settings" 2>/dev/null; then
-    warn "$settings is not valid JSON — leaving it untouched; the stale UserPromptSubmit hook was not cleaned"
-    return 0
+  kept=$(rewrite_settings unremind bak "$settings") || rc=$?
+  if [ "$rc" = 0 ]; then
+    success "Removed stale UserPromptSubmit (superpowers-reminder) entry from ${settings/$HOME/\~}"
+  elif [ "$rc" != 4 ]; then
+    warn "$(settings_problem "$rc" "$settings" "$kept" "the stale UserPromptSubmit hook was not cleaned" "$next")"
   fi
-  cp -f "$settings" "${settings}.bak-$(date +%Y%m%d-%H%M%S)"
-  python3 - "$settings" << 'PYEOF'
-import json, sys
-path = sys.argv[1]
-with open(path) as f:
-    data = json.load(f)
-hooks = data.get("hooks", {})
-ups = hooks.get("UserPromptSubmit")
-if isinstance(ups, list):
-    kept_matchers = []
-    for entry in ups:
-        inner = [h for h in entry.get("hooks", [])
-                 if "superpowers-reminder" not in h.get("command", "")]
-        if inner:
-            entry["hooks"] = inner
-            kept_matchers.append(entry)
-    if kept_matchers:
-        hooks["UserPromptSubmit"] = kept_matchers
-    else:
-        hooks.pop("UserPromptSubmit", None)
-    with open(path, "w") as f:
-        json.dump(data, f, indent=2)
-        f.write("\n")
-PYEOF
-  success "Removed stale UserPromptSubmit (superpowers-reminder) entry from ${settings/$HOME/\~}"
 }
 
 # --- Phase 4: Verify ---
@@ -1164,16 +1384,16 @@ do_verify() {
   if [ "$INSTALL_TIER" != "plugin" ]; then
     local verify_bash="$HOOK_BASH"
     if [ -z "$verify_bash" ]; then verify_bash=$(hook_bash) || verify_bash=""; fi
-    if [ -f "$HOOK_SCRIPT" ] && [ -n "$verify_bash" ] && "$verify_bash" "$HOOK_SCRIPT" 2>/dev/null | python3 -m json.tool > /dev/null 2>&1; then
+    if [ -f "$HOOK_SCRIPT" ] && [ -n "$verify_bash" ] && "$verify_bash" "$HOOK_SCRIPT" 2>/dev/null | python3 -I -m json.tool > /dev/null 2>&1; then
       success "Hook produces valid JSON"
     else
       warn "Hook did not produce valid JSON — check $HOOK_SCRIPT"
     fi
 
-    if [ -f "$SETTINGS_FILE" ] && python3 -c "
-import json; d=json.load(open('$SETTINGS_FILE'))
-assert any('beads-superpowers' in json.dumps(e) for e in d.get('hooks',{}).get('SessionStart',[]))
-" 2>/dev/null; then
+    if [ -f "$SETTINGS_FILE" ] && python3 -I -c '
+import json, sys; d=json.load(open(sys.argv[1]))
+assert any("beads-superpowers" in json.dumps(e) for e in d.get("hooks",{}).get("SessionStart",[]))
+' "$SETTINGS_FILE" 2>/dev/null; then
       success "Hook registered in settings.json"
     else
       warn "Hook not found in settings.json"
@@ -1269,185 +1489,11 @@ do_uninstall() {
       if [ -e "$SETTINGS_FILE" ]; then
         if command -v python3 >/dev/null 2>&1; then
           local rc=0 kept=""
-          # Path on argv, never spliced into source; `|| rc=$?` survives `set -e`.
-          kept=$(python3 - "$SETTINGS_FILE" << 'PYEOF'
-import io, json, os, sys, time
-
-# No exception text or content is ever printed, on any path. Exit 3: the file
-# was not changed and no backup is left. Exit 6: a failed write was undone
-# with no error, checked byte-for-byte and the backup removed; exit 7: the
-# same, but the backup could not be removed. Exit 5: undoing the write hit an
-# error or does not match; exit 8: closing the file failed after it was
-# written. On 5 and 8 the file may have changed and the backup is kept. Once
-# the backup is verified its suffix is on stdout.
-def intact(sf, raw):
-    try:
-        with open(sf, "rb") as f:
-            return f.read() == raw
-    except OSError:
-        return False
-
-def shut(fd):
-    try:
-        os.close(fd)
-        return True
-    except Exception:
-        return False
-
-def flush_drive(fd):
-    # macOS fsync does not flush the drive's cache; F_FULLFSYNC does. Best effort.
-    try:
-        import fcntl
-        fcntl.fcntl(fd, fcntl.F_FULLFSYNC)
-    except Exception:
-        pass
-
-def sync_dir(path):
-    # Best effort: keeps the backup's directory entry across a power loss.
-    try:
-        dfd = os.open(os.path.dirname(path) or ".", os.O_RDONLY)
-    except Exception:
-        return
-    try:
-        os.fsync(dfd)
-        flush_drive(dfd)
-    except Exception:
-        pass
-    shut(dfd)
-
-def put(fd, data):
-    os.lseek(fd, 0, os.SEEK_SET)
-    view = memoryview(data)
-    while view:
-        view = view[os.write(fd, view):]
-    os.ftruncate(fd, len(data))
-    os.fsync(fd)
-
-def get(fd):
-    os.lseek(fd, 0, os.SEEK_SET)
-    chunks = []
-    while True:
-        chunk = os.read(fd, 65536)
-        if not chunk:
-            return b"".join(chunks)
-        chunks.append(chunk)
-
-def main(sf):
-    try:
-        with open(sf, "rb") as f:
-            raw = f.read()
-        # Decoded as register_hook's open(sf) decodes it, so a BOM or a
-        # UTF-16/32 file is refused here as it is at install.
-        settings = json.loads(io.TextIOWrapper(io.BytesIO(raw)).read())
-        hooks = settings.get("hooks") if isinstance(settings, dict) else None
-        changed = False
-        if isinstance(hooks, dict):
-            for key in ["SessionStart", "UserPromptSubmit"]:
-                entries = hooks.get(key)
-                if isinstance(entries, list):
-                    kept = [e for e in entries if "beads-superpowers" not in json.dumps(e)]
-                    if len(kept) != len(entries):
-                        hooks[key] = kept
-                        changed = True
-        if not changed:
-            return 4
-        new = (json.dumps(settings, indent=2) + "\n").encode()
-    except Exception:
-        # Unreadable, not valid JSON (empty included), or too deeply nested.
-        return 3
-    # The file is rewritten in place (same inode, through any symlink), as
-    # register_hook writes it, so its owner, group, ACLs, xattrs and hard
-    # links are kept. Nothing is written to it until a backup of the exact
-    # bytes parsed has been made, read back and made durable. O_EXCL: a
-    # backup that already has this name is not ours and is never written or
-    # removed. The backup is 0600: it never carries more access than the file.
-    suffix = time.strftime("backup-%Y%m%d-%H%M%S")
-    backup = f"{sf}.{suffix}"
-    made = False
-    try:
-        fd = os.open(sf, os.O_RDWR)  # a read-only file is refused here
-    except Exception:
-        return 3
-    try:
-        if get(fd) != raw:
-            raise OSError("changed since it was parsed")
-        bfd = os.open(backup, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        made = True
-        try:
-            put(bfd, raw)
-            flush_drive(bfd)
-        except Exception:
-            shut(bfd)
-            raise
-        if not shut(bfd) or not intact(backup, raw):
-            raise OSError("backup not verified")
-        sync_dir(backup)
-        print(suffix, flush=True)
-    except Exception:
-        # Nothing was written to the file, so a failed close cannot matter.
-        if made:
-            try:
-                os.remove(backup)
-            except Exception:
-                pass
-        shut(fd)
-        return 3
-    try:
-        put(fd, new)
-        done = get(fd) == new
-    except Exception:
-        done = False
-    if done:
-        return 0 if shut(fd) else 8
-    # Undo: the backup is removed only if writing the original back raised
-    # nothing (write, truncate, fsync), it reads back byte-identical, and the
-    # file closed cleanly. Anything else keeps the backup.
-    try:
-        put(fd, raw)
-        undone = get(fd) == raw
-    except Exception:
-        undone = False
-    if not shut(fd):
-        return 8
-    if not undone or not intact(sf, raw):
-        return 5
-    try:
-        os.remove(backup)
-    except Exception:
-        return 7
-    return 6
-
-try:
-    code = main(sys.argv[1])
-except BaseException:
-    code = 1
-try:
-    sys.stdout.flush()
-except BaseException:
-    pass
-os._exit(code)
-PYEOF
-) || rc=$?
+          kept=$(rewrite_settings unregister backup "$SETTINGS_FILE") || rc=$?
           if [ "$rc" = 0 ]; then
             info "Removed hooks from settings.json"
-          elif [ "$rc" = 3 ]; then
-            warn "$SETTINGS_FILE could not be read, parsed or rewritten, so it was left unchanged: the beads-superpowers hook entries were NOT removed. Fix the file, its permissions or free disk space, then re-run --uninstall."
-          elif [ "$rc" = 6 ]; then
-            warn "$SETTINGS_FILE could not be rewritten, so its original contents were restored and checked byte-for-byte; its contents were left unchanged: the beads-superpowers hook entries were NOT removed. Fix the file, its permissions or free disk space, then re-run --uninstall."
-          elif [ "$rc" = 7 ]; then
-            warn "$SETTINGS_FILE could not be rewritten, so its original contents were restored and checked byte-for-byte; its contents were left unchanged: the beads-superpowers hook entries were NOT removed. An identical copy of the file remains at $SETTINGS_FILE.$kept because it could not be deleted; you can delete it. Fix the file, its permissions or free disk space, then re-run --uninstall."
-          elif [ "$rc" = 5 ]; then
-            warn "$SETTINGS_FILE could not be rewritten, and its original contents could not be restored or the restore could not be confirmed: the beads-superpowers hook entries were NOT removed. The original is kept in $SETTINGS_FILE.$kept; copy it back over $SETTINGS_FILE before re-running --uninstall."
-          elif [ "$rc" = 8 ]; then
-            warn "$SETTINGS_FILE was written but closing it failed, so its contents may have changed: the beads-superpowers hook entries may NOT have been removed. Its previous contents are kept in $SETTINGS_FILE.$kept. Check the file; if it is damaged, copy that backup back over it, then re-run --uninstall."
           elif [ "$rc" != 4 ]; then
-            # Name the backup only if it is there now: a run stopped after
-            # removing it must not point at a file that does not exist.
-            if [ -n "$kept" ] && [ -f "$SETTINGS_FILE.$kept" ]; then
-              warn "The cleanup of $SETTINGS_FILE stopped unexpectedly: check it for beads-superpowers hook entries before re-running --uninstall. A copy of its previous contents was saved in $SETTINGS_FILE.$kept."
-            else
-              warn "The cleanup of $SETTINGS_FILE stopped unexpectedly: check it for beads-superpowers hook entries before re-running --uninstall."
-            fi
+            warn "$(settings_problem "$rc" "$SETTINGS_FILE" "$kept" "the beads-superpowers hook entries were NOT removed" "re-run --uninstall")"
           fi
         fi
       fi
@@ -1455,7 +1501,7 @@ PYEOF
   esac
 
   # ADR-0039 migration: clean up any stale reminder registration/file, regardless of tier
-  cleanup_stale_reminder "$SETTINGS_FILE"
+  cleanup_stale_reminder "$SETTINGS_FILE" "re-run --uninstall"
   rm -f "$HOOKS_DIR/beads-superpowers-reminder.sh"
 
   uninstall_codex_support
@@ -1521,7 +1567,7 @@ do_test() {
   fi
 
   # Check SessionStart hook
-  if "$test_bash" "$test_home/.claude/hooks/beads-superpowers-session-start.sh" 2>/dev/null | python3 -m json.tool > /dev/null 2>&1; then
+  if "$test_bash" "$test_home/.claude/hooks/beads-superpowers-session-start.sh" 2>/dev/null | python3 -I -m json.tool > /dev/null 2>&1; then
     success "SessionStart hook: valid JSON"; pass=$((pass + 1))
   else
     error "SessionStart hook: invalid JSON"; fail=$((fail + 1))
@@ -1535,12 +1581,12 @@ do_test() {
   fi
 
   # Check settings.json
-  if python3 -c "
-import json
-d=json.load(open('$test_home/.claude/settings.json'))
-assert d['hooks']['SessionStart']
-assert 'UserPromptSubmit' not in d.get('hooks', {})
-" 2>/dev/null; then
+  if python3 -I -c '
+import json, sys
+d=json.load(open(sys.argv[1]))
+assert d["hooks"]["SessionStart"]
+assert "UserPromptSubmit" not in d.get("hooks", {})
+' "$test_home/.claude/settings.json" 2>/dev/null; then
     success "settings.json: SessionStart registered, no UserPromptSubmit"; pass=$((pass + 1))
   else
     error "settings.json: SessionStart missing or UserPromptSubmit present"; fail=$((fail + 1))
