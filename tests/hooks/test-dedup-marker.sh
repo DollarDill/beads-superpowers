@@ -88,9 +88,10 @@ hard=0
 # uid from the environment: with `id` unresolvable the hook falls back to a
 # bash variable, and bash imports UID and EUID from the environment. A value
 # that is not all digits must skip the dedup marker (inject), never build a
-# marker path from it. The PATH dir holds mkdir and chmod but no id.
+# marker path from it. The PATH dir holds mkdir and chmod but no id, plus
+# sed, tr and cut so the session id is extracted and the uid check is reached.
 mkdir -p "$TMP/noid-bin"
-for t in mkdir chmod; do
+for t in mkdir chmod sed tr cut; do
   t_path=$(command -v "$t")
   ln -s "$t_path" "$TMP/noid-bin/$t"
 done
@@ -119,6 +120,28 @@ vperms=$(stat -c %a "$TMP/victim" 2>/dev/null || stat -f %Lp "$TMP/victim")
 victim_files=$(cd "$TMP/victim" && find . -mindepth 1 | tr '\n' ' ')
 [ "$victim_files" = "./keep " ] || { echo "FAIL: symlinked marker dir: victim dir contents changed: $victim_files"; hard=1; }
 envelope_ok "$TMP/dirlnk-out" || { echo "FAIL: symlinked marker dir did not fail open (inject)"; hard=1; }
+
+# session id / source extraction unavailable (sed, tr, cut missing; mkdir and
+# find present): dedup may only degrade to duplicate injection, never suppress.
+# Two different events (startup, then clear) from one parent process: without
+# the extracted ids both would share the nosid-$PPID-unknown marker, and the
+# second would be suppressed. Direct children with file redirects, so both runs
+# share this shell as their parent (see the empty-stdin case above).
+mkdir -p "$TMP/nosed-bin" "$TMP/nosedrt"
+for t in cat mkdir find id chmod touch; do
+  t_path=$(command -v "$t")
+  ln -s "$t_path" "$TMP/nosed-bin/$t"
+done
+printf '{"session_id":"sess-nosed","source":"startup"}' \
+  | env -i HOME="$TMP/home" XDG_RUNTIME_DIR="$TMP/nosedrt" CLAUDE_PLUGIN_ROOT=x PATH="$TMP/nosed-bin" \
+    "$BASH" "$HOOK" >"$TMP/nosed-out1" 2>/dev/null \
+  || { echo "FAIL: no-sed startup run failed"; hard=1; }
+printf '{"session_id":"sess-nosed","source":"clear"}' \
+  | env -i HOME="$TMP/home" XDG_RUNTIME_DIR="$TMP/nosedrt" CLAUDE_PLUGIN_ROOT=x PATH="$TMP/nosed-bin" \
+    "$BASH" "$HOOK" >"$TMP/nosed-out2" 2>/dev/null \
+  || { echo "FAIL: no-sed clear run failed"; hard=1; }
+envelope_ok "$TMP/nosed-out1" || { echo "FAIL: no-sed startup run did not inject"; hard=1; }
+envelope_ok "$TMP/nosed-out2" || { echo "FAIL: no-sed clear run suppressed (got: $(head -c 80 "$TMP/nosed-out2"))"; hard=1; }
 [ "$hard" = 0 ] || exit 1
 
 echo "PASS: dedup marker"
