@@ -1,7 +1,7 @@
 # moved files for write-documentation, one references/<name>.md per line (see README.md)
-required-checks.md
 audit-watchlist.md
 corrections-examples.md
 medium-routing.md
 precedence.md
 integration.md
+structure-and-revision.md

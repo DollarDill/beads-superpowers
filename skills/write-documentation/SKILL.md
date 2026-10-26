@@ -89,7 +89,20 @@ Done when: a complete draft exists covering the identified context.
 
 ### Step 4: Required Checks
 
-**Read `references/required-checks.md` (in this skill's directory) before delivering any text, including a short inline reply** — run the checks scaled to the piece (even one line) and never output the audit unless asked.
+Run during revision (workflow Step 4). For pieces up to about 150 words or three short paragraphs, run checks 1-3, 5, 7, and 10. For longer pieces, run all checks. Do not output the audit unless asked.
+
+1. **Register fit.** Does the format, punctuation, formatting, and level of structure match the medium and the user's request? For web, docs, or UI text, did you preserve scannability and accessibility instead of flattening the piece for style reasons?
+2. **Concrete-anchor audit.** For each substantial paragraph, point to one concrete anchor. In criticism, reportage, reviews, and analysis, at least one paragraph in the whole piece should be built around a single concrete example or observed consequence rather than category summary. If you cannot point to that paragraph, add one.
+3. **Fact discipline.** Pick the three most fragile factual claims in the piece: dates, milestone names, quotes, close paraphrases, public metrics, future claims, causal trend claims. If you cannot vouch for them, attribute them, soften them, or cut them. If a citation or source is present, confirm it supports the exact claim rather than a nearby topic.
+4. **Source-fit check.** For factual writing, check every exact quote, close paraphrase, public metric, planned/future event, and causal claim. Do not keep `X caused Y`, `X drove Y`, or `X proved Y` unless the source supports the relationship. Use weaker relationship language only when that weaker claim is still accurate.
+5. **Regularity and sentence-continuity tripwire.** Name the single most repeated visible pattern in the piece. If the same move appears 3 or more times, or dominates two consecutive paragraphs, rewrite at least one occurrence. Also scan for false crispness: two or more neighboring short sentences whose thoughts are tightly related but split apart. If a comma, conjunction, subordinate clause, colon, or semicolon would express the relationship more naturally, combine one pair. If the period creates useful emphasis or clarity, keep it.
+6. **Repeated-frame check.** If a central metaphor, contrast, or wording family appears throughout the piece, decide whether it is a useful motif or a too-neat scaffold. Keep it only where it adds force; vary or cut the rest.
+7. **Stance and voice.** If the genre expects a visible writer or evaluative stance, state the writer's view in one sentence to yourself. If you cannot, add stance where it does real work. If the genre expects neutrality, did you keep it neutral?
+8. **Developed thought.** For any piece longer than four paragraphs, identify one place where the prose pauses, doubles back, or notices a concrete detail off the main line. If the piece runs in a perfectly straight line from claim to conclusion, see whether one example or noticed detail would make it less pre-solved.
+9. **Shape and spine.** For any piece longer than three paragraphs, state the organizing principle in five words or fewer and the controlling claim in one sentence. If the shape is basically `starting state -> changes -> verdict`, if paragraphs map one-to-one with named milestones, or if each paragraph is just one labeled topic bucket, restructure.
+10. **Over-correction.** Did you add fake-human moves (typos, slang, forced asides, random fragments, or artificial sentence-length targets) just to break a pattern?
+
+These are tripwires, not goals. Use them to catch genericity, visible regularity, false specificity, and modular structure, not to manufacture variation for its own sake.
 
 Done when: the scaled check set has been run and every issue it found is fixed inline.
 
@@ -188,67 +201,7 @@ Avoid keynote cadence, mission-statement phrasing, applause-line endings, and ce
 
 Be confident where evidence is strong. Be explicit where it is weak or interpretive. If the genre normally carries a visible writer (review, opinion, comment reply, personal post), let the writer appear. If the genre normally aims at neutrality (summary, documentation, news-style reporting), do not inject first person or attitude just to make the piece feel human. If the subject naturally invites a view, do not sand everything down to evenly polite neutrality. If the subject does not require a view, do not manufacture one. For public, technical, product, or instructional writing, keep language globally legible and inclusive.
 
-### 9. Show concrete things before generalizing
-
-Do not open with abstract diagnosis when the reader has nothing concrete to attach it to. This is not a ban on leading with the conclusion in web, docs, email, news, or task-oriented writing; if you lead with the conclusion, make it concrete enough to be useful. Usually the order should be:
-1. what happened
-2. where the pattern appeared
-3. what constraint mattered
-4. what failed or changed
-5. what that seems to mean
-
-### 10. Watch regularity
-
-LLM writing often becomes suspicious when its most visible feature is its own regularity.
-
-Watch for repeated use of the same moves:
-- parallel enumeration and reflexive three-part cadence inside sentences
-- multiple sentences doing hidden list work even without bullets
-- concession-plus-positive rhythm (`not X, but Y`; `may sound X, but Y`)
-- paragraph-closing type definitions (`the kind of X where Y`)
-- identical paragraph arcs
-- one neat claim sentence at the top of every paragraph followed by orderly elaboration
-- the same punctuation move in every paragraph
-- the same controlling metaphor or contrast returning until it feels too tidy
-- repeated thesis-like openings
-- stacked mini-sentences for impact, especially when each sentence carries one adjacent thought that could have shared a sentence
-
-Three-item parallel lists still count. The fix is not random variation; it is to break the repeated pattern where it starts to dominate.
-
-One common over-correction is false crispness: splitting every clause into its own sentence to break regularity. For when to combine and when to keep the split, see rule 6.
-
-### 11. Let the thought develop
-
-Longer pieces should not feel pre-solved. If the prose moves in a perfectly efficient straight line from claim to conclusion, it can feel rushed. Let the thought develop through a concrete example, a noticed detail, a sentence that gathers related material, or a brief doubling-back when the material naturally allows it.
-
-Development can happen inside a sentence, not only across paragraphs. A cumulative sentence can start with the main claim and then add the reason, qualification, or consequence that belongs with it. Do not split that movement into separate sentences unless the break itself does useful work.
-
-### 12. Choose structure consciously for longer pieces
-
-Default genre shapes are not wrong. They are only a problem when used by reflex.
-
-For task pages, procedures, reference docs, and news briefs, the predictable structure is often the clearest one. Do not avoid it for novelty.
-
-For retrospectives, criticism, feature writing, and other developmental pieces, the obvious defaults are often weak:
-- starting state -> changes -> verdict
-- one topic bucket per paragraph
-- one paragraph per named milestone
-
-Choose a through-line instead: one constraint that started biting, one shift in what people actually had to do, one mismatch between promise and reality.
-
-Useful alternatives: thematic instead of chronological, reverse-chronological, perspective-led, counterfactual, opinion-first, single-example-led.
-
-### 13. Do not turn a piece into catalog prose or system-tour prose
-
-If a paragraph is mainly names, milestones, categories, feature nouns, or system labels, it is probably catalog prose.
-
-If each paragraph can be summarized with a single label such as `background`, `mechanism`, `impact`, `response`, `ending`, the piece is probably system-tour prose.
-
-Do not give one paragraph to each milestone or one paragraph to each topic bucket unless that mapping is the actual point. Pick one change and trace its consequence. Cross-wire the piece so paragraphs depend on each other instead of sitting like labeled boxes.
-
-### 14. Revise by reading and cutting
-
-Re-read as a first-time reader. Cut anything that is auditioning. Cut sentences whose only job is to announce the next sentence. Collapse paragraphs that restate each other. Replace the most generic clause in the piece with something specific or delete it. Most edits should make the text shorter, but do not confuse concision with chopping: combining two tightly related sentences can be the cleaner edit when it restores the relationship between the thoughts.
+**Read `references/structure-and-revision.md` (in this skill's directory) before structuring, checking or cutting a draft** — rules 9-14: concrete before general, break visible regularity, develop the thought, pick structure on purpose, no catalog prose, revise by cutting.
 
 ## Optional Long-Form Diagnostics
 
