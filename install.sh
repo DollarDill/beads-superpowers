@@ -1418,13 +1418,21 @@ do_verify() {
       warn "Hook did not produce valid JSON — check $HOOK_SCRIPT"
     fi
 
-    if [ -f "$SETTINGS_FILE" ] && python3 -I -c '
-import json, sys; d=json.load(open(sys.argv[1]))
-assert any("beads-superpowers" in json.dumps(e) for e in d.get("hooks",{}).get("SessionStart",[]))
-' "$SETTINGS_FILE" 2>/dev/null; then
+    # Only our current form counts: the command register_hook writes. A
+    # pre-fix `bash <shim>` it could not rewrite does not.
+    if [ -f "$SETTINGS_FILE" ] && [ -n "$verify_bash" ] && python3 -I -c '
+import json, shlex, sys
+d = json.load(open(sys.argv[1]))
+cmd = shlex.quote(sys.argv[2]) + " " + shlex.quote(sys.argv[3])
+found = any(isinstance(h, dict) and h.get("command") == cmd
+            for e in d["hooks"]["SessionStart"]
+            if isinstance(e, dict) and isinstance(e.get("hooks"), list)
+            for h in e["hooks"])
+sys.exit(0 if found else 1)
+' "$SETTINGS_FILE" "$verify_bash" "$HOOK_SCRIPT" 2>/dev/null; then
       success "Hook registered in settings.json"
     else
-      warn "Hook not found in settings.json"
+      warn "Current hook registration not found in settings.json"
     fi
   fi
 

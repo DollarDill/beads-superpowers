@@ -8,7 +8,8 @@
 # The op must still happen, behind a backup under a free name, and never
 # write to, truncate or remove a file that already has a candidate name.
 # When no backup can be made at all, the warning names that cause (not the
-# user's file).
+# user's file) and the verify step does not claim a stale pre-fix
+# `bash <shim>` registration is the hook.
 # Collisions are made deterministic by planting the next 30 seconds' names.
 set -uo pipefail
 # shellcheck source=tests/install-shape/lib.sh
@@ -112,7 +113,8 @@ assert_in_log "Hook registered in settings.json"
 shape_sandbox_teardown
 
 # --- Every candidate name taken: the stamp and -1 .. -99 ---
-# The op is refused and the warning names the backup as the cause.
+# The op is refused, the warning names the backup as the cause, and verify
+# does not count the stale pre-fix `bash <shim>` as the registered hook.
 shape_sandbox_setup claude
 sf="$SANDBOX/.claude/settings.json"
 shim="$SANDBOX/.claude/hooks/beads-superpowers-session-start.sh"
@@ -132,6 +134,8 @@ else
 fi
 assert_not_in_log "could not be read"
 assert_not_in_log "Fix the file"
+assert_not_in_log "Hook registered in settings.json"
+assert_in_log "Current hook registration not found in settings.json"
 shape_sandbox_teardown
 
 # --- One run: the previous-tier cleanup, then the register ---
