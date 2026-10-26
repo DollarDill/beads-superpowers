@@ -8,4 +8,4 @@ timeout_seconds: 420
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
 
-Execute .internal/plans/2026-01-01-habit-export.md inline in this session — no subagents. The isolated worktree and branch are already set up and you are in it; I consent to working on this branch, and you may skip creating the worktree. Shell commands are not available in this session, so you cannot run bd: do everything else, and in your reply state exactly what you would append to the epic's notes. Do the setup and the pre-flight scan now and tell me what it found before you start Task 1.
+Execute .internal/plans/2026-01-01-habit-export.md inline in this session — no subagents. The isolated worktree and branch are already set up and you are in it; I consent to working on this branch, and you may skip creating the worktree. Shell commands are not available in this session, so you cannot run bd: do everything else, and in your reply state exactly what you would append to the epic's notes. Do the setup now and tell me what you found before you start Task 1.
