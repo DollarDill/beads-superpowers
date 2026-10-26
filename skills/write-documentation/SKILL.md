@@ -89,13 +89,13 @@ Done when: a complete draft exists covering the identified context.
 
 ### Step 4: Required Checks
 
-Run the revision checks scaled to the length and stakes of the piece. Fix issues inline during this pass. See the Required Checks section below.
+**Read `references/required-checks.md` (in this skill's directory) before the revision checks** — run the checks scaled to the piece and never output the audit unless asked.
 
 Done when: the scaled check set has been run and every issue it found is fixed inline.
 
 ### Step 5: Cut
 
-Cut what sounds generic, ceremonial, over-engineered, suspiciously over-specific, or too cleanly modular. Collapse paragraphs that restate each other. Replace the most generic clause in the piece with something specific or delete it.
+Scan against `references/audit-watchlist.md` (in this skill's directory). Cut what sounds generic, ceremonial, over-engineered, suspiciously over-specific, or too cleanly modular. Collapse paragraphs that restate each other. Replace the most generic clause in the piece with something specific or delete it.
 
 Done when: the piece has been reviewed for generic/ceremonial language and the most generic clause is fixed or gone.
 
@@ -107,24 +107,11 @@ Done when: the user has approved the text and the bead is closed with evidence o
 
 ## Precedence
 
-When rules conflict:
-
-1. Truth, safety, accessibility, and platform/legal requirements
-2. Explicit user instructions
-3. Genre and medium norms
-4. Core rules
-5. Optional watchlists and heuristics
-
-If the user asks for bullets, use bullets. If accessibility or the medium require structure, use structure. If the user asks for a neutral summary, do not force first person or extra stance into it.
+**Read `references/precedence.md` (in this skill's directory) before resolving a rule conflict** — truth, safety, accessibility, and legal requirements beat user instructions, then genre, core rules, watchlists.
 
 ## Medium Routing
 
-- **Chat, comments, replies, DMs, forum posts:** Running prose by default. Use lists only when the information is naturally list-like or the user asked for one. Avoid decorative formatting and canned support tone. In plain-text contexts, prefer straight ASCII quotes and apostrophes. Prefer commas, colons, conjunctions, subordinate clauses, or full stops over em dashes unless the dash clearly earns its keep. Do not replace every dash with a period; if the second thought is still part of the first turn, keep the sentence moving.
-- **Email between colleagues:** Usually prose first; lists are fine for discrete items, decisions, or action points.
-- **Documents, specs, reports, technical writing:** Structure is expected. Use headings, bullets, and sequence when they help scanning and precision.
-- **Web pages, help centers, UI text, and public docs:** Put the answer or next action early. Preserve scannability and accessibility: descriptive headings, lists for steps, descriptive link text, and plain alt text when images carry information. Do not flatten useful structure just to avoid looking templated.
-- **Blog posts, articles, criticism, retrospectives:** Use structure on purpose. Pick an angle. Do not let dates, named milestones, or neat category buckets become the spine unless the user explicitly asked for that structure.
-- **PR descriptions, release notes, CHANGELOG entries:** Lead with what changed and why. Structure for scanning. Concrete consequences over ceremonial phrasing.
+**Read `references/medium-routing.md` (in this skill's directory) before choosing a format** — format follows the medium.
 
 ## Safety Rails
 
@@ -263,93 +250,17 @@ Do not give one paragraph to each milestone or one paragraph to each topic bucke
 
 Re-read as a first-time reader. Cut anything that is auditioning. Cut sentences whose only job is to announce the next sentence. Collapse paragraphs that restate each other. Replace the most generic clause in the piece with something specific or delete it. Most edits should make the text shorter, but do not confuse concision with chopping: combining two tightly related sentences can be the cleaner edit when it restores the relationship between the thoughts.
 
-## Required Checks
-
-Run during revision (workflow Step 4). For pieces up to about 150 words or three short paragraphs, run checks 1-3, 5, 7, and 10. For longer pieces, run all checks. Do not output the audit unless asked.
-
-1. **Register fit.** Does the format, punctuation, formatting, and level of structure match the medium and the user's request? For web, docs, or UI text, did you preserve scannability and accessibility instead of flattening the piece for style reasons?
-2. **Concrete-anchor audit.** For each substantial paragraph, point to one concrete anchor. In criticism, reportage, reviews, and analysis, at least one paragraph in the whole piece should be built around a single concrete example or observed consequence rather than category summary. If you cannot point to that paragraph, add one.
-3. **Fact discipline.** Pick the three most fragile factual claims in the piece: dates, milestone names, quotes, close paraphrases, public metrics, future claims, causal trend claims. If you cannot vouch for them, attribute them, soften them, or cut them. If a citation or source is present, confirm it supports the exact claim rather than a nearby topic.
-4. **Source-fit check.** For factual writing, check every exact quote, close paraphrase, public metric, planned/future event, and causal claim. Do not keep `X caused Y`, `X drove Y`, or `X proved Y` unless the source supports the relationship. Use weaker relationship language only when that weaker claim is still accurate.
-5. **Regularity and sentence-continuity tripwire.** Name the single most repeated visible pattern in the piece. If the same move appears 3 or more times, or dominates two consecutive paragraphs, rewrite at least one occurrence. Also scan for false crispness: two or more neighboring short sentences whose thoughts are tightly related but split apart. If a comma, conjunction, subordinate clause, colon, or semicolon would express the relationship more naturally, combine one pair. If the period creates useful emphasis or clarity, keep it.
-6. **Repeated-frame check.** If a central metaphor, contrast, or wording family appears throughout the piece, decide whether it is a useful motif or a too-neat scaffold. Keep it only where it adds force; vary or cut the rest.
-7. **Stance and voice.** If the genre expects a visible writer or evaluative stance, state the writer's view in one sentence to yourself. If you cannot, add stance where it does real work. If the genre expects neutrality, did you keep it neutral?
-8. **Developed thought.** For any piece longer than four paragraphs, identify one place where the prose pauses, doubles back, or notices a concrete detail off the main line. If the piece runs in a perfectly straight line from claim to conclusion, see whether one example or noticed detail would make it less pre-solved.
-9. **Shape and spine.** For any piece longer than three paragraphs, state the organizing principle in five words or fewer and the controlling claim in one sentence. If the shape is basically `starting state -> changes -> verdict`, if paragraphs map one-to-one with named milestones, or if each paragraph is just one labeled topic bucket, restructure.
-10. **Over-correction.** Did you add fake-human moves (typos, slang, forced asides, random fragments, or artificial sentence-length targets) just to break a pattern?
-
-These are tripwires, not goals. Use them to catch genericity, visible regularity, false specificity, and modular structure, not to manufacture variation for its own sake.
-
 ## Optional Long-Form Diagnostics
 
-Ten fallback heuristics for when the Required Checks above aren't enough for a longer piece — not targets to optimize for. See [references/long-form-diagnostics.md](references/long-form-diagnostics.md).
+Ten fallback heuristics for when the Required Checks aren't enough for a longer piece — not targets to optimize for. See [references/long-form-diagnostics.md](references/long-form-diagnostics.md).
 
 ## Examples of Useful Corrections
 
-- **Generic -> specific.** Avoid: `The change had broad implications across the team.` Prefer: `The change cut review time, but it also pushed more edge cases into the escalation queue.`
-- **Puffery -> observable consequence.** Avoid: `The project stands as a testament to the team's commitment to innovation.` Prefer: `The project reduced the weekly handoff from three meetings to one written checklist.`
-- **Administrative detail -> material detail.** Avoid: `The revision changed the process.` Prefer: `After the revision, decisions stopped being a silent queue in the background; someone had to choose what to slow down and what to push through.`
-- **Specificity theater -> verified restraint.** Avoid: `The February revision renamed the framework and rewrote intake handling.` Prefer: `Early revisions focused on intake edge cases and prioritization; if you cannot verify the milestone name or exact wording, leave it out.`
-- **Hidden mechanism -> observable consequence.** Avoid: `The internal logic finally understood what mattered.` Prefer: `After the change, obviously irrelevant outcomes stopped showing up in routine cases.`
-- **Vague attribution -> supported claim.** Avoid: `Experts say the redesign improved trust.` Prefer: `In the support queue, billing complaints fell after the pricing table stopped hiding plan limits.`
-- **Causal overreach -> relationship restraint.** Avoid: `The redesign drove trust higher.` Prefer: `After the redesign, refund questions fell in the support queue.`
-- **Catalog prose -> argument prose.** Avoid: `First came change A, then change B, then change C.` Prefer: `The important shift was not that the thing accumulated more pieces. It was that later changes finally introduced friction where the earlier version let people coast.`
-- **System-tour prose -> cross-wired prose.** Avoid: one paragraph for `background`, one for `process`, one for `impact`, then a verdict. Prefer: trace one recurring constraint, show how it appears across the piece, and make the paragraphs depend on each other.
-- **Choppy -> connected.** Avoid: `The term does real work. It names a pattern that was floating unnamed.` Prefer: `The term does real work: it names a pattern that was floating unnamed.`
-- **False crispness -> carried relationship.** Avoid: `The uncertainty is real. The confident register wrapping it is a default.` Prefer: `The uncertainty is real, but the confident register wrapping it is a default.`
+**Read `references/corrections-examples.md` (in this skill's directory) before rewriting a passage** — worked avoid/prefer pairs.
 
 ## Audit Watchlist
 
-These are not bans. They are quick places to scan when default LLM writing slips into formula.
-
-### Formula phrases and sentence moves to scrutinize
-
-- `It's important to note that` / `It's worth noting that`
-- `When it comes to` / `In conclusion`
-- `in today's fast-paced world` / `ever-evolving landscape`
-- `dive deep into` / `embark on a journey`
-- `navigate` used as a vague metaphor
-- `It's not X, it's Y` / `Not because X, but because Y`
-- `What matters is...` / `The real issue is...`
-- `This is not just..., it is...`
-- `is a testament to`
-- `serves as` / `stands as` when `is` or `has` would be clearer
-- `plays a key role` / `plays a pivotal role`
-- `reflects broader`, `symbolizes`, `showcases`, `highlights`, or `underscores` when attached to generic significance rather than evidence
-- vague source laundering: `experts say`, `observers note`, `research suggests`, `critics argue`, `many believe`
-- unsupported causality: `drove`, `proved`, `showed that`, `made clear that`, `tracked with`, `led directly to`
-- paragraph-closing type definitions (`the kind of X where Y`)
-- persuasive three-part cadence or triadic rhythm used by reflex (`clearer, faster, cheaper`)
-- one-thought-per-sentence strings where adjacent claims should be coordinated or subordinated
-- decorative emoji and checkmark bullets in prose contexts
-- internal tracker IDs in reader-facing prose (`ADR-NNNN`, `bd-xxxx`) — these belong in commits and `docs/decisions/`, not human docs; describe the change, not its ID
-- generic-to-the-platform replies that reference nothing specific to the actual conversation
-- `Great question` / `Absolutely` / `I hope this helps` / `Feel free to reach out`
-
-### Jargon defaults to scrutinize
-
-Use only when they are plainly the right words, not because the model fell into them:
-`delve into`, `tapestry`, `realm`, `leverage`, `harness`, `foster`, `empower`, `unlock`, `unveil`, `vibrant`, `crucial`, `pivotal`, `compelling`, `robust`, `seamless`, `holistic`, `multifaceted`, `paradigm-shifting`, `underscore`, `testament`, `valuable insights`, `rich`, `profound`, `enhance`, `showcase`, `boast` / `boasts`, `ever-changing`, `ever-evolving`, `ever-growing`
-
-The problem is repeated fallback diction, not the existence of any one word.
-
-### Formatting artifacts in plain text to scrutinize
-
-- smart quotes and curly apostrophes
-- single-character ellipses
-- other visible copy-paste formatting artifacts that do not fit the medium
-
-### Compound-modifier hyphenation to scrutinize
-
-For temporary compounds, hyphenate before the noun: `a well-known author`, `a high-quality service`, `a long-term plan`. After the noun, usually open the compound: `The author is well known`, `The service is high quality`, `The plan is long term`.
-
-Watch for:
-- predicative over-hyphenation: `is well-known`, `seems high-quality`
-- `-ly` adverb compounds: `highly-qualified`, `newly-designed`
-- reflexive `ever-` compounds: `ever-changing`, `ever-evolving`
-- set phrases where the hyphen adds nothing: `high school`, `ice cream`
-
-Do not strip all hyphens. Keep them when they prevent ambiguity, when the compound precedes the noun, or when the term is conventionally hyphenated. The problem is the reflex, not the mark.
+**Read `references/audit-watchlist.md` (in this skill's directory) before scanning a draft** — it flags repeated fallback, so never run it as find-and-replace.
 
 ## Red Flags / Anti-Rationalization
 
@@ -371,11 +282,4 @@ bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / patt
 
 ## Integration
 
-**Pairs with:**
-- `document-release` -- fires post-ship to sync docs to code; `write-documentation` fires when writing or rewriting prose. Complementary, not overlapping.
-- `verification-before-completion` -- prose checks are part of completion evidence
-- `brainstorming` -- design docs written during brainstorming benefit from these rules
-
-**Called by:**
-- Any workflow where the agent is producing human-facing text
-- User requests to write, draft, or rewrite documentation
+**Read `references/integration.md` (in this skill's directory) before consulting the skill pairings** — pairs with document-release, which syncs docs to code after shipping.
