@@ -1026,7 +1026,11 @@ hook_bash() {
 # (add or update our SessionStart entry; a missing file is created). Path and
 # args go on argv, never into source; -I keeps the cwd off sys.path. No
 # exception text or content is ever printed, on any path. Exit 4: nothing to
-# change. Exit 3: the file was not changed and no backup is left. Exit 6: a
+# change. Exits 3 and 9-12: the file was not changed and no backup is left;
+# 3: it could not be read, is not valid JSON or cannot be written back;
+# 9: it could not be opened for writing; 10: no backup of it could be made;
+# 11: it changed while it was being updated; 12: it did not exist and could
+# not be created. Exit 6: a
 # failed write was undone with no error, checked byte-for-byte and the backup
 # removed; exit 7: the same, but the backup could not be removed. Exit 5:
 # undoing the write hit an error or does not match; exit 8: closing the file
@@ -1202,7 +1206,7 @@ def create(sf, new):
         os.makedirs(os.path.dirname(sf), exist_ok=True)
         fd = os.open(sf, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o666)
     except Exception:
-        return 3
+        return 12
     try:
         put(fd, new)
         done = True
@@ -1214,7 +1218,7 @@ def create(sf, new):
         os.remove(sf)
     except Exception:
         return 1
-    return 3
+    return 12
 
 def main(op, prefix, sf, args):
     fresh = op == "register" and not os.path.exists(sf)
@@ -1245,14 +1249,20 @@ def main(op, prefix, sf, args):
     # plus -1, -2 ... -99. The backup is 0600: it never carries more access
     # than the file.
     stamp = prefix + time.strftime("-%Y%m%d-%H%M%S")
-    made = False
     try:
         fd = os.open(sf, os.O_RDWR)  # a read-only file is refused here
     except Exception:
-        return 3
+        return 9
     try:
-        if get(fd) != raw:
-            raise OSError("changed since it was parsed")
+        current = get(fd)
+    except Exception:
+        shut(fd)
+        return 3
+    if current != raw:
+        shut(fd)
+        return 11
+    made = False
+    try:
         for n in range(100):
             suffix = stamp if n == 0 else f"{stamp}-{n}"
             backup = f"{sf}.{suffix}"
@@ -1282,7 +1292,7 @@ def main(op, prefix, sf, args):
             except Exception:
                 pass
         shut(fd)
-        return 3
+        return 10
     try:
         put(fd, new)
         done = get(fd) == new
@@ -1328,7 +1338,15 @@ settings_problem() {
   local rc="$1" f="$2" kept="$3" undone="$4" next="$5" copy="" msg
   if [ -n "$kept" ] && [ -f "$f.$kept" ]; then copy="$f.$kept"; fi
   if [ "$rc" = 3 ]; then
-    msg="$f could not be read, parsed or rewritten, so it was left unchanged: $undone. Fix the file, its permissions or free disk space, then $next."
+    msg="$f could not be read, or is not JSON the installer can parse and write back, so it was left unchanged: $undone. Fix the file or its permissions, then $next."
+  elif [ "$rc" = 9 ]; then
+    msg="$f could not be opened for writing (it may be read-only), so it was left unchanged: $undone. Fix its permissions, then $next."
+  elif [ "$rc" = 10 ]; then
+    msg="A backup of $f could not be made beside it (every backup name for this second was taken, or its directory is not writable or is out of space), so it was left unchanged: $undone. Fix the directory's permissions or free disk space, then $next."
+  elif [ "$rc" = 11 ]; then
+    msg="$f changed while the installer was updating it, so it was left unchanged: $undone. Make sure nothing else is writing it, then $next."
+  elif [ "$rc" = 12 ]; then
+    msg="$f does not exist and could not be created, so nothing was written: $undone. Fix its directory's permissions or free disk space, then $next."
   elif [ "$rc" = 6 ] || [ "$rc" = 7 ]; then
     msg="$f could not be rewritten, so its original contents were restored and checked byte-for-byte; its contents were left unchanged: $undone."
     if [ "$rc" = 7 ] && [ -n "$copy" ]; then

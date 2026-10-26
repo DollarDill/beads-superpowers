@@ -7,6 +7,8 @@
 # previous-tier cleanup then the register in one run) finds the name taken.
 # The op must still happen, behind a backup under a free name, and never
 # write to, truncate or remove a file that already has a candidate name.
+# When no backup can be made at all, the warning names that cause (not the
+# user's file).
 # Collisions are made deterministic by planting the next 30 seconds' names.
 set -uo pipefail
 # shellcheck source=tests/install-shape/lib.sh
@@ -107,6 +109,29 @@ fi
 assert_not_in_log "NOT registered"
 assert_not_in_log "could not be read"
 assert_in_log "Hook registered in settings.json"
+shape_sandbox_teardown
+
+# --- Every candidate name taken: the stamp and -1 .. -99 ---
+# The op is refused and the warning names the backup as the cause.
+shape_sandbox_setup claude
+sf="$SANDBOX/.claude/settings.json"
+shim="$SANDBOX/.claude/hooks/beads-superpowers-session-start.sh"
+mkdir -p "$SANDBOX/.claude"
+prefix_settings "$sf" "$shim"
+cp -f "$sf" "$SANDBOX/orig.json"
+plant "$sf" backup 100
+shape_install
+if cmp -s "$sf" "$SANDBOX/orig.json"; then _pass "[all names taken] settings left byte-for-byte unchanged"; else _fail "[all names taken] settings were changed"; fi
+planted_intact "$sf" 3000
+n=$(new_backups "$sf" backup | grep -c .)
+if [ "$n" = 0 ]; then _pass "[all names taken] no backup made"; else _fail "[all names taken] $n new backup(s) made"; fi
+if grep -q "backup of $sf could not be made.*left unchanged.*NOT registered" "$SANDBOX/install.log"; then
+  _pass "[all names taken] the warning names the backup as the cause"
+else
+  _fail "[all names taken] no warning naming the backup as the cause: $(grep -m1 "$sf" "$SANDBOX/install.log")"
+fi
+assert_not_in_log "could not be read"
+assert_not_in_log "Fix the file"
 shape_sandbox_teardown
 
 # --- One run: the previous-tier cleanup, then the register ---

@@ -143,7 +143,20 @@ chmod 444 "$h/.claude/settings.json"
 before=$(sha "$h/.claude/settings.json")
 install_in
 unchanged_check "register: read-only settings file" "$before"
+if ! grep -q "$h/.claude/settings.json could not be opened for writing.*NOT registered" "$log"; then echo "FAIL [register: read-only settings file]: the warning does not say the file could not be opened for writing"; grep -m1 "settings.json" "$log"; fail=1; fi
 chmod 644 "$h/.claude/settings.json"
+
+# No settings file, and its directory is read-only: it cannot be created,
+# and the warning says so (it does not blame a file that is not there).
+new_home
+mkdir -p "$h/.claude/hooks"
+chmod 555 "$h/.claude"
+install_in
+chmod 755 "$h/.claude"
+if [ "$rc" != 0 ]; then echo "FAIL [register: settings cannot be created]: exit $rc"; sed -n '1,25p' "$log"; fail=1; fi
+if [ -e "$h/.claude/settings.json" ]; then echo "FAIL [register: settings cannot be created]: a settings file appeared"; fail=1; fi
+if ! grep -q "$h/.claude/settings.json does not exist and could not be created.*NOT registered" "$log"; then echo "FAIL [register: settings cannot be created]: the warning does not say the file could not be created"; grep -m1 "settings.json" "$log"; fail=1; fi
+no_exception_text "register: settings cannot be created"
 
 # Malformed UserPromptSubmit entries: the stale reminder is removed, every
 # other entry is kept as it was, and the hook is registered.
