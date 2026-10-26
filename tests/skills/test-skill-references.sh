@@ -10,8 +10,9 @@
 #   C5 SKILL.md has the exact pointer line, with a gist (non-space start, >= 9 more chars, ends in ".")
 #   C6 file starts "# Title", a blank line, then a "Read this when " line (a missing file fails here)
 #   C7 a file over 100 lines then has a "Contents: " line
-#   C8 the file names no same-skill references/*.md that SKILL.md itself does not name
-#      outside fences (one hop either way; no hidden chain)
+#   C8 the file names no same-skill references/*.md unless SKILL.md itself names it
+#      outside fences AND it is not itself a registry entry (one hop either way; no
+#      hidden chain, no moved-to-moved chain)
 # Registry completeness (C9): every well-formed file in a references/ dir must be
 # registered in <skill>.txt unless grandfathered (see grandfathered()); a missing
 # <skill>.txt fails; checking zero skills while any registry lists a file fails.
@@ -171,6 +172,8 @@ for skill in "${SKILLS[@]}"; do
       [ -n "$m" ] || continue
       if is_same_skill "$m" && ! printf '%s' "$skill_named" | grep -qxF "${m##*/}"; then
         fail C8 "references/$f chains to same-skill $m, which SKILL.md does not name"
+      elif is_same_skill "$m" && printf '%s\n' "$entries" | grep -qxF "${m##*/}"; then
+        fail C8 "references/$f chains to same-skill $m, itself a moved (registered) file"
       fi
     done < <(printf '%s\n' "$body" | grep -oE "$PTR" | sort -u)
   done < <(printf '%s\n' "$entries")

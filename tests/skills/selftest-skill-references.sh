@@ -194,10 +194,15 @@ if setup M8a; then
   expect_red "M8 registry file names same-skill references/other.md (not named by SKILL.md)" C8
 fi
 if setup M8c; then
+  add_entry good 10 no
+  printf 'See references/long-form-diagnostics.md for more.\n' >> "$FIX/$WD/references/good.md"
+  expect_green "M8 control: grandfathered same-skill file that SKILL.md itself names (one hop either way)"
+fi
+if setup M8e; then
   add_entry peer 10 no
   add_entry good 10 no
   printf 'See references/peer.md for more.\n' >> "$FIX/$WD/references/good.md"
-  expect_green "M8 control: same-skill file that SKILL.md itself names (one hop either way)"
+  expect_red "M8 registered file names another registered file (moved-to-moved chain)" C8
 fi
 if setup M8d; then
   add_entry good 10 no

@@ -1,6 +1,6 @@
 # File Handoffs and Prompt Templates
 
-Read this when you are about to dispatch an implementer or reviewer for the first time in a plan.
+Read this when you are about to dispatch an implementer or build a review package — its rules apply to every one.
 
 ## File Handoffs
 

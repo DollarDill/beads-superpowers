@@ -30,7 +30,7 @@ escalate. Fill-or-fail, not a judgment call.
 
 Use when you have an implementation plan whose tasks are mostly independent and your human partner did not choose inline execution. Inline chosen, or no subagent tool → beads-superpowers:executing-plans; no plan, or tightly coupled tasks → brainstorm or execute manually.
 
-**Read `references/when-to-use.md` (in this skill's directory) before choosing a mode** — the decision graph and its costs.
+**Read `references/when-to-use.md` (in this skill's directory) before choosing a mode** — the decision graph.
 
 ## Pre-Flight Plan Review
 
@@ -149,7 +149,7 @@ Implementer status handling (BLOCKED / NEEDS_CONTEXT and friends): see `referenc
 
 ## Final Review
 
-**Read `references/final-review.md` (in this skill's directory) before the final review** — delete nothing until outcomes are in beads and every ledger `Ruling:` is in "Rulings I made".
+**Read `references/final-review.md` (in this skill's directory) before the final review** — delete nothing until the review is clean, outcomes and concerns are in beads, and "Rulings I made" (every `Ruling:`) is delivered.
 
 ## File Handoffs
 
@@ -200,4 +200,4 @@ bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / patt
 
 ## Integration
 
-**Read `references/integration.md` (in this skill's directory) before handing off** — required and paired skills.
+**Read `references/integration.md` (in this skill's directory) before starting** — isolate first; paired skills.
