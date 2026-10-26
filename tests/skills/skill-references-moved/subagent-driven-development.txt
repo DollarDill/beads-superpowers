@@ -1,1 +1,8 @@
 # moved files for subagent-driven-development, one references/<name>.md per line (see README.md)
+batching.md
+example-workflow.md
+preflight.md
+handoffs.md
+final-review.md
+integration.md
+when-to-use.md
