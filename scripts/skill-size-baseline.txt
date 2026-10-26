@@ -1,4 +1,3 @@
 # Skills allowed at/over 20,000 B until their 0.17.0 sub-project shrinks them.
 # A skill may not grow past its recorded size; remove its line when it drops under 20,000.
 brainstorming 25670                 # sub-project C
-executing-plans 23746               # sub-project B
