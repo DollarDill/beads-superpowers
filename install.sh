@@ -830,7 +830,83 @@ HOOKEOF
 # capture, no memory selection. That logic lives in hooks/session-start.
 set -euo pipefail
 
-# Keep only absolute PATH entries (as hooks/session-start does): an empty or relative one runs commands from the cwd.
+# hooks/session-start's PATH clean-up, byte for byte (tests/hooks/test-path-containment.sh checks it).
+# Keep only absolute PATH entries (a literal ~ or ~/x becomes $HOME, as bash
+# itself would expand it): an empty or relative entry, or PATH="", makes bash
+# look commands up in the current directory, which for a hook is an untrusted
+# project. Then drop every absolute entry inside the project (npm exec's
+# <proj>/node_modules/.bin, direnv PATH_add): bd, sed and every other tool
+# below is looked up on this PATH. The rule is hooks/run-hook.cmd's
+# bsp_outside, applied to <entry>/bash (its comments give the reasons); the
+# cwd and root parts, the same for every entry, are computed once. Pinned
+# with the launcher and both plugins by tests/hooks/test-path-containment.sh.
+# Pure bash, before any external command runs.
+bsp_cwd=$(pwd -P 2>/dev/null) || bsp_cwd=""
+case $bsp_cwd in //*) bsp_cwd=/${bsp_cwd#"${bsp_cwd%%[!/]*}"} ;; esac
+bsp_ok=1
+bsp_root=""
+case "${CLAUDE_PROJECT_DIR:-}" in
+    "") ;;
+    /*) bsp_root=$CLAUDE_PROJECT_DIR ;;
+    *) bsp_ok=0 ;;
+esac
+case "${CURSOR_PROJECT_DIR:-}" in
+    "") ;;
+    /*) if [ -z "$bsp_root" ]; then bsp_root=$CURSOR_PROJECT_DIR; fi ;;
+    *) bsp_ok=0 ;;
+esac
+bsp_pwd=${PWD:-}
+case $bsp_pwd in //*) bsp_pwd=/${bsp_pwd#"${bsp_pwd%%[!/]*}"} ;; esac
+bsp_phys_pfx=${bsp_cwd%/}
+bsp_pwd_pfx=$bsp_phys_pfx
+if [ -n "$bsp_pwd" ]; then bsp_pwd_pfx=${bsp_pwd%/}; fi
+if [ -n "${PWD:-}" ]; then
+    bsp_can=$(cd "$PWD" 2>/dev/null && pwd) || bsp_can=""
+    case $bsp_can in //*) bsp_can=/${bsp_can#"${bsp_can%%[!/]*}"} ;; esac
+    if [ -z "$bsp_can" ]; then bsp_ok=0; fi
+else
+    bsp_can=$bsp_cwd
+fi
+bsp_can_pfx=${bsp_can%/}
+if [ -n "$bsp_root" ]; then
+    bsp_root=$(cd -P "$bsp_root/" 2>/dev/null && pwd -P) || bsp_root=""
+    case $bsp_root in //*) bsp_root=/${bsp_root#"${bsp_root%%[!/]*}"} ;; esac
+    if [ -z "$bsp_root" ]; then bsp_ok=0; fi
+elif [ "$bsp_ok" = 1 ]; then
+    # No root variable: the highest ancestor of the cwd holding .git, else the cwd.
+    bsp_root=$bsp_cwd
+    bsp_d=$bsp_cwd
+    while [ -n "$bsp_d" ]; do
+        if [ -e "${bsp_d%/}/.git" ]; then bsp_root=$bsp_d; fi
+        if [ "$bsp_d" = / ]; then break; fi
+        bsp_d=${bsp_d%/*}
+        if [ -z "$bsp_d" ]; then bsp_d=/; fi
+    done
+fi
+# Prefixes go through variables: bash 5.3 does not match "${v%/}"/* when the
+# expansion is empty (cwd /).
+bsp_cwd_pfx=${bsp_cwd%/}
+bsp_root_pfx=${bsp_root%/}
+# bsp_entry_outside <absolute entry>: succeeds when bsp_outside would accept
+# <entry>/bash (the launcher's "not this launcher" clause has no file to test).
+bsp_entry_outside() {
+    local c="${1%/}/bash" lit dir
+    case "$c" in */./*|*/../*|*/.|*/..) return 1 ;; esac
+    lit=$c
+    case $lit in //*) lit=/${lit#"${lit%%[!/]*}"} ;; esac
+    case "$lit" in
+        "$bsp_pwd_pfx"/*|"$bsp_phys_pfx"/*|"$bsp_can_pfx"/*) return 1 ;;
+    esac
+    dir=$(cd -P "${c%/*}/" 2>/dev/null && pwd -P) || dir=""
+    case $dir in //*) dir=/${dir#"${dir%%[!/]*}"} ;; esac
+    if [ "$bsp_ok" = 1 ] && [ -n "$bsp_cwd" ] && [ -n "$bsp_root" ] && [ -n "$dir" ]; then
+        case "$dir/" in
+            "$bsp_cwd_pfx"/*|"$bsp_root_pfx"/*) ;;
+            *) return 0 ;;
+        esac
+    fi
+    return 1
+}
 bsp_safe_path=""
 IFS=: read -r -a bsp_path_parts <<<"${PATH:-}"
 for bsp_p in ${bsp_path_parts[@]+"${bsp_path_parts[@]}"}; do
@@ -841,6 +917,7 @@ for bsp_p in ${bsp_path_parts[@]+"${bsp_path_parts[@]}"}; do
             if [[ "${HOME:-}" == /* ]]; then bsp_p="${HOME}${bsp_p#\~}"; else continue; fi ;;
         *) continue ;;
     esac
+    if ! bsp_entry_outside "$bsp_p"; then continue; fi
     bsp_safe_path="${bsp_safe_path:+$bsp_safe_path:}$bsp_p"
 done
 PATH="${bsp_safe_path:-/usr/bin:/bin}"; export PATH

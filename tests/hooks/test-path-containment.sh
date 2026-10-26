@@ -4,8 +4,9 @@
 # (hooks/run-hook.cmd), hooks/session-start's PATH clean-up (bd, sed and every
 # other tool it calls; run directly and in the harness's launcher shape), and
 # the PATH each plugin hands its own `bd memories` fallback (Hermes and
-# OpenCode), and install.sh's hook_bash, the bash it registers as the hook's
-# interpreter. All must apply one containment rule, so they share the rows.
+# OpenCode), install.sh's hook_bash, the bash it registers as the hook's
+# interpreter, and the npx-tier fallback hook install.sh writes. All must
+# apply one containment rule, so they share the rows.
 #
 # The rule (hooks/run-hook.cmd's bsp_outside): an absolute entry is dropped when
 # it has a . or .. component, literally starts with the cwd (logical, physical
@@ -146,6 +147,32 @@ console.log(out.messages[0].parts[0].text);'
 } >"$TMP/hb.sh"
 if grep -q -x '  if \[ -x /nonexistent/bin/bash \]; then' "$TMP/hb.sh"; then hb_ok=1; else hb_ok=0; report "extract hook_bash from install.sh" 1 "function body or its /bin/bash line not found"; fi
 
+# install.sh's npx-tier fallback hook (no checkout: skill injection plus a
+# bd memories line), written as write_hook_script writes it. It finds the
+# skill under $HOME/.claude/skills.
+{
+  awk '/^IFS= read -r -d .. BSP_USABLE_SH <</,/^BSPEOF$/' "$ROOT/install.sh"
+  awk '/^write_hook_script\(\) \{$/ { on = 1 }
+       on { print }
+       on && /^}$/ && prev ~ /chmod \+x "\$HOOK_SCRIPT"$/ { exit }
+       { prev = $0 }' "$ROOT/install.sh"
+} >"$TMP/whs.sh"
+fb_ok=0
+if [ "$(tail -n 1 "$TMP/whs.sh")" = "}" ]; then
+  mkdir -p "$TMP/fbhooks"
+  # shellcheck source=/dev/null
+  if (. "$TMP/whs.sh" && HOOKS_DIR="$TMP/fbhooks" HOOK_SCRIPT="$TMP/fbhooks/fallback.sh" SKILLS_DIR="$TMP/skills" write_hook_script ""); then fb_ok=1; fi
+fi
+if [ "$fb_ok" = 0 ]; then report "write the npx fallback hook from install.sh" 1 "write_hook_script not found or failed"; fi
+# Its PATH clean-up is hooks/session-start's, byte for byte.
+pc_block() { awk '/^# Keep only absolute PATH entries/ { on = 1 } on { print } on && /^PATH="\$\{bsp_safe_path:-\/usr\/bin:\/bin\}"; export PATH$/ { exit }' "$1"; }
+pc_ss=$(pc_block "$ROOT/hooks/session-start")
+if [ "$fb_ok" = 1 ] && [ -n "$pc_ss" ] && [ "$(pc_block "$TMP/fbhooks/fallback.sh")" = "$pc_ss" ]; then report "npx fallback hook's PATH clean-up is session-start's" 0 ""; else report "npx fallback hook's PATH clean-up is session-start's" 1 "the blocks differ (or one is missing)"; fi
+for hh in "$H" "$FH"; do
+  mkdir -p "$hh/.claude/skills"
+  ln -s "$ROOT/skills/using-superpowers" "$hh/.claude/skills/using-superpowers"
+done
+
 n=0
 # row_run <cwd> <PWD> <entry> <extras> <command...>: sets rc, out, got.
 row_run() {
@@ -200,6 +227,11 @@ while IFS='|' read -r name dir pw e exp x; do
   if [ -n "$node_bin" ]; then
     row_run "$dir" "$pw" "$e" "$x" "$node_bin" --input-type=module -e "$OC_JS" "$TMP/ocfx/.opencode/plugins/beads-superpowers.js"
     verdict "OpenCode bd fallback [$name]" "$(want "$exp" bd)" "$(has 'session composer unavailable')"
+  fi
+  # The npx fallback hook: the entry's bd never runs when dropped.
+  if [ "$fb_ok" = 1 ]; then
+    row_run "$dir" "$pw" "$e" "$x" "$bash_bin" "$TMP/fbhooks/fallback.sh"
+    verdict "install.sh npx fallback hook [$name]" "$(want "$exp" bd)" "$(has 'Production-Grade Doctrine')"
   fi
   # hook_bash prints the bash it would register: the outside bin's when the
   # entry is dropped, the entry's when kept, and none (rc 1) when every
