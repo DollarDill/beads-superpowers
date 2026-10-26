@@ -29,6 +29,7 @@ selftest:
     bash tests/manifests/selftest.sh
     bash tests/skills/selftest-doctrine-floor.sh
     bash tests/skills/selftest-skill-size.sh
+    bash tests/skills/selftest-skill-references.sh
     bash tests/skills/selftest-secret-echo.sh
     bash tests/skills/selftest-eval-gate.sh
     bash tests/skills/selftest-eval-scaffolds.sh
