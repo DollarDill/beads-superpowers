@@ -89,7 +89,7 @@ Done when: a complete draft exists covering the identified context.
 
 ### Step 4: Required Checks
 
-**Read `references/required-checks.md` (in this skill's directory) before the revision checks** — run the checks scaled to the piece and never output the audit unless asked.
+**Read `references/required-checks.md` (in this skill's directory) before delivering any text, including a short inline reply** — run the checks scaled to the piece (even one line) and never output the audit unless asked.
 
 Done when: the scaled check set has been run and every issue it found is fixed inline.
 
@@ -282,4 +282,4 @@ bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / patt
 
 ## Integration
 
-**Read `references/integration.md` (in this skill's directory) before consulting the skill pairings** — pairs with document-release, which syncs docs to code after shipping.
+**Read `references/integration.md` (in this skill's directory) before consulting the skill pairings** — pairs with document-release.
