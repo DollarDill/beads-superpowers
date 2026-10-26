@@ -283,16 +283,16 @@ detect_tools() {
 
 detect_upstream_conflict() {
   if [ -f "$PLUGINS_FILE" ]; then
-    if python3 -I -c "
+    if python3 -I -c '
 import json, sys
 try:
-    d = json.load(open('$PLUGINS_FILE'))
-    if 'superpowers@claude-plugins-official' in d.get('plugins', {}):
+    d = json.load(open(sys.argv[1]))
+    if "superpowers@claude-plugins-official" in d.get("plugins", {}):
         sys.exit(0)
     sys.exit(1)
 except:
     sys.exit(1)
-" 2>/dev/null; then
+' "$PLUGINS_FILE" 2>/dev/null; then
       error "Upstream superpowers plugin detected."
       echo
       echo "  beads-superpowers supersedes the upstream superpowers plugin."
@@ -1170,10 +1170,10 @@ do_verify() {
       warn "Hook did not produce valid JSON — check $HOOK_SCRIPT"
     fi
 
-    if [ -f "$SETTINGS_FILE" ] && python3 -I -c "
-import json; d=json.load(open('$SETTINGS_FILE'))
-assert any('beads-superpowers' in json.dumps(e) for e in d.get('hooks',{}).get('SessionStart',[]))
-" 2>/dev/null; then
+    if [ -f "$SETTINGS_FILE" ] && python3 -I -c '
+import json, sys; d=json.load(open(sys.argv[1]))
+assert any("beads-superpowers" in json.dumps(e) for e in d.get("hooks",{}).get("SessionStart",[]))
+' "$SETTINGS_FILE" 2>/dev/null; then
       success "Hook registered in settings.json"
     else
       warn "Hook not found in settings.json"
@@ -1541,12 +1541,12 @@ do_test() {
   fi
 
   # Check settings.json
-  if python3 -I -c "
-import json
-d=json.load(open('$test_home/.claude/settings.json'))
-assert d['hooks']['SessionStart']
-assert 'UserPromptSubmit' not in d.get('hooks', {})
-" 2>/dev/null; then
+  if python3 -I -c '
+import json, sys
+d=json.load(open(sys.argv[1]))
+assert d["hooks"]["SessionStart"]
+assert "UserPromptSubmit" not in d.get("hooks", {})
+' "$test_home/.claude/settings.json" 2>/dev/null; then
     success "settings.json: SessionStart registered, no UserPromptSubmit"; pass=$((pass + 1))
   else
     error "settings.json: SessionStart missing or UserPromptSubmit present"; fail=$((fail + 1))
