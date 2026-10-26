@@ -775,7 +775,9 @@ export CLAUDE_PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$BSP_ROOT}"
 # 1. Keep absolute PATH entries, map ~ and ~/x to $HOME when $HOME is
 #    absolute, drop everything else, fall back to /usr/bin:/bin.
 # 2. Use the bash on that PATH. Only if there is none, use $BASH when it is
-#    absolute, physically outside both the cwd tree and the project root
+#    absolute, has no . or .. component and does not literally start with
+#    the cwd (a relative PATH entry's signatures), lies physically outside
+#    both the cwd tree and the project root
 #    (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR; with neither set, the
 #    highest .git ancestor of the cwd), and not this shim. A relative or
 #    unresolvable root variable refuses $BASH. bash fills $BASH by a PATH
@@ -808,7 +810,11 @@ case "$bsp_bash" in
   *) bsp_bash="" ;;
 esac
 if [ -z "$bsp_bash" ]; then
+  # A . or .. component is the signature of a relative PATH entry: bash
+  # records its lookup unnormalised (<cwd>/../bash), which can land above or
+  # beside a root that is just the cwd. Refuse it, whatever the root.
   case "${BASH:-}" in
+    */./*|*/../*|*/.|*/..) ;;
     /*)
       # bash keeps a leading // through cd -P and pwd -P: collapse it.
       bsp_cwd=$(pwd -P 2>/dev/null) || bsp_cwd=""
@@ -825,6 +831,33 @@ if [ -z "$bsp_bash" ]; then
         "") ;;
         /*) if [ -z "$bsp_root" ]; then bsp_root=$CURSOR_PROJECT_DIR; fi ;;
         *) bsp_ok=0 ;;
+      esac
+      # A $BASH that literally starts with the cwd came from a relative PATH
+      # entry, symlinked or not: bash builds it as $PWD/<entry>/bash. Compare
+      # it with the logical cwd ($PWD, when set) and the physical one, with a
+      # leading run of slashes collapsed in each and in $BASH. Refuse a match,
+      # whatever the root. Accepted over-refusal: a real bash reached through a
+      # symlink under the cwd (cwd = $HOME, ~/.nix-profile/bin/bash) is refused.
+      # bash 5.x builds $BASH from its canonical cwd but keeps an inherited
+      # $PWD as spelled (//, /./, doubled /), so also compare with the
+      # canonical logical cwd, from cd "$PWD" && pwd. If that cd fails, refuse.
+      bsp_lit=$BASH
+      case $bsp_lit in //*) bsp_lit=/${bsp_lit#"${bsp_lit%%[!/]*}"} ;; esac
+      bsp_pwd=${PWD:-}
+      case $bsp_pwd in //*) bsp_pwd=/${bsp_pwd#"${bsp_pwd%%[!/]*}"} ;; esac
+      bsp_phys_pfx=${bsp_cwd%/}
+      bsp_pwd_pfx=$bsp_phys_pfx
+      if [ -n "$bsp_pwd" ]; then bsp_pwd_pfx=${bsp_pwd%/}; fi
+      if [ -n "${PWD:-}" ]; then
+        bsp_can=$(cd "$PWD" 2>/dev/null && pwd) || bsp_can=""
+        case $bsp_can in //*) bsp_can=/${bsp_can#"${bsp_can%%[!/]*}"} ;; esac
+        if [ -z "$bsp_can" ]; then bsp_ok=0; fi
+      else
+        bsp_can=$bsp_cwd
+      fi
+      bsp_can_pfx=${bsp_can%/}
+      case "$bsp_lit" in
+        "$bsp_pwd_pfx"/*|"$bsp_phys_pfx"/*|"$bsp_can_pfx"/*) bsp_ok=0 ;;
       esac
       if [ -n "$bsp_root" ]; then
         bsp_root=$(cd -P "$bsp_root/" 2>/dev/null && pwd -P) || bsp_root=""

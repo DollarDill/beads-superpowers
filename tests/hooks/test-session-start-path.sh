@@ -207,14 +207,15 @@ if [ "$(tail -n 1 "$T/whs.sh")" = "}" ] && grep -q 'HOOKEOF' "$T/whs.sh"; then
   silent_check "shim: argv0 bash, PATH='/nonexistent:' (\$BASH in cwd refused)"
   fresh; run "$T/evil" "/nonexistent" "$bash_bin" "$T/hookhome/shim.sh"
   planted_check "shim: bash-less PATH falls back to an absolute \$BASH"
-  # Project root: $BASH = <root>/sub/../bash resolves to <root>/bash.
+  # Project root: $BASH = <root>/bash from a subdirectory cwd, as an absolute
+  # argv0, so no . or .. component or cwd prefix refuses it first.
   mkdir -p "$T/proj/sub"
   printf '#!/bin/sh\n: > "%s/ran-rootbash"\n' "$T" >"$T/proj/bash"
   chmod +x "$T/proj/bash"
   for pv in CLAUDE_PROJECT_DIR CURSOR_PROJECT_DIR; do
     fresh
     # shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
-    run "$T/proj/sub" "/nonexistent:.." /usr/bin/env "$pv=$T/proj" "$bash_bin" -c 'exec -a bash "$0" "$@"' "$bash_bin" "$T/hookhome/shim.sh"
+    run "$T/proj/sub" /nonexistent /usr/bin/env "$pv=$T/proj" "$bash_bin" -c 'exec -a "$0" "$@"' "$T/proj/bash" "$bash_bin" "$T/hookhome/shim.sh"
     silent_check "shim: \$BASH inside $pv from a subdirectory cwd (refused)"
   done
   # cwd / contains every $BASH; bash 5.3 does not match "${v%/}"/* when the
@@ -226,21 +227,24 @@ if [ "$(tail -n 1 "$T/whs.sh")" = "}" ] && grep -q 'HOOKEOF' "$T/whs.sh"; then
     seen="$seen$sh_bin "
     fresh; run / /nonexistent /usr/bin/env BASH="$bash_bin" "$sh_bin" "$T/hookhome/shim.sh"
     silent_check "shim: cwd / refuses \$BASH ($sh_bin)"
-    # With a project root elsewhere, only the cwd half of the pattern holds.
+    # With a project root elsewhere. The cwd-prefix rule now refuses both of
+    # these first; the R1 outside-symlink row pins the final check's cwd half.
     fresh; run / /nonexistent /usr/bin/env BASH="$bash_bin" CLAUDE_PROJECT_DIR="$T/proj" "$sh_bin" "$T/hookhome/shim.sh"
     silent_check "shim: cwd /, CLAUDE_PROJECT_DIR elsewhere, refuses \$BASH ($sh_bin)"
   done
   # Containment shapes under dash, bash 3.2 and bash 5.3, with no bash on
-  # the cleaned PATH. Under bash, $BASH is <cwd>/../bash, built from $PWD for
-  # argv0 "bash" and a relative ".." entry; under dash it is set to that string.
-  # shim_cont <shell> <cwd> <$BASH for dash> [VAR=value...]
+  # the cleaned PATH. The planted $BASH is spelled absolutely, with no . or ..
+  # component and no cwd prefix, so the root, // and .git logic refuses it
+  # (an absolute PATH entry cannot deliver it: `command -v` would pick that
+  # bash directly). Under bash it is the absolute argv0; under dash it is set.
+  # shim_cont <shell> <cwd> <$BASH> [VAR=value...]
   shim_cont() {
-    local sh_bin="$1" dir="$2" dash_bash="$3"; shift 3
+    local sh_bin="$1" dir="$2" bv="$3"; shift 3
     fresh
     # shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
     case "$sh_bin" in
-      */dash) run "$dir" /nonexistent /usr/bin/env BASH="$dash_bash" "$@" "$sh_bin" "$T/hookhome/shim.sh" ;;
-      *) run "$dir" "/nonexistent:.." /usr/bin/env "$@" "$bash_bin" -c 'exec -a bash "$0" "$@"' "$sh_bin" "$T/hookhome/shim.sh" ;;
+      */dash) run "$dir" /nonexistent /usr/bin/env BASH="$bv" "$@" "$sh_bin" "$T/hookhome/shim.sh" ;;
+      *) run "$dir" /nonexistent /usr/bin/env "$@" "$bash_bin" -c 'exec -a "$0" "$@"' "$bv" "$sh_bin" "$T/hookhome/shim.sh" ;;
     esac
   }
   for t in cp gp gf gn; do
@@ -260,30 +264,138 @@ if [ "$(tail -n 1 "$T/whs.sh")" = "}" ] && grep -q 'HOOKEOF' "$T/whs.sh"; then
     case "$seen" in *" $sh_bin "*) continue ;; esac
     seen="$seen$sh_bin "
     # A leading // survives cd -P and pwd -P in bash (dash collapses it).
-    shim_cont "$sh_bin" "$C/sub" "$C/sub/../bash" CLAUDE_PROJECT_DIR=/
+    shim_cont "$sh_bin" "$C/sub" "$C/bash" CLAUDE_PROJECT_DIR=/
     silent_check "shim: CLAUDE_PROJECT_DIR=/ contains \$BASH ($sh_bin)"
-    shim_cont "$sh_bin" "$C/sub" "$C/sub/../bash" CLAUDE_PROJECT_DIR="/$C"
+    shim_cont "$sh_bin" "$C/sub" "$C/bash" CLAUDE_PROJECT_DIR="/$C"
     silent_check "shim: CLAUDE_PROJECT_DIR=//<proj> contains \$BASH ($sh_bin)"
-    shim_cont "$sh_bin" "$C/sub" "/$C/sub/../bash" PWD="/$C/sub" CLAUDE_PROJECT_DIR="$C"
+    shim_cont "$sh_bin" "$C/sub" "/$C/bash" PWD="/$C/sub" CLAUDE_PROJECT_DIR="$C"
     silent_check "shim: inherited PWD=//<proj>/sub, \$BASH=//<proj>/bash ($sh_bin)"
     # Control: an outside bash still runs under a //-spelled root.
     fresh; run "$C/sub" /nonexistent /usr/bin/env BASH="$bash_bin" CLAUDE_PROJECT_DIR="/$C" "$sh_bin" "$T/hookhome/shim.sh"
     planted_check "shim: outside \$BASH runs under CLAUDE_PROJECT_DIR=//<proj> ($sh_bin)"
     # A relative root variable fails closed, even for an outside bash.
     for pv in CLAUDE_PROJECT_DIR CURSOR_PROJECT_DIR; do
-      shim_cont "$sh_bin" "$C/sub" "$C/sub/../bash" "$pv=proj"
+      shim_cont "$sh_bin" "$C/sub" "$C/bash" "$pv=proj"
       silent_check "shim: relative $pv refuses \$BASH ($sh_bin)"
       fresh; run "$C/sub" /nonexistent /usr/bin/env BASH="$bash_bin" "$pv=proj" "$sh_bin" "$T/hookhome/shim.sh"
       silent_check "shim: relative $pv refuses an outside \$BASH ($sh_bin)"
     done
     # No root variable: the nearest ancestor holding .git is a root too.
     for t in gp gf gn; do
-      shim_cont "$sh_bin" "$T/$t/proj/sub" "$T/$t/proj/sub/../bash"
+      shim_cont "$sh_bin" "$T/$t/proj/sub" "$T/$t/proj/bash"
       silent_check "shim: no root variable, \$BASH inside the .git ancestor ($t) ($sh_bin)"
     done
     fresh; run "$T/gp/proj/sub" /nonexistent /usr/bin/env BASH="$bash_bin" "$sh_bin" "$T/hookhome/shim.sh"
     planted_check "shim: outside \$BASH runs below a .git ancestor ($sh_bin)"
   done
+  # R1: no root variable and no .git, so the root is just the cwd, and a
+  # relative entry reaches a bash above or beside it: through ".."
+  # (<cwd>/../bash, <cwd>/../other/bash) or through a symlink the project
+  # ships (nm -> ../evilnm, entry nm/.bin). bash builds $BASH as
+  # $PWD/<entry>/bash (bash 5.x: from its canonical cwd), so a . or ..
+  # component, or a literal logical (as given or canonical) or physical cwd
+  # prefix, is refused.
+  mkdir -p "$T/ng/proj/sub" "$T/ng/proj/other" "$T/ng/proj/evilnm/.bin" "$T/rbin"
+  ln -s ../evilnm "$T/ng/proj/sub/nm"
+  ln -s ng/proj "$T/ngl"
+  for b in "$T/ng/proj/bash" "$T/ng/proj/other/bash" "$T/ng/proj/evilnm/.bin/bash"; do
+    printf '#!/bin/sh\n: > "%s/ran-relbash"\n' "$T" >"$b"
+    chmod +x "$b"
+  done
+  ln -s "$bash_bin" "$T/rbin/bash"
+  NG="$T/ng/proj/sub"
+  NGL="$T/ngl/sub"
+  NGP=$(cd -P "$NG" && pwd -P)
+  mkdir -p "$T/ct/cwd" "$T/ct/elsewhere"
+  ln -s cwd "$T/ct/alias"
+  printf '#!/bin/sh\n: > "%s/ran-ctbash"\n' "$T" >"$T/ct/cwd/bash"
+  chmod +x "$T/ct/cwd/bash"
+  seen=" "
+  for sh_bin in /bin/dash /bin/bash /opt/homebrew/bin/bash "$bash_bin"; do
+    if [ ! -x "$sh_bin" ]; then continue; fi
+    case "$seen" in *" $sh_bin "*) continue ;; esac
+    seen="$seen$sh_bin "
+    # bash drops a leading ./ from an entry (./nm/.bin gives
+    # <cwd>/nm/.bin/bash) but keeps an inner one: nm/./.bin and nm/.bin/.
+    # give <cwd>/nm/./.bin/bash and <cwd>/nm/.bin/./bash. When the launcher
+    # or shim runs as its own process (as the harness runs it, or via
+    # bash <file> / sh <file>), such a lookup starts with a spelling of the
+    # cwd it compares against, so the prefix rule refuses it as well as the
+    # . rule. The exception is a file sourced (. <file>) after a cd: $BASH
+    # keeps the old cwd, only the . rule refuses nm/./.bin, and plain
+    # nm/.bin runs a planted bash. Sourcing is unsupported and not tested
+    # here.
+    for e in .. ../other nm/.bin ./nm/.bin nm/./.bin nm/.bin/.; do
+      fresh
+      # shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
+      case "$sh_bin" in
+        */dash) run "$NG" /nonexistent /usr/bin/env PWD="$NG" BASH="$NG/$e/bash" "$sh_bin" "$T/hookhome/shim.sh" ;;
+        *) run "$NG" "/nonexistent:$e" "$bash_bin" -c 'exec -a bash "$0" "$@"' "$sh_bin" "$T/hookhome/shim.sh" ;;
+      esac
+      silent_check "shim: no root, no .git, PATH entry '$e' reaches a planted bash ($sh_bin)"
+    done
+    # The same symlinked entry from a symlinked (logical) cwd, $PWD inherited.
+    fresh
+    # shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
+    case "$sh_bin" in
+      */dash) run "$NGL" /nonexistent /usr/bin/env PWD="$NGL" BASH="$NGL/nm/.bin/bash" "$sh_bin" "$T/hookhome/shim.sh" ;;
+      *) run "$NGL" /nonexistent:nm/.bin /usr/bin/env PWD="$NGL" "$bash_bin" -c 'exec -a bash "$0" "$@"' "$sh_bin" "$T/hookhome/shim.sh" ;;
+    esac
+    silent_check "shim: no root, no .git, entry nm/.bin from a symlinked cwd ($sh_bin)"
+    # An inherited $PWD spelled non-canonically, from the symlinked cwd: bash
+    # 5.x builds $BASH from its canonical cwd but keeps $PWD as given, so
+    # neither the literal $PWD prefix nor the physical one matches. Under
+    # dash an exported $BASH can carry the canonical spelling the same way.
+    for pw in "$T//ngl/sub" "$T/./ngl/sub" "$NGL//" "$T/ngl//sub/"; do
+      fresh
+      # shellcheck disable=SC2016 # $0/$@ are expanded by the inner bash
+      case "$sh_bin" in
+        */dash) run "$NGL" /nonexistent /usr/bin/env PWD="$pw" BASH="$NGL/nm/.bin/bash" "$sh_bin" "$T/hookhome/shim.sh" ;;
+        *) run "$NGL" /nonexistent:nm/.bin /usr/bin/env PWD="$pw" "$bash_bin" -c 'exec -a bash "$0" "$@"' "$sh_bin" "$T/hookhome/shim.sh" ;;
+      esac
+      silent_check "shim: no root, no .git, entry nm/.bin, inherited PWD=${pw#"$T"} ($sh_bin)"
+    done
+    # A mid-path /../ with no cwd prefix: only the . and .. rule refuses it.
+    shim_cont "$sh_bin" "$NG" "$T/ng/proj/other/../bash"
+    silent_check "shim: no root, no .git, \$BASH=<proj>/other/../bash outside the cwd ($sh_bin)"
+    # The same for a /./ and a trailing /. component: bash keeps an absolute
+    # argv0 verbatim as $BASH, so only the . rule refuses these. They use an
+    # absolute argv0 because, for an executed launcher or shim, no lookup
+    # spelling is refused by the . rule alone (see the entry loop).
+    shim_cont "$sh_bin" "$NG" "$T/ng/proj/./bash"
+    silent_check "shim: no root, no .git, \$BASH=<proj>/./bash outside the cwd ($sh_bin)"
+    shim_cont "$sh_bin" "$NG" "$T/ng/proj/other/."
+    silent_check "shim: no root, no .git, \$BASH=<proj>/other/. outside the cwd ($sh_bin)"
+    # $BASH reached through a symlink outside the cwd that points into it,
+    # with the root elsewhere: only the cwd half of the final check refuses.
+    shim_cont "$sh_bin" "$T/ct/cwd" "$T/ct/alias/bash" CLAUDE_PROJECT_DIR="$T/ct/elsewhere"
+    silent_check "shim: \$BASH in the cwd through an outside symlink, root elsewhere ($sh_bin)"
+    # Controls: a bash outside the project still runs, as $BASH and through
+    # an absolute PATH entry.
+    fresh; run "$NG" /nonexistent /usr/bin/env BASH="$bash_bin" "$sh_bin" "$T/hookhome/shim.sh"
+    planted_check "shim: no root, no .git: outside \$BASH runs ($sh_bin)"
+    fresh; run "$NG" "/nonexistent:$T/rbin" "$sh_bin" "$T/hookhome/shim.sh"
+    planted_check "shim: no root, no .git: bash on an absolute PATH entry runs ($sh_bin)"
+  done
+  if [ -x /bin/dash ]; then
+    for bv in "$T/ng/proj/./bash" "$T/ng/proj/other/." "$T/ng/proj/other/.."; do
+      fresh; run "$NG" /nonexistent /usr/bin/env PWD="$NG" BASH="$bv" /bin/dash "$T/hookhome/shim.sh"
+      silent_check "shim: \$BASH with a . or .. component (${bv#"$T"/}) (dash)"
+    done
+    # Each prefix on its own ($PWD is the symlinked spelling; $BASH starts
+    # with it, or with the physical cwd), then a leading // on either side.
+    # shim_spell <name> <PWD> <$BASH>
+    shim_spell() {
+      fresh; run "$NG" /nonexistent /usr/bin/env PWD="$2" BASH="$3" /bin/dash "$T/hookhome/shim.sh"
+      silent_check "shim: $1 (dash)"
+    }
+    shim_spell "\$BASH starts with the logical cwd" "$NGL" "$NGL/nm/.bin/bash"
+    shim_spell "\$BASH starts with the physical cwd" "$NGL" "$NGP/nm/.bin/bash"
+    shim_spell "\$BASH starts with the logical cwd, PWD=//..." "/$NGL" "$NGL/nm/.bin/bash"
+    shim_spell "\$BASH=//<logical cwd>/..." "$NGL" "/$NGL/nm/.bin/bash"
+  else
+    echo "SKIP: shim \$BASH . and .. components under /bin/dash (/bin/dash not found)"
+  fi
   # $BASH naming the shim itself is refused (no self re-exec).
   if [ -x /bin/dash ]; then
     fresh; run "$T/plain" /nonexistent /usr/bin/env BASH="$T/hookhome/shim.sh" /bin/dash "$T/hookhome/shim.sh"
