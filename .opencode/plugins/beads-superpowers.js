@@ -33,8 +33,7 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
   // hooks/session-start's rule (~ and ~/x become $HOME when HOME is absolute,
   // anything else relative is dropped, fallback /usr/bin:/bin). An empty or
   // relative entry, or PATH="", makes a lookup search the cwd, an untrusted
-  // project; the composer's #!/usr/bin/env bash and `bd` are both looked up
-  // before the hook's own clean-up runs.
+  // project; the launcher's bash and `bd` are both looked up on it.
   const childEnv = () => {
     const home = process.env.HOME ?? '';
     const keep = [];
@@ -55,14 +54,20 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
   // so a bash.exe or bd.exe in the project would run.
   const noChildren = () => process.platform === 'win32';
 
-  // Exec the canonical composer. Returns null on failure, on Windows, OR on
-  // the composer's event-dedup yielding an empty rapid re-run — a real payload
-  // always carries the <EXTREMELY_IMPORTANT> injection marker.
+  // Exec the canonical composer through hooks/run-hook.cmd, run by /bin/sh:
+  // the launcher takes the first bash on PATH outside the project (an
+  // absolute entry can sit inside it, <proj>/node_modules/.bin), else $BASH
+  // under the same check, and execs session-start with it. The composer's
+  // own #!/usr/bin/env bash would take the first bash on PATH, wherever it
+  // is. No usable bash: the launcher exits 0 with no output.
+  // Returns null on failure, on Windows, OR on the composer's event-dedup
+  // yielding an empty rapid re-run — a real payload always carries the
+  // <EXTREMELY_IMPORTANT> injection marker.
   const composeBootstrap = () => {
     if (noChildren()) return null;
     try {
       const text = execSync(
-        `"${path.join(packageRoot, 'hooks/session-start')}" --emit-plain 2>/dev/null`,
+        `/bin/sh "${path.join(packageRoot, 'hooks/run-hook.cmd')}" session-start --emit-plain 2>/dev/null`,
         { encoding: 'utf8', timeout: 10000, env: childEnv() }
       ).trim();
       return text.includes('EXTREMELY_IMPORTANT') ? text : null;

@@ -102,8 +102,8 @@ def _child_env():
     hooks/session-start's rule: ~ and ~/x become $HOME when HOME is absolute,
     anything else relative is dropped, fallback /usr/bin:/bin. An empty or
     relative entry, or PATH="", makes a lookup search the cwd, an untrusted
-    project; the composer's #!/usr/bin/env bash and `bd` are both looked up
-    before the hook's own clean-up runs. Exec hygiene, not composition policy.
+    project; the launcher's bash and `bd` are both looked up on it. Exec
+    hygiene, not composition policy.
     """
     env = dict(os.environ)
     home = env.get("HOME", "")
@@ -130,15 +130,24 @@ def _no_children():
 
 
 def _compose_bootstrap():
-    """Exec the canonical composer. None on any failure, and on Windows."""
+    """Exec the canonical composer. None on any failure, and on Windows.
+
+    Through hooks/run-hook.cmd, run by /bin/sh: the launcher takes the first
+    bash on PATH outside the project (an absolute entry can sit inside it,
+    <proj>/node_modules/.bin), else $BASH under the same check, and execs
+    session-start with it. The composer's own #!/usr/bin/env bash would take
+    the first bash on PATH, wherever it is. No launcher next to the composer,
+    or no usable bash (the launcher exits 0 with no output): None.
+    """
     if _no_children():
         return None
     composer = _composer_path()
     if composer is None:
         return None
+    launcher = os.path.join(os.path.dirname(composer), "run-hook.cmd")
     try:
         proc = subprocess.run(
-            [composer, "--emit-plain"],
+            ["/bin/sh", launcher, "session-start", "--emit-plain"],
             capture_output=True, text=True, timeout=10, check=False,
             env=_child_env(),
         )

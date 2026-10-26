@@ -86,7 +86,7 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 
 python3 - "$ROOT" <<'PY' || fail=1
-import glob, os, sys, importlib.util, tempfile, shutil, pathlib
+import glob, os, sys, importlib.util, tempfile, shutil, pathlib, subprocess
 
 root = sys.argv[1]
 ok_, bad_ = [], []
@@ -145,6 +145,10 @@ def build_fixture(layout, with_hooks=True, n_skills=2, env_bash=False):
             f.write(('#!/usr/bin/env bash\n' if env_bash else '#!/bin/sh\n') +
                     'echo "<EXTREMELY_IMPORTANT>STUB PAYLOAD</EXTREMELY_IMPORTANT>"\n')
         os.chmod(p, 0o755)
+        # The plugin starts the composer through the real launcher, which
+        # picks a bash outside the project.
+        shutil.copy(os.path.join(root, "hooks", "run-hook.cmd"),
+                    os.path.join(hd, "run-hook.cmd"))
     return tmp, plugin_dir
 
 
@@ -275,6 +279,18 @@ text = ctx.hooks["pre_llm_call"](is_first_turn=True)["context"]
 check(text == STUB, "flattened layout WITH hooks/ resolves the composer")
 shutil.rmtree(tmp)
 
+# The composer is started through hooks/run-hook.cmd; without it next to the
+# composer, degrade DISCLOSINGLY, never exec the composer some other way.
+tmp, pdir = build_fixture("flat", with_hooks=True)
+os.remove(os.path.join(pdir, "hooks", "run-hook.cmd"))
+mod = load(pdir)
+ctx = FakeCtx()
+mod.register(ctx)
+text = ctx.hooks["pre_llm_call"](is_first_turn=True)["context"]
+check("session composer unavailable" in text,
+      "composer without the launcher next to it degrades DISCLOSINGLY")
+shutil.rmtree(tmp)
+
 # --- fail-closed memory line: only a count header may pass through ---
 check(mod._MEM_HEADER_RE.match("Memories (220):") is not None,
       "memory-line pattern accepts a count header")
@@ -310,6 +326,18 @@ def bash_on_clean_path(p):
     return any(os.access(os.path.join(e, "bash"), os.X_OK) for e in ents)
 
 
+# The plugin runs the launcher with /bin/sh. With no usable bash on PATH the
+# launcher falls back to $BASH: /bin/sh sets it when it is bash (macOS), so
+# the composer still runs under it; dash leaves it unset, so the plugin falls
+# back to the pointer.
+SH_SETS_BASH = subprocess.run(["/bin/sh", "-c", 'printf %s "${BASH-}"'],
+                              capture_output=True, text=True).stdout != ""
+
+
+def composer_runs(p):
+    return bash_on_clean_path(p) or SH_SETS_BASH
+
+
 saved_path, saved_cwd = os.environ.get("PATH"), os.getcwd()
 try:
     for p in ("", ".:/usr/bin", ":/usr/bin:/bin"):
@@ -333,7 +361,7 @@ try:
             what = f"{'composer' if with_hooks else 'bd fallback'}, PATH='{p}'"
             ran = planted_ran()
             check(ran == [], f"no planted binary ran ({what}); ran: {ran}")
-            if with_hooks and bash_on_clean_path(p):
+            if with_hooks and composer_runs(p):
                 check(text == STUB, f"composer payload injected ({what})")
             else:
                 check(BOOT_MARK in text and "session composer unavailable" in text,
@@ -367,6 +395,52 @@ try:
     ran = planted_ran()
     check(ran == ["tildebash"], f"PATH='~/bin' resolves bash in $HOME/bin; ran: {ran}")
     check(text == STUB, "composer payload injected (PATH='~/bin')")
+
+    # --- an absolute PATH entry inside the project (security review #8) ---
+    # The cleaned PATH keeps absolute entries, and one can sit inside the
+    # project (<proj>/node_modules/.bin from npm exec, direnv PATH_add). The
+    # composer must start with the launcher's containment walk: the planted
+    # bash never runs, and a bash further down PATH runs the composer. With
+    # the planted one the only bash on PATH, the launcher's $BASH fallback
+    # decides (see SH_SETS_BASH).
+    proj = os.path.realpath(tempfile.mkdtemp())
+    os.makedirs(os.path.join(proj, ".git"))
+    nmbin = os.path.join(proj, "node_modules", ".bin")
+    os.makedirs(nmbin)
+    nb = os.path.join(nmbin, "bash")
+    with open(nb, "w") as f:
+        f.write(f'#!/bin/sh\n: > "{markers}/ran-nmbash"\n')
+    os.chmod(nb, 0o755)
+    try:
+        for p, layout in ((f"{nmbin}:/usr/bin:/bin", "sibling"),
+                          (f"{nmbin}:/usr/bin:/bin", "flat"),
+                          (nmbin, "sibling")):
+            tmp, pdir = build_fixture(layout, with_hooks=True, env_bash=True)
+            os.chdir(proj)
+            os.environ["PATH"] = p
+            try:
+                mod = load(pdir)
+                ctx = FakeCtx()
+                mod.register(ctx)
+                text = ctx.hooks["pre_llm_call"](is_first_turn=True)["context"]
+            finally:
+                if saved_path is None:
+                    os.environ.pop("PATH", None)
+                else:
+                    os.environ["PATH"] = saved_path
+                os.chdir(saved_cwd)
+                shutil.rmtree(tmp)
+            what = f"in-project PATH entry, {layout}, PATH='{p.replace(proj, '<proj>')}'"
+            ran = planted_ran()
+            check(ran == [], f"no planted binary ran ({what}); ran: {ran}")
+            # The planted bash is refused, so only the bashes after it count.
+            if composer_runs("/nonexistent" if p == nmbin else "/usr/bin:/bin"):
+                check(text == STUB, f"composer payload injected ({what})")
+            else:
+                check(BOOT_MARK in text and "session composer unavailable" in text,
+                      f"fallback pointer injected ({what})")
+    finally:
+        shutil.rmtree(proj)
 
     # --- Windows spawns nothing (P1) ---
     # CreateProcess searches the cwd before PATH, which env cannot change, so
