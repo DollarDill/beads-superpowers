@@ -2,8 +2,9 @@
 # test-path-containment.sh — one table of PATH-entry rows, run against every
 # place that cleans PATH before running a tool: the launcher's bash walk
 # (hooks/run-hook.cmd), hooks/session-start's PATH clean-up (bd, sed and every
-# other tool it calls; run directly and in the harness's launcher shape). Both
-# must apply one containment rule, so they share the rows.
+# other tool it calls; run directly and in the harness's launcher shape), and
+# the PATH each plugin hands its own `bd memories` fallback (Hermes and
+# OpenCode). All four must apply one containment rule, so they share the rows.
 #
 # The rule (hooks/run-hook.cmd's bsp_outside): an absolute entry is dropped when
 # it has a . or .. component, literally starts with the cwd (logical, physical
@@ -25,6 +26,8 @@ TMP=$(mktemp -d) || exit 1
 trap 'rm -rf "$TMP"' EXIT
 bash_bin="$(command -v bash)"
 real_sed="$(command -v sed)"
+py_bin="$(command -v python3 || true)"
+node_bin="$(command -v node || true)"
 
 report() { # name | ok(0/1) | detail
   if [ "$2" = 0 ]; then echo "PASS: $1"; else echo "FAIL: $1"; echo "  $3"; fail=1; fi
@@ -95,6 +98,7 @@ control: outside entry, CLAUDE_PROJECT_DIR set|$AB|$AB|$TMP/legit/bin|keep|CLAUD
 control: ~/.local/bin, project root elsewhere|$AB|$AB|~/.local/bin|keep|HOME=$FH CLAUDE_PROJECT_DIR=$AB
 control: absolute ~/.local/bin, .git root elsewhere|$AB/other|$AB/other|$FH/.local/bin|keep|HOME=$FH
 control: outside entry, CLAUDE_PROJECT_DIR spelled //|$AB|$AB|$TMP/legit/bin|keep|CLAUDE_PROJECT_DIR=/$AB
+control: outside entry, inherited PWD names no directory|$AB|$TMP/no-such-dir|$TMP/legit/bin|keep|CLAUDE_PROJECT_DIR=$AB
 ROWS
 }
 
@@ -110,12 +114,28 @@ want() {
 }
 norm() { printf '%s' "$1" | tr ' ' '\n' | sort | tr '\n' ' ' | sed 's/^ *//; s/ *$//'; }
 
-# In a temp plugin root: the launcher with a probe.
+# In a temp plugin root: the launcher with a probe, and plugin fixtures with
+# no composer, so each plugin takes its own `bd memories` fallback.
 PR="$TMP/plugin"
 mkdir -p "$PR/hooks"
 cp -f "$ROOT/hooks/run-hook.cmd" "$PR/hooks/run-hook.cmd"
 printf '#!/bin/sh\necho probe-ran\n' >"$PR/hooks/probe-ok"
 chmod +x "$PR/hooks/run-hook.cmd" "$PR/hooks/probe-ok"
+mkdir -p "$TMP/hfx" "$TMP/ocfx/.opencode/plugins"
+cp -f "$ROOT/.hermes-plugin/__init__.py" "$TMP/hfx/__init__.py"
+cp -f "$ROOT/.opencode/plugins/beads-superpowers.js" "$TMP/ocfx/.opencode/plugins/beads-superpowers.js"
+# shellcheck disable=SC2016 # python source, not shell
+HERMES_PY='import importlib.util, sys
+spec = importlib.util.spec_from_file_location("hermes_under_test", sys.argv[1])
+m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+print(m._fallback_bootstrap())'
+OC_JS='import { pathToFileURL } from "node:url";
+const { BeadsSuperpowersPlugin } = await import(pathToFileURL(process.argv[1]).href);
+const hooks = await BeadsSuperpowersPlugin({ client: {}, directory: process.cwd() });
+const out = { messages: [{ info: { role: "user" }, parts: [{ type: "text", text: "hi" }] }] };
+await hooks["experimental.chat.messages.transform"]({}, out);
+console.log(out.messages[0].parts[0].text);'
 
 n=0
 # row_run <cwd> <PWD> <entry> <extras> <command...>: sets rc, out, got.
@@ -163,6 +183,17 @@ while IFS='|' read -r name dir pw e exp x; do
     if [ "$exp" = all ]; then inj=0; if [ -n "$out" ]; then inj=1; fi; else inj=$(has 'Production-Grade Doctrine'); fi
     verdict "session-start via launcher, $sh_bin -c [$name]" "$(want "$exp" bash bd sed)" "$inj"
   done
+  # Each plugin's own bd fallback, with the PATH it builds.
+  if [ -n "$py_bin" ]; then
+    row_run "$dir" "$pw" "$e" "$x" "$py_bin" -I -c "$HERMES_PY" "$TMP/hfx/__init__.py"
+    verdict "Hermes bd fallback [$name]" "$(want "$exp" bd)" "$(has 'session composer unavailable')"
+  fi
+  if [ -n "$node_bin" ]; then
+    row_run "$dir" "$pw" "$e" "$x" "$node_bin" --input-type=module -e "$OC_JS" "$TMP/ocfx/.opencode/plugins/beads-superpowers.js"
+    verdict "OpenCode bd fallback [$name]" "$(want "$exp" bd)" "$(has 'session composer unavailable')"
+  fi
 done < <(rows)
+if [ -z "$py_bin" ]; then echo "SKIP: Hermes rows (python3 not found)"; fi
+if [ -z "$node_bin" ]; then echo "SKIP: OpenCode rows (node not found)"; fi
 
 exit "$fail"
