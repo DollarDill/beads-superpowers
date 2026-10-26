@@ -75,10 +75,11 @@ unreadable=0; if grep -qF 'skill unreadable' "$out"; then unreadable=1; fi
 check "backslash \$0, empty PATH" "$unreadable"
 
 # --- partial PATH: cat resolves, sed/mkdir do not (Review Focus 1) ---
-mkdir -p "$T/catbin"
+# The stub sits outside the cwd: an entry inside the cwd tree is dropped.
+mkdir -p "$T/catbin" "$T/catcwd"
 printf '#!%s\n: > "%s/cat-used"\nexec /bin/cat "$@"\n' "$bash_bin" "$T" >"$T/catbin/cat"
 chmod +x "$T/catbin/cat"
-fresh; run "$T" "$T/catbin" "$bash_bin" "$ROOT/hooks/session-start"
+fresh; run "$T/catcwd" "$T/catbin" "$bash_bin" "$ROOT/hooks/session-start"
 cat_used=1; if [ -e "$T/cat-used" ]; then cat_used=0; fi
 check "cat stub (emit_json goes through cat)" "$cat_used"
 
