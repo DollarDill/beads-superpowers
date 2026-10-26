@@ -372,11 +372,10 @@ fi
 
 # --- an absolute PATH entry inside the project (security review #8) ---
 # The cleaned PATH keeps absolute entries, and one can sit inside the project
-# (<proj>/node_modules/.bin from npm exec, direnv PATH_add). The bash that
-# `command -v` finds there gets the same containment as $BASH and is refused;
-# the launcher then falls back to $BASH, as when PATH has no bash. Under bash
-# $BASH is the outside interpreter, so the probe runs; dash leaves $BASH unset
-# unless inherited, so it exits silently, or uses an inherited outside $BASH.
+# (<proj>/node_modules/.bin from npm exec, direnv PATH_add). Each bash on
+# the cleaned PATH gets the same containment as $BASH, and the launcher takes
+# the first that passes: here the in-project one is refused and the real bash
+# further down (/usr/bin:/bin) runs the probe, under every launcher shell.
 mkdir -p "$TMP/ab/proj/.git" "$TMP/ab/proj/sub" "$TMP/ab/proj/other" "$TMP/ab/nogit/sub" "$TMP/ab/nogit/other"
 ln -s proj/sub "$TMP/ab/alias"
 for b in "$TMP/ab/proj/sub/bash" "$TMP/ab/nogit/sub/bash"; do
@@ -406,8 +405,7 @@ for sh_bin in /bin/dash /bin/bash /opt/homebrew/bin/bash "$bash_bin"; do
   if [ ! -x "$sh_bin" ]; then continue; fi
   case "$seen" in *" $sh_bin "*) continue ;; esac
   seen="$seen$sh_bin "
-  want=yes
-  case "$sh_bin" in */dash) want=no ;; esac
+  want=$(want_probe /usr/bin:/bin)
   # Review probe P4 case i: the entry is inside the cwd tree.
   abs_run "$sh_bin" "$AB" "$AB/sub"
   abs_check "absolute in-project PATH entry, cwd tree ($sh_bin)" "$want"
@@ -429,6 +427,94 @@ for sh_bin in /bin/dash /bin/bash /opt/homebrew/bin/bash "$bash_bin"; do
       abs_run "$sh_bin" "$AB" "$AB/sub" BASH="$bash_bin"
       abs_check "absolute in-project PATH entry, inherited outside \$BASH ($sh_bin)" yes ;;
   esac
+done
+
+# --- the first contained bash on PATH is the one used ---
+# first_bash <PATH value>: the first <entry>/bash that is an executable file.
+first_bash() {
+  local e
+  local IFS=:
+  for e in $1; do
+    if [ -f "$e/bash" ] && [ -x "$e/bash" ]; then echo "$e/bash"; return; fi
+  done
+}
+REAL=$(first_bash /usr/bin:/bin)
+# shellcheck disable=SC2016 # $BASH is expanded by the probe
+printf '#!/bin/sh\necho "probe-ran BASH=$BASH"\n' >"$root/hooks/probe-which"
+chmod +x "$root/hooks/probe-which"
+# which_check <name> <want: a bash path, or "none" for a silent exit 0>
+which_check() {
+  local want_out="probe-ran BASH=$2"
+  if [ "$2" = none ]; then want_out=""; fi
+  if [ "$rc" = 0 ] && [ -z "$ran" ] && [ "$out" = "$want_out" ]; then report "$1" 0 ""; else report "$1" 1 "rc=$rc planted ran:[$ran] out=[$out] want=[$want_out]"; fi
+}
+# (a) The harness shape: the registered command is the shebang-less launcher,
+# run by a shell's ENOEXEC fallback (sh -c '"$0" ...'), where $BASH is the
+# launcher itself or unset. With the in-project bash first on PATH, the real
+# bash after it must run the hook.
+seen=" "
+for sh_bin in /bin/sh /bin/dash /bin/bash /opt/homebrew/bin/bash "$bash_bin"; do
+  if [ ! -x "$sh_bin" ]; then continue; fi
+  case "$seen" in *" $sh_bin "*) continue ;; esac
+  seen="$seen$sh_bin "
+  # shellcheck disable=SC2016 # $0 is expanded by the inner shell
+  out=$(cd "$AB" && env -i HOME="$TMP" PWD="$AB" PATH="$AB/sub:/usr/bin:/bin" "$sh_bin" -c '"$0" probe-which' "$L" </dev/null 2>&1); rc=$?
+  ran=$(planted_ran)
+  which_check "harness shape ($sh_bin -c), in-project bash first on PATH: real bash runs" "${REAL:-none}"
+done
+# The same shape end to end, with the real launcher and hook: the bootstrap is
+# injected.
+hh="$TMP/ab-home"; mkdir -p "$hh/rt"
+# shellcheck disable=SC2016 # $0 is expanded by the inner shell
+out=$(cd "$AB" && env -i HOME="$hh" XDG_RUNTIME_DIR="$hh/rt" PWD="$AB" CLAUDE_PLUGIN_ROOT="$ROOT" PATH="$AB/sub:/usr/bin:/bin" /bin/sh -c '"$0" session-start' "$ROOT/hooks/run-hook.cmd" </dev/null 2>/dev/null); rc=$?
+ran=$(planted_ran)
+if [ -n "$REAL" ]; then
+  if [ "$rc" = 0 ] && [ -z "$ran" ] && [[ "$out" == *"Production-Grade Doctrine"* ]]; then report "harness shape (/bin/sh -c), real session-start: bootstrap injected" 0 ""; else report "harness shape (/bin/sh -c), real session-start: bootstrap injected" 1 "rc=$rc planted ran:[$ran] out=$(printf '%s' "$out" | head -c 200)"; fi
+else
+  echo "SKIP: harness shape end to end (no bash in /usr/bin or /bin)"
+fi
+# (b) The in-project bash is the only bash on PATH: refused, and the launcher
+# falls back to $BASH as before: the launcher's bash interpreter runs it,
+# dash (no $BASH) exits silently.
+seen=" "
+for sh_bin in /bin/dash /bin/bash /opt/homebrew/bin/bash "$bash_bin"; do
+  if [ ! -x "$sh_bin" ]; then continue; fi
+  case "$seen" in *" $sh_bin "*) continue ;; esac
+  seen="$seen$sh_bin "
+  want=$sh_bin
+  case "$sh_bin" in */dash) want=none ;; esac
+  out=$(cd "$AB" && env -i HOME="$TMP" PWD="$AB" PATH="$AB/sub" "$sh_bin" "$L" probe-which </dev/null 2>&1); rc=$?
+  ran=$(planted_ran)
+  which_check "only bash on PATH is in the project: refused, \$BASH fallback ($sh_bin)" "$want"
+done
+# (c) A ~/.local/bin bash when HOME is also the project root (the over-refusal
+# R1 accepted): refused, and /bin/bash further down PATH runs the hook. As
+# CLAUDE_PROJECT_DIR, and as the .git ancestor with no root variable; spelled
+# absolutely and as a literal ~ entry.
+FH="$TMP/fakehome"
+mkdir -p "$FH/.local/bin" "$FH/work/.git"
+printf '#!/bin/sh\n: > "%s/ran-homebash"\necho PLANTED\n' "$TMP" >"$FH/.local/bin/bash"
+chmod +x "$FH/.local/bin/bash"
+seen=" "
+for sh_bin in /bin/dash /bin/bash /opt/homebrew/bin/bash "$bash_bin"; do
+  if [ ! -x "$sh_bin" ]; then continue; fi
+  case "$seen" in *" $sh_bin "*) continue ;; esac
+  seen="$seen$sh_bin "
+  # shellcheck disable=SC2088 # a literal ~ entry, mapped to $HOME by the launcher
+  for e in "$FH/.local/bin" "~/.local/bin"; do
+    out=$(cd "$FH/work" && env -i HOME="$FH" PWD="$FH/work" CLAUDE_PROJECT_DIR="$FH" PATH="$e:/usr/bin:/bin" "$sh_bin" "$L" probe-which </dev/null 2>&1); rc=$?
+    ran=$(planted_ran)
+    which_check "HOME is CLAUDE_PROJECT_DIR, PATH entry $e: /usr/bin:/bin bash runs ($sh_bin)" "${REAL:-none}"
+  done
+  mkdir -p "$FH/.git"
+  out=$(cd "$FH/work" && env -i HOME="$FH" PWD="$FH/work" PATH="$FH/.local/bin:/usr/bin:/bin" "$sh_bin" "$L" probe-which </dev/null 2>&1); rc=$?
+  ran=$(planted_ran)
+  rm -rf "$FH/.git"
+  which_check "HOME is the .git-ancestor root: /usr/bin:/bin bash runs ($sh_bin)" "${REAL:-none}"
+  # shellcheck disable=SC2016 # $0 is expanded by the inner shell
+  out=$(cd "$FH/work" && env -i HOME="$FH" PWD="$FH/work" CLAUDE_PROJECT_DIR="$FH" PATH="$FH/.local/bin:/usr/bin:/bin" "$sh_bin" -c '"$0" probe-which' "$L" </dev/null 2>&1); rc=$?
+  ran=$(planted_ran)
+  which_check "HOME is CLAUDE_PROJECT_DIR, harness shape ($sh_bin -c): /usr/bin:/bin bash runs" "${REAL:-none}"
 done
 
 # --- no self re-exec (M2): an ENOEXEC fallback sets $BASH to the launcher ---

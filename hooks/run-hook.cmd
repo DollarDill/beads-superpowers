@@ -55,16 +55,18 @@ CMDBLOCK
 # 1. Clean PATH before any lookup, with hooks/session-start's rule: keep
 #    absolute entries, map ~ and ~/x to $HOME when $HOME is absolute, drop
 #    everything else, and fall back to /usr/bin:/bin.
-# 2. Use `command -v bash` on that PATH, else $BASH, taking each only when it
-#    is absolute, has no . or .. component and does not literally start
+# 2. Walk that PATH in order and use the first <entry>/bash that passes the
+#    check below, else $BASH if it passes, taking each only when it is
+#    absolute, has no . or .. component and does not literally start
 #    with the cwd (the signatures of a relative PATH entry), and lies outside
 #    both the current directory tree and the project root
 #    (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR; with neither set, the
 #    highest .git ancestor of the cwd; the cwd can be a subdirectory of it),
 #    and not this launcher. A root variable that is relative or unresolvable
 #    refuses it. The cleaned PATH can still hold an absolute entry inside
-#    the project (<proj>/node_modules/.bin, direnv PATH_add), so the
-#    `command -v` result gets the same check as $BASH.
+#    the project (<proj>/node_modules/.bin, direnv PATH_add), so each PATH
+#    bash gets the same check as $BASH, and a refused one does not stop the
+#    walk: a real bash further down PATH is still found.
 #    $BASH alone is not safe: dash leaves it unset, bash fills it by a PATH
 #    search that can land in the cwd, and an ENOEXEC fallback (a harness
 #    execing this shebang-less file) sets it to this launcher, which would
@@ -99,8 +101,8 @@ case "$0" in
 esac
 
 # bsp_outside <bash>: succeeds when the candidate passes the containment in
-# step 2. Applied to the `command -v bash` result and to $BASH alike; the
-# comments inside say $BASH for either.
+# step 2. Applied to each PATH bash and to $BASH alike; the comments inside
+# say $BASH for either.
 bsp_outside() {
   # A . or .. component is the signature of a relative PATH entry: bash
   # records its lookup unnormalised (<cwd>/../bash), which can land above or
@@ -195,14 +197,20 @@ bsp_outside() {
   return 1
 }
 
-bsp_bash=$(command -v bash 2>/dev/null) || bsp_bash=""
-case "$bsp_bash" in
-  /*) ;;
-  *) bsp_bash="" ;;
-esac
-if [ -n "$bsp_bash" ] && ! bsp_outside "$bsp_bash"; then
-  bsp_bash=""
-fi
+bsp_bash=""
+IFS=:
+set -f
+for bsp_p in $PATH; do
+  IFS=$bsp_old_ifs
+  set +f
+  bsp_c="${bsp_p%/}/bash"
+  if [ -f "$bsp_c" ] && [ -x "$bsp_c" ] && bsp_outside "$bsp_c"; then
+    bsp_bash=$bsp_c
+    break
+  fi
+done
+set +f
+IFS=$bsp_old_ifs
 if [ -z "$bsp_bash" ] && bsp_outside "${BASH:-}"; then
   bsp_bash=$BASH
 fi
