@@ -1,6 +1,6 @@
 ---
-description: "Behaviour: the CHANGELOG entry request fires write-documentation, the agent reads the moved references/required-checks.md, and the delivered entry passes two named required checks (concrete-anchor audit, fact discipline)."
-tags: [write-documentation, wd-core, core-behaviour]
+description: "Inline regression: the CHANGELOG entry request fires write-documentation and the delivered entry passes two named required checks (concrete-anchor audit, fact discipline), which SKILL.md carries inline under Step 4. Not core-behaviour: it tests no moved rule."
+tags: [write-documentation, wd-core]
 model: sonnet
 runs: 3
 max_turns: 15

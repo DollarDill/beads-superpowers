@@ -2,7 +2,7 @@
 type: llm
 ---
 
-The reply must contain a CHANGELOG entry for the changes in CHANGES.md (the Skill and Read tool calls are graded separately). Grade only that entry against two checks from the write-documentation skill's references/required-checks.md, quoted here verbatim:
+The reply must contain a CHANGELOG entry for the changes in CHANGES.md (the Skill tool call is graded separately). Grade only that entry against two checks from the write-documentation skill's Required Checks (Step 4 of its SKILL.md), quoted here verbatim:
 
 2. **Concrete-anchor audit.** For each substantial paragraph, point to one concrete anchor. In criticism, reportage, reviews, and analysis, at least one paragraph in the whole piece should be built around a single concrete example or observed consequence rather than category summary. If you cannot point to that paragraph, add one.
 
