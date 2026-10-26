@@ -283,7 +283,7 @@ detect_tools() {
 
 detect_upstream_conflict() {
   if [ -f "$PLUGINS_FILE" ]; then
-    if python3 -c "
+    if python3 -I -c "
 import json, sys
 try:
     d = json.load(open('$PLUGINS_FILE'))
@@ -691,7 +691,7 @@ do_auto_uninstall_previous() {
       rm -f "$HOOK_SCRIPT" "$HOOKS_DIR/beads-superpowers-reminder.sh" 2>/dev/null
       rm -rf "$HOOKS_DIR/beads-superpowers" 2>/dev/null
       if [ -f "$SETTINGS_FILE" ] && [ "$HAS_PYTHON3" = 1 ]; then
-        python3 -c "
+        python3 -I -c "
 import json
 sf = '$SETTINGS_FILE'
 with open(sf) as f:
@@ -1017,7 +1017,7 @@ hook_bash() {
 register_hook() {
   local rc=0
   # `|| rc=$?` keeps the capture alive under `set -e` whatever the caller does.
-  python3 - "$SETTINGS_FILE" "$HOOK_SCRIPT" "$HOOK_BASH" << 'PYEOF' || rc=$?
+  python3 -I - "$SETTINGS_FILE" "$HOOK_SCRIPT" "$HOOK_BASH" << 'PYEOF' || rc=$?
 import json, os, shlex, sys
 
 sf, hs, hb = sys.argv[1:4]
@@ -1118,12 +1118,12 @@ cleanup_stale_reminder() {
     warn "Manual fix: remove the UserPromptSubmit entry referencing superpowers-reminder.sh from $settings"
     return 0
   fi
-  if ! python3 -c 'import json, sys; json.load(open(sys.argv[1]))' "$settings" 2>/dev/null; then
+  if ! python3 -I -c 'import json, sys; json.load(open(sys.argv[1]))' "$settings" 2>/dev/null; then
     warn "$settings is not valid JSON — leaving it untouched; the stale UserPromptSubmit hook was not cleaned"
     return 0
   fi
   cp -f "$settings" "${settings}.bak-$(date +%Y%m%d-%H%M%S)"
-  python3 - "$settings" << 'PYEOF'
+  python3 -I - "$settings" << 'PYEOF'
 import json, sys
 path = sys.argv[1]
 with open(path) as f:
@@ -1164,13 +1164,13 @@ do_verify() {
   if [ "$INSTALL_TIER" != "plugin" ]; then
     local verify_bash="$HOOK_BASH"
     if [ -z "$verify_bash" ]; then verify_bash=$(hook_bash) || verify_bash=""; fi
-    if [ -f "$HOOK_SCRIPT" ] && [ -n "$verify_bash" ] && "$verify_bash" "$HOOK_SCRIPT" 2>/dev/null | python3 -m json.tool > /dev/null 2>&1; then
+    if [ -f "$HOOK_SCRIPT" ] && [ -n "$verify_bash" ] && "$verify_bash" "$HOOK_SCRIPT" 2>/dev/null | python3 -I -m json.tool > /dev/null 2>&1; then
       success "Hook produces valid JSON"
     else
       warn "Hook did not produce valid JSON — check $HOOK_SCRIPT"
     fi
 
-    if [ -f "$SETTINGS_FILE" ] && python3 -c "
+    if [ -f "$SETTINGS_FILE" ] && python3 -I -c "
 import json; d=json.load(open('$SETTINGS_FILE'))
 assert any('beads-superpowers' in json.dumps(e) for e in d.get('hooks',{}).get('SessionStart',[]))
 " 2>/dev/null; then
@@ -1270,7 +1270,7 @@ do_uninstall() {
         if command -v python3 >/dev/null 2>&1; then
           local rc=0 kept=""
           # Path on argv, never spliced into source; `|| rc=$?` survives `set -e`.
-          kept=$(python3 - "$SETTINGS_FILE" << 'PYEOF'
+          kept=$(python3 -I - "$SETTINGS_FILE" << 'PYEOF'
 import io, json, os, sys, time
 
 # No exception text or content is ever printed, on any path. Exit 3: the file
@@ -1527,7 +1527,7 @@ do_test() {
   fi
 
   # Check SessionStart hook
-  if "$test_bash" "$test_home/.claude/hooks/beads-superpowers-session-start.sh" 2>/dev/null | python3 -m json.tool > /dev/null 2>&1; then
+  if "$test_bash" "$test_home/.claude/hooks/beads-superpowers-session-start.sh" 2>/dev/null | python3 -I -m json.tool > /dev/null 2>&1; then
     success "SessionStart hook: valid JSON"; pass=$((pass + 1))
   else
     error "SessionStart hook: invalid JSON"; fail=$((fail + 1))
@@ -1541,7 +1541,7 @@ do_test() {
   fi
 
   # Check settings.json
-  if python3 -c "
+  if python3 -I -c "
 import json
 d=json.load(open('$test_home/.claude/settings.json'))
 assert d['hooks']['SessionStart']

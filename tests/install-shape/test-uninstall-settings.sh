@@ -336,8 +336,10 @@ else
   echo "SKIP [xattr]: no extended attribute can be set here"
 fi
 
-# Fault injection into the in-place write (python3 - honours PYTHONPATH, so a
-# sitecustomize.py wraps os calls for the settings file or its backup only).
+# Fault injection into the in-place write: install.sh runs python3 -I, which
+# ignores PYTHONPATH, so a python3 wrapper first on PATH loads inject.py (it
+# wraps os calls for the settings file or its backup only) before running the
+# script install.sh pipes to `python3 -I -`. Other python3 runs pass through.
 # BSP_FAULT_MODE is a comma-separated set of faults:
 #   partial         the first write stops halfway with an error
 #   restore-fails   every later write fails
@@ -348,7 +350,7 @@ fi
 #   unlink-removes  removing a backup removes it, then raises
 #   trace           no fault; append write / dirsync / fullfsync to $BSP_FAULT_LOG
 FI="$SANDBOX/fi"; mkdir -p "$FI"
-cat >"$FI/sitecustomize.py" <<'PY'
+cat >"$FI/inject.py" <<'PY'
 import errno, os, stat
 _path = os.environ.get("BSP_FAULT_PATH")
 _mode = set((os.environ.get("BSP_FAULT_MODE") or "").split(","))
@@ -425,8 +427,25 @@ def _rm(real):
 os.write, os.fsync, os.close = write, fsync, close
 os.remove, os.unlink = _rm(_remove), _rm(_unlink)
 PY
+mkdir -p "$FI/bin"
+{
+  printf '#!/bin/bash\n'
+  printf 'py=%q\n' "$(command -v python3)"
+  printf 'inject=%q\n' "$FI/inject.py"
+  cat <<'SH'
+if [ "${1:-}" = -I ] && [ "${2:-}" = - ]; then
+  shift 2
+  exec "$py" -I -c 'import sys
+exec(open(sys.argv.pop(1)).read())
+sys.argv[0] = "-"
+exec(compile(sys.stdin.read(), "<stdin>", "exec"), {"__name__": "__main__"})' "$inject" "$@"
+fi
+exec "$py" "$@"
+SH
+} >"$FI/bin/python3"
+chmod +x "$FI/bin/python3"
 fault_run() {
-  HOME="$h" BEADS_SUPERPOWERS_SKILLS_DIR="$h/skills" PYTHONPATH="$FI" \
+  HOME="$h" BEADS_SUPERPOWERS_SKILLS_DIR="$h/skills" PATH="$FI/bin:$PATH" \
     BSP_FAULT_PATH="$h/.claude/settings.json" BSP_FAULT_MODE="$1" BSP_FAULT_LOG="$h.trace" \
     bash "$REPO_ROOT/install.sh" --uninstall >"$log" 2>&1
   rc=$?
