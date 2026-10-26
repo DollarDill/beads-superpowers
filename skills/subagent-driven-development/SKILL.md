@@ -28,45 +28,13 @@ escalate. Fill-or-fail, not a judgment call.
 
 ## When to Use
 
-```dot
-digraph when_to_use {
-    "Have implementation plan?" [shape=diamond];
-    "Tasks mostly independent?" [shape=diamond];
-    "Partner chose inline, or no subagent tool?" [shape=diamond];
-    "subagent-driven-development" [shape=box];
-    "executing-plans" [shape=box];
-    "Manual execution or brainstorm first" [shape=box];
+Use when you have an implementation plan whose tasks are mostly independent and your human partner did not choose inline execution. Inline chosen, or no subagent tool → beads-superpowers:executing-plans; no plan, or tightly coupled tasks → brainstorm or execute manually.
 
-    "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
-    "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
-    "Tasks mostly independent?" -> "Partner chose inline, or no subagent tool?" [label="yes"];
-    "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
-    "Partner chose inline, or no subagent tool?" -> "executing-plans" [label="yes"];
-    "Partner chose inline, or no subagent tool?" -> "subagent-driven-development" [label="no"];
-}
-```
-
-**vs. Executing Plans (inline):**
-- Fresh subagent per task (no context pollution) instead of one context doing every task
-- Review after each task (spec compliance + code quality) instead of only at the end
-- Costs a fresh context per task and per review; inline costs one context plus one final reviewer
-- Both run in this session, share the same plan workspace under `.internal/sdd/`, use beads as the ledger, and never pause between tasks
+**Read `references/when-to-use.md` (in this skill's directory) before choosing a mode** — the decision graph and its costs.
 
 ## Pre-Flight Plan Review
 
-Before dispatching Task 1, read the plan once — and **if it names a `Spec:`, read that too**: the
-spec is the authority the plan argues from, so in-plan conflicts resolve against it. A plan with no
-reachable spec gets a ledger note saying so, because rulings made without one are provisional. Then
-scan for conflicts:
-
-- tasks that contradict each other or the plan's Global Constraints
-- anything the plan explicitly mandates that the review rubric treats as a defect (a test that asserts nothing, verbatim duplication of a logic block)
-
-Conflicts the spec unambiguously settles: rule on them, record each as `Ruling: … — settled by … — …` in the ledger, and proceed.
-Everything else — anything the spec does not settle, and anything on the must-stop list — goes to
-your human partner as **one batched structured question**, each finding beside the plan text that
-mandates it, asking which governs. Ask before execution begins, not one interrupt per discovery
-mid-plan. The review loop remains the net for conflicts that only emerge from implementation.
+**Read `references/preflight.md` (in this skill's directory) before Task 1** — ask about unsettled conflicts once, up front.
 
 ## The Process (Sequential Mode)
 
@@ -123,145 +91,9 @@ digraph process {
 
 ## Parallel Batch Mode
 
-When `bd ready --parent <epic-id>` returns multiple unblocked tasks, those tasks have no dependencies between them and can execute in parallel — each in its own isolated `bd worktree`.
+**Read `references/batching.md` (in this skill's directory) before a parallel batch** — one `bd worktree` per task, max 5.
 
-**Core principle:** One `bd worktree` per task + parallel dispatch = safe concurrency with per-task rollback.
-
-**Parallel cap:** Maximum 5 subagents per batch. If more tasks are unblocked, split into batches of 5.
-
-### Before you fan out (orchestrator-only)
-
-Worktrees isolate *files*, not *assumptions* — parallel agents on different files can still diverge on an un-prescribed shared decision (MAST FC2). Before dispatching:
-
-1. **Front-load shared decisions** — list every decision ≥2 agents depend on (schemas, naming, interfaces, conventions); decide each once and write it verbatim into *every* agent prompt.
-2. **Share full context, not summaries** — give each agent the relevant traces/facts, not a lossy digest.
-
-This is orchestrator discipline applied before dispatch; do not ask subagents to coordinate with each other.
-
-### Batch Execution Flow
-
-```dot
-digraph parallel_batch {
-    rankdir=TB;
-
-    "bd swarm validate <epic-id>" [shape=box];
-    "bd ready --parent <epic-id>" [shape=box];
-    "How many unblocked?" [shape=diamond];
-    "0: All done → finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
-    "1: Sequential mode (run in epic worktree)" [shape=box];
-    ">1: Parallel batch" [shape=box];
-    "Create bd worktree per task (max 5)" [shape=box];
-    "Dispatch subagents in parallel (one Agent call per task, all in one message)" [shape=box];
-    "Task review per task (single reviewer)" [shape=box];
-    "All reviews pass?" [shape=diamond];
-    "Merge passed task branches into epic worktree" [shape=box];
-    "bd worktree remove completed tasks" [shape=box];
-    "Run full test suite on epic worktree" [shape=box];
-    "Integration tests pass?" [shape=diamond];
-    "systematic-debugging → fix" [shape=box];
-    "Handle failed tasks" [shape=box];
-
-    "bd swarm validate <epic-id>" -> "bd ready --parent <epic-id>";
-    "bd ready --parent <epic-id>" -> "How many unblocked?";
-    "How many unblocked?" -> "0: All done → finishing-a-development-branch" [label="0"];
-    "How many unblocked?" -> "1: Sequential mode (run in epic worktree)" [label="1"];
-    "1: Sequential mode (run in epic worktree)" -> "bd ready --parent <epic-id>" [label="after task completes"];
-    "How many unblocked?" -> ">1: Parallel batch" [label="2-5+"];
-    ">1: Parallel batch" -> "Create bd worktree per task (max 5)";
-    "Create bd worktree per task (max 5)" -> "Dispatch subagents in parallel (one Agent call per task, all in one message)";
-    "Dispatch subagents in parallel (one Agent call per task, all in one message)" -> "Task review per task (single reviewer)";
-    "Task review per task (single reviewer)" -> "All reviews pass?";
-    "All reviews pass?" -> "Merge passed task branches into epic worktree" [label="yes"];
-    "All reviews pass?" -> "Handle failed tasks" [label="some failed"];
-    "Handle failed tasks" -> "Merge passed task branches into epic worktree" [label="merge passing tasks"];
-    "Merge passed task branches into epic worktree" -> "bd worktree remove completed tasks";
-    "bd worktree remove completed tasks" -> "Run full test suite on epic worktree";
-    "Run full test suite on epic worktree" -> "Integration tests pass?";
-    "Integration tests pass?" -> "bd ready --parent <epic-id>" [label="yes → next batch"];
-    "Integration tests pass?" -> "systematic-debugging → fix" [label="no"];
-    "systematic-debugging → fix" -> "Run full test suite on epic worktree";
-}
-```
-
-### Parallel Batch Walkthrough
-
-```
-1. Orchestrator creates epic worktree (once, at the start):
-     bd worktree create .worktrees/<epic-name>
-
-2. Analyze the work graph before dispatching:
-     bd swarm validate <epic-id>
-     → Shows wave structure (which tasks can run concurrently vs sequentially),
-       max parallelism, estimated worker-sessions, and dependency warnings.
-     Use this to plan batch sizes and catch missing dependencies before
-     wasting subagent runs on tasks that will block.
-
-3. Get unblocked tasks:
-     bd ready --parent <epic-id>
-     → Returns N tasks with no unresolved dependencies
-
-4. If N > 1 (parallel batch, cap at 5 per batch):
-   For each task in the batch:
-     bd worktree create .worktrees/<task-name> --branch feature/<epic>/<task>
-
-5. Dispatch all subagents in parallel:
-   Read ./implementer-prompt.md, then one Agent tool call per task, ALL in the same message:
-     Agent({
-       description: "Implement Task N: <name>",
-       prompt: "<implementer-prompt content with 'Work from: <task-worktree-path>'>",
-       subagent_type: "general-purpose"
-     })
-
-6. Task review per task (can also run in parallel):
-   Dispatch the single task reviewer (./task-reviewer-prompt.md) with the task
-   brief, the implementer's report file, and the review-package diff. It returns
-   a spec-compliance verdict (✅/❌/⚠️) and a code-quality verdict in one pass.
-
-7. For each task that passes review:
-     cd .worktrees/<epic-name>
-     git merge feature/<epic>/<task>
-     bd worktree remove .worktrees/<task-name> --merged-into <epic-branch>
-     bd close <task-id> --reason "Completed: reviews passed"
-
-8. Run full test suite on epic worktree (integration check):
-   If fail → invoke systematic-debugging → fix before next batch
-
-9. Re-run bd ready --parent <epic-id>
-   Repeat from step 3 until no tasks remain
-
-9. If N == 1 at any point:
-   Sequential mode — run in epic worktree directly, no per-task worktree needed
-```
-
-> **Tip:** Use `bd -C .worktrees/<task> ready` to check task status across worktrees without changing directory.
-
-> **Concurrent orchestrators (optional — `bd merge-slot`):** Step 7's merges run through a single orchestrator, one at a time, so the normal flow has no merge race and needs no coordination. The exception is when **two or more orchestrators or sessions** run SDD concurrently against the same repo (overlapping epics) — their merges into the shared base could collide. For that case only, serialize merges with the beads v1.0.5 merge slot: `bd merge-slot create` once for the repo, then wrap each task merge as `bd merge-slot acquire` → `git merge feature/<epic>/<task>` → `bd merge-slot release`, so only one orchestrator resolves conflicts at a time. Pairs with the `bd swarm validate` pre-step above.
-
-### Failed Task Handling
-
-When a parallel task fails review:
-
-1. **Do not merge** its task branch into the epic branch.
-2. **Option A — Fix rounds:** Keep the task worktree and run **`## Fix Rounds` / `## The Breaker`** below, unchanged: five-round cap, a FRESH implementer every round, scoped re-review via `./re-review-prompt.md`, PASS gated on a green full suite. Parallel mode gets no unbounded loop.
-3. **Option B — Discard:** not a controller call. Discarding a failed task's branch (`bd worktree remove .worktrees/<task-name>`) is a disposition **the user** decides — surface it per `references/breaker-trip.md`; never adjudicate it yourself.
-4. Other parallel tasks that passed review are still merged independently — one failure does not block the batch.
-
-### Mode Selection
-
-```
-tasks = bd ready --parent <epic-id>
-
-if len(tasks) == 0:
-    All done → invoke finishing-a-development-branch
-elif len(tasks) == 1:
-    Sequential mode (run in epic worktree, existing behavior)
-elif len(tasks) <= 5:
-    Parallel batch (one bd worktree per task)
-else:
-    Take first 5 → parallel batch, remaining wait for next iteration
-```
-
-Mode selection is automatic. The orchestrator checks after every batch or sequential task completes.
+When a parallel task fails review: **Do not merge** its task branch into the epic branch.
 
 ## Model Selection
 
@@ -317,124 +149,15 @@ Implementer status handling (BLOCKED / NEEDS_CONTEXT and friends): see `referenc
 
 ## Final Review
 
-Run `bash scripts/review-package <plan-file> <MERGE_BASE> HEAD` and dispatch a
-most-capable-tier reviewer over the whole branch — the only place the composite of
-all fix rounds is examined. Findings go to one fix subagent, then one scoped
-re-review; residuals follow the breaker rules.
-
-**Rulings I made.** Before you delete anything, collect **every** ledger line containing
-`Ruling:` — pre-flight rulings, parked findings, breaker adjudications, all of them — into your
-final message under "Rulings I made", in the order you made them, each with its cited spec
-location and what it costs if wrong. The list is exhaustive: if the ledger holds a ruling, the
-list holds it. This is the only place decisions you took on your human partner's behalf reach
-them, so they can rework whatever you got wrong.
-
-**Teardown:** remove the plan's workspace once the final review is clean **and**
-each task's outcome and any implementer-raised concerns are recorded in beads,
-**and** the "Rulings I made" list has been delivered.
-Reports are the only non-regenerable artifact — delete once the record is durable.
+**Read `references/final-review.md` (in this skill's directory) before the final review** — delete nothing until outcomes are in beads and every ledger `Ruling:` is in "Rulings I made".
 
 ## File Handoffs
 
-Hand task text and review diffs to subagents as **files**, not pasted context — this keeps large text out of your own context and gives subagents a single thing to read.
-
-- Before dispatching an implementer, run `bash scripts/task-brief <plan-file> <N>` → writes `.internal/sdd/<plan-basename>/task-<N>-brief.md`.
-- The implementer writes its full report to `.internal/sdd/<plan-basename>/task-<N>-report.md` (you name the path via `[REPORT_FILE]`); the reviewer reads it as a file. Fix rounds **append** to it.
-- Before dispatching the reviewer, run `bash scripts/review-package <plan-file> <BASE> <HEAD>` → writes `.internal/sdd/<plan-basename>/review-<base7>..<head7>.diff`. `BASE` is the commit recorded before the implementer ran — never `HEAD~1`.
-- The reviewer is **read-only**: it must not mutate the working tree, the index, HEAD, or branch state.
-- The workspace is resolved **per plan, per working tree** (`bash scripts/sdd-workspace <plan-file>`). Two plans in one tree never share brief filenames, and in Parallel Batch Mode each `bd worktree` gets its own tree.
-
-## Prompt Templates
-
-Dispatch via the `Agent` tool:
-
-1. `Read` the prompt template file
-2. Use its content as the `prompt` parameter
-3. Use `subagent_type: "general-purpose"` (do NOT use `"implementer"` — that is Claude Code's built-in implementer agent with its own system prompt, which overrides the prompt template)
-
-- `./implementer-prompt.md` - Dispatch implementer subagent
-- `./task-reviewer-prompt.md` - Dispatch the single task reviewer subagent (returns spec-compliance + code-quality verdicts in one read-only pass)
-- `./re-review-prompt.md` - Scoped re-reviewer for fix rounds (checks the named findings only; PASS also requires a green suite)
+**Read `references/handoffs.md` (in this skill's directory) before dispatching** — hand over files; dispatch as `general-purpose`.
 
 ## Example Workflow
 
-```
-You: I'm using Subagent-Driven Development to execute this plan.
-
-[Read plan file once: .internal/plans/feature-plan.md]
-[Extract all 5 tasks with full text and context]
-[Create epic + tasks via bd import (parent-child rides the import; blocks wired after):]
-[  bd create "Epic: <name>" -t epic -p 2 -d "<goal>, then 'Plan: <plan path>' and 'Spec: <spec path>' lines, then '## Success Criteria' on its own line"  -> note epic id]
-[  Author tasks as JSONL, one per line, id OMITTED, each with a parent-child dep to the epic]
-[    and "## Acceptance Criteria" in description; pipe to: bd import -]
-[    (schema: bd import --help / bd export | jq -c 'select(.id=="<id>")'; confirm output has no "Skipped dependency")]
-[  Wire task ordering (blocks): bd ready --parent <epic-id> --json -> child ids, then]
-[  printf 'dep add <t3> <t1> blocks\ndep add <t3> <t2> blocks\n' | bd batch]
-
-Task 1: Hook installation script
-
-[Get Task 1 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
-
-Implementer: "Before I begin - should the hook be installed at user or system level?"
-
-You: "User level (~/.config/superpowers/hooks/)"
-
-Implementer: "Got it. Implementing now..."
-[Later] Implementer:
-  - Implemented install-hook command
-  - Added tests, 5/5 passing
-  - Self-review: Found I missed --force flag, added it
-  - Committed
-
-[Generate review package: bash scripts/review-package PLAN_FILE BASE HEAD]
-[Dispatch single task reviewer with the brief, report file, and diff]
-Task reviewer:
-  Spec Compliance: ✅ Spec compliant - all requirements met, nothing extra
-  Strengths: Good test coverage, clean
-  Issues: None
-  Task quality: Approved
-
-[bd close <task-1-id> --reason "Completed: review clean, commits a1b2c3d..e4f5a6b"]
-
-Task 2: Recovery modes
-
-[Get Task 2 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
-
-Implementer: [No questions, proceeds]
-Implementer:
-  - Added verify/repair modes
-  - 8/8 tests passing
-  - Self-review: All good
-  - Committed
-
-[Generate review package + dispatch single task reviewer]
-Task reviewer:
-  Spec Compliance: ❌ Issues:
-    - Missing: Progress reporting (spec says "report every 100 items")
-    - Extra: Added --json flag (not requested)
-  Issues (Important): Magic number (100)
-  Task quality: Needs fixes
-
-[Fix round 1 of max 5: dispatch a FRESH implementer with the findings — never resume]
-Implementer: Removed --json flag, added progress reporting, extracted PROGRESS_INTERVAL constant
-
-[Re-generate review package + dispatch scoped re-reviewer (./re-review-prompt.md)]
-Re-reviewer:
-  Named findings: all resolved
-  Full test suite: green → PASS
-
-[bd close <task-2-id> --reason "Completed: review clean, commits e4f5a6b..c7d8e9f"]
-
-...
-
-[After all tasks]
-[Dispatch final code-reviewer]
-Final reviewer: All requirements met, ready to merge
-
-Done!
-```
+**Read `references/example-workflow.md` (in this skill's directory) before a first run** — one plan, end to end.
 
 ## Durable Progress
 
@@ -477,20 +200,4 @@ bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / patt
 
 ## Integration
 
-**Required workflow skills:**
-- **beads-superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
-- **beads-superpowers:writing-plans** - Creates the plan this skill executes
-- **beads-superpowers:requesting-code-review** - Code review template for reviewer subagents
-- **beads-superpowers:finishing-a-development-branch** - Complete development after all tasks
-- **beads-superpowers:dispatching-parallel-agents** - SDD's parallel batch mode uses this skill's dispatch pattern: when `bd ready --parent` returns multiple unblocked tasks, up to 5 are dispatched concurrently, each in its own worktree
-- **beads-superpowers:receiving-code-review** - When the task review produces feedback, this skill's anti-sycophancy protocol ensures technical evaluation rather than blind acceptance
-
-**Subagents should use:**
-- **beads-superpowers:test-driven-development** - Subagents follow TDD for each task
-
-**Parallel mode uses:**
-- **beads-superpowers:using-git-worktrees** - Multiple worktrees for parallel task isolation
-- **beads-superpowers:systematic-debugging** - Integration test failures after batch merge
-
-**Alternative workflow:**
-- **beads-superpowers:executing-plans** - Use when your human partner chose inline execution or no subagent tool exists — cheaper: one context plus one final review
+**Read `references/integration.md` (in this skill's directory) before handing off** — required and paired skills.

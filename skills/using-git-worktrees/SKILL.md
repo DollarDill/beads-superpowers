@@ -195,7 +195,7 @@ bd worktree remove .worktrees/<task-name> --merged-into <epic-branch>   # the ep
 - All task worktrees branch from the same HEAD commit (created before any subagent commits)
 - After merge, run the full test suite on the epic worktree to catch integration issues
 
-**See also:** `beads-superpowers:subagent-driven-development` → Parallel Batch Mode section for the full orchestration flow.
+**See also:** `beads-superpowers:subagent-driven-development` → `../subagent-driven-development/references/batching.md` for the full orchestration flow.
 
 ## Quick Reference
 

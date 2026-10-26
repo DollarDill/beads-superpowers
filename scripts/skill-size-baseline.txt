@@ -1,6 +1,5 @@
 # Skills allowed at/over 20,000 B until their 0.17.0 sub-project shrinks them.
 # A skill may not grow past its recorded size; remove its line when it drops under 20,000.
-subagent-driven-development 34843   # sub-project B
 write-documentation 29624           # sub-project B
 brainstorming 25670                 # sub-project C
 executing-plans 23746               # sub-project B

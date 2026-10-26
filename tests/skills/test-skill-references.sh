@@ -10,7 +10,8 @@
 #   C5 SKILL.md has the exact pointer line, with a gist (non-space start, >= 9 more chars, ends in ".")
 #   C6 file starts "# Title", a blank line, then a "Read this when " line (a missing file fails here)
 #   C7 a file over 100 lines then has a "Contents: " line
-#   C8 the file names no same-skill references/*.md (no chaining)
+#   C8 the file names no same-skill references/*.md that SKILL.md itself does not name
+#      outside fences (one hop either way; no hidden chain)
 # Registry completeness (C9): every well-formed file in a references/ dir must be
 # registered in <skill>.txt unless grandfathered (see grandfathered()); a missing
 # <skill>.txt fails; checking zero skills while any registry lists a file fails.
@@ -74,6 +75,7 @@ for skill in "${SKILLS[@]}"; do
 
   # C1 (every skill) + C3 (only where references/ exists) + C4 for mentioned names
   same=0
+  skill_named=""  # same-skill basenames SKILL.md names outside fences (C8 allows one hop to these)
   while IFS= read -r m; do
     [ -n "$m" ] || continue
     if [ ! -f "$dir/$m" ]; then
@@ -82,7 +84,11 @@ for skill in "${SKILLS[@]}"; do
     if ! printf '%s\n' "${m##*/}" | grep -qE '^[a-z0-9-]+\.md$'; then
       fail C4 "ill-formed name mentioned in SKILL.md: $m"
     fi
-    if is_same_skill "$m"; then same=$((same + 1)); fi
+    if is_same_skill "$m"; then
+      same=$((same + 1))
+      skill_named="$skill_named${m##*/}
+"
+    fi
   done < <(printf '%s\n' "$unfenced" | grep -oE "$BROAD" | sort -u)
 
   if [ ! -d "$refs" ]; then
@@ -163,8 +169,8 @@ for skill in "${SKILLS[@]}"; do
     fi
     while IFS= read -r m; do
       [ -n "$m" ] || continue
-      if is_same_skill "$m"; then
-        fail C8 "references/$f chains to same-skill $m"
+      if is_same_skill "$m" && ! printf '%s' "$skill_named" | grep -qxF "${m##*/}"; then
+        fail C8 "references/$f chains to same-skill $m, which SKILL.md does not name"
       fi
     done < <(printf '%s\n' "$body" | grep -oE "$PTR" | sort -u)
   done < <(printf '%s\n' "$entries")

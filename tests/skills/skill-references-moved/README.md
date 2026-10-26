@@ -6,7 +6,13 @@ One `<skill>.txt` per skill checked by `tests/skills/test-skill-references.sh`
 Format: one `references/` filename per line (e.g. `batching.md`); `#` comments
 and blank lines are ignored. A listed file is held to the stricter checks C5-C8
 (pointer line with a gist, `Read this when ` header, `Contents:` past 100 lines,
-no same-skill chaining); a listed file that is missing fails.
+no hidden same-skill chaining); a listed file that is missing fails.
+
+C8 (amended 2026-10-26, user decision): a listed file MAY name a same-skill
+`references/<f>.md` when `SKILL.md` itself names that file outside fenced code,
+so the reader is one hop from it either way. It fails `FAIL C8:` for a
+same-skill file that `SKILL.md` does not name (or names only inside a fence).
+Cross-skill `../<skill>/references/*.md` mentions never count.
 
 Writers: Task 2 fills `subagent-driven-development.txt`, Task 3
 `executing-plans.txt`, Task 4 `write-documentation.txt` - each only its own file,
