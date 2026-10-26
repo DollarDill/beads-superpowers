@@ -3,4 +3,3 @@
 subagent-driven-development 34843   # sub-project B
 write-documentation 29624           # sub-project B
 brainstorming 25670                 # sub-project C
-executing-plans 23746               # sub-project B

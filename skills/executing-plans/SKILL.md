@@ -36,50 +36,20 @@ escalate. Fill-or-fail, not a judgment call.
 
 ## When to Use
 
-- You have a plan from beads-superpowers:writing-plans and your human partner chose inline execution at the handoff.
 - Your harness has no subagent tool (see `../using-superpowers/references/`). Never fabricate a dispatch; run the plan here.
-- Tasks are mostly independent — the same precondition as beads-superpowers:subagent-driven-development.
 
-Prefer subagent-driven development when the plan has more than about eight tasks, when a task's brief plus its expected test output would not fit one uncompacted stretch, or when the plan touches auth, secrets, permissions, input validation or data deletion. Inline over a long plan still works — beads make it recoverable — but the last tasks get the least of you.
+**Read `references/when-to-use.md` (in this skill's directory) before choosing inline execution** — when it fits, and when to prefer subagents.
 
 ## Setup
 
 1. Isolated workspace first — use beads-superpowers:using-git-worktrees. Never start on a main/master branch without your human partner's explicit consent.
 2. Plan workspace: `bash ../subagent-driven-development/scripts/sdd-workspace PLAN_FILE` prints this plan's git-ignored directory under `.internal/sdd/` — briefs, review packages and test logs live there. Another plan's directory is never yours to read or write. Shared with subagent-driven development, so a plan can change executors mid-flight.
-3. Find or create the ledger. Locate an existing epic by its `Plan:` anchor, which lives in the description (`bd search` matches titles only): `bd list -t epic --status open --desc-contains "Plan: <plan file path>"`. **Resuming:** first `bd list --parent <epic-id> --status in_progress` — a task interrupted mid-flight is still claimed, and `bd ready` excludes it. Check its commits against `git log` before redoing anything, then finish it through the Task Loop from step 2. Then `bd ready --parent <epic-id>` is the remaining work; a closed child's completion line names its commit range — check it against `git log` before touching anything, and trust bd and git over your recollection. **Fresh:** create the epic, then import the tasks:
-
-   ```bash
-   # 1. Create the epic (→ note its id). Plan: and Spec: are the resume anchors.
-   bd create "Epic: <plan-name>" -t epic -p 2 -d "<goal>
-Plan: <plan file path>
-Spec: <spec file path or 'none reachable'>
-
-## Success Criteria
-- <measurable outcome from the plan's Goal>"
-
-   # 2. Author the tasks as JSONL — one issue per line, id OMITTED (auto-assigned;
-   #    a supplied colliding id would overwrite that bead and reset its omitted fields).
-   #    Parent each to the epic; embed the bd lint-required '## Acceptance Criteria' in
-   #    'description'. Read `bd import --help` on first use; `bd export | jq -c 'select(.id=="<id>")'` round-trips
-   #    a real bead as a schema template.
-   cat <<'EOF' | bd import -
-{"title":"Task 1: <title>","issue_type":"task","priority":2,"description":"<summary>\n\n## Acceptance Criteria\n- <outcome>","dependencies":[{"depends_on_id":"<epic-id>","type":"parent-child"}]}
-{"title":"Task 2: <title>","issue_type":"task","priority":2,"description":"<summary>\n\n## Acceptance Criteria\n- <outcome>","dependencies":[{"depends_on_id":"<epic-id>","type":"parent-child"}]}
-EOF
-   ```
-
-   Confirm the import output shows no `Skipped dependency`.
-
-   > **Wire task ordering (`blocks`) after the import.** `parent-child` rides the import, but inter-task `blocks` deps do not. Capture the ids **scoped to the parent**, then wire ordering atomically:
-   > ```bash
-   > bd ready --parent <epic-id> --json   # → the child task ids
-   > printf 'dep add <task-2-id> <task-1-id> blocks\n' | bd batch
-   > ```
-   > Note: `bd batch create` does not support `--description`/`--parent`/`--acceptance` — that is why task *creation* uses `bd import`, not `bd batch`.
+3. Find or create the ledger. Locate an existing epic by its `Plan:` anchor, which lives in the description (`bd search` matches titles only): `bd list -t epic --status open --desc-contains "Plan: <plan file path>"`. **Resuming:** first `bd list --parent <epic-id> --status in_progress` — a task interrupted mid-flight is still claimed, and `bd ready` excludes it. Check its commits against `git log` before redoing anything, then finish it through the Task Loop from step 2. Then `bd ready --parent <epic-id>` is the remaining work; a closed child's completion line names its commit range — check it against `git log` before touching anything, and trust bd and git over your recollection.
+   **Read `references/ledger-setup.md` (in this skill's directory) before creating a fresh ledger** — create the epic, then `bd import -` every task and wire `blocks` with `bd batch`.
 
 4. Read the plan once — its context and Global Constraints — and the Spec it names: the spec is the authority the plan argues from, and conflicts inside the plan resolve against it. No reachable spec → `bd update <epic-id> --append-notes "No spec reachable — rulings are provisional"`.
 5. **REQUIRED SUB-SKILL:** load beads-superpowers:test-driven-development now, before Task 1. It governs every step of every task below; a plan whose steps already say "write the failing test first" does not exempt you from reading it.
-6. Pre-flight scan: for every task that consumes what an earlier task produces, one row — the two tasks, what one produces against what the other consumes, what you found — appended with `bd update <epic-id> --append-notes "Pre-flight: <row>"`. Tasks that share nothing get no row; a plan whose tasks share nothing gets the single line `Pre-flight: no shared interfaces`. Rule on each conflict the spec settles; escalate the rest. Record each ruling beside its row. Each task's own text is checked when you read its brief, not here.
+6. **Read `references/preflight.md` (in this skill's directory) before the pre-flight scan** — one epic-notes row per shared interface; rule only what the spec settles.
 
 ## The Task Loop
 
@@ -173,56 +143,7 @@ The stops above are the only reasons to stop the run; a blocker on a single task
 
 ## Example Workflow
 
-```
-You: I'm using the executing-plans skill to implement this plan inline.
-
-[Setup: feature branch verified; workspace .internal/sdd/feature-plan/ resolved — sibling plan directories left alone]
-[No open epic anchored "Plan: .internal/plans/feature-plan.md" — fresh: epic created, 5 tasks imported, ordering wired]
-[Read plan once; spec read; test-driven-development loaded]
-[Pre-flight scan: 2 shared-interface rows, clean; appended to the epic's notes]
-
-Task 1: Hook installation script
-
-[bd ready --parent <epic-id> --claim → Task 1; brief read; BASE a1b2c3d]
-[Step 1: write failing test — written]
-[Step 2: run it — FAIL: install_hook not defined. Matches Expected.]
-[Step 3: implement — written]
-[Step 4: run it — PASS 1/1. Matches Expected.]
-[Step 5: commit — d4e5f6a]
-[Contract: tests ran, output read, no deviations]
-[npm test -- hooks → task-1-tests.log, 1/1 pass; bd close: complete (commits a1b2c3d..d4e5f6a, tests: npm test -- hooks → 1/1 pass; rulings: 0)]
-
-Task 2: Recovery modes
-
-[Claimed; heartbeat on regaining control; brief read; BASE d4e5f6a]
-[Step 2: run failing test — FAIL, but on an import error: Task 1 exported
- installHook, the brief consumes install_hook]
-[Task 2: Ruling: use installHook — settled by spec §Hook API, which names installHook — cost if wrong: one rename; appended to the epic's notes]
-[Steps 2-5 as planned; commit b7c8d9e]
-[npm test -- recovery → task-2-tests.log, 8/8 pass; bd close: complete (commits d4e5f6a..b7c8d9e, tests: npm test -- recovery → 8/8 pass; rulings: 1)]
-
-...
-
-[No open children under the epic: review-package plan MERGE_BASE HEAD, completion lines appended; dispatch code-reviewer on the most capable tier]
-Reviewer: One Important finding — progress reporting interval hardcoded. Two Minor.
-[Re-grade by effect: Important stands; minors → epic notes as deferred]
-[Fix pass: test_progress_interval_configurable RED → extract PROGRESS_INTERVAL → GREEN; suite 12/12; commit]
-[Epic notes: Final: fixed hardcoded interval — test_progress_interval_configurable RED→GREEN, suite 12/12]
-
-Rulings I made:
-- Task 2: install_hook → installHook — settled by spec §Hook API — cost if wrong: one rename
-
-Deferred minors:
-- README lacks a usage example
-- recovery.js could split verify/repair into two files
-
-Fixes applied:
-- hardcoded interval — test_progress_interval_configurable RED→GREEN, suite 12/12
-
-[Delete this plan's workspace — git and beads are the record now; sibling plan directories untouched]
-
-Using beads-superpowers:finishing-a-development-branch.
-```
+**Read `references/example-workflow.md` (in this skill's directory) before your first task** — a worked inline run, start to finish.
 
 ## Red Flags
 
