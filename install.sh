@@ -1266,22 +1266,190 @@ do_uninstall() {
       rm -rf "$HOOKS_DIR/beads-superpowers"
       info "Removed hook scripts"
 
-      if [ -f "$SETTINGS_FILE" ] && command -v python3 >/dev/null 2>&1; then
-        cp -f "$SETTINGS_FILE" "${SETTINGS_FILE}.backup-$(date +%Y%m%d-%H%M%S)"
-        python3 << PYEOF
-import json
-sf = "$SETTINGS_FILE"
-with open(sf) as f:
-    settings = json.load(f)
-hooks = settings.get("hooks", {})
-for key in ["SessionStart", "UserPromptSubmit"]:
-    if key in hooks:
-        hooks[key] = [e for e in hooks[key] if "beads-superpowers" not in json.dumps(e)]
-with open(sf, "w") as f:
-    json.dump(settings, f, indent=2)
-    f.write("\n")
+      if [ -e "$SETTINGS_FILE" ]; then
+        if command -v python3 >/dev/null 2>&1; then
+          local rc=0 kept=""
+          # Path on argv, never spliced into source; `|| rc=$?` survives `set -e`.
+          kept=$(python3 - "$SETTINGS_FILE" << 'PYEOF'
+import io, json, os, sys, time
+
+# No exception text or content is ever printed, on any path. Exit 3: the file
+# was not changed and no backup is left. Exit 6: a failed write was undone
+# with no error, checked byte-for-byte and the backup removed; exit 7: the
+# same, but the backup could not be removed. Exit 5: undoing the write hit an
+# error or does not match; exit 8: closing the file failed after it was
+# written. On 5 and 8 the file may have changed and the backup is kept. Once
+# the backup is verified its suffix is on stdout.
+def intact(sf, raw):
+    try:
+        with open(sf, "rb") as f:
+            return f.read() == raw
+    except OSError:
+        return False
+
+def shut(fd):
+    try:
+        os.close(fd)
+        return True
+    except Exception:
+        return False
+
+def flush_drive(fd):
+    # macOS fsync does not flush the drive's cache; F_FULLFSYNC does. Best effort.
+    try:
+        import fcntl
+        fcntl.fcntl(fd, fcntl.F_FULLFSYNC)
+    except Exception:
+        pass
+
+def sync_dir(path):
+    # Best effort: keeps the backup's directory entry across a power loss.
+    try:
+        dfd = os.open(os.path.dirname(path) or ".", os.O_RDONLY)
+    except Exception:
+        return
+    try:
+        os.fsync(dfd)
+        flush_drive(dfd)
+    except Exception:
+        pass
+    shut(dfd)
+
+def put(fd, data):
+    os.lseek(fd, 0, os.SEEK_SET)
+    view = memoryview(data)
+    while view:
+        view = view[os.write(fd, view):]
+    os.ftruncate(fd, len(data))
+    os.fsync(fd)
+
+def get(fd):
+    os.lseek(fd, 0, os.SEEK_SET)
+    chunks = []
+    while True:
+        chunk = os.read(fd, 65536)
+        if not chunk:
+            return b"".join(chunks)
+        chunks.append(chunk)
+
+def main(sf):
+    try:
+        with open(sf, "rb") as f:
+            raw = f.read()
+        # Decoded as register_hook's open(sf) decodes it, so a BOM or a
+        # UTF-16/32 file is refused here as it is at install.
+        settings = json.loads(io.TextIOWrapper(io.BytesIO(raw)).read())
+        hooks = settings.get("hooks") if isinstance(settings, dict) else None
+        changed = False
+        if isinstance(hooks, dict):
+            for key in ["SessionStart", "UserPromptSubmit"]:
+                entries = hooks.get(key)
+                if isinstance(entries, list):
+                    kept = [e for e in entries if "beads-superpowers" not in json.dumps(e)]
+                    if len(kept) != len(entries):
+                        hooks[key] = kept
+                        changed = True
+        if not changed:
+            return 4
+        new = (json.dumps(settings, indent=2) + "\n").encode()
+    except Exception:
+        # Unreadable, not valid JSON (empty included), or too deeply nested.
+        return 3
+    # The file is rewritten in place (same inode, through any symlink), as
+    # register_hook writes it, so its owner, group, ACLs, xattrs and hard
+    # links are kept. Nothing is written to it until a backup of the exact
+    # bytes parsed has been made, read back and made durable. O_EXCL: a
+    # backup that already has this name is not ours and is never written or
+    # removed. The backup is 0600: it never carries more access than the file.
+    suffix = time.strftime("backup-%Y%m%d-%H%M%S")
+    backup = f"{sf}.{suffix}"
+    made = False
+    try:
+        fd = os.open(sf, os.O_RDWR)  # a read-only file is refused here
+    except Exception:
+        return 3
+    try:
+        if get(fd) != raw:
+            raise OSError("changed since it was parsed")
+        bfd = os.open(backup, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        made = True
+        try:
+            put(bfd, raw)
+            flush_drive(bfd)
+        except Exception:
+            shut(bfd)
+            raise
+        if not shut(bfd) or not intact(backup, raw):
+            raise OSError("backup not verified")
+        sync_dir(backup)
+        print(suffix, flush=True)
+    except Exception:
+        # Nothing was written to the file, so a failed close cannot matter.
+        if made:
+            try:
+                os.remove(backup)
+            except Exception:
+                pass
+        shut(fd)
+        return 3
+    try:
+        put(fd, new)
+        done = get(fd) == new
+    except Exception:
+        done = False
+    if done:
+        return 0 if shut(fd) else 8
+    # Undo: the backup is removed only if writing the original back raised
+    # nothing (write, truncate, fsync), it reads back byte-identical, and the
+    # file closed cleanly. Anything else keeps the backup.
+    try:
+        put(fd, raw)
+        undone = get(fd) == raw
+    except Exception:
+        undone = False
+    if not shut(fd):
+        return 8
+    if not undone or not intact(sf, raw):
+        return 5
+    try:
+        os.remove(backup)
+    except Exception:
+        return 7
+    return 6
+
+try:
+    code = main(sys.argv[1])
+except BaseException:
+    code = 1
+try:
+    sys.stdout.flush()
+except BaseException:
+    pass
+os._exit(code)
 PYEOF
-        info "Removed hooks from settings.json"
+) || rc=$?
+          if [ "$rc" = 0 ]; then
+            info "Removed hooks from settings.json"
+          elif [ "$rc" = 3 ]; then
+            warn "$SETTINGS_FILE could not be read, parsed or rewritten, so it was left unchanged: the beads-superpowers hook entries were NOT removed. Fix the file, its permissions or free disk space, then re-run --uninstall."
+          elif [ "$rc" = 6 ]; then
+            warn "$SETTINGS_FILE could not be rewritten, so its original contents were restored and checked byte-for-byte; its contents were left unchanged: the beads-superpowers hook entries were NOT removed. Fix the file, its permissions or free disk space, then re-run --uninstall."
+          elif [ "$rc" = 7 ]; then
+            warn "$SETTINGS_FILE could not be rewritten, so its original contents were restored and checked byte-for-byte; its contents were left unchanged: the beads-superpowers hook entries were NOT removed. An identical copy of the file remains at $SETTINGS_FILE.$kept because it could not be deleted; you can delete it. Fix the file, its permissions or free disk space, then re-run --uninstall."
+          elif [ "$rc" = 5 ]; then
+            warn "$SETTINGS_FILE could not be rewritten, and its original contents could not be restored or the restore could not be confirmed: the beads-superpowers hook entries were NOT removed. The original is kept in $SETTINGS_FILE.$kept; copy it back over $SETTINGS_FILE before re-running --uninstall."
+          elif [ "$rc" = 8 ]; then
+            warn "$SETTINGS_FILE was written but closing it failed, so its contents may have changed: the beads-superpowers hook entries may NOT have been removed. Its previous contents are kept in $SETTINGS_FILE.$kept. Check the file; if it is damaged, copy that backup back over it, then re-run --uninstall."
+          elif [ "$rc" != 4 ]; then
+            # Name the backup only if it is there now: a run stopped after
+            # removing it must not point at a file that does not exist.
+            if [ -n "$kept" ] && [ -f "$SETTINGS_FILE.$kept" ]; then
+              warn "The cleanup of $SETTINGS_FILE stopped unexpectedly: check it for beads-superpowers hook entries before re-running --uninstall. A copy of its previous contents was saved in $SETTINGS_FILE.$kept."
+            else
+              warn "The cleanup of $SETTINGS_FILE stopped unexpectedly: check it for beads-superpowers hook entries before re-running --uninstall."
+            fi
+          fi
+        fi
       fi
       ;;
   esac
