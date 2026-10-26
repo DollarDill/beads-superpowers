@@ -1435,7 +1435,13 @@ PYEOF
           elif [ "$rc" = 6 ]; then
             warn "$SETTINGS_FILE could not be rewritten, so its original contents were restored and checked byte-for-byte; its contents were left unchanged: the beads-superpowers hook entries were NOT removed. Fix the file, its permissions or free disk space, then re-run --uninstall."
           elif [ "$rc" = 7 ]; then
-            warn "$SETTINGS_FILE could not be rewritten, so its original contents were restored and checked byte-for-byte; its contents were left unchanged: the beads-superpowers hook entries were NOT removed. An identical copy of the file remains at $SETTINGS_FILE.$kept because it could not be deleted; you can delete it. Fix the file, its permissions or free disk space, then re-run --uninstall."
+            # Name the copy only if it is there now: the removal that reported
+            # a failure may still have removed it.
+            if [ -n "$kept" ] && [ -f "$SETTINGS_FILE.$kept" ]; then
+              warn "$SETTINGS_FILE could not be rewritten, so its original contents were restored and checked byte-for-byte; its contents were left unchanged: the beads-superpowers hook entries were NOT removed. An identical copy of the file remains at $SETTINGS_FILE.$kept because it could not be deleted; you can delete it. Fix the file, its permissions or free disk space, then re-run --uninstall."
+            else
+              warn "$SETTINGS_FILE could not be rewritten, so its original contents were restored and checked byte-for-byte; its contents were left unchanged: the beads-superpowers hook entries were NOT removed. Fix the file, its permissions or free disk space, then re-run --uninstall."
+            fi
           elif [ "$rc" = 5 ]; then
             warn "$SETTINGS_FILE could not be rewritten, and its original contents could not be restored or the restore could not be confirmed: the beads-superpowers hook entries were NOT removed. The original is kept in $SETTINGS_FILE.$kept; copy it back over $SETTINGS_FILE before re-running --uninstall."
           elif [ "$rc" = 8 ]; then
