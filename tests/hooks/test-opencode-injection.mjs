@@ -19,6 +19,7 @@ import { fileURLToPath } from "node:url"
 import { dirname, join } from "node:path"
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, realpathSync, readdirSync, accessSync, constants } from "node:fs"
 import { tmpdir } from "node:os"
+import { execFileSync } from "node:child_process"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = join(__dirname, "../..")
@@ -26,12 +27,13 @@ const realPluginPath = join(repoRoot, ".opencode/plugins/beads-superpowers.js")
 const pluginSrc = readFileSync(realPluginPath, "utf-8")
 
 // Test 0a: exec-target — composeBootstrap execs the canonical composer, not a
-// reimplementation. Exactly one execSync call targets hooks/session-start
-// --emit-plain (one source of truth; a bd-prime-style dump must not be
-// reimplemented here). Matches across the multi-line template literal.
-const execTargetRe = /execSync\(\s*`[^`]*hooks\/session-start[^`]*--emit-plain[^`]*`/g
+// reimplementation. Exactly one execSync call targets session-start
+// --emit-plain, through the hooks/run-hook.cmd launcher (one source of truth;
+// a bd-prime-style dump must not be reimplemented here). Matches across the
+// multi-line template literal.
+const execTargetRe = /execSync\(\s*`[^`]*hooks\/run-hook\.cmd[^`]* session-start --emit-plain[^`]*`/g
 const execTargetMatches = pluginSrc.match(execTargetRe) || []
-assert.strictEqual(execTargetMatches.length, 1, "exactly one execSync call targets hooks/session-start --emit-plain")
+assert.strictEqual(execTargetMatches.length, 1, "exactly one execSync call targets hooks/run-hook.cmd session-start --emit-plain")
 assert.ok(!pluginSrc.includes("bdPrime"), "bdPrime() must not exist — composeBootstrap replaces it")
 console.log("PASS: exec-target — single execSync call to the canonical hook with --emit-plain")
 
@@ -79,6 +81,9 @@ function buildFixture(withHook, envBash = false) {
       ? "#!/usr/bin/env bash\nprintf '%s\\n' '" + stubPayload + "'\n"
       : "#!/bin/sh\ncat <<'STUBEOF'\n" + stubPayload + "\nSTUBEOF\n"
     writeFileSync(join(hooksDir, "session-start"), stub, { mode: 0o755 })
+    // The plugin starts the composer through the real launcher, which picks
+    // a bash outside the project.
+    writeFileSync(join(hooksDir, "run-hook.cmd"), readFileSync(join(repoRoot, "hooks/run-hook.cmd")), { mode: 0o755 })
   }
 
   return { root, pluginPath }
@@ -155,14 +160,20 @@ const plantedRan = () => {
   return ran.map(m => m.replace(/^ran-/, ""))
 }
 // Whether the cleaned PATH (its absolute entries, else /usr/bin:/bin) holds a
-// bash: then the composer runs; otherwise the plugin falls back (macOS has no
-// /usr/bin/bash, a merged-/usr Linux does).
+// bash: then the composer runs (macOS has no /usr/bin/bash, a merged-/usr
+// Linux does).
 const bashOnCleanPath = (p) => {
   const abs = p.split(":").filter(e => e.startsWith("/"))
   return (abs.length ? abs : ["/usr/bin", "/bin"]).some(e => {
     try { accessSync(join(e, "bash"), constants.X_OK); return true } catch { return false }
   })
 }
+// The plugin runs the launcher with /bin/sh. With no usable bash on PATH the
+// launcher falls back to $BASH: /bin/sh sets it when it is bash (macOS), so
+// the composer still runs under it; dash leaves it unset, so the plugin falls
+// back to the pointer.
+const shSetsBash = execFileSync("/bin/sh", ["-c", 'printf %s "${BASH-}"'], { encoding: "utf8", env: process.env }) !== ""
+const composerRuns = (p) => bashOnCleanPath(p) || shSetsBash
 const savedPath = process.env.PATH
 const savedCwd = process.cwd()
 try {
@@ -185,7 +196,7 @@ try {
       }
       const what = `${withHook ? "composer" : "bd fallback"}, PATH='${p}'`
       assert.deepStrictEqual(plantedRan(), [], `planted binary ran (${what})`)
-      if (withHook && bashOnCleanPath(p)) {
+      if (withHook && composerRuns(p)) {
         assert.strictEqual(text, stubPayload, `composer payload injected (${what})`)
       } else {
         assert.ok(text.includes("EXTREMELY_IMPORTANT") && text.includes("session composer unavailable"),
@@ -221,6 +232,54 @@ try {
   assert.deepStrictEqual(plantedRan(), ["tildebash"], "PATH='~/bin' resolves bash in $HOME/bin")
   assert.strictEqual(text, stubPayload, "composer payload injected (PATH='~/bin')")
   console.log("PASS: a ~/bin PATH entry maps to $HOME/bin")
+
+  // --- an absolute PATH entry inside the project (security review #8) ---
+  // The cleaned PATH keeps absolute entries, and one can sit inside the
+  // project (<proj>/node_modules/.bin from npm exec, direnv PATH_add). The
+  // composer must start with the launcher's containment walk: the planted
+  // bash never runs, and a bash further down PATH runs the composer. With the
+  // planted one the only bash on PATH, the launcher's $BASH fallback decides
+  // (see shSetsBash).
+  const proj = realpathSync(mkdtempSync(join(tmpdir(), "bsp-oc-proj-")))
+  mkdirSync(join(proj, ".git"))
+  const nmbin = join(proj, "node_modules/.bin")
+  mkdirSync(nmbin, { recursive: true })
+  writeFileSync(join(nmbin, "bash"), `#!/bin/sh\n: > "${markers}/ran-nmbash"\n`, { mode: 0o755 })
+  try {
+    for (const p of [`${nmbin}:/usr/bin:/bin`, nmbin]) {
+      const fp = buildFixture(true, true)
+      process.chdir(proj)
+      process.env.PATH = p
+      let textP, compactP
+      try {
+        const { BeadsSuperpowersPlugin: PluginP } = await import(fp.pluginPath)
+        const hooksP = await PluginP({ client: {}, directory: proj })
+        const outP = { messages: [{ info: { role: "user" }, parts: [{ type: "text", text: "hi" }] }] }
+        await hooksP["experimental.chat.messages.transform"]({}, outP)
+        textP = outP.messages[0].parts[0].text
+        const compaction = { context: [] }
+        await hooksP["experimental.session.compacting"]({}, compaction)
+        compactP = compaction.context[0]
+      } finally {
+        process.env.PATH = savedPath
+        process.chdir(savedCwd)
+        rmSync(fp.root, { recursive: true, force: true })
+      }
+      const what = `in-project PATH entry, PATH='${p.replace(proj, "<proj>")}'`
+      assert.deepStrictEqual(plantedRan(), [], `planted binary ran (${what})`)
+      // The planted bash is refused, so only the bashes after it count.
+      if (composerRuns(p === nmbin ? "/nonexistent" : "/usr/bin:/bin")) {
+        assert.strictEqual(textP, stubPayload, `composer payload injected (${what})`)
+        assert.strictEqual(compactP, stubPayload, `compaction re-composes (${what})`)
+      } else {
+        assert.ok(textP.includes("EXTREMELY_IMPORTANT") && textP.includes("session composer unavailable"),
+          `fallback pointer injected (${what}): ${textP}`)
+      }
+      console.log(`PASS: planted bash never runs (${what})`)
+    }
+  } finally {
+    rmSync(proj, { recursive: true, force: true })
+  }
 
   // --- Windows spawns nothing (P1) ---
   // CreateProcess and cmd.exe search the cwd before PATH, which no env can

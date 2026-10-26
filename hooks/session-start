@@ -198,8 +198,12 @@ if [ ! -t 0 ]; then
     done
     bsp_stdin="${bsp_stdin}${bsp_line}"   # capture final unterminated line (read rc=1 leaves partial content)
 fi
-bsp_sid=$(printf '%s' "$bsp_stdin" | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | tr -cd 'a-zA-Z0-9_-' | cut -c1-64) || bsp_sid=""
-bsp_src=$(printf '%s' "$bsp_stdin" | sed -n 's/.*"source"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'     | tr -cd 'a-zA-Z0-9_-' | cut -c1-32) || bsp_src=""
+# A failed pipeline (sed, tr or cut missing) cannot tell events apart, so it
+# skips the dedup marker (inject): dedup may duplicate an injection, never
+# suppress one. A pipeline that ran but found no id still dedups (below).
+bsp_ids_ok=1
+bsp_sid=$(printf '%s' "$bsp_stdin" | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | tr -cd 'a-zA-Z0-9_-' | cut -c1-64) || { bsp_sid=""; bsp_ids_ok=0; }
+bsp_src=$(printf '%s' "$bsp_stdin" | sed -n 's/.*"source"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'     | tr -cd 'a-zA-Z0-9_-' | cut -c1-32) || { bsp_src=""; bsp_ids_ok=0; }
 # PPID-keyed fallback: duplicate registrations for the SAME event share a parent
 # (the harness process) → still dedup; different sessions = different harness
 # processes (different PPIDs) → never collide on one global "nosid" bucket.
@@ -216,7 +220,7 @@ bsp_suppress=0
 # user can pre-create it as a symlink (chmod and the marker would follow it) or
 # as their own directory. Either way, skip dedup and inject.
 bsp_marker_ok=0
-if [[ "$bsp_uid" =~ ^[0-9]+$ ]] \
+if [ "$bsp_ids_ok" = "1" ] && [[ "$bsp_uid" =~ ^[0-9]+$ ]] \
    && mkdir -p "$bsp_marker_dir" 2>/dev/null \
    && [ ! -L "$bsp_marker_dir" ] && [ -O "$bsp_marker_dir" ] \
    && chmod 700 "$bsp_marker_dir" 2>/dev/null; then
