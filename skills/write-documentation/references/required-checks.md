@@ -1,0 +1,18 @@
+# Required Checks
+
+Read this when you run workflow Step 4, the revision checks that scale to the length and stakes of a piece.
+
+Run during revision (workflow Step 4). For pieces up to about 150 words or three short paragraphs, run checks 1-3, 5, 7, and 10. For longer pieces, run all checks. Do not output the audit unless asked.
+
+1. **Register fit.** Does the format, punctuation, formatting, and level of structure match the medium and the user's request? For web, docs, or UI text, did you preserve scannability and accessibility instead of flattening the piece for style reasons?
+2. **Concrete-anchor audit.** For each substantial paragraph, point to one concrete anchor. In criticism, reportage, reviews, and analysis, at least one paragraph in the whole piece should be built around a single concrete example or observed consequence rather than category summary. If you cannot point to that paragraph, add one.
+3. **Fact discipline.** Pick the three most fragile factual claims in the piece: dates, milestone names, quotes, close paraphrases, public metrics, future claims, causal trend claims. If you cannot vouch for them, attribute them, soften them, or cut them. If a citation or source is present, confirm it supports the exact claim rather than a nearby topic.
+4. **Source-fit check.** For factual writing, check every exact quote, close paraphrase, public metric, planned/future event, and causal claim. Do not keep `X caused Y`, `X drove Y`, or `X proved Y` unless the source supports the relationship. Use weaker relationship language only when that weaker claim is still accurate.
+5. **Regularity and sentence-continuity tripwire.** Name the single most repeated visible pattern in the piece. If the same move appears 3 or more times, or dominates two consecutive paragraphs, rewrite at least one occurrence. Also scan for false crispness: two or more neighboring short sentences whose thoughts are tightly related but split apart. If a comma, conjunction, subordinate clause, colon, or semicolon would express the relationship more naturally, combine one pair. If the period creates useful emphasis or clarity, keep it.
+6. **Repeated-frame check.** If a central metaphor, contrast, or wording family appears throughout the piece, decide whether it is a useful motif or a too-neat scaffold. Keep it only where it adds force; vary or cut the rest.
+7. **Stance and voice.** If the genre expects a visible writer or evaluative stance, state the writer's view in one sentence to yourself. If you cannot, add stance where it does real work. If the genre expects neutrality, did you keep it neutral?
+8. **Developed thought.** For any piece longer than four paragraphs, identify one place where the prose pauses, doubles back, or notices a concrete detail off the main line. If the piece runs in a perfectly straight line from claim to conclusion, see whether one example or noticed detail would make it less pre-solved.
+9. **Shape and spine.** For any piece longer than three paragraphs, state the organizing principle in five words or fewer and the controlling claim in one sentence. If the shape is basically `starting state -> changes -> verdict`, if paragraphs map one-to-one with named milestones, or if each paragraph is just one labeled topic bucket, restructure.
+10. **Over-correction.** Did you add fake-human moves (typos, slang, forced asides, random fragments, or artificial sentence-length targets) just to break a pattern?
+
+These are tripwires, not goals. Use them to catch genericity, visible regularity, false specificity, and modular structure, not to manufacture variation for its own sake.
