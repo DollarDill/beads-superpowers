@@ -1239,11 +1239,12 @@ def main(op, prefix, sf, args):
     # The file is rewritten in place (same inode, through any symlink), so its
     # owner, group, ACLs, xattrs and hard links are kept. Nothing is written
     # to it until a backup of the exact bytes parsed has been made, read back
-    # and made durable. O_EXCL: a backup that already has this name is not
-    # ours and is never written or removed. The backup is 0600: it never
-    # carries more access than the file.
-    suffix = prefix + time.strftime("-%Y%m%d-%H%M%S")
-    backup = f"{sf}.{suffix}"
+    # and made durable. O_EXCL: a name that is already taken is not ours and
+    # is never written or removed; the stamp has 1-second resolution, so a
+    # taken name (an earlier op in the same second) moves on to the stamp
+    # plus -1, -2 ... -99. The backup is 0600: it never carries more access
+    # than the file.
+    stamp = prefix + time.strftime("-%Y%m%d-%H%M%S")
     made = False
     try:
         fd = os.open(sf, os.O_RDWR)  # a read-only file is refused here
@@ -1252,7 +1253,16 @@ def main(op, prefix, sf, args):
     try:
         if get(fd) != raw:
             raise OSError("changed since it was parsed")
-        bfd = os.open(backup, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        for n in range(100):
+            suffix = stamp if n == 0 else f"{stamp}-{n}"
+            backup = f"{sf}.{suffix}"
+            try:
+                bfd = os.open(backup, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+                break
+            except FileExistsError:
+                continue
+        else:
+            raise OSError("every backup name is taken")
         made = True
         try:
             put(bfd, raw)

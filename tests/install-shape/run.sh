@@ -36,6 +36,9 @@ if [ "$TARGET" = "all" ]; then
   echo "═══ install-settings"
   if bash "$HERE/test-install-settings.sh"; then echo "═══ install-settings PASS"; else echo "═══ install-settings FAIL"; total_rc=1; fi
   echo
+  echo "═══ backup-collision"
+  if bash "$HERE/test-backup-collision.sh"; then echo "═══ backup-collision PASS"; else echo "═══ backup-collision FAIL"; total_rc=1; fi
+  echo
   echo "═══ hook-shim-bash"
   if bash "$HERE/test-hook-shim-bash.sh"; then echo "═══ hook-shim-bash PASS"; else echo "═══ hook-shim-bash FAIL"; total_rc=1; fi
   echo

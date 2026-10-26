@@ -247,7 +247,9 @@ if grep -q "beads-superpowers" "$h/dotfiles/settings.json" || ! grep -q "echo fo
 if ! grep -q "Removed hooks from settings.json" "$log"; then echo "FAIL [symlink]: no removal message"; fail=1; fi
 
 # A read-only backup that already has this run's one-second name is not ours:
-# it must survive, byte-identical. Names are pre-made for the next 30 seconds.
+# it must survive, byte-identical, and the uninstall still happens behind a
+# backup under a free name (the stamp plus -1). Names are pre-made for the
+# next 30 seconds.
 setup
 printf '%s' "$WITH_ENTRIES" >"$h/.claude/settings.json"
 before=$(sha "$h/.claude/settings.json")
@@ -262,11 +264,20 @@ for i in range(30):
 PY
 run_uninstall
 if [ "$rc" != 0 ]; then echo "FAIL [pre-existing backup]: exit $rc"; sed -n '1,25p' "$log"; fail=1; fi
-if [ "$(backups "$h")" != 30 ]; then echo "FAIL [pre-existing backup]: expected the 30 pre-existing backups, found $(backups "$h")"; fail=1; fi
-if grep -L -x "pre-existing" "$h/.claude/settings.json.backup-"* 2>/dev/null | grep -q .; then echo "FAIL [pre-existing backup]: a pre-existing backup was overwritten"; fail=1; fi
-if [ "$before" != "$(sha "$h/.claude/settings.json")" ]; then echo "FAIL [pre-existing backup]: settings file was modified"; fail=1; fi
-if ! grep -q "$h/.claude/settings.json.*NOT removed" "$log"; then echo "FAIL [pre-existing backup]: no warning naming the file and 'NOT removed'"; fail=1; fi
-if grep -q "Removed hooks from settings.json" "$log"; then echo "FAIL [pre-existing backup]: claimed hooks were removed"; fail=1; fi
+if [ "$(backups "$h")" != 31 ]; then echo "FAIL [pre-existing backup]: expected the 30 pre-existing backups and one new one, found $(backups "$h")"; fail=1; fi
+if [ "$(grep -l -x "pre-existing" "$h/.claude/settings.json.backup-"* 2>/dev/null | wc -l | tr -d ' ')" != 30 ]; then echo "FAIL [pre-existing backup]: a pre-existing backup was overwritten or removed"; fail=1; fi
+for b in "$h/.claude/settings.json.backup-"*; do
+  if [ -f "$b" ] && ! grep -q -x "pre-existing" "$b"; then
+    case "$b" in
+      *-[0-9][0-9][0-9][0-9][0-9][0-9]-1) ;;
+      *) echo "FAIL [pre-existing backup]: the new backup is not the stamp plus -1: ${b##*/}"; fail=1 ;;
+    esac
+    if [ "$before" != "$(sha "$b")" ]; then echo "FAIL [pre-existing backup]: the new backup does not hold the original bytes"; fail=1; fi
+  fi
+done
+if grep -q "beads-superpowers" "$h/.claude/settings.json" || ! grep -q "echo foreign" "$h/.claude/settings.json"; then echo "FAIL [pre-existing backup]: settings not cleaned"; fail=1; fi
+if grep -q "NOT removed" "$log"; then echo "FAIL [pre-existing backup]: the uninstall was refused"; fail=1; fi
+if ! grep -q "Removed hooks from settings.json" "$log"; then echo "FAIL [pre-existing backup]: no removal message"; fail=1; fi
 
 # The file itself is rewritten in place (same inode), so what hangs off the
 # inode is kept: hard links, the group, ACL entries, extended attributes.
