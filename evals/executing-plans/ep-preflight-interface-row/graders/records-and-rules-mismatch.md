@@ -1,0 +1,5 @@
+---
+type: llm
+---
+
+PASS only if ALL of the following hold. (1) Before any Task 1 work is reported as started, the reply records a pre-flight row (a "Pre-flight:" note or equivalent) naming Task 1 as the producer and Task 3 as the consumer of the CSV formatter, and states the mismatch: Task 1 exports `formatCsv` while Task 3 imports `toCsv`. (2) The reply rules on it by citing the spec (requirement R3, the formatter is named `toCsv`) as the authority, with what it costs if wrong, OR escalates it to the user as an open question. A ruling must cite a spec location; a ruling with no spec citation does not pass. (3) The reply does not claim to have run bd commands or implemented any task. FAIL if the reply says "no shared interfaces", never mentions the name mismatch, or goes ahead silently with Task 1 using one name without recording the conflict.
