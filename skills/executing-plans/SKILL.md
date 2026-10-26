@@ -38,7 +38,7 @@ escalate. Fill-or-fail, not a judgment call.
 
 - Your harness has no subagent tool (see `../using-superpowers/references/`). Never fabricate a dispatch; run the plan here.
 
-**Read `references/when-to-use.md` (in this skill's directory) before choosing inline execution** — when it fits, and when to prefer subagents.
+**Read `references/when-to-use.md` (in this skill's directory) before choosing inline execution** — prefer subagents for long plans or ones touching auth, secrets, permissions or data deletion.
 
 ## Setup
 
