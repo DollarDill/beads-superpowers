@@ -337,34 +337,93 @@ else
 fi
 
 # Fault injection into the in-place write (python3 - honours PYTHONPATH, so a
-# sitecustomize.py wraps os.write for the settings file only). The first
-# write stops halfway with an error; later writes succeed (restore works) or
-# also fail (restore impossible).
+# sitecustomize.py wraps os calls for the settings file or its backup only).
+# BSP_FAULT_MODE is a comma-separated set of faults:
+#   partial         the first write stops halfway with an error
+#   restore-fails   every later write fails
+#   restore-raises  every later write completes, then raises
+#   fsync           every fsync of the settings file raises
+#   close           closing the settings file closes it, then raises
+#   unlink          removing a backup raises
+#   trace           no fault; append write / dirsync / fullfsync to $BSP_FAULT_LOG
 FI="$SANDBOX/fi"; mkdir -p "$FI"
 cat >"$FI/sitecustomize.py" <<'PY'
-import errno, os
+import errno, os, stat
 _path = os.environ.get("BSP_FAULT_PATH")
-_mode = os.environ.get("BSP_FAULT_MODE")
-_real = os.write
-_hits = [0]
-def _write(fd, data):
+_mode = set((os.environ.get("BSP_FAULT_MODE") or "").split(","))
+_log = os.environ.get("BSP_FAULT_LOG")
+def _note(what):
+    if "trace" in _mode and _log:
+        with open(_log, "a") as f:
+            f.write(what + "\n")
+def _kind(fd):
     try:
-        ours = _path is not None and os.path.samestat(os.fstat(fd), os.stat(_path))
+        st = os.fstat(fd)
     except OSError:
-        ours = False
-    if ours:
+        return None
+    if stat.S_ISDIR(st.st_mode):
+        try:
+            return "dir" if os.path.samestat(st, os.stat(os.path.dirname(_path))) else None
+        except (OSError, TypeError):
+            return None
+    return "file" if stat.S_ISREG(st.st_mode) else None
+try:
+    import fcntl
+    _fcntl = fcntl.fcntl
+    def _fc(fd, op, *a):
+        if op == getattr(fcntl, "F_FULLFSYNC", None) and _kind(fd) == "file" and not _ours(fd):
+            _note("fullfsync")
+        return _fcntl(fd, op, *a)
+    fcntl.fcntl = _fc
+except ImportError:
+    pass
+_write, _fsync, _close, _remove, _unlink = os.write, os.fsync, os.close, os.remove, os.unlink
+_hits = [0]
+def _ours(fd):
+    try:
+        return _path is not None and os.path.samestat(os.fstat(fd), os.stat(_path))
+    except OSError:
+        return False
+def _fail():
+    raise OSError(errno.EIO, "injected")
+def write(fd, data):
+    if _ours(fd):
+        _note("write")
         _hits[0] += 1
-        if _hits[0] == 1:
-            _real(fd, bytes(data)[: max(1, len(data) // 2)])
-            raise OSError(errno.EIO, "injected")
-        if _mode == "restore-fails":
-            raise OSError(errno.EIO, "injected")
-    return _real(fd, data)
-os.write = _write
+        if _hits[0] == 1 and "partial" in _mode:
+            _write(fd, bytes(data)[: max(1, len(data) // 2)])
+            _fail()
+        if _hits[0] > 1 and "restore-fails" in _mode:
+            _fail()
+        if _hits[0] > 1 and "restore-raises" in _mode:
+            view = memoryview(data)
+            while view:
+                view = view[_write(fd, view):]
+            _fail()
+    return _write(fd, data)
+def fsync(fd):
+    if _kind(fd) == "dir":
+        _note("dirsync")
+    if "fsync" in _mode and _ours(fd):
+        _fail()
+    return _fsync(fd)
+def close(fd):
+    ours = "close" in _mode and _ours(fd)
+    _close(fd)
+    if ours:
+        _fail()
+def _rm(real):
+    def rm(p, *a, **k):
+        if "unlink" in _mode and ".backup-" in str(p):
+            _fail()
+        return real(p, *a, **k)
+    return rm
+os.write, os.fsync, os.close = write, fsync, close
+os.remove, os.unlink = _rm(_remove), _rm(_unlink)
 PY
 fault_run() {
   HOME="$h" BEADS_SUPERPOWERS_SKILLS_DIR="$h/skills" PYTHONPATH="$FI" \
-    BSP_FAULT_PATH="$h/.claude/settings.json" BSP_FAULT_MODE="$1" \
+    BSP_FAULT_PATH="$h/.claude/settings.json" BSP_FAULT_MODE="$1" BSP_FAULT_LOG="$h.trace" \
     bash "$REPO_ROOT/install.sh" --uninstall >"$log" 2>&1
   rc=$?
 }
@@ -383,7 +442,7 @@ fault_common() {
 setup
 printf '%s' "$WITH_ENTRIES" >"$h/.claude/settings.json"
 before=$(sha "$h/.claude/settings.json")
-fault_run restore-works
+fault_run partial
 fault_common "write fails, restored"
 if [ "$before" != "$(sha "$h/.claude/settings.json")" ]; then echo "FAIL [write fails, restored]: settings file not byte-identical to the original"; fail=1; fi
 if [ "$(backups "$h")" != 0 ]; then echo "FAIL [write fails, restored]: stray backup left"; fail=1; fi
@@ -394,7 +453,7 @@ if ! grep -q "$h/.claude/settings.json.*original contents were restored" "$log";
 setup
 printf '%s' "$WITH_ENTRIES" >"$h/.claude/settings.json"
 before=$(sha "$h/.claude/settings.json")
-fault_run restore-fails
+fault_run partial,restore-fails
 fault_common "write fails, restore fails"
 if [ "$(backups "$h")" != 1 ]; then echo "FAIL [write fails, restore fails]: expected the backup to be kept, found $(backups "$h")"; fail=1; fi
 for b in "$h/.claude/settings.json.backup-"*; do
@@ -403,6 +462,88 @@ for b in "$h/.claude/settings.json.backup-"*; do
   if ! grep -qF "$b" "$log"; then echo "FAIL [write fails, restore fails]: message does not name the backup $b"; fail=1; fi
 done
 if ! grep -q "$h/.claude/settings.json.*could not be restored" "$log"; then echo "FAIL [write fails, restore fails]: message does not say the restore failed"; fail=1; fi
+
+# A kept backup holds the original bytes and the message names it; every
+# backup path any message names exists. $1 case name, $2 sha of the original.
+kept_backup() {
+  local name="$1" orig="$2" b
+  if [ "$(backups "$h")" != 1 ]; then echo "FAIL [$name]: expected the backup to be kept, found $(backups "$h")"; fail=1; fi
+  for b in "$h/.claude/settings.json.backup-"*; do
+    if [ ! -f "$b" ]; then continue; fi
+    if [ "$orig" != "$(sha "$b")" ]; then echo "FAIL [$name]: backup is not byte-identical to the original"; fail=1; fi
+    if ! grep -qF "$b" "$log"; then echo "FAIL [$name]: message does not name the backup $b"; fail=1; fi
+  done
+  named_exist "$name"
+}
+named_exist() {
+  local b
+  while IFS= read -r b; do
+    if [ ! -e "$h/.claude/$b" ]; then echo "FAIL [$1]: a message names $b, which does not exist"; fail=1; fi
+  done < <(grep -o 'settings\.json\.backup-[0-9-]*' "$log" | sort -u)
+}
+# close(2) fails after a write (network/FUSE filesystems report write-back
+# errors there): the file may have changed, so the backup is kept and named,
+# no removal is claimed and no exception text is printed.
+close_case() {
+  local name="$1" mode="$2"
+  setup
+  printf '%s' "$WITH_ENTRIES" >"$h/.claude/settings.json"
+  before=$(sha "$h/.claude/settings.json")
+  fault_run "$mode"
+  if [ "$rc" != 0 ]; then echo "FAIL [$name]: exit $rc"; sed -n '1,25p' "$log"; fail=1; fi
+  if grep -Eq "Traceback|Error|File \"|errno|injected" "$log"; then echo "FAIL [$name]: exception text in output"; grep -E "Traceback|Error|File \"|errno|injected" "$log" | head -3; fail=1; fi
+  if grep -q "Removed hooks from settings.json" "$log"; then echo "FAIL [$name]: claimed hooks were removed"; fail=1; fi
+  if ! grep -q "$h/.claude/settings.json.*closing it failed.*may have changed" "$log"; then echo "FAIL [$name]: message does not say closing failed and the file may have changed"; fail=1; fi
+  if [ -e "$h/skills/.beads-superpowers-version" ] || ! grep -q "beads-superpowers uninstalled" "$log"; then
+    echo "FAIL [$name]: rest of the uninstall did not run"; fail=1
+  fi
+  kept_backup "$name" "$before"
+}
+close_case "close fails after rewrite" close
+close_case "close fails after restore" partial,close
+
+# The restore's own write or fsync raises although the bytes read back match:
+# the restore did not complete cleanly, so the backup is kept and named.
+for mode in partial,restore-raises partial,fsync; do
+  setup
+  printf '%s' "$WITH_ENTRIES" >"$h/.claude/settings.json"
+  before=$(sha "$h/.claude/settings.json")
+  fault_run "$mode"
+  name="restore raises ($mode)"
+  fault_common "$name"
+  kept_backup "$name" "$before"
+  if grep -q "restored and checked" "$log"; then echo "FAIL [$name]: claimed a clean restore"; fail=1; fi
+  if ! grep -q "$h/.claude/settings.json.*could not be restored or the restore could not be confirmed" "$log"; then echo "FAIL [$name]: message does not say the restore could not be confirmed"; fail=1; fi
+done
+
+# The backup cannot be removed after a clean restore: the message says an
+# identical copy remains and names it.
+setup
+printf '%s' "$WITH_ENTRIES" >"$h/.claude/settings.json"
+before=$(sha "$h/.claude/settings.json")
+fault_run partial,unlink
+name="backup removal fails"
+fault_common "$name"
+kept_backup "$name" "$before"
+if [ "$before" != "$(sha "$h/.claude/settings.json")" ]; then echo "FAIL [$name]: settings file not byte-identical to the original"; fail=1; fi
+if ! grep -q "$h/.claude/settings.json.*original contents were restored" "$log"; then echo "FAIL [$name]: no message saying the original was restored"; fail=1; fi
+if ! grep -q "identical copy.*remains" "$log"; then echo "FAIL [$name]: message does not say an identical copy remains"; fail=1; fi
+
+# The backup's directory entry is fsynced (and on macOS the backup gets
+# F_FULLFSYNC) before the settings file is first written.
+setup
+printf '%s' "$WITH_ENTRIES" >"$h/.claude/settings.json"
+fault_run trace
+name="backup durable before rewrite"
+meta_ok "$name"
+first_write=$(grep -n -m1 -x write "$h.trace" 2>/dev/null | cut -d: -f1)
+dirsync=$(grep -n -m1 -x dirsync "$h.trace" 2>/dev/null | cut -d: -f1)
+if [ -z "$first_write" ]; then echo "FAIL [$name]: trace saw no write to the settings file"; fail=1; fi
+if [ -z "$dirsync" ] || [ -z "$first_write" ] || [ "$dirsync" -gt "$first_write" ]; then echo "FAIL [$name]: the directory was not fsynced before the first write"; fail=1; fi
+if [ "$(uname -s)" = Darwin ]; then
+  full=$(grep -n -m1 -x fullfsync "$h.trace" 2>/dev/null | cut -d: -f1)
+  if [ -z "$full" ] || [ -z "$first_write" ] || [ "$full" -gt "$first_write" ]; then echo "FAIL [$name]: the backup did not get F_FULLFSYNC before the first write"; fail=1; fi
+fi
 
 if [ "$fail" -eq 0 ]; then echo "PASS: --uninstall handles the settings file safely"; fi
 exit "$fail"
