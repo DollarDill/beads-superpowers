@@ -55,14 +55,16 @@ CMDBLOCK
 # 1. Clean PATH before any lookup, with hooks/session-start's rule: keep
 #    absolute entries, map ~ and ~/x to $HOME when $HOME is absolute, drop
 #    everything else, and fall back to /usr/bin:/bin.
-# 2. Use `command -v bash` on that PATH. Only if it finds none, use $BASH when
-#    it is absolute, has no . or .. component and does not literally start
+# 2. Use `command -v bash` on that PATH, else $BASH, taking each only when it
+#    is absolute, has no . or .. component and does not literally start
 #    with the cwd (the signatures of a relative PATH entry), and lies outside
 #    both the current directory tree and the project root
 #    (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR; with neither set, the
 #    highest .git ancestor of the cwd; the cwd can be a subdirectory of it),
 #    and not this launcher. A root variable that is relative or unresolvable
-#    refuses $BASH.
+#    refuses it. The cleaned PATH can still hold an absolute entry inside
+#    the project (<proj>/node_modules/.bin, direnv PATH_add), so the
+#    `command -v` result gets the same check as $BASH.
 #    $BASH alone is not safe: dash leaves it unset, bash fills it by a PATH
 #    search that can land in the cwd, and an ENOEXEC fallback (a harness
 #    execing this shebang-less file) sets it to this launcher, which would
@@ -96,16 +98,14 @@ case "$0" in
   *) SCRIPT_DIR="$(pwd)" ;;
 esac
 
-bsp_bash=$(command -v bash 2>/dev/null) || bsp_bash=""
-case "$bsp_bash" in
-  /*) ;;
-  *) bsp_bash="" ;;
-esac
-if [ -z "$bsp_bash" ]; then
+# bsp_outside <bash>: succeeds when the candidate passes the containment in
+# step 2. Applied to the `command -v bash` result and to $BASH alike; the
+# comments inside say $BASH for either.
+bsp_outside() {
   # A . or .. component is the signature of a relative PATH entry: bash
   # records its lookup unnormalised (<cwd>/../bash), which can land above or
   # beside a root that is just the cwd. Refuse it, whatever the root.
-  case "${BASH:-}" in
+  case "$1" in
     */./*|*/../*|*/.|*/..) ;;
     /*)
       # Compare physical paths: $BASH and $PWD can name the same place through
@@ -140,7 +140,7 @@ if [ -z "$bsp_bash" ]; then
       # bash 5.x builds $BASH from its canonical cwd but keeps an inherited
       # $PWD as spelled (//, /./, doubled /), so also compare with the
       # canonical logical cwd, from cd "$PWD" && pwd. If that cd fails, refuse.
-      bsp_lit=$BASH
+      bsp_lit=$1
       case $bsp_lit in //*) bsp_lit=/${bsp_lit#"${bsp_lit%%[!/]*}"} ;; esac
       bsp_pwd=${PWD:-}
       case $bsp_pwd in //*) bsp_pwd=/${bsp_pwd#"${bsp_pwd%%[!/]*}"} ;; esac
@@ -175,7 +175,7 @@ if [ -z "$bsp_bash" ]; then
           if [ -z "$bsp_d" ]; then bsp_d=/; fi
         done
       fi
-      bsp_bash_dir=$(cd -P "${BASH%/*}/" 2>/dev/null && pwd -P) || bsp_bash_dir=""
+      bsp_bash_dir=$(cd -P "${1%/*}/" 2>/dev/null && pwd -P) || bsp_bash_dir=""
       case $bsp_bash_dir in //*) bsp_bash_dir=/${bsp_bash_dir#"${bsp_bash_dir%%[!/]*}"} ;; esac
       if [ "$bsp_ok" = 1 ] && [ -n "$bsp_cwd" ] && [ -n "$bsp_root" ] && [ -n "$bsp_bash_dir" ]; then
         # Strip the trailing / into a variable first: at cwd / the prefix is
@@ -186,12 +186,25 @@ if [ -z "$bsp_bash" ]; then
         case "$bsp_bash_dir/" in
           "$bsp_cwd_pfx"/*|"$bsp_root_pfx"/*) ;;
           *)
-            if [ ! "$BASH" -ef "${SCRIPT_DIR}/${0##*[/\\]}" ]; then
-              bsp_bash=$BASH
+            if [ ! "$1" -ef "${SCRIPT_DIR}/${0##*[/\\]}" ]; then
+              return 0
             fi ;;
         esac
       fi ;;
   esac
+  return 1
+}
+
+bsp_bash=$(command -v bash 2>/dev/null) || bsp_bash=""
+case "$bsp_bash" in
+  /*) ;;
+  *) bsp_bash="" ;;
+esac
+if [ -n "$bsp_bash" ] && ! bsp_outside "$bsp_bash"; then
+  bsp_bash=""
+fi
+if [ -z "$bsp_bash" ] && bsp_outside "${BASH:-}"; then
+  bsp_bash=$BASH
 fi
 if [ -z "$bsp_bash" ]; then
   exit 0

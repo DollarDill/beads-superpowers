@@ -370,6 +370,67 @@ else
   echo "SKIP: \$BASH . and .. components under /bin/dash (/bin/dash not found)"
 fi
 
+# --- an absolute PATH entry inside the project (security review #8) ---
+# The cleaned PATH keeps absolute entries, and one can sit inside the project
+# (<proj>/node_modules/.bin from npm exec, direnv PATH_add). The bash that
+# `command -v` finds there gets the same containment as $BASH and is refused;
+# the launcher then falls back to $BASH, as when PATH has no bash. Under bash
+# $BASH is the outside interpreter, so the probe runs; dash leaves $BASH unset
+# unless inherited, so it exits silently, or uses an inherited outside $BASH.
+mkdir -p "$TMP/ab/proj/.git" "$TMP/ab/proj/sub" "$TMP/ab/proj/other" "$TMP/ab/nogit/sub" "$TMP/ab/nogit/other"
+ln -s proj/sub "$TMP/ab/alias"
+for b in "$TMP/ab/proj/sub/bash" "$TMP/ab/nogit/sub/bash"; do
+  printf '#!/bin/sh\n: > "%s/ran-absbash"\necho PLANTED\n' "$TMP" >"$b"
+  chmod +x "$b"
+done
+AB="$TMP/ab/proj"
+# abs_run <shell> <cwd> <first PATH entry> [VAR=value...]: the entry is
+# followed by /usr/bin:/bin. Sets rc, out, ran.
+abs_run() {
+  local sh_bin="$1" dir="$2" e="$3"; shift 3
+  out=$(cd "$dir" && env -i HOME="$TMP" PWD="$dir" PATH="$e:/usr/bin:/bin" "$@" "$sh_bin" "$L" probe-ok </dev/null 2>&1); rc=$?
+  ran=$(planted_ran)
+}
+# abs_check <name> <want-probe yes/no>
+abs_check() {
+  local probe_ok=0
+  if [ "$2" = yes ]; then
+    if [[ "$out" != *probe-ran* ]]; then probe_ok=1; fi
+  else
+    if [ -n "$out" ]; then probe_ok=1; fi
+  fi
+  if [ "$rc" = 0 ] && [ -z "$ran" ] && [ "$probe_ok" = 0 ]; then report "$1 (probe runs: $2)" 0 ""; else report "$1 (probe runs: $2)" 1 "rc=$rc planted ran:[$ran] out=$out"; fi
+}
+seen=" "
+for sh_bin in /bin/dash /bin/bash /opt/homebrew/bin/bash "$bash_bin"; do
+  if [ ! -x "$sh_bin" ]; then continue; fi
+  case "$seen" in *" $sh_bin "*) continue ;; esac
+  seen="$seen$sh_bin "
+  want=yes
+  case "$sh_bin" in */dash) want=no ;; esac
+  # Review probe P4 case i: the entry is inside the cwd tree.
+  abs_run "$sh_bin" "$AB" "$AB/sub"
+  abs_check "absolute in-project PATH entry, cwd tree ($sh_bin)" "$want"
+  # Outside the cwd tree, inside the project root: CLAUDE_PROJECT_DIR, then
+  # the highest .git ancestor when no root variable is set.
+  abs_run "$sh_bin" "$AB/other" "$AB/sub" CLAUDE_PROJECT_DIR="$AB"
+  abs_check "absolute in-project PATH entry, CLAUDE_PROJECT_DIR root ($sh_bin)" "$want"
+  abs_run "$sh_bin" "$AB/other" "$AB/sub"
+  abs_check "absolute in-project PATH entry, .git ancestor root ($sh_bin)" "$want"
+  # Spelled from outside the project through a symlink into it (physical
+  # check), and with a .. component (no .git, so the root is the cwd).
+  abs_run "$sh_bin" "$AB" "$TMP/ab/alias"
+  abs_check "absolute PATH entry symlinked into the project ($sh_bin)" "$want"
+  abs_run "$sh_bin" "$TMP/ab/nogit/other" "$TMP/ab/nogit/other/../sub"
+  abs_check "absolute PATH entry with a .. component ($sh_bin)" "$want"
+  case "$sh_bin" in
+    */dash)
+      # An inherited outside $BASH is the fallback, so the hook still runs.
+      abs_run "$sh_bin" "$AB" "$AB/sub" BASH="$bash_bin"
+      abs_check "absolute in-project PATH entry, inherited outside \$BASH ($sh_bin)" yes ;;
+  esac
+done
+
 # --- no self re-exec (M2): an ENOEXEC fallback sets $BASH to the launcher ---
 # bounded <outfile> <command...>: runs it in the background and kills it after
 # 10 s (macOS has no timeout(1)); sets rc (124 on timeout).
