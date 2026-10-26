@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Seeds a tiny habits app, an approved reports spec, and a plan with three independent tasks, for the SDD parallel-batch case.
+# Seeds a tiny habits app, an approved reports spec, and a plan with six independent tasks, for the SDD parallel-batch case.
 # Runs in the eval's empty workspace; writes relative paths only.
 set -euo pipefail
 mkdir -p src test .internal/specs .internal/plans
@@ -71,6 +71,12 @@ Status: Approved
   `streak`, or `null` for an empty list.
 - **R3** `src/counts.js` exports `doneToday(habits, today)`, which counts the habits whose
   `lastCompleted` falls on the same calendar day as `today`.
+- **R4** `src/names.js` exports `habitNames(habits)`, which returns the habit names sorted
+  alphabetically.
+- **R5** `src/totals.js` exports `totalStreak(habits)`, which returns the sum of every habit's
+  `streak`, or `0` for an empty list.
+- **R6** `src/stale.js` exports `staleHabits(habits, cutoff)`, which returns the habits whose
+  `lastCompleted` is before `cutoff`.
 
 ## Out of scope
 
@@ -79,9 +85,9 @@ EOF
 cat > .internal/plans/2026-01-01-habit-reports.md <<'EOF'
 # Habit Report Helpers Implementation Plan
 
-**Goal:** Add three small, independent report helpers.
+**Goal:** Add six small, independent report helpers.
 
-**Architecture:** Three pure functions, each in its own module with its own test file. No task
+**Architecture:** Six pure functions, each in its own module with its own test file. No task
 consumes another task's output.
 
 **Tech Stack:** Node 20, ES modules, `node:test`.
@@ -146,6 +152,60 @@ consumes another task's output.
 - [ ] **Step 1: Write failing tests** in `test/counts.test.js` for same-day, previous-day and empty inputs.
 - [ ] **Step 2: Run `npm test`** — expect FAIL.
 - [ ] **Step 3: Implement `doneToday`** in `src/counts.js`.
+- [ ] **Step 4: Run `npm test`** — expect PASS.
+- [ ] **Step 5: Commit.**
+
+### Task 4: Habit names
+
+**Files:**
+- Create: `src/names.js`
+- Test: `test/names.test.js`
+
+**Interfaces:**
+- Produces: `habitNames(habits: Habit[]) -> string[]`
+
+**Acceptance Criteria:**
+- Returns the habit names sorted alphabetically; returns `[]` for an empty list.
+
+- [ ] **Step 1: Write failing tests** in `test/names.test.js` for an unsorted and an empty list.
+- [ ] **Step 2: Run `npm test`** — expect FAIL.
+- [ ] **Step 3: Implement `habitNames`** in `src/names.js`.
+- [ ] **Step 4: Run `npm test`** — expect PASS.
+- [ ] **Step 5: Commit.**
+
+### Task 5: Total streak
+
+**Files:**
+- Create: `src/totals.js`
+- Test: `test/totals.test.js`
+
+**Interfaces:**
+- Produces: `totalStreak(habits: Habit[]) -> number`
+
+**Acceptance Criteria:**
+- Returns the sum of every habit's `streak`; returns `0` for an empty list.
+
+- [ ] **Step 1: Write failing tests** in `test/totals.test.js` for a populated and an empty list.
+- [ ] **Step 2: Run `npm test`** — expect FAIL.
+- [ ] **Step 3: Implement `totalStreak`** in `src/totals.js`.
+- [ ] **Step 4: Run `npm test`** — expect PASS.
+- [ ] **Step 5: Commit.**
+
+### Task 6: Stale habits
+
+**Files:**
+- Create: `src/stale.js`
+- Test: `test/stale.test.js`
+
+**Interfaces:**
+- Produces: `staleHabits(habits: Habit[], cutoff: Date) -> Habit[]`
+
+**Acceptance Criteria:**
+- Returns the habits whose `lastCompleted` is before `cutoff`.
+
+- [ ] **Step 1: Write failing tests** in `test/stale.test.js` for habits before, on and after the cutoff.
+- [ ] **Step 2: Run `npm test`** — expect FAIL.
+- [ ] **Step 3: Implement `staleHabits`** in `src/stale.js`.
 - [ ] **Step 4: Run `npm test`** — expect PASS.
 - [ ] **Step 5: Commit.**
 EOF
