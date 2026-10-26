@@ -1235,17 +1235,26 @@ do_uninstall() {
 
       if [ -e "$SETTINGS_FILE" ]; then
         if command -v python3 >/dev/null 2>&1; then
-          local rc=0
+          local rc=0 kept=""
           # Path on argv, never spliced into source; `|| rc=$?` survives `set -e`.
-          python3 - "$SETTINGS_FILE" << 'PYEOF' || rc=$?
-import json, os, shutil, sys, time
+          kept=$(python3 - "$SETTINGS_FILE" << 'PYEOF'
+import json, os, shutil, sys, tempfile, time
 
-# No exception text or content is ever printed: every failure exits 3 and the
-# shell prints one fixed warning. The file is left as it was on every failure.
+# No exception text or content is ever printed. Exit 3: the file was not
+# changed. Exit 5: it may have been; stdout carries the suffix of the backup
+# that was kept.
+def intact(sf, raw):
+    try:
+        with open(sf, "rb") as f:
+            return f.read() == raw
+    except OSError:
+        return False
+
 def main(sf):
     try:
-        with open(sf) as f:
-            settings = json.load(f)
+        with open(sf, "rb") as f:
+            raw = f.read()
+        settings = json.loads(raw)
         hooks = settings.get("hooks") if isinstance(settings, dict) else None
         changed = False
         if isinstance(hooks, dict):
@@ -1262,28 +1271,58 @@ def main(sf):
     except Exception:
         # Unreadable, not valid JSON (empty included), or too deeply nested.
         return 3
-    backup = f"{sf}.backup-{time.strftime('%Y%m%d-%H%M%S')}"
+    # The new text goes to a temp file beside the real file (behind any
+    # symlink) and replaces it atomically, so the file is either fully
+    # rewritten or byte-identical. O_EXCL: a backup that already has this
+    # name is not ours and is never written or removed.
+    target = os.path.realpath(sf)
+    suffix = time.strftime("backup-%Y%m%d-%H%M%S")
+    backup = f"{sf}.{suffix}"
+    made = False
+    tmp = None
     try:
-        shutil.copy2(sf, backup)
-        with open(sf, "w") as f:
+        with open(target, "r+b"):
+            pass  # a read-only file is refused, not replaced
+        fd = os.open(backup, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        made = True
+        with os.fdopen(fd, "wb") as f:
+            f.write(raw)
+        shutil.copystat(sf, backup)
+        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(target), prefix=".settings.json.", suffix=".tmp")
+        with os.fdopen(fd, "w") as f:
             f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
+        shutil.copymode(target, tmp)
+        os.replace(tmp, target)
+        return 0
     except Exception:
-        # Do not leave a backup beside a file that was not rewritten.
-        try:
-            os.remove(backup)
-        except OSError:
-            pass
+        if tmp is not None:
+            try:
+                os.remove(tmp)
+            except OSError:
+                pass
+        if made and not intact(sf, raw):
+            print(suffix)
+            return 5
+        if made:
+            try:
+                os.remove(backup)
+            except OSError:
+                pass
         return 3
-    return 0
 
 sys.exit(main(sys.argv[1]))
 PYEOF
+) || rc=$?
           if [ "$rc" = 0 ]; then
             info "Removed hooks from settings.json"
           elif [ "$rc" = 3 ]; then
-            warn "$SETTINGS_FILE could not be read, parsed or written: the beads-superpowers hook entries were NOT removed. Fix the file or its permissions, then re-run --uninstall."
+            warn "$SETTINGS_FILE could not be read, parsed or rewritten, so it was left unchanged: the beads-superpowers hook entries were NOT removed. Fix the file, its permissions or free disk space, then re-run --uninstall."
+          elif [ "$rc" = 5 ]; then
+            warn "$SETTINGS_FILE could not be confirmed unchanged after a failed rewrite; its previous contents are kept in $SETTINGS_FILE.$kept. Check the file before re-running --uninstall."
           elif [ "$rc" != 4 ]; then
-            warn "$SETTINGS_FILE was left as is: the beads-superpowers hook entries were NOT removed."
+            warn "The cleanup of $SETTINGS_FILE stopped unexpectedly: check it for beads-superpowers hook entries before re-running --uninstall."
           fi
         fi
       fi
