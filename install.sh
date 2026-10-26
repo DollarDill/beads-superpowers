@@ -1238,43 +1238,52 @@ do_uninstall() {
           local rc=0
           # Path on argv, never spliced into source; `|| rc=$?` survives `set -e`.
           python3 - "$SETTINGS_FILE" << 'PYEOF' || rc=$?
-import json, shutil, sys, time
+import json, os, shutil, sys, time
 
-sf = sys.argv[1]
-try:
-    with open(sf) as f:
-        settings = json.load(f)
-except (ValueError, OSError):
-    # Not valid JSON (an empty or whitespace-only file included) or not
-    # readable (permission denied, a directory): leave it byte-for-byte alone,
-    # make no backup. Neither the error text nor the content is printed.
-    print(f"beads-superpowers: {sf} is not readable or not valid JSON; the "
-          "beads-superpowers hook entries were NOT removed. Repair or move the "
-          "file, then re-run --uninstall.", file=sys.stderr)
-    sys.exit(3)
+# No exception text or content is ever printed: every failure exits 3 and the
+# shell prints one fixed warning. The file is left as it was on every failure.
+def main(sf):
+    try:
+        with open(sf) as f:
+            settings = json.load(f)
+        hooks = settings.get("hooks") if isinstance(settings, dict) else None
+        changed = False
+        if isinstance(hooks, dict):
+            for key in ["SessionStart", "UserPromptSubmit"]:
+                entries = hooks.get(key)
+                if isinstance(entries, list):
+                    kept = [e for e in entries if "beads-superpowers" not in json.dumps(e)]
+                    if len(kept) != len(entries):
+                        hooks[key] = kept
+                        changed = True
+        if not changed:
+            return 4
+        text = json.dumps(settings, indent=2) + "\n"
+    except Exception:
+        # Unreadable, not valid JSON (empty included), or too deeply nested.
+        return 3
+    backup = f"{sf}.backup-{time.strftime('%Y%m%d-%H%M%S')}"
+    try:
+        shutil.copy2(sf, backup)
+        with open(sf, "w") as f:
+            f.write(text)
+    except Exception:
+        # Do not leave a backup beside a file that was not rewritten.
+        try:
+            os.remove(backup)
+        except OSError:
+            pass
+        return 3
+    return 0
 
-hooks = settings.get("hooks") if isinstance(settings, dict) else None
-changed = False
-if isinstance(hooks, dict):
-    for key in ["SessionStart", "UserPromptSubmit"]:
-        entries = hooks.get(key)
-        if isinstance(entries, list):
-            kept = [e for e in entries if "beads-superpowers" not in json.dumps(e)]
-            if len(kept) != len(entries):
-                hooks[key] = kept
-                changed = True
-if not changed:
-    sys.exit(4)
-
-shutil.copy2(sf, f"{sf}.backup-{time.strftime('%Y%m%d-%H%M%S')}")
-with open(sf, "w") as f:
-    json.dump(settings, f, indent=2)
-    f.write("\n")
+sys.exit(main(sys.argv[1]))
 PYEOF
           if [ "$rc" = 0 ]; then
             info "Removed hooks from settings.json"
-          elif [ "$rc" != 3 ] && [ "$rc" != 4 ]; then
-            warn "Could not remove hooks from $SETTINGS_FILE (python exit $rc); it was left as is."
+          elif [ "$rc" = 3 ]; then
+            warn "$SETTINGS_FILE could not be read, parsed or written: the beads-superpowers hook entries were NOT removed. Fix the file or its permissions, then re-run --uninstall."
+          elif [ "$rc" != 4 ]; then
+            warn "$SETTINGS_FILE was left as is: the beads-superpowers hook entries were NOT removed."
           fi
         fi
       fi

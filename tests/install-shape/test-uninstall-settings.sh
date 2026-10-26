@@ -19,12 +19,12 @@ sha() {
   fi
 }
 
-# uninstall <home> <log>: lay down a real install first (rest-of-uninstall
-# evidence), then restore the settings file to what the case wants and run it.
+# setup lays down a real install first (rest-of-uninstall evidence) and removes
+# the settings file the install wrote; each case then writes the one it wants.
 BSP='{"type":"command","command":"bash /x/beads-superpowers-session-start.sh"}'
 FOREIGN='{"type":"command","command":"echo foreign"}'
 
-# run_case <name> <settings content or "@dir"> -> sets $h $log $rc
+# setup / run_uninstall set $h $log $rc for the case that follows.
 setup() {
   n=$((n + 1))
   h="$SANDBOX/h$n"; log="$SANDBOX/h$n.log"
@@ -38,7 +38,7 @@ run_uninstall() {
     bash "$REPO_ROOT/install.sh" --uninstall >"$log" 2>&1
   rc=$?
 }
-backups() { find "$1/.claude" -maxdepth 1 -name 'settings.json.backup-*' | wc -l | tr -d ' '; }
+backups() { find "$1/.claude" -maxdepth 1 -name 'settings.json.backup-*' -exec echo x \; | wc -l | tr -d ' '; }
 
 untouched_case() {
   local name="$1" content="$2" before after
@@ -93,7 +93,8 @@ PY
     echo "FAIL [$name]: rest of the uninstall did not run"; fail=1
   fi
 }
-shape_case "hooks null" '{"hooks": null, "keep": 1}' 'd == {"hooks": None, "keep": 1} or d.get("keep") == 1'
+shape_case "hooks null" '{"hooks": null, "keep": 1}' 'd == {"hooks": None, "keep": 1}'
+if [ "$(cat "$h/.claude/settings.json")" != '{"hooks": null, "keep": 1}' ]; then echo "FAIL [hooks null]: file not byte-identical"; fail=1; fi
 shape_case "hooks a list" '{"hooks": [1], "keep": 1}' 'd["hooks"] == [1] and d["keep"] == 1'
 shape_case "SessionStart not a list" '{"hooks": {"SessionStart": "x", "Other": [1]}}' 'd["hooks"]["SessionStart"] == "x"'
 shape_case "mixed entries" \
@@ -119,6 +120,63 @@ run_uninstall
 if [ "$rc" != 0 ]; then echo "FAIL [odd path]: exit $rc"; sed -n '1,25p' "$log"; fail=1; fi
 if grep -q "beads-superpowers" "$h/.claude/settings.json" || ! grep -q "echo foreign" "$h/.claude/settings.json"; then echo "FAIL [odd path]: wrong content"; fail=1; fi
 if grep -q "Traceback" "$log"; then echo "FAIL [odd path]: traceback"; fail=1; fi
+if [ "$(backups "$h")" != 1 ]; then echo "FAIL [odd path]: expected exactly one backup, got $(backups "$h")"; fail=1; fi
+if ! grep -q "Removed hooks from settings.json" "$log"; then echo "FAIL [odd path]: no removal message"; fail=1; fi
+
+# The same with a newline in the path.
+n=$((n + 1))
+h="$SANDBOX/h$n"$'\n'"nl"; log="$SANDBOX/h$n.log"
+mkdir -p "$h/.claude"
+printf '%s' "{\"hooks\": {\"SessionStart\": [{\"hooks\": [$BSP]}, {\"hooks\": [$FOREIGN]}]}}" >"$h/.claude/settings.json"
+run_uninstall
+if [ "$rc" != 0 ]; then echo "FAIL [newline path]: exit $rc"; sed -n '1,25p' "$log"; fail=1; fi
+if grep -q "beads-superpowers" "$h/.claude/settings.json" || ! grep -q "echo foreign" "$h/.claude/settings.json"; then echo "FAIL [newline path]: wrong content"; fail=1; fi
+if grep -q "Traceback" "$log"; then echo "FAIL [newline path]: traceback"; fail=1; fi
+if [ "$(backups "$h")" != 1 ]; then echo "FAIL [newline path]: expected exactly one backup, got $(backups "$h")"; fail=1; fi
+if ! grep -q "Removed hooks from settings.json" "$log"; then echo "FAIL [newline path]: no removal message"; fail=1; fi
+
+# Valid file with nothing of ours in it: byte-identical, no backup, no removal claim.
+setup
+printf '%s' "{\"hooks\": {\"SessionStart\": [{\"hooks\": [$FOREIGN]}]}}" >"$h/.claude/settings.json"
+before=$(sha "$h/.claude/settings.json")
+run_uninstall
+if [ "$rc" != 0 ]; then echo "FAIL [nothing to remove]: exit $rc"; fail=1; fi
+if [ "$before" != "$(sha "$h/.claude/settings.json")" ]; then echo "FAIL [nothing to remove]: file was rewritten"; fail=1; fi
+if [ "$(backups "$h")" != 0 ]; then echo "FAIL [nothing to remove]: a backup was created"; fail=1; fi
+if grep -q "Removed hooks from settings.json" "$log"; then echo "FAIL [nothing to remove]: claimed hooks were removed"; fail=1; fi
+
+# Failure paths on a file that HAS entries to remove: no exception text, file
+# untouched, no stray backup, fixed warning, rest of the uninstall runs, exit 0.
+failure_case() {
+  local name="$1" before
+  before=$(sha "$h/.claude/settings.json")
+  run_uninstall
+  chmod 755 "$h/.claude"; chmod 644 "$h/.claude/settings.json"
+  if [ "$rc" != 0 ]; then echo "FAIL [$name]: exit $rc"; sed -n '1,25p' "$log"; fail=1; fi
+  if [ "$before" != "$(sha "$h/.claude/settings.json")" ]; then echo "FAIL [$name]: settings file was modified"; fail=1; fi
+  if [ "$(backups "$h")" != 0 ]; then echo "FAIL [$name]: stray backup left"; fail=1; fi
+  if ! grep -q "$h/.claude/settings.json.*NOT removed" "$log"; then echo "FAIL [$name]: no warning naming the file and 'NOT removed'"; fail=1; fi
+  if grep -q "Removed hooks from settings.json" "$log"; then echo "FAIL [$name]: claimed hooks were removed"; fail=1; fi
+  if grep -Eq "Traceback|Error|File \"|errno|Permission denied" "$log"; then echo "FAIL [$name]: exception text in output"; grep -E "Traceback|Error|File \"|errno|Permission denied" "$log" | head -3; fail=1; fi
+  if [ -e "$h/skills/.beads-superpowers-version" ] || ! grep -q "beads-superpowers uninstalled" "$log"; then
+    echo "FAIL [$name]: rest of the uninstall did not run"; fail=1
+  fi
+}
+WITH_ENTRIES="{\"hooks\": {\"SessionStart\": [{\"hooks\": [$BSP]}, {\"hooks\": [$FOREIGN]}]}}"
+
+setup
+printf '%s' "$WITH_ENTRIES" >"$h/.claude/settings.json"
+chmod 444 "$h/.claude/settings.json"
+failure_case "read-only settings file"
+
+setup
+printf '%s' "$WITH_ENTRIES" >"$h/.claude/settings.json"
+chmod 555 "$h/.claude"
+failure_case "unwritable .claude dir"
+
+setup
+python3 -I -c 'import sys; sys.stdout.write("[" * 100000)' >"$h/.claude/settings.json"
+failure_case "deeply nested JSON"
 
 if [ "$fail" -eq 0 ]; then echo "PASS: --uninstall handles the settings file safely"; fi
 exit "$fail"
