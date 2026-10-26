@@ -126,4 +126,15 @@ printf '### Task 1: One\none\n' > "$own/plan.md"
 [ -z "$(cd "$own" && git status --porcelain -- .internal/sdd/.gitignore)" ] \
   || { echo "FAIL: existing sdd .gitignore shows as modified"; exit 1; }
 
+# 15. outside any git repo it fails on every bash: non-zero, nothing created
+norepo=$(mktemp -d); trap 'rm -rf "$TMP" "$own" "$norepo"' EXIT
+printf '# plan\n' > "$norepo/plan.md"
+for b in /bin/bash /opt/homebrew/bin/bash /usr/local/bin/bash; do
+  [ -x "$b" ] || continue
+  rm -rf "$norepo/.internal"
+  rc=0; (cd "$norepo" && GIT_CEILING_DIRECTORIES="$norepo" "$b" "$WS" plan.md >/dev/null 2>&1) || rc=$?
+  [ "$rc" -ne 0 ] || { echo "FAIL: sdd-workspace outside a repo exited 0 under $b"; exit 1; }
+  [ ! -e "$norepo/.internal" ] || { echo "FAIL: sdd-workspace created .internal outside a repo under $b"; exit 1; }
+done
+
 echo "PASS: sdd plan-scoped workspace + callers"

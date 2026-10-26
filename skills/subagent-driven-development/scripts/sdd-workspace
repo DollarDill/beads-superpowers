@@ -30,7 +30,13 @@ plan=$1
 # Physical path, spelled the way pwd -P spells the plan path below: on Git
 # Bash, rev-parse prints C:/Users/... while pwd prints /c/Users/..., and the
 # repo-relative marker check needs both in the same form.
-root=$(CDPATH='' cd -- "$(git rev-parse --show-toplevel)" && pwd -P)
+# Resolved in two checked steps: a nested $(git ...) inside cd loses git's
+# failure status on bash 3.2 and would run on outside a repo.
+if ! top=$(git rev-parse --show-toplevel); then
+  echo "not inside a git repository: sdd-workspace needs a repo root" >&2
+  exit 128
+fi
+root=$(CDPATH='' cd -- "$top" && pwd -P)
 base="$root/.internal/sdd"
 mkdir -p "$base"
 # Create-only: a repo may commit its own .gitignore here (e.g. to version
