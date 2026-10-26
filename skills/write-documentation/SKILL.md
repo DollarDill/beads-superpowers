@@ -95,7 +95,7 @@ Done when: the scaled check set has been run and every issue it found is fixed i
 
 ### Step 5: Cut
 
-Cut what sounds generic, ceremonial, over-engineered, suspiciously over-specific, or too cleanly modular. Collapse paragraphs that restate each other. Replace the most generic clause in the piece with something specific or delete it.
+Scan against `references/audit-watchlist.md` (in this skill's directory). Cut what sounds generic, ceremonial, over-engineered, suspiciously over-specific, or too cleanly modular. Collapse paragraphs that restate each other. Replace the most generic clause in the piece with something specific or delete it.
 
 Done when: the piece has been reviewed for generic/ceremonial language and the most generic clause is fixed or gone.
 
@@ -107,7 +107,7 @@ Done when: the user has approved the text and the bead is closed with evidence o
 
 ## Precedence
 
-**Read `references/precedence.md` (in this skill's directory) before resolving a rule conflict** — truth and safety beat user instructions, then genre, rules, watchlists.
+**Read `references/precedence.md` (in this skill's directory) before resolving a rule conflict** — truth, safety, accessibility, and legal requirements beat user instructions, then genre, core rules, watchlists.
 
 ## Medium Routing
 
@@ -283,4 +283,3 @@ bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / patt
 ## Integration
 
 **Read `references/integration.md` (in this skill's directory) before consulting the skill pairings** — pairs with document-release, which syncs docs to code after shipping.
-
