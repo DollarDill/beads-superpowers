@@ -41,10 +41,14 @@ run_uninstall() {
 backups() { find "$1/.claude" -maxdepth 1 -name 'settings.json.backup-*' -exec echo x \; | wc -l | tr -d ' '; }
 
 untouched_case() {
-  local name="$1" content="$2" before after
   setup
   # shellcheck disable=SC2059
-  printf "$content" >"$h/.claude/settings.json"
+  printf "$2" >"$h/.claude/settings.json"
+  untouched_check "$1"
+}
+# untouched_check runs the uninstall on the settings file already in $h.
+untouched_check() {
+  local name="$1" before after
   before=$(sha "$h/.claude/settings.json")
   run_uninstall
   after=$(sha "$h/.claude/settings.json")
@@ -63,6 +67,19 @@ untouched_case "truncated JSON" '{"hooks": '
 untouched_case "not json" 'not json'
 untouched_case "empty file" ''
 untouched_case "whitespace only" ' \n\n'
+
+# A BOM or a UTF-16/UTF-32 encoding is refused, as the install path refuses
+# it (register_hook reads the file as text): untouched, even with our entries.
+untouched_case "UTF-8 BOM" "\xef\xbb\xbf{\"hooks\": {\"SessionStart\": [{\"hooks\": [$BSP]}]}}"
+for enc in utf-16 utf-16-le utf-32; do
+  setup
+  python3 -I - "$h/.claude/settings.json" "$enc" "{\"hooks\": {\"SessionStart\": [{\"hooks\": [$BSP]}]}}" <<'PY'
+import sys
+with open(sys.argv[1], "wb") as f:
+    f.write(sys.argv[3].encode(sys.argv[2]))
+PY
+  untouched_check "$enc"
+done
 
 # A directory at the settings path is handled like invalid JSON.
 setup
@@ -208,6 +225,9 @@ else
   if [ "$(backups "$h")" != 0 ]; then echo "FAIL [write fails partway]: stray backup left"; fail=1; fi
   if [ -n "$(find "$h/.claude" -maxdepth 1 -name '*.tmp' -print)" ]; then echo "FAIL [write fails partway]: temp file left"; fail=1; fi
   if ! grep -q "$h/.claude/settings.json.*left unchanged.*NOT removed" "$log"; then echo "FAIL [write fails partway]: no warning naming the file, 'left unchanged' and 'NOT removed'"; fail=1; fi
+  # The in-place write is cut off after 1024 bytes; the original (562 bytes,
+  # under the limit) is written back and checked byte-for-byte.
+  if ! grep -q "$h/.claude/settings.json.*original contents were restored" "$log"; then echo "FAIL [write fails partway]: no warning saying the original contents were restored"; fail=1; fi
   if grep -q "Removed hooks from settings.json" "$log"; then echo "FAIL [write fails partway]: claimed hooks were removed"; fail=1; fi
   if grep -Eq "Traceback|Error|File \"|errno" "$log"; then echo "FAIL [write fails partway]: exception text in output"; fail=1; fi
   if [ -e "$h/skills/.beads-superpowers-version" ] || ! grep -q "beads-superpowers uninstalled" "$log"; then
@@ -247,6 +267,142 @@ if grep -L -x "pre-existing" "$h/.claude/settings.json.backup-"* 2>/dev/null | g
 if [ "$before" != "$(sha "$h/.claude/settings.json")" ]; then echo "FAIL [pre-existing backup]: settings file was modified"; fail=1; fi
 if ! grep -q "$h/.claude/settings.json.*NOT removed" "$log"; then echo "FAIL [pre-existing backup]: no warning naming the file and 'NOT removed'"; fail=1; fi
 if grep -q "Removed hooks from settings.json" "$log"; then echo "FAIL [pre-existing backup]: claimed hooks were removed"; fail=1; fi
+
+# The file itself is rewritten in place (same inode), so what hangs off the
+# inode is kept: hard links, the group, ACL entries, extended attributes.
+cleaned() {
+  if grep -q "beads-superpowers" "$1" || ! grep -q "echo foreign" "$1"; then return 1; fi
+}
+meta_ok() {
+  local name="$1"
+  if [ "$rc" != 0 ]; then echo "FAIL [$name]: exit $rc"; sed -n '1,25p' "$log"; fail=1; fi
+  if ! cleaned "$h/.claude/settings.json"; then echo "FAIL [$name]: settings not cleaned"; fail=1; fi
+  if [ "$(backups "$h")" != 1 ]; then echo "FAIL [$name]: expected exactly one backup, got $(backups "$h")"; fail=1; fi
+  if ! grep -q "Removed hooks from settings.json" "$log"; then echo "FAIL [$name]: no removal message"; fail=1; fi
+}
+gid() { python3 -I -c 'import os, sys; print(os.stat(sys.argv[1]).st_gid)' "$1"; }
+
+setup
+printf '%s' "$WITH_ENTRIES" >"$h/.claude/settings.json"
+ln "$h/.claude/settings.json" "$h/settings.hardlink"
+run_uninstall
+meta_ok "hard link"
+if [ ! "$h/.claude/settings.json" -ef "$h/settings.hardlink" ]; then echo "FAIL [hard link]: the two names no longer share an inode"; fail=1; fi
+if ! cleaned "$h/settings.hardlink"; then echo "FAIL [hard link]: the other name does not see the cleaned content"; fail=1; fi
+
+setup
+printf '%s' "$WITH_ENTRIES" >"$h/.claude/settings.json"
+g0=$(gid "$h/.claude/settings.json"); g1=""
+for g in $(id -G); do
+  if [ "$g" != "$g0" ] && chgrp "$g" "$h/.claude/settings.json" 2>/dev/null; then g1=$g; break; fi
+done
+if [ -z "$g1" ]; then
+  echo "SKIP [group]: this user has no second group to set on the file"
+else
+  run_uninstall
+  meta_ok "group"
+  if [ "$(gid "$h/.claude/settings.json")" != "$g1" ]; then echo "FAIL [group]: group changed from $g1 to $(gid "$h/.claude/settings.json")"; fail=1; fi
+fi
+
+setup
+printf '%s' "$WITH_ENTRIES" >"$h/.claude/settings.json"
+if chmod +a "user:_www deny read" "$h/.claude/settings.json" 2>/dev/null; then
+  run_uninstall
+  meta_ok "ACL"
+  acl=$(ls -le "$h/.claude/settings.json")  # macOS shows ACL entries only via ls -le
+  case "$acl" in
+    *"user:_www deny read"*) ;;
+    *) echo "FAIL [ACL]: the deny-read ACL entry was dropped"; fail=1 ;;
+  esac
+elif command -v setfacl >/dev/null 2>&1 && setfacl -m u:nobody:r "$h/.claude/settings.json" 2>/dev/null; then
+  run_uninstall
+  meta_ok "ACL"
+  if ! getfacl -p "$h/.claude/settings.json" 2>/dev/null | grep -q "^user:nobody:r"; then echo "FAIL [ACL]: the user:nobody ACL entry was dropped"; fail=1; fi
+else
+  echo "SKIP [ACL]: neither 'chmod +a' nor setfacl can set an ACL here"
+fi
+
+setup
+printf '%s' "$WITH_ENTRIES" >"$h/.claude/settings.json"
+if xattr -w com.example.tag kept "$h/.claude/settings.json" 2>/dev/null; then
+  run_uninstall
+  meta_ok "xattr"
+  if [ "$(xattr -p com.example.tag "$h/.claude/settings.json" 2>/dev/null)" != kept ]; then echo "FAIL [xattr]: the extended attribute was dropped"; fail=1; fi
+elif python3 -I -c 'import os, sys; os.setxattr(sys.argv[1], "user.example", b"kept")' "$h/.claude/settings.json" 2>/dev/null; then
+  run_uninstall
+  meta_ok "xattr"
+  if ! python3 -I -c 'import os, sys; sys.exit(os.getxattr(sys.argv[1], "user.example") != b"kept")' "$h/.claude/settings.json" 2>/dev/null; then echo "FAIL [xattr]: the extended attribute was dropped"; fail=1; fi
+else
+  echo "SKIP [xattr]: no extended attribute can be set here"
+fi
+
+# Fault injection into the in-place write (python3 - honours PYTHONPATH, so a
+# sitecustomize.py wraps os.write for the settings file only). The first
+# write stops halfway with an error; later writes succeed (restore works) or
+# also fail (restore impossible).
+FI="$SANDBOX/fi"; mkdir -p "$FI"
+cat >"$FI/sitecustomize.py" <<'PY'
+import errno, os
+_path = os.environ.get("BSP_FAULT_PATH")
+_mode = os.environ.get("BSP_FAULT_MODE")
+_real = os.write
+_hits = [0]
+def _write(fd, data):
+    try:
+        ours = _path is not None and os.path.samestat(os.fstat(fd), os.stat(_path))
+    except OSError:
+        ours = False
+    if ours:
+        _hits[0] += 1
+        if _hits[0] == 1:
+            _real(fd, bytes(data)[: max(1, len(data) // 2)])
+            raise OSError(errno.EIO, "injected")
+        if _mode == "restore-fails":
+            raise OSError(errno.EIO, "injected")
+    return _real(fd, data)
+os.write = _write
+PY
+fault_run() {
+  HOME="$h" BEADS_SUPERPOWERS_SKILLS_DIR="$h/skills" PYTHONPATH="$FI" \
+    BSP_FAULT_PATH="$h/.claude/settings.json" BSP_FAULT_MODE="$1" \
+    bash "$REPO_ROOT/install.sh" --uninstall >"$log" 2>&1
+  rc=$?
+}
+fault_common() {
+  local name="$1"
+  if [ "$rc" != 0 ]; then echo "FAIL [$name]: exit $rc"; sed -n '1,25p' "$log"; fail=1; fi
+  if ! grep -q "$h/.claude/settings.json.*NOT removed" "$log"; then echo "FAIL [$name]: no warning naming the file and 'NOT removed'"; fail=1; fi
+  if grep -q "Removed hooks from settings.json" "$log"; then echo "FAIL [$name]: claimed hooks were removed"; fail=1; fi
+  if grep -Eq "Traceback|Error|File \"|errno|injected" "$log"; then echo "FAIL [$name]: exception text in output"; fail=1; fi
+  if [ -e "$h/skills/.beads-superpowers-version" ] || ! grep -q "beads-superpowers uninstalled" "$log"; then
+    echo "FAIL [$name]: rest of the uninstall did not run"; fail=1
+  fi
+}
+
+# Restore works: the file is byte-identical again and the backup is removed.
+setup
+printf '%s' "$WITH_ENTRIES" >"$h/.claude/settings.json"
+before=$(sha "$h/.claude/settings.json")
+fault_run restore-works
+fault_common "write fails, restored"
+if [ "$before" != "$(sha "$h/.claude/settings.json")" ]; then echo "FAIL [write fails, restored]: settings file not byte-identical to the original"; fail=1; fi
+if [ "$(backups "$h")" != 0 ]; then echo "FAIL [write fails, restored]: stray backup left"; fail=1; fi
+if ! grep -q "$h/.claude/settings.json.*original contents were restored" "$log"; then echo "FAIL [write fails, restored]: no message saying the original was restored"; fail=1; fi
+
+# Restore impossible: the backup is kept, holds the original bytes, and the
+# message names it and says the restore failed.
+setup
+printf '%s' "$WITH_ENTRIES" >"$h/.claude/settings.json"
+before=$(sha "$h/.claude/settings.json")
+fault_run restore-fails
+fault_common "write fails, restore fails"
+if [ "$(backups "$h")" != 1 ]; then echo "FAIL [write fails, restore fails]: expected the backup to be kept, found $(backups "$h")"; fail=1; fi
+for b in "$h/.claude/settings.json.backup-"*; do
+  if [ ! -f "$b" ]; then continue; fi
+  if [ "$before" != "$(sha "$b")" ]; then echo "FAIL [write fails, restore fails]: backup is not byte-identical to the original"; fail=1; fi
+  if ! grep -qF "$b" "$log"; then echo "FAIL [write fails, restore fails]: message does not name the backup $b"; fail=1; fi
+done
+if ! grep -q "$h/.claude/settings.json.*could not be restored" "$log"; then echo "FAIL [write fails, restore fails]: message does not say the restore failed"; fail=1; fi
 
 if [ "$fail" -eq 0 ]; then echo "PASS: --uninstall handles the settings file safely"; fi
 exit "$fail"
