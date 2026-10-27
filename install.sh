@@ -470,6 +470,17 @@ install_agents_from() {
   done
 }
 
+# hook_setup_failed <setup_hooks rc> [context]: a setup_hooks caller's warning,
+# naming the cause: rc 2 is hook_bash finding no usable bash, anything else
+# is python3 missing.
+hook_setup_failed() {
+  if [ "$1" = 2 ]; then
+    warn "Hook setup failed${2:+ $2} — no usable bash outside the project was found; re-run install.sh once one is on PATH"
+  else
+    warn "Hook setup failed${2:+ $2} — re-run install.sh once python3 is available"
+  fi
+}
+
 setup_hooks() {
   local source_root="${1:-}"
   if [ "$HAS_PYTHON3" = 0 ]; then
@@ -479,8 +490,8 @@ setup_hooks() {
   fi
 
   if ! HOOK_BASH=$(hook_bash); then
-    warn "no bash found on PATH — cannot register the SessionStart hook"
-    return 1
+    warn "no usable bash outside the project was found on PATH — cannot register the SessionStart hook"
+    return 2
   fi
 
   mkdir -p "$HOOKS_DIR"
@@ -517,7 +528,7 @@ try_local_install() {
 
   install_agents_from "$STAGING_DIR/repo"
 
-  setup_hooks "$STAGING_DIR/repo" || warn "Hook setup failed — re-run install.sh once python3 is available"
+  setup_hooks "$STAGING_DIR/repo" || hook_setup_failed $?
 
   INSTALL_TIER="local"
   return 0
@@ -577,7 +588,7 @@ try_npx_install() {
     success "Skills installed via npx"
 
     # npx doesn't install hooks — do it ourselves
-    setup_hooks || warn "Hook setup failed after npx install — re-run install.sh once python3 is available"
+    setup_hooks || hook_setup_failed $? "after npx install"
 
     INSTALL_TIER="npx"
     return 0
@@ -620,7 +631,7 @@ try_tarball_install() {
 
   install_agents_from "$STAGING_DIR/extracted"
 
-  setup_hooks "$STAGING_DIR/extracted" || warn "Hook setup failed — re-run install.sh once python3 is available"
+  setup_hooks "$STAGING_DIR/extracted" || hook_setup_failed $?
 
   INSTALL_TIER="tarball"
   return 0
@@ -644,7 +655,7 @@ try_git_install() {
 
   install_agents_from "$STAGING_DIR/repo"
 
-  setup_hooks "$STAGING_DIR/repo" || warn "Hook setup failed — re-run install.sh once python3 is available"
+  setup_hooks "$STAGING_DIR/repo" || hook_setup_failed $?
 
   INSTALL_TIER="git"
   return 0
@@ -1654,7 +1665,7 @@ print_dry_run() {
 do_test() {
   local test_home="/tmp/beads-superpowers-test" test_bash
   if ! test_bash=$(hook_bash); then
-    error "no bash found on PATH"
+    error "no usable bash outside the project was found on PATH"
     exit 1
   fi
   rm -rf "$test_home"

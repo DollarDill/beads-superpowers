@@ -64,5 +64,28 @@ not_planted "in-project bash is the only bash on PATH"
 hook_run "$SANDBOX/real:/usr/bin:/bin" "$proj"
 real_used "control: bash outside the project first on PATH"
 
+# When hook_bash finds no usable bash, every setup_hooks caller names that
+# cause, not python3. Each caller line runs against the real setup_hooks
+# with hook_bash stubbed to fail (no /bin/bash host needed); a host without
+# python3 still gets the python3 advice.
+{
+  awk '/^setup_hooks\(\) \{$/,/^}$/' "$REPO_ROOT/install.sh"
+  awk '/^hook_setup_failed\(\) \{$/,/^}$/' "$REPO_ROOT/install.sh"
+} >"$SANDBOX/setup.sh"
+callers=$(grep -E '^[[:space:]]*setup_hooks( |$).*\|\| ' "$REPO_ROOT/install.sh")
+if [ "$(printf '%s\n' "$callers" | grep -c .)" != 4 ]; then echo "FAIL: expected 4 setup_hooks callers in install.sh, found: $callers"; fail=1; fi
+while IFS= read -r line; do
+  # shellcheck disable=SC2016 # $1/$2 are expanded by the inner bash
+  msg=$(HAS_PYTHON3=1 bash -c 'warn() { echo "warn $1"; }; info() { :; }; hook_bash() { return 1; }; STAGING_DIR=/nonexistent; . "$1"; eval "$2"' _ "$SANDBOX/setup.sh" "$line" 2>&1)
+  if [[ "$msg" == *"no usable bash outside the project"* ]] && [[ "$msg" != *python3* ]]; then :; else
+    echo "FAIL [no usable bash]: caller '${line#"${line%%[![:space:]]*}"}' printed: $msg"; fail=1
+  fi
+  # shellcheck disable=SC2016 # $1/$2 are expanded by the inner bash
+  msg=$(HAS_PYTHON3=0 bash -c 'warn() { echo "warn $1"; }; info() { :; }; hook_bash() { return 1; }; STAGING_DIR=/nonexistent; . "$1"; eval "$2"' _ "$SANDBOX/setup.sh" "$line" 2>&1)
+  if [[ "$msg" == *"once python3 is available"* ]] && [[ "$msg" != *"no usable bash"* ]]; then :; else
+    echo "FAIL [no python3]: caller '${line#"${line%%[![:space:]]*}"}' printed: $msg"; fail=1
+  fi
+done <<<"$callers"
+
 if [ "$fail" -eq 0 ]; then echo "PASS: the registered hook never runs a bash from inside the project"; fi
 exit "$fail"
