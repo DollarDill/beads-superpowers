@@ -124,6 +124,48 @@ run "$T/plain" '~/bin:/usr/bin:/bin' "$bash_bin" "$ROOT/hooks/session-start"
 tilde=1; if [ -e "$T/tilde-bd-ran" ]; then tilde=0; fi
 check "tilde entry kept (~/bin/bd runs)" "$tilde"
 
+# --- bd dropped because a git $HOME is the root: the injection says why ---
+# HOME holds a .git and no root variable is set, so HOME is the project root
+# (user decision 2026-10-28) and a bd under it is dropped with the rest of
+# the project. The injected text and the stderr hint name the cause and both
+# fixes. The bd is only ever stat'ed, never run. When bd is simply absent, or
+# a root variable is set, the note does not appear.
+HOMEBD_NOTE='set CLAUDE_PROJECT_DIR (or CURSOR_PROJECT_DIR) to your project directory, or install bd outside your home directory'
+injected() { # the additionalContext of $out, parsed outside the hook's env
+  python3 -I -c 'import json,sys; print(json.load(sys.stdin)["hookSpecificOutput"]["additionalContext"])' <"$out" 2>/dev/null
+}
+homebd_case() { # name | want note (0 yes, 1 no) | bd planted (0/1) | PATH | extra env... (__H__ is HOME)
+  local name="$1" want="$2" plant="$3" p="$4" ctx has_ctx=1 has_err=1 planted prc kv
+  local -a extra=()
+  shift 4
+  fresh
+  p=${p//__H__/$h}
+  for kv in "$@"; do extra+=("${kv//__H__/$h}"); done
+  mkdir -p "$h/.git" "$h/sub" "$h/.local/bin"
+  if [ "$plant" = 1 ]; then
+    printf '#!/bin/sh\n: > "%s/ran-homebd"\necho "Memories (1):"\n' "$T" >"$h/.local/bin/bd"
+    chmod +x "$h/.local/bin/bd"
+  fi
+  (cd "$h/sub" && env -i HOME="$h" XDG_RUNTIME_DIR="$rt" CLAUDE_PLUGIN_ROOT="$ROOT" PATH="$p" ${extra[@]+"${extra[@]}"} \
+    "$bash_bin" "$ROOT/hooks/session-start" </dev/null >"$out" 2>"$err")
+  rc=$?
+  ctx=$(injected)
+  if [[ "$ctx" == *"$HOMEBD_NOTE"* ]]; then has_ctx=0; fi
+  if grep -qF "$HOMEBD_NOTE" "$err"; then has_err=0; fi
+  planted=$(no_planted); prc=$?
+  if [ "$prc" != 0 ]; then echo "$planted"; fi
+  if [ "$want" = 0 ]; then
+    check "$name" "$(( has_ctx || has_err || prc ))"
+  else
+    check "$name" "$(( (! has_ctx) || (! has_err) || prc ))"
+  fi
+}
+homebd_case "git HOME is the root, bd under it dropped (absolute entry): injection names the cause and fixes" 0 1 '__H__/.local/bin:/usr/bin:/bin'
+# shellcheck disable=SC2088 # a literal ~ entry, mapped to $HOME by the hook
+homebd_case "git HOME is the root, bd under it dropped (~ entry): injection names the cause and fixes" 0 1 '~/.local/bin:/usr/bin:/bin'
+homebd_case "git HOME is the root, bd simply absent: no HOME note" 1 0 '__H__/.local/bin:/usr/bin:/bin'
+homebd_case "bd under HOME dropped with a root variable set: no HOME note" 1 1 '__H__/.local/bin:/usr/bin:/bin' CLAUDE_PROJECT_DIR=__H__
+
 # --- golden: a normal PATH emits the same bytes as the pre-change hook ---
 # Base: GOLDEN_BASE (0c5127c), the last commit before sub-project A. Rule: when a
 # later change INTENDS to change the hook's normal-PATH output, move GOLDEN_BASE

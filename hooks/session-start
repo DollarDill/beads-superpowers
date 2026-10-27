@@ -86,6 +86,27 @@ for bsp_p in ${bsp_path_parts[@]+"${bsp_path_parts[@]}"}; do
     bsp_safe_path="${bsp_safe_path:+$bsp_safe_path:}$bsp_p"
 done
 PATH="${bsp_safe_path:-/usr/bin:/bin}"; export PATH
+# With no root variable, a .git in $HOME makes $HOME the root, so a bd under
+# it (~/.local/bin) is dropped with the rest of the project. When that is why
+# bd is missing, the injection says so (bsp_homebd_note). Stat only: nothing
+# in a dropped entry is ever run.
+bsp_homebd=0
+if [ -z "${CLAUDE_PROJECT_DIR:-}" ] && [ -z "${CURSOR_PROJECT_DIR:-}" ] \
+   && [[ "${HOME:-}" == /* ]] && [ -e "${HOME%/}/.git" ] && [ -n "$bsp_root" ] \
+   && [ "$bsp_root" -ef "$HOME" ] && ! command -v bd >/dev/null 2>&1; then
+    for bsp_p in ${bsp_path_parts[@]+"${bsp_path_parts[@]}"}; do
+        # shellcheck disable=SC2088 # literal ~ entries, as above
+        case "$bsp_p" in
+            /*) ;;
+            "~"|"~/"*) bsp_p="${HOME}${bsp_p#\~}" ;;
+            *) continue ;;
+        esac
+        if [ -f "${bsp_p%/}/bd" ] && [ -x "${bsp_p%/}/bd" ] && ! bsp_entry_outside "$bsp_p"; then
+            bsp_homebd=1; break
+        fi
+    done
+fi
+bsp_homebd_note="beads-superpowers: no beads context this session. bd is installed under your home directory, and with no project root variable set, the .git in your home directory makes it the project root, so the hook drops every PATH entry under it (it never runs a tool from inside the project). To fix: set CLAUDE_PROJECT_DIR (or CURSOR_PROJECT_DIR) to your project directory, or install bd outside your home directory."
 
 # Determine plugin root directory.
 # Splits $0 on its last / or \ (run-hook.cmd's cmd half passes a Windows
@@ -463,6 +484,10 @@ if [ -n "$beads_context" ]; then
 <beads-context>
 ${beads_context}
 </beads-context>"
+elif [ "$bsp_homebd" = 1 ]; then
+    session_context_raw="${session_context_raw}
+
+${bsp_homebd_note}"
 fi
 
 # Output context injection.
@@ -509,7 +534,9 @@ else
 fi
 
 # bd-absent hint (non-fatal, one line to stderr)
-if ! command -v bd >/dev/null 2>&1; then
+if [ "$bsp_homebd" = 1 ]; then
+  printf '%s\n' "$bsp_homebd_note" >&2
+elif ! command -v bd >/dev/null 2>&1; then
   printf '%s\n' "beads not found — install bd to enable persistent task memory: https://github.com/DollarDill/beads-superpowers#prerequisites" >&2
 fi
 
