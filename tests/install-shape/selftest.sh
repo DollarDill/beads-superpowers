@@ -423,7 +423,7 @@ elif ! cp -f "$REPO_ROOT/tests/skills/test-sdd-structure.sh" "$SB18/tests/skills
 elif ! mkdir -p "$SB18/skills/using-superpowers" || ! cp -rf "$REPO_ROOT/skills/using-superpowers/references" "$SB18/skills/using-superpowers/references"; then
   echo "SELFTEST FAIL: mutation-18 setup copy using-superpowers references failed (rig broken, not a caught mutation)"; rc=1
 else
-  for _ in $(seq 1 60); do echo >> "$SB18/skills/subagent-driven-development/SKILL.md"; done
+  n=$(grep -c '' "$SB18/skills/subagent-driven-development/SKILL.md"); for _ in $(seq "$n" 499); do echo >> "$SB18/skills/subagent-driven-development/SKILL.md"; done
   expect_red "sdd structure: SKILL.md over the 500-line budget" \
     bash "$SB18/tests/skills/test-sdd-structure.sh"
   cp -f "$REPO_ROOT/skills/subagent-driven-development/SKILL.md" \

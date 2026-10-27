@@ -24,7 +24,7 @@ absent 'bd epic status <epic-id>'
 pin 'bd list -t epic --status open --desc-contains "Plan: <plan file path>"'
 absent 'bd search "<plan basename>"'
 absent 'The stops above are the only reasons to stop.'
-absent 'Rule on each conflict a row surfaces'
+if grep -qF -- 'Rule on each conflict a row surfaces' "$ROOT/skills/executing-plans/references/preflight.md"; then echo "FAIL: present in preflight.md: Rule on each conflict a row surfaces"; fail=1; fi
 # CHANGE-DETECTOR (convert: plugin-eval executing-plans case, s9xyx)
 pin 'Do not pause to check in between tasks'
 pin 'complete (commits <base7>..<head7>, tests: <cmd>'
@@ -63,9 +63,18 @@ pin "Another plan's directory is never yours to read or write."
 pin 'Sibling directories belong to other plans; leave them alone.'
 pin 'a test that passes before the implementation exists is a finding about the test.'
 pin 'does not exempt you from reading it.'
-pin "Each task's own text is checked when you read its brief, not here."
+grep -qF -- "Each task's own text is checked when you read its brief, not here." "$ROOT/skills/executing-plans/references/preflight.md" || { echo "FAIL: preflight.md lacks the per-task-text sentence"; fail=1; }
 pin 'the reviewer checks each deliberately'
 pin '## Example Workflow'
+# moved step-scoped text lives in references/ - one pin per pointer line
+# shellcheck disable=SC2016  # backticks are literal pinned skill text, not command substitution
+pin 'Read `references/example-workflow.md` (in this skill'"'"'s directory) before your first task**'
+# shellcheck disable=SC2016  # backticks are literal pinned skill text, not command substitution
+pin 'Read `references/when-to-use.md` (in this skill'"'"'s directory) before choosing inline execution**'
+# shellcheck disable=SC2016  # backticks are literal pinned skill text, not command substitution
+pin 'Read `references/ledger-setup.md` (in this skill'"'"'s directory) before creating a fresh ledger** — create the epic, then `bd import -` every task'
+# shellcheck disable=SC2016  # backticks are literal pinned skill text, not command substitution
+pin 'Read `references/preflight.md` (in this skill'"'"'s directory) before the pre-flight scan**'
 # guardrail floor: Red Flags table has at least 12 rows
 rows=$(awk '/^## Red Flags/{f=1;next} f&&/^## /{f=0} f&&/^\|/{c++} END{print c+0}' "$F")
 [ "$rows" -ge 14 ] || { echo "FAIL: Red Flags table has $rows lines (< header+separator+12 rows)"; fail=1; }
