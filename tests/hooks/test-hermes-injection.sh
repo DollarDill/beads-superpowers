@@ -450,8 +450,9 @@ try:
     # bd is only in $HOME/.local/bin, which the cleaning drops. The real
     # composer (hooks/session-start, through the launcher) decides; the plugin
     # only runs it. Its injected text must carry the composer's note, the
-    # plugin's own child PATH must still drop the entry, and the planted bd
-    # must never run. With bd simply absent, no note.
+    # PATH the plugin actually hands the composer child (captured from the
+    # subprocess.run call, not recomputed) must still drop the entry, and the
+    # planted bd must never run. With bd simply absent, no note.
     NOTE = ("set CLAUDE_PROJECT_DIR (or CURSOR_PROJECT_DIR) to your project "
             "directory, or install bd outside your home directory")
     saved_env = {k: os.environ.get(k) for k in
@@ -479,12 +480,24 @@ try:
         os.environ["XDG_RUNTIME_DIR"] = os.path.realpath(tempfile.mkdtemp())
         os.environ.pop("CLAUDE_PROJECT_DIR", None)
         os.environ.pop("CURSOR_PROJECT_DIR", None)
+        handed_envs = []
         try:
             mod = load(pdir)
-            ctx = FakeCtx()
-            mod.register(ctx)
-            text = ctx.hooks["pre_llm_call"](is_first_turn=True)["context"]
-            handed = mod._child_env()["PATH"]
+            real_run = mod.subprocess.run
+
+            def capture(*a, **kw):
+                args = a[0] if a else kw.get("args")
+                if "session-start" in args:
+                    handed_envs.append(kw.get("env"))
+                return real_run(*a, **kw)
+
+            mod.subprocess.run = capture
+            try:
+                ctx = FakeCtx()
+                mod.register(ctx)
+                text = ctx.hooks["pre_llm_call"](is_first_turn=True)["context"]
+            finally:
+                mod.subprocess.run = real_run
         finally:
             shutil.rmtree(os.environ["XDG_RUNTIME_DIR"])
             for k, v in saved_env.items():
@@ -498,8 +511,11 @@ try:
         what = "bd under a git HOME" if plant else "bd absent, git HOME"
         ran = planted_ran()
         check(ran == [], f"no planted binary ran ({what}); ran: {ran}")
-        check(lbin not in handed.split(":"),
-              f"plugin child PATH still drops the HOME entry ({what}): {handed}")
+        check(len(handed_envs) == 1 and handed_envs[0] is not None,
+              f"composer child started once with an explicit env ({what}): {len(handed_envs)}")
+        handed = (handed_envs[0] or {}).get("PATH", "") if handed_envs else ""
+        check(handed != "" and lbin not in handed.split(":"),
+              f"PATH handed to the composer child still drops the HOME entry ({what}): {handed}")
         check("session composer unavailable" not in text and BOOT_MARK in text,
               f"real composer payload injected ({what})")
         if plant:

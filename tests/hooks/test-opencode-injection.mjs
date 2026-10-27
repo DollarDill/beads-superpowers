@@ -20,6 +20,7 @@ import { dirname, join } from "node:path"
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, realpathSync, readdirSync, accessSync, constants, symlinkSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { execFileSync } from "node:child_process"
+import { createRequire, syncBuiltinESMExports } from "node:module"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = join(__dirname, "../..")
@@ -285,8 +286,10 @@ try {
   // HOME holds a .git, no root variable is set, the cwd is below HOME and bd
   // is only in $HOME/.local/bin, which the cleaning drops. The real composer
   // (hooks/session-start, through the launcher) decides; the plugin only
-  // runs it. Its injected text must carry the composer's note and the
-  // planted bd must never run. With bd simply absent, no note.
+  // runs it. Its injected text must carry the composer's note, the PATH the
+  // plugin actually hands the composer child (captured from its execSync
+  // call, not recomputed) must still drop the entry, and the planted bd must
+  // never run. With bd simply absent, no note.
   const homeNote = "set CLAUDE_PROJECT_DIR (or CURSOR_PROJECT_DIR) to your project directory, or install bd outside your home directory"
   const savedEnv = Object.fromEntries(["PATH", "HOME", "XDG_RUNTIME_DIR", "CLAUDE_PROJECT_DIR", "CURSOR_PROJECT_DIR"]
     .map(k => [k, process.env[k]]))
@@ -314,6 +317,14 @@ try {
     delete process.env.CLAUDE_PROJECT_DIR
     delete process.env.CURSOR_PROJECT_DIR
     let textH
+    const handedEnvs = []
+    const cp = createRequire(import.meta.url)("node:child_process")
+    const realExecSync = cp.execSync
+    cp.execSync = (cmd, opts) => {
+      if (String(cmd).includes("session-start")) handedEnvs.push(opts?.env)
+      return realExecSync(cmd, opts)
+    }
+    syncBuiltinESMExports()
     try {
       const { BeadsSuperpowersPlugin: PluginH } = await import(frPlugin)
       const hooksH = await PluginH({ client: {}, directory: join(ghome, "sub") })
@@ -321,6 +332,8 @@ try {
       await hooksH["experimental.chat.messages.transform"]({}, outH)
       textH = outH.messages[0].parts[0].text
     } finally {
+      cp.execSync = realExecSync
+      syncBuiltinESMExports()
       for (const [k, v] of Object.entries(savedEnv)) {
         if (v === undefined) delete process.env[k]
         else process.env[k] = v
@@ -330,6 +343,10 @@ try {
     }
     const what = plant ? "bd under a git HOME" : "bd absent, git HOME"
     assert.deepStrictEqual(plantedRan(), [], `planted binary ran (${what})`)
+    assert.ok(handedEnvs.length === 1 && handedEnvs[0], `composer child started once with an explicit env (${what}): ${handedEnvs.length}`)
+    const handed = handedEnvs[0].PATH ?? ""
+    assert.ok(handed !== "" && !handed.split(":").includes(lbin),
+      `PATH handed to the composer child still drops the HOME entry (${what}): ${handed}`)
     assert.ok(textH.includes("EXTREMELY_IMPORTANT") && !textH.includes("session composer unavailable"),
       `real composer payload injected (${what}): ${textH.slice(0, 200)}`)
     if (plant) {
