@@ -75,10 +75,11 @@ unreadable=0; if grep -qF 'skill unreadable' "$out"; then unreadable=1; fi
 check "backslash \$0, empty PATH" "$unreadable"
 
 # --- partial PATH: cat resolves, sed/mkdir do not (Review Focus 1) ---
-mkdir -p "$T/catbin"
+# The stub sits outside the cwd: an entry inside the cwd tree is dropped.
+mkdir -p "$T/catbin" "$T/catcwd"
 printf '#!%s\n: > "%s/cat-used"\nexec /bin/cat "$@"\n' "$bash_bin" "$T" >"$T/catbin/cat"
 chmod +x "$T/catbin/cat"
-fresh; run "$T" "$T/catbin" "$bash_bin" "$ROOT/hooks/session-start"
+fresh; run "$T/catcwd" "$T/catbin" "$bash_bin" "$ROOT/hooks/session-start"
 cat_used=1; if [ -e "$T/cat-used" ]; then cat_used=0; fi
 check "cat stub (emit_json goes through cat)" "$cat_used"
 
@@ -173,7 +174,11 @@ awk '/^write_hook_script\(\) \{$/ { on = 1 }
      on { print }
      on && /^}$/ && prev ~ /chmod \+x "\$HOOK_SCRIPT"$/ { exit }
      { prev = $0 }' "$ROOT/install.sh" >"$T/whs.sh"
-if [ "$(tail -n 1 "$T/whs.sh")" = "}" ] && grep -q 'HOOKEOF' "$T/whs.sh"; then
+# The shim's bash rule, which write_hook_script writes into it.
+awk '/^IFS= read -r -d .. BSP_USABLE_SH <</,/^BSPEOF$/' "$ROOT/install.sh" >"$T/bsp.sh"
+if [ "$(tail -n 1 "$T/whs.sh")" = "}" ] && grep -q 'HOOKEOF' "$T/whs.sh" && [ "$(tail -n 1 "$T/bsp.sh")" = BSPEOF ]; then
+  # shellcheck source=/dev/null
+  . "$T/bsp.sh"
   # shellcheck source=/dev/null
   . "$T/whs.sh"
   HOOKS_DIR="$T/hookhome" HOOK_SCRIPT="$T/hookhome/shim.sh" SKILLS_DIR="$ROOT/skills" write_hook_script "$ROOT"
@@ -416,7 +421,7 @@ if [ "$(tail -n 1 "$T/whs.sh")" = "}" ] && grep -q 'HOOKEOF' "$T/whs.sh"; then
   run "$T/evil" "" "$bash_bin" "$T/hookhome/fallback.sh"
   planted_check "planted binaries: npx fallback with PATH=''"
 else
-  report "extract write_hook_script from install.sh" 1 "function body not found"
+  report "extract write_hook_script from install.sh" 1 "function body or BSP_USABLE_SH not found"
 fi
 
 # --- install.sh: the bash the hook is registered and run with ---

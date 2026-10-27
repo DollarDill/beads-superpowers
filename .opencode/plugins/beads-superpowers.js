@@ -17,6 +17,7 @@
 
 import path from 'path';
 import { execSync } from 'child_process';
+import { existsSync, realpathSync, statSync } from 'fs';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -29,13 +30,88 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
   const packageRoot = path.resolve(__dirname, '../..');
   const skillsDir = path.join(packageRoot, 'skills');
 
-  // The env for every child: PATH cut to absolute entries, with
-  // hooks/session-start's rule (~ and ~/x become $HOME when HOME is absolute,
-  // anything else relative is dropped, fallback /usr/bin:/bin). An empty or
-  // relative entry, or PATH="", makes a lookup search the cwd, an untrusted
-  // project; the launcher's bash and `bd` are both looked up on it.
+  // hooks/session-start's in-project PATH-entry drop, for this process. The
+  // rule is hooks/run-hook.cmd's bsp_outside, applied to <entry>/bash: an
+  // entry is dropped when it has a . or .. component, literally starts with
+  // the cwd (logical, physical or canonical), or lies physically inside the
+  // cwd tree or the project root (CLAUDE_PROJECT_DIR, else
+  // CURSOR_PROJECT_DIR, else the highest .git ancestor of the cwd); every
+  // entry is dropped when a root variable is relative or does not resolve.
+  // The logical cwd is $PWD when it names the cwd, as a shell started here
+  // would take it. Pinned with the shell copies by
+  // tests/hooks/test-path-containment.sh.
+  const entryOutside = () => {
+    const collapse = (p) => (p.startsWith('//') ? '/' + p.replace(/^\/+/, '') : p);
+    const strip1 = (p) => (p.endsWith('/') ? p.slice(0, -1) : p);
+    // Shell `cd -P <p>/ && pwd -P`: the physical directory, or ''.
+    const physDir = (p) => {
+      try {
+        return statSync(p).isDirectory() ? collapse(realpathSync(p)) : '';
+      } catch {
+        return '';
+      }
+    };
+    let cwd = '';
+    try { cwd = collapse(process.cwd()); } catch { cwd = ''; }
+    let ok = true;
+    let root = '';
+    for (const v of ['CLAUDE_PROJECT_DIR', 'CURSOR_PROJECT_DIR']) {
+      const val = process.env[v] ?? '';
+      if (val.startsWith('/')) root = root || val;
+      else if (val) ok = false;
+    }
+    let pwd = process.env.PWD ?? '';
+    try {
+      const a = statSync(pwd);
+      const b = statSync('.');
+      if (!pwd.startsWith('/') || a.dev !== b.dev || a.ino !== b.ino) pwd = cwd;
+    } catch {
+      pwd = cwd;
+    }
+    const physPfx = strip1(cwd);
+    const pwdPfx = pwd ? strip1(collapse(pwd)) : physPfx;
+    let can = cwd;
+    if (pwd) {
+      can = physDir(pwd) ? collapse(path.posix.normalize(pwd)) : '';
+      if (!can) ok = false;
+    }
+    const canPfx = strip1(can);
+    if (root) {
+      root = physDir(root);
+      if (!root) ok = false;
+    } else if (ok) {
+      root = cwd;
+      let d = cwd;
+      while (d) {
+        if (existsSync(strip1(d) + '/.git')) root = d;
+        if (d === '/') break;
+        d = d.slice(0, d.lastIndexOf('/')) || '/';
+      }
+    }
+    const cwdPfx = strip1(cwd);
+    const rootPfx = strip1(root);
+    return (entry) => {
+      const cand = strip1(entry) + '/bash';
+      if (cand.includes('/./') || cand.includes('/../')) return false;
+      const lit = collapse(cand);
+      if ([pwdPfx, physPfx, canPfx].some((pfx) => lit.startsWith(pfx + '/'))) return false;
+      const d = physDir(strip1(entry) + '/');
+      if (!(ok && cwd && root && d)) return false;
+      return !((d + '/').startsWith(cwdPfx + '/') || (d + '/').startsWith(rootPfx + '/'));
+    };
+  };
+
+  // The env for every child: PATH cut to absolute entries outside the
+  // project, with hooks/session-start's rule (~ and ~/x become $HOME when
+  // HOME is absolute, anything else relative is dropped, then every entry
+  // inside the project, see entryOutside; fallback /usr/bin:/bin). An empty
+  // or relative entry, or PATH="", makes a lookup search the cwd, an
+  // untrusted project, and an absolute entry can sit inside it
+  // (<proj>/node_modules/.bin); the launcher's bash and `bd` are both
+  // looked up on it.
   const childEnv = () => {
     const home = process.env.HOME ?? '';
+    const outside = entryOutside();
     const keep = [];
     for (let p of (process.env.PATH ?? '').split(':')) {
       if (p === '~' || p.startsWith('~/')) {
@@ -44,7 +120,7 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
       } else if (!p.startsWith('/')) {
         continue;
       }
-      keep.push(p);
+      if (outside(p)) keep.push(p);
     }
     return { ...process.env, PATH: keep.join(':') || '/usr/bin:/bin' };
   };

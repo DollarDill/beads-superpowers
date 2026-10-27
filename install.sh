@@ -796,6 +796,195 @@ IFS=$bsp_old_ifs
 PATH="${bsp_safe_path:-/usr/bin:/bin}"; export PATH
 
 # bsp_usable <bash>: the rule in step 2. Exit 0: it may be run.
+HOOKEOF
+      printf '%s' "$BSP_USABLE_SH"
+      cat << 'HOOKEOF'
+bsp_bash=""
+bsp_old_ifs=$IFS
+IFS=:
+set -f
+for bsp_p in $PATH; do
+  if [ -f "$bsp_p/bash" ] && [ -x "$bsp_p/bash" ] && bsp_usable "$bsp_p/bash"; then
+    bsp_bash=$bsp_p/bash
+    break
+  fi
+done
+set +f
+IFS=$bsp_old_ifs
+if [ -z "$bsp_bash" ] && bsp_usable "${BASH:-}"; then
+  bsp_bash=$BASH
+fi
+if [ -z "$bsp_bash" ]; then
+  exit 0
+fi
+exec "$bsp_bash" "$BSP_ROOT/hooks/session-start" "$@"
+HOOKEOF
+    } > "$HOOK_SCRIPT"
+  else
+    cat > "$HOOK_SCRIPT" << 'HOOKEOF'
+#!/usr/bin/env bash
+# beads-superpowers SessionStart hook — minimal fallback (npx tier).
+# npx installs skills only (no repo checkout), so the canonical
+# hooks/session-start composer is not available to exec. This fallback is
+# policy-free by design: skill injection plus static bd pointers — no bd prime
+# capture, no memory selection. That logic lives in hooks/session-start.
+set -euo pipefail
+
+# hooks/session-start's PATH clean-up, byte for byte (tests/hooks/test-path-containment.sh checks it).
+# Keep only absolute PATH entries (a literal ~ or ~/x becomes $HOME, as bash
+# itself would expand it): an empty or relative entry, or PATH="", makes bash
+# look commands up in the current directory, which for a hook is an untrusted
+# project. Then drop every absolute entry inside the project (npm exec's
+# <proj>/node_modules/.bin, direnv PATH_add): bd, sed and every other tool
+# below is looked up on this PATH. The rule is hooks/run-hook.cmd's
+# bsp_outside, applied to <entry>/bash (its comments give the reasons); the
+# cwd and root parts, the same for every entry, are computed once. Pinned
+# with the launcher and both plugins by tests/hooks/test-path-containment.sh.
+# Pure bash, before any external command runs.
+bsp_cwd=$(pwd -P 2>/dev/null) || bsp_cwd=""
+case $bsp_cwd in //*) bsp_cwd=/${bsp_cwd#"${bsp_cwd%%[!/]*}"} ;; esac
+bsp_ok=1
+bsp_root=""
+case "${CLAUDE_PROJECT_DIR:-}" in
+    "") ;;
+    /*) bsp_root=$CLAUDE_PROJECT_DIR ;;
+    *) bsp_ok=0 ;;
+esac
+case "${CURSOR_PROJECT_DIR:-}" in
+    "") ;;
+    /*) if [ -z "$bsp_root" ]; then bsp_root=$CURSOR_PROJECT_DIR; fi ;;
+    *) bsp_ok=0 ;;
+esac
+bsp_pwd=${PWD:-}
+case $bsp_pwd in //*) bsp_pwd=/${bsp_pwd#"${bsp_pwd%%[!/]*}"} ;; esac
+bsp_phys_pfx=${bsp_cwd%/}
+bsp_pwd_pfx=$bsp_phys_pfx
+if [ -n "$bsp_pwd" ]; then bsp_pwd_pfx=${bsp_pwd%/}; fi
+if [ -n "${PWD:-}" ]; then
+    bsp_can=$(cd "$PWD" 2>/dev/null && pwd) || bsp_can=""
+    case $bsp_can in //*) bsp_can=/${bsp_can#"${bsp_can%%[!/]*}"} ;; esac
+    if [ -z "$bsp_can" ]; then bsp_ok=0; fi
+else
+    bsp_can=$bsp_cwd
+fi
+bsp_can_pfx=${bsp_can%/}
+if [ -n "$bsp_root" ]; then
+    bsp_root=$(cd -P "$bsp_root/" 2>/dev/null && pwd -P) || bsp_root=""
+    case $bsp_root in //*) bsp_root=/${bsp_root#"${bsp_root%%[!/]*}"} ;; esac
+    if [ -z "$bsp_root" ]; then bsp_ok=0; fi
+elif [ "$bsp_ok" = 1 ]; then
+    # No root variable: the highest ancestor of the cwd holding .git, else the cwd.
+    bsp_root=$bsp_cwd
+    bsp_d=$bsp_cwd
+    while [ -n "$bsp_d" ]; do
+        if [ -e "${bsp_d%/}/.git" ]; then bsp_root=$bsp_d; fi
+        if [ "$bsp_d" = / ]; then break; fi
+        bsp_d=${bsp_d%/*}
+        if [ -z "$bsp_d" ]; then bsp_d=/; fi
+    done
+fi
+# Prefixes go through variables: bash 5.3 does not match "${v%/}"/* when the
+# expansion is empty (cwd /).
+bsp_cwd_pfx=${bsp_cwd%/}
+bsp_root_pfx=${bsp_root%/}
+# bsp_entry_outside <absolute entry>: succeeds when bsp_outside would accept
+# <entry>/bash (the launcher's "not this launcher" clause has no file to test).
+bsp_entry_outside() {
+    local c="${1%/}/bash" lit dir
+    case "$c" in */./*|*/../*|*/.|*/..) return 1 ;; esac
+    lit=$c
+    case $lit in //*) lit=/${lit#"${lit%%[!/]*}"} ;; esac
+    case "$lit" in
+        "$bsp_pwd_pfx"/*|"$bsp_phys_pfx"/*|"$bsp_can_pfx"/*) return 1 ;;
+    esac
+    dir=$(cd -P "${c%/*}/" 2>/dev/null && pwd -P) || dir=""
+    case $dir in //*) dir=/${dir#"${dir%%[!/]*}"} ;; esac
+    if [ "$bsp_ok" = 1 ] && [ -n "$bsp_cwd" ] && [ -n "$bsp_root" ] && [ -n "$dir" ]; then
+        case "$dir/" in
+            "$bsp_cwd_pfx"/*|"$bsp_root_pfx"/*) ;;
+            *) return 0 ;;
+        esac
+    fi
+    return 1
+}
+bsp_safe_path=""
+IFS=: read -r -a bsp_path_parts <<<"${PATH:-}"
+for bsp_p in ${bsp_path_parts[@]+"${bsp_path_parts[@]}"}; do
+    # shellcheck disable=SC2088 # literal ~ entries: bash expands them at lookup
+    case "$bsp_p" in
+        /*) ;;
+        "~"|"~/"*)
+            if [[ "${HOME:-}" == /* ]]; then bsp_p="${HOME}${bsp_p#\~}"; else continue; fi ;;
+        *) continue ;;
+    esac
+    if ! bsp_entry_outside "$bsp_p"; then continue; fi
+    bsp_safe_path="${bsp_safe_path:+$bsp_safe_path:}$bsp_p"
+done
+PATH="${bsp_safe_path:-/usr/bin:/bin}"; export PATH
+
+SKILL_CONTENT=""
+for dir in "$HOME/.claude/skills" "$HOME/.agents/skills"; do
+  if [ -f "$dir/using-superpowers/SKILL.md" ]; then
+    SKILL_CONTENT=$(cat "$dir/using-superpowers/SKILL.md" 2>/dev/null || true)
+    break
+  fi
+done
+
+if [ -z "$SKILL_CONTENT" ]; then
+  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"beads-superpowers: using-superpowers skill not found."}}\n'
+  exit 0
+fi
+
+BEADS_CONTEXT=""
+if command -v bd >/dev/null 2>&1; then
+  MEMORY_LINE=$({ bd memories 2>/dev/null || true; } | head -1)
+  BEADS_CONTEXT=$(cat <<'PTR'
+## Issue Tracking (bd)
+
+This workspace uses **bd (beads)**. Core commands:
+- `bd ready -n 10` — unblocked work · `bd show --short <id>` — skim an issue
+- `bd create "Title" -t task -p 2` — create · `bd close <id> --reason "..."` — complete
+- `bd query "status=open"` — search · `bd remember "insight"` — persist a memory
+- knowledge store: `bd list --label <topic> --status all` — prior decisions/research/design (deferred beads)
+Full reference: `bd human`. If beads context was not injected this session: `bd prime`.
+
+## Persistent Memories
+PTR
+)
+  BEADS_CONTEXT="${BEADS_CONTEXT}
+${MEMORY_LINE}
+"'Search: `bd memories <keyword>` · fetch: `bd recall <key>`'
+fi
+
+escape_json() {
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  s="${s//$'\n'/\\n}"
+  s="${s//$'\r'/\\r}"
+  s="${s//$'\t'/\\t}"
+  printf '%s' "$s"
+}
+
+SKILL_ESC=$(escape_json "$SKILL_CONTENT")
+CONTEXT="<EXTREMELY_IMPORTANT>\\nYou have beads-superpowers.\\n\\n**Below is the full content of your 'beads-superpowers:using-superpowers' skill:**\\n\\n${SKILL_ESC}\\n</EXTREMELY_IMPORTANT>"
+
+if [ -n "$BEADS_CONTEXT" ]; then
+  BEADS_ESC=$(escape_json "$BEADS_CONTEXT")
+  CONTEXT="${CONTEXT}\\n\\n<beads-context>\\n${BEADS_ESC}\\n</beads-context>"
+fi
+
+printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' "$CONTEXT"
+HOOKEOF
+  fi
+  chmod +x "$HOOK_SCRIPT"
+}
+
+
+# BSP_USABLE_SH: the shim's bash rule, bsp_usable <bash> (step 2 in the
+# shim's comments). One copy: write_hook_script writes it into the shim, and
+# hook_bash evals it to vet the bash it registers.
+IFS= read -r -d '' BSP_USABLE_SH <<'BSPEOF' || true
 bsp_usable() {
   bsp_c=$1
   # A . or .. component is the signature of a relative PATH entry: bash
@@ -881,110 +1070,7 @@ bsp_usable() {
   fi
   return 1
 }
-bsp_bash=""
-bsp_old_ifs=$IFS
-IFS=:
-set -f
-for bsp_p in $PATH; do
-  if [ -f "$bsp_p/bash" ] && [ -x "$bsp_p/bash" ] && bsp_usable "$bsp_p/bash"; then
-    bsp_bash=$bsp_p/bash
-    break
-  fi
-done
-set +f
-IFS=$bsp_old_ifs
-if [ -z "$bsp_bash" ] && bsp_usable "${BASH:-}"; then
-  bsp_bash=$BASH
-fi
-if [ -z "$bsp_bash" ]; then
-  exit 0
-fi
-exec "$bsp_bash" "$BSP_ROOT/hooks/session-start" "$@"
-HOOKEOF
-    } > "$HOOK_SCRIPT"
-  else
-    cat > "$HOOK_SCRIPT" << 'HOOKEOF'
-#!/usr/bin/env bash
-# beads-superpowers SessionStart hook — minimal fallback (npx tier).
-# npx installs skills only (no repo checkout), so the canonical
-# hooks/session-start composer is not available to exec. This fallback is
-# policy-free by design: skill injection plus static bd pointers — no bd prime
-# capture, no memory selection. That logic lives in hooks/session-start.
-set -euo pipefail
-
-# Keep only absolute PATH entries (as hooks/session-start does): an empty or relative one runs commands from the cwd.
-bsp_safe_path=""
-IFS=: read -r -a bsp_path_parts <<<"${PATH:-}"
-for bsp_p in ${bsp_path_parts[@]+"${bsp_path_parts[@]}"}; do
-    # shellcheck disable=SC2088 # literal ~ entries: bash expands them at lookup
-    case "$bsp_p" in
-        /*) ;;
-        "~"|"~/"*)
-            if [[ "${HOME:-}" == /* ]]; then bsp_p="${HOME}${bsp_p#\~}"; else continue; fi ;;
-        *) continue ;;
-    esac
-    bsp_safe_path="${bsp_safe_path:+$bsp_safe_path:}$bsp_p"
-done
-PATH="${bsp_safe_path:-/usr/bin:/bin}"; export PATH
-
-SKILL_CONTENT=""
-for dir in "$HOME/.claude/skills" "$HOME/.agents/skills"; do
-  if [ -f "$dir/using-superpowers/SKILL.md" ]; then
-    SKILL_CONTENT=$(cat "$dir/using-superpowers/SKILL.md" 2>/dev/null || true)
-    break
-  fi
-done
-
-if [ -z "$SKILL_CONTENT" ]; then
-  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"beads-superpowers: using-superpowers skill not found."}}\n'
-  exit 0
-fi
-
-BEADS_CONTEXT=""
-if command -v bd >/dev/null 2>&1; then
-  MEMORY_LINE=$({ bd memories 2>/dev/null || true; } | head -1)
-  BEADS_CONTEXT=$(cat <<'PTR'
-## Issue Tracking (bd)
-
-This workspace uses **bd (beads)**. Core commands:
-- `bd ready -n 10` — unblocked work · `bd show --short <id>` — skim an issue
-- `bd create "Title" -t task -p 2` — create · `bd close <id> --reason "..."` — complete
-- `bd query "status=open"` — search · `bd remember "insight"` — persist a memory
-- knowledge store: `bd list --label <topic> --status all` — prior decisions/research/design (deferred beads)
-Full reference: `bd human`. If beads context was not injected this session: `bd prime`.
-
-## Persistent Memories
-PTR
-)
-  BEADS_CONTEXT="${BEADS_CONTEXT}
-${MEMORY_LINE}
-"'Search: `bd memories <keyword>` · fetch: `bd recall <key>`'
-fi
-
-escape_json() {
-  local s="$1"
-  s="${s//\\/\\\\}"
-  s="${s//\"/\\\"}"
-  s="${s//$'\n'/\\n}"
-  s="${s//$'\r'/\\r}"
-  s="${s//$'\t'/\\t}"
-  printf '%s' "$s"
-}
-
-SKILL_ESC=$(escape_json "$SKILL_CONTENT")
-CONTEXT="<EXTREMELY_IMPORTANT>\\nYou have beads-superpowers.\\n\\n**Below is the full content of your 'beads-superpowers:using-superpowers' skill:**\\n\\n${SKILL_ESC}\\n</EXTREMELY_IMPORTANT>"
-
-if [ -n "$BEADS_CONTEXT" ]; then
-  BEADS_ESC=$(escape_json "$BEADS_CONTEXT")
-  CONTEXT="${CONTEXT}\\n\\n<beads-context>\\n${BEADS_ESC}\\n</beads-context>"
-fi
-
-printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' "$CONTEXT"
-HOOKEOF
-  fi
-  chmod +x "$HOOK_SCRIPT"
-}
-
+BSPEOF
 
 # hook_bash: prints the absolute bash the registered hook command names.
 # The harness runs that command through a shell, so a bare `bash` would be
@@ -993,8 +1079,12 @@ HOOKEOF
 # hooks/session-start's rule (absolute entries only, ~ and ~/x become $HOME).
 # /bin/bash comes first when it is there: an earlier bash on the install-time
 # PATH can be ephemeral (nix-shell, devbox, mise shims) and vanish later.
+# Otherwise the shim's own choice, made once: the first bash on that PATH that
+# passes bsp_usable, else $BASH if it passes. An absolute entry can sit inside
+# the project install.sh is run from (npm exec's node_modules/.bin, direnv
+# PATH_add), and the bash named here runs every session.
 hook_bash() {
-  local p safe="" found
+  local p safe="" BSP_SHIM="${HOOK_SCRIPT:-}"
   if [ -x /bin/bash ]; then
     printf '%s\n' /bin/bash
     return 0
@@ -1011,12 +1101,19 @@ hook_bash() {
     esac
     safe="${safe:+$safe:}$p"
   done
-  # Assigning PATH also clears the hash table, so no earlier lookup leaks in.
-  found=$(PATH="${safe:-/usr/bin:/bin}"; command -v bash) || return 1
-  case "$found" in
-    /*) printf '%s\n' "$found" ;;
-    *) return 1 ;;
-  esac
+  eval "$BSP_USABLE_SH"
+  IFS=: read -r -a parts <<<"${safe:-/usr/bin:/bin}"
+  for p in "${parts[@]}"; do
+    if [ -f "$p/bash" ] && [ -x "$p/bash" ] && bsp_usable "$p/bash"; then
+      printf '%s\n' "$p/bash"
+      return 0
+    fi
+  done
+  if bsp_usable "${BASH:-}"; then
+    printf '%s\n' "$BASH"
+    return 0
+  fi
+  return 1
 }
 
 # rewrite_settings <op> <backup prefix> <settings file> [op args]: the one
