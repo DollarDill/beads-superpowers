@@ -17,9 +17,10 @@
 import assert from "node:assert"
 import { fileURLToPath } from "node:url"
 import { dirname, join } from "node:path"
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, realpathSync, readdirSync, accessSync, constants } from "node:fs"
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, realpathSync, readdirSync, accessSync, constants, symlinkSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { execFileSync } from "node:child_process"
+import { createRequire, syncBuiltinESMExports } from "node:module"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = join(__dirname, "../..")
@@ -279,6 +280,81 @@ try {
     }
   } finally {
     rmSync(proj, { recursive: true, force: true })
+  }
+
+  // --- bd dropped because a git $HOME is the root: the note reaches OpenCode ---
+  // HOME holds a .git, no root variable is set, the cwd is below HOME and bd
+  // is only in $HOME/.local/bin, which the cleaning drops. The real composer
+  // (hooks/session-start, through the launcher) decides; the plugin only
+  // runs it. Its injected text must carry the composer's note, the PATH the
+  // plugin actually hands the composer child (captured from its execSync
+  // call, not recomputed) must still drop the entry, and the planted bd must
+  // never run. With bd simply absent, no note.
+  const homeNote = "set CLAUDE_PROJECT_DIR (or CURSOR_PROJECT_DIR) to your project directory, or install bd outside your home directory"
+  const savedEnv = Object.fromEntries(["PATH", "HOME", "XDG_RUNTIME_DIR", "CLAUDE_PROJECT_DIR", "CURSOR_PROJECT_DIR"]
+    .map(k => [k, process.env[k]]))
+  for (const plant of [true, false]) {
+    const ghome = realpathSync(mkdtempSync(join(tmpdir(), "bsp-oc-ghome-")))
+    mkdirSync(join(ghome, ".git"))
+    mkdirSync(join(ghome, "sub"))
+    const lbin = join(ghome, ".local/bin")
+    mkdirSync(lbin, { recursive: true })
+    if (plant) {
+      writeFileSync(join(lbin, "bd"), `#!/bin/sh\n: > "${markers}/ran-homebd"\necho "Memories (1):"\n`, { mode: 0o755 })
+    }
+    // The real composer, launcher and skills, behind a copy of the plugin.
+    const fr = realpathSync(mkdtempSync(join(tmpdir(), "bsp-oc-real-")))
+    mkdirSync(join(fr, ".opencode/plugins"), { recursive: true })
+    const frPlugin = join(fr, ".opencode/plugins/beads-superpowers.js")
+    writeFileSync(frPlugin, pluginSrc)
+    symlinkSync(join(repoRoot, "hooks"), join(fr, "hooks"))
+    symlinkSync(join(repoRoot, "skills"), join(fr, "skills"))
+    const rt = realpathSync(mkdtempSync(join(tmpdir(), "bsp-oc-rt-")))
+    process.chdir(join(ghome, "sub"))
+    process.env.PATH = `${lbin}:/usr/bin:/bin`
+    process.env.HOME = ghome
+    process.env.XDG_RUNTIME_DIR = rt
+    delete process.env.CLAUDE_PROJECT_DIR
+    delete process.env.CURSOR_PROJECT_DIR
+    let textH
+    const handedEnvs = []
+    const cp = createRequire(import.meta.url)("node:child_process")
+    const realExecSync = cp.execSync
+    cp.execSync = (cmd, opts) => {
+      if (String(cmd).includes("session-start")) handedEnvs.push(opts?.env)
+      return realExecSync(cmd, opts)
+    }
+    syncBuiltinESMExports()
+    try {
+      const { BeadsSuperpowersPlugin: PluginH } = await import(frPlugin)
+      const hooksH = await PluginH({ client: {}, directory: join(ghome, "sub") })
+      const outH = { messages: [{ info: { role: "user" }, parts: [{ type: "text", text: "hi" }] }] }
+      await hooksH["experimental.chat.messages.transform"]({}, outH)
+      textH = outH.messages[0].parts[0].text
+    } finally {
+      cp.execSync = realExecSync
+      syncBuiltinESMExports()
+      for (const [k, v] of Object.entries(savedEnv)) {
+        if (v === undefined) delete process.env[k]
+        else process.env[k] = v
+      }
+      process.chdir(savedCwd)
+      for (const d of [fr, rt, ghome]) rmSync(d, { recursive: true, force: true })
+    }
+    const what = plant ? "bd under a git HOME" : "bd absent, git HOME"
+    assert.deepStrictEqual(plantedRan(), [], `planted binary ran (${what})`)
+    assert.ok(handedEnvs.length === 1 && handedEnvs[0], `composer child started once with an explicit env (${what}): ${handedEnvs.length}`)
+    const handed = handedEnvs[0].PATH ?? ""
+    assert.ok(handed !== "" && !handed.split(":").includes(lbin),
+      `PATH handed to the composer child still drops the HOME entry (${what}): ${handed}`)
+    assert.ok(textH.includes("EXTREMELY_IMPORTANT") && !textH.includes("session composer unavailable"),
+      `real composer payload injected (${what}): ${textH.slice(0, 200)}`)
+    if (plant) {
+      assert.ok(textH.includes(homeNote), `injected text carries the composer's HOME note (${what})`)
+    } else {
+      assert.ok(!textH.includes(homeNote), `no HOME note when bd is simply absent (${what})`)
+    }
+    console.log(`PASS: git-HOME bd note through the plugin (${what})`)
   }
 
   // --- Windows spawns nothing (P1) ---

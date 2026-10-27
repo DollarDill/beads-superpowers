@@ -44,6 +44,18 @@ echo "$out" | grep -q "inbox_count=2" || { echo "FAIL: inbox count wrong"; exit 
 # no verdict language ever
 echo "$out" | grep -qiE 'fresh|stale|consistent|verdict' && { echo "FAIL: verdict language in raw digest"; exit 1; }
 
+# python3 never imports from the project: a json.py planted in the cwd (an
+# untrusted repository) must not run when the memories digest is built.
+if command -v python3 >/dev/null 2>&1; then
+  printf 'import os\nopen(os.environ["BSP_MARK"], "w").close()\nraise SystemExit(0)\n' > json.py
+  out=$(BSP_MARK="$TMP/planted-ran" PATH="$TMP/bin:$PATH" bash "$SCRIPT")
+  rm -f json.py
+  if [ -e "$TMP/planted-ran" ]; then echo "FAIL: orient.sh ran a json.py planted in the project"; exit 1; fi
+  echo "$out" | grep -q "== memories ==" || { echo "FAIL: memories section missing with a planted json.py"; exit 1; }
+else
+  echo "SKIP: planted json.py check (python3 absent)"
+fi
+
 # bd absent: visible SKIP, still exits 0
 out2=$(PATH="/usr/bin:/bin" bash "$SCRIPT")
 echo "$out2" | grep -q "SKIP" || { echo "FAIL: no visible SKIP without bd"; exit 1; }

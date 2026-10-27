@@ -400,9 +400,9 @@ try:
     # The cleaned PATH keeps absolute entries, and one can sit inside the
     # project (<proj>/node_modules/.bin from npm exec, direnv PATH_add). The
     # composer must start with the launcher's containment walk: the planted
-    # bash never runs, and a bash further down PATH runs the composer. With
-    # the planted one the only bash on PATH, the launcher's $BASH fallback
-    # decides (see SH_SETS_BASH).
+    # bash never runs, and a bash further down the cleaned PATH runs the
+    # composer. With none there (a planted-only PATH cleans to /usr/bin:/bin),
+    # the launcher's $BASH fallback decides (see SH_SETS_BASH).
     proj = os.path.realpath(tempfile.mkdtemp())
     os.makedirs(os.path.join(proj, ".git"))
     nmbin = os.path.join(proj, "node_modules", ".bin")
@@ -423,6 +423,7 @@ try:
                 ctx = FakeCtx()
                 mod.register(ctx)
                 text = ctx.hooks["pre_llm_call"](is_first_turn=True)["context"]
+                handed = mod._child_env()["PATH"]  # the PATH the child really gets
             finally:
                 if saved_path is None:
                     os.environ.pop("PATH", None)
@@ -434,13 +435,93 @@ try:
             ran = planted_ran()
             check(ran == [], f"no planted binary ran ({what}); ran: {ran}")
             # The planted bash is refused, so only the bashes after it count.
-            if composer_runs("/nonexistent" if p == nmbin else "/usr/bin:/bin"):
+            # Judged on the PATH the plugin hands the child, not the raw one: the
+            # in-project entry is dropped, leaving /usr/bin:/bin.
+            if composer_runs(handed):
                 check(text == STUB, f"composer payload injected ({what})")
             else:
                 check(BOOT_MARK in text and "session composer unavailable" in text,
                       f"fallback pointer injected ({what})")
     finally:
         shutil.rmtree(proj)
+
+    # --- bd dropped because a git $HOME is the root: the note reaches Hermes ---
+    # HOME holds a .git, no root variable is set, the cwd is below HOME and
+    # bd is only in $HOME/.local/bin, which the cleaning drops. The real
+    # composer (hooks/session-start, through the launcher) decides; the plugin
+    # only runs it. Its injected text must carry the composer's note, the
+    # PATH the plugin actually hands the composer child (captured from the
+    # subprocess.run call, not recomputed) must still drop the entry, and the
+    # planted bd must never run. With bd simply absent, no note.
+    NOTE = ("set CLAUDE_PROJECT_DIR (or CURSOR_PROJECT_DIR) to your project "
+            "directory, or install bd outside your home directory")
+    saved_env = {k: os.environ.get(k) for k in
+                 ("PATH", "HOME", "XDG_RUNTIME_DIR", "CLAUDE_PROJECT_DIR",
+                  "CURSOR_PROJECT_DIR")}
+    for plant in (True, False):
+        ghome = os.path.realpath(tempfile.mkdtemp())
+        os.makedirs(os.path.join(ghome, ".git"))
+        os.makedirs(os.path.join(ghome, "sub"))
+        lbin = os.path.join(ghome, ".local", "bin")
+        os.makedirs(lbin)
+        if plant:
+            with open(os.path.join(lbin, "bd"), "w") as f:
+                f.write(f'#!/bin/sh\n: > "{markers}/ran-homebd"\necho "Memories (1):"\n')
+            os.chmod(os.path.join(lbin, "bd"), 0o755)
+        # The real composer, launcher and skills, behind a copy of the plugin
+        # (a copy, so loading it writes no bytecode into the repo).
+        tmp, pdir = build_fixture("sibling", with_hooks=False)
+        shutil.rmtree(os.path.join(tmp, "skills"))
+        os.symlink(os.path.join(root, "skills"), os.path.join(tmp, "skills"))
+        os.symlink(os.path.join(root, "hooks"), os.path.join(tmp, "hooks"))
+        os.chdir(os.path.join(ghome, "sub"))
+        os.environ["PATH"] = f"{lbin}:/usr/bin:/bin"
+        os.environ["HOME"] = ghome
+        os.environ["XDG_RUNTIME_DIR"] = os.path.realpath(tempfile.mkdtemp())
+        os.environ.pop("CLAUDE_PROJECT_DIR", None)
+        os.environ.pop("CURSOR_PROJECT_DIR", None)
+        handed_envs = []
+        try:
+            mod = load(pdir)
+            real_run = mod.subprocess.run
+
+            def capture(*a, **kw):
+                args = a[0] if a else kw.get("args")
+                if "session-start" in args:
+                    handed_envs.append(kw.get("env"))
+                return real_run(*a, **kw)
+
+            mod.subprocess.run = capture
+            try:
+                ctx = FakeCtx()
+                mod.register(ctx)
+                text = ctx.hooks["pre_llm_call"](is_first_turn=True)["context"]
+            finally:
+                mod.subprocess.run = real_run
+        finally:
+            shutil.rmtree(os.environ["XDG_RUNTIME_DIR"])
+            for k, v in saved_env.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+            os.chdir(saved_cwd)
+            shutil.rmtree(tmp)
+            shutil.rmtree(ghome)
+        what = "bd under a git HOME" if plant else "bd absent, git HOME"
+        ran = planted_ran()
+        check(ran == [], f"no planted binary ran ({what}); ran: {ran}")
+        check(len(handed_envs) == 1 and handed_envs[0] is not None,
+              f"composer child started once with an explicit env ({what}): {len(handed_envs)}")
+        handed = (handed_envs[0] or {}).get("PATH", "") if handed_envs else ""
+        check(handed != "" and lbin not in handed.split(":"),
+              f"PATH handed to the composer child still drops the HOME entry ({what}): {handed}")
+        check("session composer unavailable" not in text and BOOT_MARK in text,
+              f"real composer payload injected ({what})")
+        if plant:
+            check(NOTE in text, f"injected text carries the composer's HOME note ({what})")
+        else:
+            check(NOTE not in text, f"no HOME note when bd is simply absent ({what})")
 
     # --- Windows spawns nothing (P1) ---
     # CreateProcess searches the cwd before PATH, which env cannot change, so

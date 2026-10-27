@@ -12,7 +12,7 @@ states exactly when to open each section below.
 # Manual bootstrap (8 steps)
 bd init --skip-agents                      # Creates empty .beads/
 bd dolt stop 2>/dev/null                   # Stop server if running
-DB_NAME=$(python3 -c "import json; print(json.load(open('.beads/metadata.json')).get('dolt_database','beads'))" 2>/dev/null || echo "beads")
+DB_NAME=$(python3 -I -c "import json; print(json.load(open('.beads/metadata.json')).get('dolt_database','beads'))" 2>/dev/null || echo "beads")
 rm -rf ".beads/embeddeddolt/${DB_NAME:?DB_NAME unset — run the previous line in the same shell}/"     # Remove empty database
 cd .beads/embeddeddolt
 dolt clone git@github.com:<owner>/<repo>-beads.git "${DB_NAME:?DB_NAME unset — run the DB_NAME line in the same shell}"  # dedicated beads remote

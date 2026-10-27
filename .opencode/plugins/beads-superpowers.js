@@ -32,27 +32,47 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
 
   // hooks/session-start's in-project PATH-entry drop, for this process. The
   // rule is hooks/run-hook.cmd's bsp_outside, applied to <entry>/bash: an
-  // entry is dropped when it has a . or .. component, literally starts with
-  // the cwd (logical, physical or canonical), or lies physically inside the
-  // cwd tree or the project root (CLAUDE_PROJECT_DIR, else
-  // CURSOR_PROJECT_DIR, else the highest .git ancestor of the cwd); every
-  // entry is dropped when a root variable is relative or does not resolve.
-  // The logical cwd is $PWD when it names the cwd, as a shell started here
-  // would take it. Pinned with the shell copies by
-  // tests/hooks/test-path-containment.sh.
+  // entry is dropped when it has a . or .. component, passes through the cwd
+  // as written, or lies physically inside the cwd tree or the project root
+  // (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR, else the highest .git
+  // ancestor of the cwd), all compared by file identity; every entry is
+  // dropped when a root variable is relative or does not resolve. Pinned
+  // with the shell copies by tests/hooks/test-path-containment.sh.
   const entryOutside = () => {
-    const collapse = (p) => (p.startsWith('//') ? '/' + p.replace(/^\/+/, '') : p);
     const strip1 = (p) => (p.endsWith('/') ? p.slice(0, -1) : p);
-    // Shell `cd -P <p>/ && pwd -P`: the physical directory, or ''.
+    // Shell `cd -P <p>/ && pwd -P`: the physical directory, or ''. The
+    // native realpath(3) lets the kernel resolve a symlink before a later
+    // "..", as the shell copies do; realpathSync's JS version cancels
+    // lnk/.. as text first and lands elsewhere.
     const physDir = (p) => {
       try {
-        return statSync(p).isDirectory() ? collapse(realpathSync(p)) : '';
+        return statSync(p).isDirectory() ? realpathSync.native(p) : '';
       } catch {
         return '';
       }
     };
+    // p or an ancestor of it, up to /, is the same directory as d: compared
+    // by identity (device and inode), never by spelling, since a case- or
+    // normalisation-insensitive filesystem (the macOS APFS default) gives one
+    // directory many spellings. The launcher's bsp_within.
+    const same = (a, b) => {
+      try {
+        const x = statSync(a, { bigint: true });
+        const y = statSync(b, { bigint: true });
+        return x.dev === y.dev && x.ino === y.ino;
+      } catch {
+        return false;
+      }
+    };
+    const within = (p, d) => {
+      for (;;) {
+        if (same(p, d)) return true;
+        if (!/\/.*[^/]/.test(p)) return false;
+        p = p.slice(0, p.lastIndexOf('/')) || '/';
+      }
+    };
     let cwd = '';
-    try { cwd = collapse(process.cwd()); } catch { cwd = ''; }
+    try { cwd = process.cwd(); } catch { cwd = ''; }
     let ok = true;
     let root = '';
     for (const v of ['CLAUDE_PROJECT_DIR', 'CURSOR_PROJECT_DIR']) {
@@ -60,22 +80,6 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
       if (val.startsWith('/')) root = root || val;
       else if (val) ok = false;
     }
-    let pwd = process.env.PWD ?? '';
-    try {
-      const a = statSync(pwd);
-      const b = statSync('.');
-      if (!pwd.startsWith('/') || a.dev !== b.dev || a.ino !== b.ino) pwd = cwd;
-    } catch {
-      pwd = cwd;
-    }
-    const physPfx = strip1(cwd);
-    const pwdPfx = pwd ? strip1(collapse(pwd)) : physPfx;
-    let can = cwd;
-    if (pwd) {
-      can = physDir(pwd) ? collapse(path.posix.normalize(pwd)) : '';
-      if (!can) ok = false;
-    }
-    const canPfx = strip1(can);
     if (root) {
       root = physDir(root);
       if (!root) ok = false;
@@ -88,16 +92,14 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
         d = d.slice(0, d.lastIndexOf('/')) || '/';
       }
     }
-    const cwdPfx = strip1(cwd);
-    const rootPfx = strip1(root);
     return (entry) => {
       const cand = strip1(entry) + '/bash';
       if (cand.includes('/./') || cand.includes('/../')) return false;
-      const lit = collapse(cand);
-      if ([pwdPfx, physPfx, canPfx].some((pfx) => lit.startsWith(pfx + '/'))) return false;
-      const d = physDir(strip1(entry) + '/');
+      const dir = cand.slice(0, cand.lastIndexOf('/'));
+      if (within(dir, '.')) return false;
+      const d = physDir(dir + '/');
       if (!(ok && cwd && root && d)) return false;
-      return !((d + '/').startsWith(cwdPfx + '/') || (d + '/').startsWith(rootPfx + '/'));
+      return !(within(d, '.') || within(d, root));
     };
   };
 
@@ -139,12 +141,15 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
   // Returns null on failure, on Windows, OR on the composer's event-dedup
   // yielding an empty rapid re-run — a real payload always carries the
   // <EXTREMELY_IMPORTANT> injection marker.
+  // The child's PATH stays cut; the PATH this process started with goes
+  // along as BSP_HOST_PATH, data only, so the composer can say why bd is
+  // missing (it only stats entries in it). Whether to say so is its call.
   const composeBootstrap = () => {
     if (noChildren()) return null;
     try {
       const text = execSync(
         `/bin/sh "${path.join(packageRoot, 'hooks/run-hook.cmd')}" session-start --emit-plain 2>/dev/null`,
-        { encoding: 'utf8', timeout: 10000, env: childEnv() }
+        { encoding: 'utf8', timeout: 10000, env: { ...childEnv(), BSP_HOST_PATH: process.env.PATH ?? '' } }
       ).trim();
       return text.includes('EXTREMELY_IMPORTANT') ? text : null;
     } catch {

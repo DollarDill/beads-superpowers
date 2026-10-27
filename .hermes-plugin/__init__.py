@@ -96,43 +96,48 @@ def _composer_path():
     return None
 
 
-def _collapse(p):
-    """A leading run of slashes collapsed to one, as the launcher does."""
-    if p.startswith("//"):
-        return "/" + p.lstrip("/")
-    return p
-
-
-def _strip1(p):
-    """Shell ${p%/}: one trailing slash removed."""
-    return p[:-1] if p.endswith("/") else p
-
-
 def _phys_dir(p):
     """Shell `cd -P <p>/ && pwd -P`: the physical directory, or ""."""
     try:
         if not os.path.isdir(p):
             return ""
-        return _collapse(os.path.realpath(p))
+        return os.path.realpath(p)
     except (OSError, ValueError):
         return ""
+
+
+def _within(p, d):
+    """p or an ancestor of it, up to /, is the same directory as d.
+
+    Compared by identity (device and inode), never by spelling: a case- or
+    normalisation-insensitive filesystem (the macOS APFS default) gives one
+    directory many spellings. The launcher's bsp_within.
+    """
+    while True:
+        try:
+            if os.path.samefile(p, d):
+                return True
+        except (OSError, ValueError):
+            pass
+        if not re.search(r"/.*[^/]", p):
+            return False
+        p = p[:p.rfind("/")] or "/"
 
 
 def _entry_outside(env):
     """hooks/session-start's in-project PATH-entry drop, for this process.
 
     The rule is hooks/run-hook.cmd's bsp_outside, applied to <entry>/bash: an
-    entry is dropped when it has a . or .. component, literally starts with
-    the cwd (logical, physical or canonical), or lies physically inside the
-    cwd tree or the project root (CLAUDE_PROJECT_DIR, else
-    CURSOR_PROJECT_DIR, else the highest .git ancestor of the cwd); every
-    entry is dropped when a root variable is relative or does not resolve.
-    The logical cwd is $PWD when it names the cwd, as a shell started here
-    would take it. Pinned with the shell copies by
-    tests/hooks/test-path-containment.sh. Exec hygiene, not policy.
+    entry is dropped when it has a . or .. component, passes through the cwd
+    as written, or lies physically inside the cwd tree or the project root
+    (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR, else the highest .git
+    ancestor of the cwd), all compared by file identity; every entry is
+    dropped when a root variable is relative or does not resolve. Pinned
+    with the shell copies by tests/hooks/test-path-containment.sh. Exec
+    hygiene, not policy.
     """
     try:
-        cwd = _collapse(os.getcwd())
+        cwd = os.getcwd()
     except OSError:
         cwd = ""
     ok = True
@@ -143,21 +148,6 @@ def _entry_outside(env):
             root = root or val
         elif val:
             ok = False
-    pwd = env.get("PWD", "")
-    try:
-        if not (pwd.startswith("/") and os.path.samefile(pwd, ".")):
-            pwd = cwd
-    except OSError:
-        pwd = cwd
-    phys_pfx = _strip1(cwd)
-    pwd_pfx = _strip1(_collapse(pwd)) if pwd else phys_pfx
-    if pwd:
-        can = _collapse(os.path.normpath(pwd)) if os.path.isdir(pwd) else ""
-        if not can:
-            ok = False
-    else:
-        can = cwd
-    can_pfx = _strip1(can)
     if root:
         root = _phys_dir(root)
         if not root:
@@ -165,24 +155,22 @@ def _entry_outside(env):
     elif ok:
         root = d = cwd
         while d:
-            if os.path.exists(_strip1(d) + "/.git"):
+            if os.path.exists((d[:-1] if d.endswith("/") else d) + "/.git"):
                 root = d
             if d == "/":
                 break
             d = d[:d.rfind("/")] or "/"
-    cwd_pfx, root_pfx = _strip1(cwd), _strip1(root)
 
     def outside(entry):
-        cand = _strip1(entry) + "/bash"
+        cand = (entry[:-1] if entry.endswith("/") else entry) + "/bash"
         if "/./" in cand or "/../" in cand:
             return False
-        lit = _collapse(cand)
-        if any(lit.startswith(pfx + "/") for pfx in (pwd_pfx, phys_pfx, can_pfx)):
+        if _within(cand[:cand.rfind("/")], "."):
             return False
-        d = _phys_dir(_strip1(entry) + "/")
+        d = _phys_dir(cand[:cand.rfind("/")] + "/")
         if not (ok and cwd and root and d):
             return False
-        return not (d + "/").startswith((cwd_pfx + "/", root_pfx + "/"))
+        return not (_within(d, ".") or _within(d, root))
 
     return outside
 
@@ -240,11 +228,16 @@ def _compose_bootstrap():
     if composer is None:
         return None
     launcher = os.path.join(os.path.dirname(composer), "run-hook.cmd")
+    # The child's PATH stays cut; the PATH this process started with goes
+    # along as data, so the composer can say why bd is missing (it only
+    # stats entries in it). Whether to say so is the composer's call.
+    env = _child_env()
+    env["BSP_HOST_PATH"] = os.environ.get("PATH", "")
     try:
         proc = subprocess.run(
             ["/bin/sh", launcher, "session-start", "--emit-plain"],
             capture_output=True, text=True, timeout=10, check=False,
-            env=_child_env(),
+            env=env,
         )
     except (OSError, subprocess.SubprocessError):
         return None

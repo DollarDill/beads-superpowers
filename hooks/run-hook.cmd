@@ -57,12 +57,13 @@ CMDBLOCK
 #    everything else, and fall back to /usr/bin:/bin.
 # 2. Walk that PATH in order and use the first <entry>/bash that passes the
 #    check below, else $BASH if it passes, taking each only when it is
-#    absolute, has no . or .. component and does not literally start
-#    with the cwd (the signatures of a relative PATH entry), and lies outside
+#    absolute, has no . or .. component and does not pass through the cwd
+#    as written (the signatures of a relative PATH entry), and lies outside
 #    both the current directory tree and the project root
 #    (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR; with neither set, the
 #    highest .git ancestor of the cwd; the cwd can be a subdirectory of it),
-#    and not this launcher. A root variable that is relative or unresolvable
+#    and not this launcher. "Inside" is decided by file identity, not by
+#    path spelling (bsp_within). A root variable that is relative or unresolvable
 #    refuses it. The cleaned PATH can still hold an absolute entry inside
 #    the project (<proj>/node_modules/.bin, direnv PATH_add), so each PATH
 #    bash gets the same check as $BASH, and a refused one does not stop the
@@ -100,6 +101,21 @@ case "$0" in
   *) SCRIPT_DIR="$(pwd)" ;;
 esac
 
+# bsp_within <path> <dir>: succeeds when <path> or one of its ancestors, up
+# to /, is the same directory as <dir>. Compared by identity (test -ef: device
+# and inode), never by spelling: on a case- or normalisation-insensitive
+# filesystem (the macOS APFS default) one directory has many spellings, and
+# $PWD, a PATH entry and a root variable can each use a different one.
+bsp_within() {
+  bsp_w=$1
+  while :; do
+    if [ "$bsp_w" -ef "$2" ]; then return 0; fi
+    case $bsp_w in */*[!/]*) ;; *) return 1 ;; esac
+    bsp_w=${bsp_w%/*}
+    if [ -z "$bsp_w" ]; then bsp_w=/; fi
+  done
+}
+
 # bsp_outside <bash>: succeeds when the candidate passes the containment in
 # step 2. Applied to each PATH bash and to $BASH alike; the comments inside
 # say $BASH for either.
@@ -114,11 +130,7 @@ bsp_outside() {
       # different symlinks. cd -P hands the path to chdir unchanged, so the
       # kernel resolves it as exec will: a symlink before the ".." after it
       # (a plain cd would cancel lnk/.. as text first).
-      # bash keeps a leading // through cd -P and pwd -P (dash collapses it),
-      # and //x never matches a /x prefix: each resolved path has a leading
-      # run of slashes collapsed to one.
       bsp_cwd=$(pwd -P 2>/dev/null) || bsp_cwd=""
-      case $bsp_cwd in //*) bsp_cwd=/${bsp_cwd#"${bsp_cwd%%[!/]*}"} ;; esac
       # The root is CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR. Either one
       # set but not absolute, or a named root that does not resolve: refuse.
       bsp_ok=1
@@ -133,36 +145,16 @@ bsp_outside() {
         /*) if [ -z "$bsp_root" ]; then bsp_root=$CURSOR_PROJECT_DIR; fi ;;
         *) bsp_ok=0 ;;
       esac
-      # A $BASH that literally starts with the cwd came from a relative PATH
-      # entry, symlinked or not: bash builds it as $PWD/<entry>/bash. Compare
-      # it with the logical cwd ($PWD, when set) and the physical one, with a
-      # leading run of slashes collapsed in each and in $BASH. Refuse a match,
-      # whatever the root. Accepted over-refusal: a real bash reached through a
-      # symlink under the cwd (cwd = $HOME, ~/.nix-profile/bin/bash) is refused.
-      # bash 5.x builds $BASH from its canonical cwd but keeps an inherited
-      # $PWD as spelled (//, /./, doubled /), so also compare with the
-      # canonical logical cwd, from cd "$PWD" && pwd. If that cd fails, refuse.
-      bsp_lit=$1
-      case $bsp_lit in //*) bsp_lit=/${bsp_lit#"${bsp_lit%%[!/]*}"} ;; esac
-      bsp_pwd=${PWD:-}
-      case $bsp_pwd in //*) bsp_pwd=/${bsp_pwd#"${bsp_pwd%%[!/]*}"} ;; esac
-      bsp_phys_pfx=${bsp_cwd%/}
-      bsp_pwd_pfx=$bsp_phys_pfx
-      if [ -n "$bsp_pwd" ]; then bsp_pwd_pfx=${bsp_pwd%/}; fi
-      if [ -n "${PWD:-}" ]; then
-        bsp_can=$(cd "$PWD" 2>/dev/null && pwd) || bsp_can=""
-        case $bsp_can in //*) bsp_can=/${bsp_can#"${bsp_can%%[!/]*}"} ;; esac
-        if [ -z "$bsp_can" ]; then bsp_ok=0; fi
-      else
-        bsp_can=$bsp_cwd
-      fi
-      bsp_can_pfx=${bsp_can%/}
-      case "$bsp_lit" in
-        "$bsp_pwd_pfx"/*|"$bsp_phys_pfx"/*|"$bsp_can_pfx"/*) bsp_ok=0 ;;
-      esac
+      # A $BASH whose path, read literally, passes through the cwd came from a
+      # relative PATH entry, symlinked or not: bash builds it as
+      # $PWD/<entry>/bash. Refuse it when any literal ancestor of it is the
+      # cwd, however $PWD spells the cwd (symlinks, //, /./, letter case),
+      # whatever the root. Accepted over-refusal: a real bash reached through
+      # a symlink under the cwd (cwd = $HOME, ~/.nix-profile/bin/bash) is
+      # refused.
+      if bsp_within "${1%/*}" .; then bsp_ok=0; fi
       if [ -n "$bsp_root" ]; then
         bsp_root=$(cd -P "$bsp_root/" 2>/dev/null && pwd -P) || bsp_root=""
-        case $bsp_root in //*) bsp_root=/${bsp_root#"${bsp_root%%[!/]*}"} ;; esac
         if [ -z "$bsp_root" ]; then bsp_ok=0; fi
       elif [ "$bsp_ok" = 1 ]; then
         # No root variable (Codex sets none): the root is the highest
@@ -178,20 +170,14 @@ bsp_outside() {
         done
       fi
       bsp_bash_dir=$(cd -P "${1%/*}/" 2>/dev/null && pwd -P) || bsp_bash_dir=""
-      case $bsp_bash_dir in //*) bsp_bash_dir=/${bsp_bash_dir#"${bsp_bash_dir%%[!/]*}"} ;; esac
+      # Inside the cwd tree or the root: some ancestor of the physical
+      # directory is the cwd or the root itself, by identity.
       if [ "$bsp_ok" = 1 ] && [ -n "$bsp_cwd" ] && [ -n "$bsp_root" ] && [ -n "$bsp_bash_dir" ]; then
-        # Strip the trailing / into a variable first: at cwd / the prefix is
-        # empty, and bash 5.3 does not match "${v%/}"/* when the expansion
-        # is empty (dash and bash 3.2 do); "$v"/* matches in all three.
-        bsp_cwd_pfx=${bsp_cwd%/}
-        bsp_root_pfx=${bsp_root%/}
-        case "$bsp_bash_dir/" in
-          "$bsp_cwd_pfx"/*|"$bsp_root_pfx"/*) ;;
-          *)
-            if [ ! "$1" -ef "${SCRIPT_DIR}/${0##*[/\\]}" ]; then
-              return 0
-            fi ;;
-        esac
+        if bsp_within "$bsp_bash_dir" . || bsp_within "$bsp_bash_dir" "$bsp_root"; then
+          :
+        elif [ ! "$1" -ef "${SCRIPT_DIR}/${0##*[/\\]}" ]; then
+          return 0
+        fi
       fi ;;
   esac
   return 1
