@@ -400,9 +400,9 @@ try:
     # The cleaned PATH keeps absolute entries, and one can sit inside the
     # project (<proj>/node_modules/.bin from npm exec, direnv PATH_add). The
     # composer must start with the launcher's containment walk: the planted
-    # bash never runs, and a bash further down PATH runs the composer. With
-    # the planted one the only bash on PATH, the launcher's $BASH fallback
-    # decides (see SH_SETS_BASH).
+    # bash never runs, and a bash further down the cleaned PATH runs the
+    # composer. With none there (a planted-only PATH cleans to /usr/bin:/bin),
+    # the launcher's $BASH fallback decides (see SH_SETS_BASH).
     proj = os.path.realpath(tempfile.mkdtemp())
     os.makedirs(os.path.join(proj, ".git"))
     nmbin = os.path.join(proj, "node_modules", ".bin")
@@ -423,6 +423,7 @@ try:
                 ctx = FakeCtx()
                 mod.register(ctx)
                 text = ctx.hooks["pre_llm_call"](is_first_turn=True)["context"]
+                handed = mod._child_env()["PATH"]  # the PATH the child really gets
             finally:
                 if saved_path is None:
                     os.environ.pop("PATH", None)
@@ -434,7 +435,9 @@ try:
             ran = planted_ran()
             check(ran == [], f"no planted binary ran ({what}); ran: {ran}")
             # The planted bash is refused, so only the bashes after it count.
-            if composer_runs("/nonexistent" if p == nmbin else "/usr/bin:/bin"):
+            # Judged on the PATH the plugin hands the child, not the raw one: the
+            # in-project entry is dropped, leaving /usr/bin:/bin.
+            if composer_runs(handed):
                 check(text == STUB, f"composer payload injected ({what})")
             else:
                 check(BOOT_MARK in text and "session composer unavailable" in text,
