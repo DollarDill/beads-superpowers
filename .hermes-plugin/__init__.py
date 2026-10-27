@@ -228,11 +228,16 @@ def _compose_bootstrap():
     if composer is None:
         return None
     launcher = os.path.join(os.path.dirname(composer), "run-hook.cmd")
+    # The child's PATH stays cut; the PATH this process started with goes
+    # along as data, so the composer can say why bd is missing (it only
+    # stats entries in it). Whether to say so is the composer's call.
+    env = _child_env()
+    env["BSP_HOST_PATH"] = os.environ.get("PATH", "")
     try:
         proc = subprocess.run(
             ["/bin/sh", launcher, "session-start", "--emit-plain"],
             capture_output=True, text=True, timeout=10, check=False,
-            env=_child_env(),
+            env=env,
         )
     except (OSError, subprocess.SubprocessError):
         return None

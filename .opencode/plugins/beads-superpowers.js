@@ -141,12 +141,15 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
   // Returns null on failure, on Windows, OR on the composer's event-dedup
   // yielding an empty rapid re-run — a real payload always carries the
   // <EXTREMELY_IMPORTANT> injection marker.
+  // The child's PATH stays cut; the PATH this process started with goes
+  // along as BSP_HOST_PATH, data only, so the composer can say why bd is
+  // missing (it only stats entries in it). Whether to say so is its call.
   const composeBootstrap = () => {
     if (noChildren()) return null;
     try {
       const text = execSync(
         `/bin/sh "${path.join(packageRoot, 'hooks/run-hook.cmd')}" session-start --emit-plain 2>/dev/null`,
-        { encoding: 'utf8', timeout: 10000, env: childEnv() }
+        { encoding: 'utf8', timeout: 10000, env: { ...childEnv(), BSP_HOST_PATH: process.env.PATH ?? '' } }
       ).trim();
       return text.includes('EXTREMELY_IMPORTANT') ? text : null;
     } catch {

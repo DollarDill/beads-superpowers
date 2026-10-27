@@ -174,6 +174,17 @@ homebd_case "git HOME is the root, bd simply absent: no HOME note" 1 0 '__H__/.l
 homebd_case "bd under HOME dropped with a root variable set: no HOME note" 1 1 '__H__/.local/bin:/usr/bin:/bin' CLAUDE_PROJECT_DIR=__H__
 homebd_case "bd outside HOME, reached only through a /./ entry: no HOME note" 1 '__O__/bin' '__O__/./bin:/usr/bin:/bin'
 homebd_case "bd in a dropped entry inside the cwd tree: no HOME note" 1 '__H__/sub/node_modules/.bin' '__H__/sub/node_modules/.bin:/usr/bin:/bin'
+# BSP_HOST_PATH, the uncut PATH a plugin passes along, is read by the note
+# scan only: no child of the hook inherits it. bd here is outside HOME and the
+# cwd, so the hook runs it and it records what it saw.
+fresh; mkdir -p "$T/hostbin"
+# shellcheck disable=SC2016 # ${BSP_HOST_PATH-unset} is expanded by the planted bd
+printf '#!/bin/sh\nprintf %%s "${BSP_HOST_PATH-unset}" > "%s/hostpath-seen"\n' "$T" >"$T/hostbin/bd"
+chmod +x "$T/hostbin/bd"
+run "$h" "$T/hostbin:/usr/bin:/bin" /usr/bin/env BSP_HOST_PATH=/nowhere "$bash_bin" "$ROOT/hooks/session-start"
+seen=$(cat "$T/hostpath-seen" 2>/dev/null) || seen="bd never ran"
+seen_ok=1; if [ "$seen" = unset ]; then seen_ok=0; fi
+check "BSP_HOST_PATH is not passed on to bd (saw: $seen)" "$seen_ok"
 
 # --- golden: a normal PATH emits the same bytes as the pre-change hook ---
 # Base: GOLDEN_BASE (0c5127c), the last commit before sub-project A. Rule: when a

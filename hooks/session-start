@@ -89,12 +89,19 @@ PATH="${bsp_safe_path:-/usr/bin:/bin}"; export PATH
 # With no root variable, a .git in $HOME makes $HOME the root, so a bd under
 # it (~/.local/bin) is dropped with the rest of the project. When that is why
 # bd is missing, the injection says so (bsp_homebd_note). Stat only: nothing
-# in a dropped entry is ever run.
+# in a dropped entry is ever run. A plugin that cut PATH itself before
+# starting this hook (Hermes, OpenCode) passes the PATH it started with as
+# BSP_HOST_PATH; only this scan reads it, and no child inherits it.
+bsp_scan_parts=(${bsp_path_parts[@]+"${bsp_path_parts[@]}"})
+if [ -n "${BSP_HOST_PATH+set}" ]; then
+    IFS=: read -r -a bsp_scan_parts <<<"$BSP_HOST_PATH"
+    unset BSP_HOST_PATH
+fi
 bsp_homebd=0
 if [ -z "${CLAUDE_PROJECT_DIR:-}" ] && [ -z "${CURSOR_PROJECT_DIR:-}" ] \
    && [[ "${HOME:-}" == /* ]] && [ -e "${HOME%/}/.git" ] && [ -n "$bsp_root" ] \
    && [ "$bsp_root" -ef "$HOME" ] && ! command -v bd >/dev/null 2>&1; then
-    for bsp_p in ${bsp_path_parts[@]+"${bsp_path_parts[@]}"}; do
+    for bsp_p in ${bsp_scan_parts[@]+"${bsp_scan_parts[@]}"}; do
         # shellcheck disable=SC2088 # literal ~ entries, as above
         case "$bsp_p" in
             /*) ;;
