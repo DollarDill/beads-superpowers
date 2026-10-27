@@ -72,6 +72,12 @@ plant "$FH/.local/bin" ran
 plant "$TMP/legit/bin" ran
 H="$TMP/home"
 mkdir -p "$H"
+# A root variable spelled <proj>/escape/.. with escape -> ../out/bin: the
+# kernel resolves the symlink before the .., so the root is <b>/out, not
+# <proj> (a textual normalise would cancel escape/.. first).
+plant "$TMP/b/out/bin" ran
+plant "$TMP/b/proj/sub" ran
+ln -s ../out/bin "$TMP/b/proj/escape"
 
 # Rows: name | cwd | PWD | first PATH entry | expect | extra env (space-separated)
 rows() {
@@ -101,6 +107,8 @@ control: ~/.local/bin, project root elsewhere|$AB|$AB|~/.local/bin|keep|HOME=$FH
 control: absolute ~/.local/bin, .git root elsewhere|$AB/other|$AB/other|$FH/.local/bin|keep|HOME=$FH
 control: outside entry, CLAUDE_PROJECT_DIR spelled //|$AB|$AB|$TMP/legit/bin|keep|CLAUDE_PROJECT_DIR=/$AB
 control: outside entry, inherited PWD names no directory|$AB|$TMP/no-such-dir|$TMP/legit/bin|keep|CLAUDE_PROJECT_DIR=$AB
+root var with .. after a symlink, entry in the resolved root|$AB|$AB|$TMP/b/out/bin|drop|CLAUDE_PROJECT_DIR=$TMP/b/proj/escape/..
+control: root var with .. after a symlink, entry beside the resolved root|$AB|$AB|$TMP/b/proj/sub|keep|CLAUDE_PROJECT_DIR=$TMP/b/proj/escape/..
 ROWS
 }
 

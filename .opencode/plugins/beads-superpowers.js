@@ -40,10 +40,13 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
   // with the shell copies by tests/hooks/test-path-containment.sh.
   const entryOutside = () => {
     const strip1 = (p) => (p.endsWith('/') ? p.slice(0, -1) : p);
-    // Shell `cd -P <p>/ && pwd -P`: the physical directory, or ''.
+    // Shell `cd -P <p>/ && pwd -P`: the physical directory, or ''. The
+    // native realpath(3) lets the kernel resolve a symlink before a later
+    // "..", as the shell copies do; realpathSync's JS version cancels
+    // lnk/.. as text first and lands elsewhere.
     const physDir = (p) => {
       try {
-        return statSync(p).isDirectory() ? realpathSync(p) : '';
+        return statSync(p).isDirectory() ? realpathSync.native(p) : '';
       } catch {
         return '';
       }
