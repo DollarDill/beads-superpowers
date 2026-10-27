@@ -235,4 +235,4 @@ bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / patt
 
 ## Integration
 
-**Read `references/integration.md` (in this skill's directory) before consulting the skill pairings** — pairs with document-release.
+**Read `references/integration.md` (in this skill's directory) before consulting the skill pairings** — pairs with document-release, which syncs docs to code after shipping.
