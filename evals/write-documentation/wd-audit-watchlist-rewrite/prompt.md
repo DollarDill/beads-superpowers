@@ -1,11 +1,11 @@
 ---
-description: "Behaviour: tightening a README paragraph fires write-documentation, the agent reads the moved references/audit-watchlist.md, and the rewrite cuts the opener repeated in four sentences while keeping the one right-word use of a watchlisted term (test harness) and every fact."
+description: "Behaviour: revising a ~330-word README section fires write-documentation, the agent reads the moved references/audit-watchlist.md, and the revision cuts the watchlist fallback diction the draft repeats across paragraphs to at most one use each, without a new repeated stock phrase, keeping every fact and inventing none."
 tags: [write-documentation, wd-core, core-behaviour]
 model: sonnet
 runs: 3
-max_turns: 15
-timeout_seconds: 400
+max_turns: 20
+timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
 
-Tighten the paragraph in `NOTES.md` for our README. Reply inline with the rewrite; don't create files.
+`DRAFT.md` is the "Why queuekit" section I've drafted for our README. Revise it so it's ready to publish, and reply inline with the full revised section; don't create files.
