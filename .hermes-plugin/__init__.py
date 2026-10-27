@@ -106,6 +106,14 @@ def _phys_dir(p):
         return ""
 
 
+def _within_one(p, d):
+    """p is the same directory as d, by identity; False when either fails."""
+    try:
+        return os.path.samefile(p, d)
+    except (OSError, ValueError):
+        return False
+
+
 def _within(p, d):
     """p or an ancestor of it, up to /, is the same directory as d.
 
@@ -114,11 +122,8 @@ def _within(p, d):
     directory many spellings. The launcher's bsp_within.
     """
     while True:
-        try:
-            if os.path.samefile(p, d):
-                return True
-        except (OSError, ValueError):
-            pass
+        if _within_one(p, d):
+            return True
         if not re.search(r"/.*[^/]", p):
             return False
         p = p[:p.rfind("/")] or "/"
@@ -131,7 +136,7 @@ def _entry_outside(env):
     entry is dropped when it has a . or .. component, passes through the cwd
     as written, or lies physically inside the cwd tree or the project root
     (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR, else the highest .git
-    ancestor of the cwd), all compared by file identity; every entry is
+    ancestor of the cwd below $HOME), all compared by file identity; every entry is
     dropped when a root variable is relative or does not resolve. Pinned
     with the shell copies by tests/hooks/test-path-containment.sh. Exec
     hygiene, not policy.
@@ -153,8 +158,15 @@ def _entry_outside(env):
         if not root:
             ok = False
     elif ok:
+        # Stop below $HOME (by identity): $HOME is never the root, so a
+        # dotfiles repo's .git there cannot pull every ~/... entry into the
+        # project; with no .git found below it, the root is the cwd. A HOME
+        # that is unset or not absolute is not used.
+        home = env.get("HOME", "")
         root = d = cwd
         while d:
+            if home.startswith("/") and _within_one(d, home):
+                break
             if os.path.exists((d[:-1] if d.endswith("/") else d) + "/.git"):
                 root = d
             if d == "/":

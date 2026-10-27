@@ -78,6 +78,14 @@ mkdir -p "$H"
 plant "$TMP/b/out/bin" ran
 plant "$TMP/b/proj/sub" ran
 ln -s ../out/bin "$TMP/b/proj/escape"
+# $HOME is never the project root: a home that is itself a git checkout (a
+# dotfiles repo) holds a project below it with no .git of its own (notes),
+# and a real project with one (code/p).
+HH="$TMP/dot"
+mkdir -p "$HH/.git" "$HH/code/p/.git" "$HH/code/p/other"
+plant "$HH/.local/bin" ran
+plant "$HH/notes/node_modules/.bin" ran
+plant "$HH/code/p/sub" ran
 
 # Rows: name | cwd | PWD | first PATH entry | expect | extra env (space-separated)
 rows() {
@@ -109,6 +117,13 @@ control: outside entry, CLAUDE_PROJECT_DIR spelled //|$AB|$AB|$TMP/legit/bin|kee
 control: outside entry, inherited PWD names no directory|$AB|$TMP/no-such-dir|$TMP/legit/bin|keep|CLAUDE_PROJECT_DIR=$AB
 root var with .. after a symlink, entry in the resolved root|$AB|$AB|$TMP/b/out/bin|drop|CLAUDE_PROJECT_DIR=$TMP/b/proj/escape/..
 control: root var with .. after a symlink, entry beside the resolved root|$AB|$AB|$TMP/b/proj/sub|keep|CLAUDE_PROJECT_DIR=$TMP/b/proj/escape/..
+HOME has a .git, cwd below it has none: ~/.local/bin kept|$HH/notes|$HH/notes|~/.local/bin|keep|HOME=$HH
+HOME has a .git, cwd below it has none: absolute ~/.local/bin kept|$HH/notes|$HH/notes|$HH/.local/bin|keep|HOME=$HH
+HOME has a .git, cwd below it has none: cwd tree still dropped|$HH/notes|$HH/notes|$HH/notes/node_modules/.bin|drop|HOME=$HH
+HOME has a .git, project below it has its own: the project is the root|$HH/code/p/other|$HH/code/p/other|$HH/code/p/sub|drop|HOME=$HH
+HOME has a .git, project below it has its own: ~/.local/bin kept|$HH/code/p/other|$HH/code/p/other|~/.local/bin|keep|HOME=$HH
+HOME that does not resolve: the .git walk is unchanged|$HH/notes|$HH/notes|$HH/.local/bin|drop|HOME=$TMP/no-such-home
+HOME that is not absolute (.. names it from the cwd): the .git walk is unchanged|$HH/notes|$HH/notes|$HH/.local/bin|drop|HOME=..
 ROWS
 }
 
@@ -129,6 +144,7 @@ case-swapped PATH entry, cwd tree, .git root|$AB|$AB|$SW/node_modules/.bin|drop|
 case-swapped PATH entry, cwd tree, CLAUDE_PROJECT_DIR|$AB|$AB|$SW/node_modules/.bin|drop|CLAUDE_PROJECT_DIR=$AB
 case-swapped PATH entry, .git ancestor root, sibling cwd|$AB/other|$AB/other|$SW/SUB|drop|
 case-swapped PATH entry, CLAUDE_PROJECT_DIR root, sibling cwd|$AB/other|$AB/other|$SW/SUB|drop|CLAUDE_PROJECT_DIR=$AB
+HOME case-swapped, has a .git, cwd below it has none: ~/.local/bin kept|$HH/notes|$HH/notes|~/.local/bin|keep|HOME=$TMP/DOT
 case-swapped CLAUDE_PROJECT_DIR, sibling cwd|$AB/other|$AB/other|$AB/sub|drop|CLAUDE_PROJECT_DIR=$SW
 case-swapped CURSOR_PROJECT_DIR, sibling cwd|$AB/other|$AB/other|$AB/sub|drop|CURSOR_PROJECT_DIR=$SW
 case-swapped literal cwd prefix, symlinked out|$TMP/ct/cwd|$TMP/ct/cwd|$TMP/CT/CWD/out|drop|CLAUDE_PROJECT_DIR=$TMP/ct/cwd
@@ -204,7 +220,7 @@ if [ "$fb_ok" = 0 ]; then report "write the npx fallback hook from install.sh" 1
 pc_block() { awk '/^# Keep only absolute PATH entries/ { on = 1 } on { print } on && /^PATH="\$\{bsp_safe_path:-\/usr\/bin:\/bin\}"; export PATH$/ { exit }' "$1"; }
 pc_ss=$(pc_block "$ROOT/hooks/session-start")
 if [ "$fb_ok" = 1 ] && [ -n "$pc_ss" ] && [ "$(pc_block "$TMP/fbhooks/fallback.sh")" = "$pc_ss" ]; then report "npx fallback hook's PATH clean-up is session-start's" 0 ""; else report "npx fallback hook's PATH clean-up is session-start's" 1 "the blocks differ (or one is missing)"; fi
-for hh in "$H" "$FH"; do
+for hh in "$H" "$FH" "$HH"; do
   mkdir -p "$hh/.claude/skills"
   ln -s "$ROOT/skills/using-superpowers" "$hh/.claude/skills/using-superpowers"
 done
@@ -264,8 +280,13 @@ while IFS='|' read -r name dir pw e exp x; do
     row_run "$dir" "$pw" "$e" "$x" "$node_bin" --input-type=module -e "$OC_JS" "$TMP/ocfx/.opencode/plugins/beads-superpowers.js"
     verdict "OpenCode bd fallback [$name]" "$(want "$exp" bd)" "$(has 'session composer unavailable')"
   fi
-  # The npx fallback hook: the entry's bd never runs when dropped.
-  if [ "$fb_ok" = 1 ]; then
+  # The npx fallback hook: the entry's bd never runs when dropped. It needs
+  # the row's HOME to hold the skill it injects.
+  rh=$H
+  for kv in $x; do case "$kv" in HOME=*) rh=${kv#HOME=} ;; esac; done
+  if [ "$fb_ok" = 1 ] && ! (cd "$dir" && [ -e "$rh/.claude/skills/using-superpowers" ]); then
+    echo "SKIP: install.sh npx fallback hook [$name] (the row's HOME holds no skill to inject)"
+  elif [ "$fb_ok" = 1 ]; then
     row_run "$dir" "$pw" "$e" "$x" "$bash_bin" "$TMP/fbhooks/fallback.sh"
     verdict "install.sh npx fallback hook [$name]" "$(want "$exp" bd)" "$(has 'Production-Grade Doctrine')"
   fi
@@ -277,7 +298,7 @@ while IFS='|' read -r name dir pw e exp x; do
     row_run "$dir" "$pw" "$e" "$x" "$bash_bin" -c '. "$1" && hook_bash' _ "$TMP/hb.sh"
     case "$exp" in
       drop) hb_want="$OUT/bash"; hb_rc=0 ;;
-      keep) hb_want="${e/#\~/$FH}/bash"; hb_rc=0 ;;
+      keep) hb_want="${e/#\~/$rh}/bash"; hb_rc=0 ;;
       all) hb_want=""; hb_rc=1 ;;
     esac
     if [ "$rc" = "$hb_rc" ] && [ "$out" = "$hb_want" ] && [ -z "$got" ]; then report "install.sh hook_bash [$name]" 0 ""; else report "install.sh hook_bash [$name]" 1 "rc=$rc out=[$out] want=[$hb_want] rc want $hb_rc markers=[$got]"; fi
