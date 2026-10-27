@@ -104,6 +104,34 @@ control: outside entry, inherited PWD names no directory|$AB|$TMP/no-such-dir|$T
 ROWS
 }
 
+# On a case-insensitive filesystem (the macOS APFS default) one directory has
+# many spellings, so containment must compare file identity, not strings.
+# These rows name the fixture with its letters' case swapped; they need such a
+# filesystem, probed at runtime, and SKIP visibly elsewhere (on a
+# case-sensitive one the swapped spelling names nothing and a row would pass
+# for the wrong reason).
+SW="$TMP/AB/PROJ"
+if [ -d "$SW" ] && [ "$SW" -ef "$AB" ] && [ -d "$TMP/CT/CWD" ]; then ci=1; else ci=0; fi
+ci_rows() {
+  cat <<ROWS
+case-swapped PWD, cwd tree, .git root|$AB|$SW|$AB/node_modules/.bin|drop|
+case-swapped PWD, cwd tree, CLAUDE_PROJECT_DIR|$AB|$SW|$AB/node_modules/.bin|drop|CLAUDE_PROJECT_DIR=$AB
+case-swapped PWD, .git ancestor root, sibling cwd|$AB/other|$SW/OTHER|$AB/sub|drop|
+case-swapped PATH entry, cwd tree, .git root|$AB|$AB|$SW/node_modules/.bin|drop|
+case-swapped PATH entry, cwd tree, CLAUDE_PROJECT_DIR|$AB|$AB|$SW/node_modules/.bin|drop|CLAUDE_PROJECT_DIR=$AB
+case-swapped PATH entry, .git ancestor root, sibling cwd|$AB/other|$AB/other|$SW/SUB|drop|
+case-swapped PATH entry, CLAUDE_PROJECT_DIR root, sibling cwd|$AB/other|$AB/other|$SW/SUB|drop|CLAUDE_PROJECT_DIR=$AB
+case-swapped CLAUDE_PROJECT_DIR, sibling cwd|$AB/other|$AB/other|$AB/sub|drop|CLAUDE_PROJECT_DIR=$SW
+case-swapped CURSOR_PROJECT_DIR, sibling cwd|$AB/other|$AB/other|$AB/sub|drop|CURSOR_PROJECT_DIR=$SW
+case-swapped literal cwd prefix, symlinked out|$TMP/ct/cwd|$TMP/ct/cwd|$TMP/CT/CWD/out|drop|CLAUDE_PROJECT_DIR=$TMP/ct/cwd
+control: case-swapped outside entry|$AB|$AB|$TMP/LEGIT/BIN|keep|CLAUDE_PROJECT_DIR=$AB
+ROWS
+}
+all_rows() {
+  rows
+  if [ "$ci" = 1 ]; then ci_rows; fi
+}
+
 # want <expect> <tool...>: the markers that row expects, in markers' order.
 want() {
   local e="$1" t s=""; shift
@@ -246,7 +274,8 @@ while IFS='|' read -r name dir pw e exp x; do
     esac
     if [ "$rc" = "$hb_rc" ] && [ "$out" = "$hb_want" ] && [ -z "$got" ]; then report "install.sh hook_bash [$name]" 0 ""; else report "install.sh hook_bash [$name]" 1 "rc=$rc out=[$out] want=[$hb_want] rc want $hb_rc markers=[$got]"; fi
   fi
-done < <(rows)
+done < <(all_rows)
+if [ "$ci" = 0 ]; then echo "SKIP: case-swapped rows (the filesystem at $TMP is case-sensitive: $SW names nothing)"; fi
 # hook_bash with no PATH bash passing: $BASH when it passes, else none (rc 1,
 # and setup_hooks registers no hook).
 if [ "$hb_ok" = 1 ]; then
