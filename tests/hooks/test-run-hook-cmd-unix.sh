@@ -489,13 +489,16 @@ for sh_bin in /bin/dash /bin/bash /opt/homebrew/bin/bash "$bash_bin"; do
 done
 # (c) A ~/.local/bin bash when HOME is also the project root (the over-refusal
 # R1 accepted): refused, and /bin/bash further down PATH runs the hook. As
-# CLAUDE_PROJECT_DIR, spelled absolutely and as a literal ~ entry. With no
-# root variable, HOME is never the root (user decision 2026-10-27): a .git at
-# HOME (a dotfiles repo) no longer makes ~/.local/bin part of the project.
+# CLAUDE_PROJECT_DIR, and as the .git ancestor with no root variable; spelled
+# absolutely and as a literal ~ entry. Also HOME as the checkout itself (a
+# container or CI image, user decision 2026-10-28): HOME holds the .git, no
+# root variable, cwd a subdirectory: a bash planted anywhere under HOME
+# (node_modules/.bin, .local/bin) never runs.
 FH="$TMP/fakehome"
-mkdir -p "$FH/.local/bin" "$FH/work/.git"
+mkdir -p "$FH/.local/bin" "$FH/work/.git" "$FH/sub" "$FH/node_modules/.bin"
 printf '#!/bin/sh\n: > "%s/ran-homebash"\necho PLANTED\n' "$TMP" >"$FH/.local/bin/bash"
-chmod +x "$FH/.local/bin/bash"
+printf '#!/bin/sh\n: > "%s/ran-homenmbash"\necho PLANTED\n' "$TMP" >"$FH/node_modules/.bin/bash"
+chmod +x "$FH/.local/bin/bash" "$FH/node_modules/.bin/bash"
 seen=" "
 for sh_bin in /bin/dash /bin/bash /opt/homebrew/bin/bash "$bash_bin"; do
   if [ ! -x "$sh_bin" ]; then continue; fi
@@ -510,12 +513,14 @@ for sh_bin in /bin/dash /bin/bash /opt/homebrew/bin/bash "$bash_bin"; do
   mkdir -p "$FH/.git"
   out=$(cd "$FH/work" && env -i HOME="$FH" PWD="$FH/work" PATH="$FH/.local/bin:/usr/bin:/bin" "$sh_bin" "$L" probe-which </dev/null 2>&1); rc=$?
   ran=$(planted_ran)
+  which_check "HOME is the .git-ancestor root: /usr/bin:/bin bash runs ($sh_bin)" "${REAL:-none}"
+  # shellcheck disable=SC2088 # a literal ~ entry, mapped to $HOME by the launcher
+  for e in "$FH/node_modules/.bin" "$FH/.local/bin" "~/.local/bin"; do
+    out=$(cd "$FH/sub" && env -i HOME="$FH" PWD="$FH/sub" PATH="$e:/usr/bin:/bin" "$sh_bin" "$L" probe-which </dev/null 2>&1); rc=$?
+    ran=$(planted_ran)
+    which_check "HOME is the checkout, no root variable, cwd a subdirectory, PATH entry $e: /usr/bin:/bin bash runs ($sh_bin)" "${REAL:-none}"
+  done
   rm -rf "$FH/.git"
-  if [ "$rc" = 0 ] && [ "$ran" = " homebash" ] && [ "$out" = PLANTED ]; then
-    report "HOME has a .git, no root variable: HOME is not the root, ~/.local/bin bash runs ($sh_bin)" 0 ""
-  else
-    report "HOME has a .git, no root variable: HOME is not the root, ~/.local/bin bash runs ($sh_bin)" 1 "rc=$rc ran:[$ran] out=[$out] want ran:[ homebash] out=[PLANTED]"
-  fi
   # shellcheck disable=SC2016 # $0 is expanded by the inner shell
   out=$(cd "$FH/work" && env -i HOME="$FH" PWD="$FH/work" CLAUDE_PROJECT_DIR="$FH" PATH="$FH/.local/bin:/usr/bin:/bin" "$sh_bin" -c '"$0" probe-which' "$L" </dev/null 2>&1); rc=$?
   ran=$(planted_ran)

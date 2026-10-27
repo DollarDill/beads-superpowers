@@ -78,12 +78,15 @@ mkdir -p "$H"
 plant "$TMP/b/out/bin" ran
 plant "$TMP/b/proj/sub" ran
 ln -s ../out/bin "$TMP/b/proj/escape"
-# $HOME is never the project root: a home that is itself a git checkout (a
-# dotfiles repo) holds a project below it with no .git of its own (notes),
-# and a real project with one (code/p).
+# A HOME that is itself a git checkout (a container or CI image whose HOME is
+# the project, or a dotfiles repo): with no root variable its .git makes HOME
+# the root (user decision 2026-10-28), so nothing planted under it runs from
+# a subdirectory without a .git (notes), nor from a project below it that has
+# its own (code/p): the highest .git wins.
 HH="$TMP/dot"
 mkdir -p "$HH/.git" "$HH/code/p/.git" "$HH/code/p/other"
 plant "$HH/.local/bin" ran
+plant "$HH/node_modules/.bin" ran
 plant "$HH/notes/node_modules/.bin" ran
 plant "$HH/code/p/sub" ran
 
@@ -117,11 +120,12 @@ control: outside entry, CLAUDE_PROJECT_DIR spelled //|$AB|$AB|$TMP/legit/bin|kee
 control: outside entry, inherited PWD names no directory|$AB|$TMP/no-such-dir|$TMP/legit/bin|keep|CLAUDE_PROJECT_DIR=$AB
 root var with .. after a symlink, entry in the resolved root|$AB|$AB|$TMP/b/out/bin|drop|CLAUDE_PROJECT_DIR=$TMP/b/proj/escape/..
 control: root var with .. after a symlink, entry beside the resolved root|$AB|$AB|$TMP/b/proj/sub|keep|CLAUDE_PROJECT_DIR=$TMP/b/proj/escape/..
-HOME has a .git, cwd below it has none: ~/.local/bin kept|$HH/notes|$HH/notes|~/.local/bin|keep|HOME=$HH
-HOME has a .git, cwd below it has none: absolute ~/.local/bin kept|$HH/notes|$HH/notes|$HH/.local/bin|keep|HOME=$HH
+HOME is the checkout, cwd a subdirectory: \$HOME/node_modules/.bin dropped|$HH/notes|$HH/notes|$HH/node_modules/.bin|drop|HOME=$HH
+HOME has a .git, cwd below it has none: ~/.local/bin dropped|$HH/notes|$HH/notes|~/.local/bin|drop|HOME=$HH
+HOME has a .git, cwd below it has none: absolute ~/.local/bin dropped|$HH/notes|$HH/notes|$HH/.local/bin|drop|HOME=$HH
 HOME has a .git, cwd below it has none: cwd tree still dropped|$HH/notes|$HH/notes|$HH/notes/node_modules/.bin|drop|HOME=$HH
-HOME has a .git, project below it has its own: the project is the root|$HH/code/p/other|$HH/code/p/other|$HH/code/p/sub|drop|HOME=$HH
-HOME has a .git, project below it has its own: ~/.local/bin kept|$HH/code/p/other|$HH/code/p/other|~/.local/bin|keep|HOME=$HH
+HOME has a .git, project below it has its own: HOME is still the root|$HH/code/p/other|$HH/code/p/other|$HH/code/p/sub|drop|HOME=$HH
+HOME has a .git, project below it has its own: ~/.local/bin dropped|$HH/code/p/other|$HH/code/p/other|~/.local/bin|drop|HOME=$HH
 HOME that does not resolve: the .git walk is unchanged|$HH/notes|$HH/notes|$HH/.local/bin|drop|HOME=$TMP/no-such-home
 HOME that is not absolute (.. names it from the cwd): the .git walk is unchanged|$HH/notes|$HH/notes|$HH/.local/bin|drop|HOME=..
 ROWS
@@ -144,7 +148,7 @@ case-swapped PATH entry, cwd tree, .git root|$AB|$AB|$SW/node_modules/.bin|drop|
 case-swapped PATH entry, cwd tree, CLAUDE_PROJECT_DIR|$AB|$AB|$SW/node_modules/.bin|drop|CLAUDE_PROJECT_DIR=$AB
 case-swapped PATH entry, .git ancestor root, sibling cwd|$AB/other|$AB/other|$SW/SUB|drop|
 case-swapped PATH entry, CLAUDE_PROJECT_DIR root, sibling cwd|$AB/other|$AB/other|$SW/SUB|drop|CLAUDE_PROJECT_DIR=$AB
-HOME case-swapped, has a .git, cwd below it has none: ~/.local/bin kept|$HH/notes|$HH/notes|~/.local/bin|keep|HOME=$TMP/DOT
+HOME case-swapped, has a .git, cwd below it has none: ~/.local/bin dropped|$HH/notes|$HH/notes|~/.local/bin|drop|HOME=$TMP/DOT
 case-swapped CLAUDE_PROJECT_DIR, sibling cwd|$AB/other|$AB/other|$AB/sub|drop|CLAUDE_PROJECT_DIR=$SW
 case-swapped CURSOR_PROJECT_DIR, sibling cwd|$AB/other|$AB/other|$AB/sub|drop|CURSOR_PROJECT_DIR=$SW
 case-swapped literal cwd prefix, symlinked out|$TMP/ct/cwd|$TMP/ct/cwd|$TMP/CT/CWD/out|drop|CLAUDE_PROJECT_DIR=$TMP/ct/cwd

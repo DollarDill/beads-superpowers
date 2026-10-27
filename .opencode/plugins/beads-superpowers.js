@@ -35,7 +35,7 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
   // entry is dropped when it has a . or .. component, passes through the cwd
   // as written, or lies physically inside the cwd tree or the project root
   // (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR, else the highest .git
-  // ancestor of the cwd below $HOME), all compared by file identity; every entry is
+  // ancestor of the cwd), all compared by file identity; every entry is
   // dropped when a root variable is relative or does not resolve. Pinned
   // with the shell copies by tests/hooks/test-path-containment.sh.
   const entryOutside = () => {
@@ -84,15 +84,9 @@ export const BeadsSuperpowersPlugin = async ({ client, directory }) => {
       root = physDir(root);
       if (!root) ok = false;
     } else if (ok) {
-      // Stop below $HOME (by identity): $HOME is never the root, so a
-      // dotfiles repo's .git there cannot pull every ~/... entry into the
-      // project; with no .git found below it, the root is the cwd. A HOME
-      // that is unset or not absolute is not used.
-      const home = process.env.HOME ?? '';
       root = cwd;
       let d = cwd;
       while (d) {
-        if (home.startsWith('/') && same(d, home)) break;
         if (existsSync(strip1(d) + '/.git')) root = d;
         if (d === '/') break;
         d = d.slice(0, d.lastIndexOf('/')) || '/';

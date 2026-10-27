@@ -779,8 +779,7 @@ export CLAUDE_PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$BSP_ROOT}"
 #    component and does not pass through the cwd as written (a relative
 #    PATH entry's signatures), lies physically outside both the cwd tree and
 #    the project root (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR; with
-#    neither set, the highest .git ancestor of the cwd below $HOME, else the
-#    cwd), compared by file
+#    neither set, the highest .git ancestor of the cwd), compared by file
 #    identity rather than path spelling, and is not this shim. A
 #    relative or unresolvable root variable refuses it. An absolute PATH
 #    entry can still point into the project (npm exec's node_modules/.bin,
@@ -875,11 +874,6 @@ elif [ "$bsp_ok" = 1 ]; then
     bsp_root=$bsp_cwd
     bsp_d=$bsp_cwd
     while [ -n "$bsp_d" ]; do
-        # Stop below $HOME (by identity): $HOME is never the root, so a
-        # dotfiles repo's .git there cannot pull every ~/... entry into the
-        # project; with no .git found below it, the root is the cwd. A HOME
-        # that is unset or not absolute is not used.
-        case "${HOME:-}" in /*) if [ "$bsp_d" -ef "$HOME" ]; then break; fi ;; esac
         if [ -e "${bsp_d%/}/.git" ]; then bsp_root=$bsp_d; fi
         if [ "$bsp_d" = / ]; then break; fi
         bsp_d=${bsp_d%/*}
@@ -1042,11 +1036,6 @@ bsp_usable() {
     bsp_root=$bsp_cwd
     bsp_d=$bsp_cwd
     while [ -n "$bsp_d" ]; do
-      # Stop below $HOME (by identity): $HOME is never the root, so a
-      # dotfiles repo's .git there cannot pull every ~/... entry into the
-      # project; with no .git found below it, the root is the cwd. A HOME
-      # that is unset or not absolute is not used.
-      case "${HOME:-}" in /*) if [ "$bsp_d" -ef "$HOME" ]; then break; fi ;; esac
       if [ -e "${bsp_d%/}/.git" ]; then bsp_root=$bsp_d; fi
       if [ "$bsp_d" = / ]; then break; fi
       bsp_d=${bsp_d%/*}

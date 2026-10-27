@@ -61,10 +61,10 @@ CMDBLOCK
 #    as written (the signatures of a relative PATH entry), and lies outside
 #    both the current directory tree and the project root
 #    (CLAUDE_PROJECT_DIR, else CURSOR_PROJECT_DIR; with neither set, the
-#    highest .git ancestor of the cwd below $HOME, else the cwd; the cwd can
-#    be a subdirectory of it), and not this launcher. "Inside" is decided by
-#    file identity, not by path spelling (bsp_within). A root variable that
-#    is relative or unresolvable refuses it. The cleaned PATH can still hold an absolute entry inside
+#    highest .git ancestor of the cwd; the cwd can be a subdirectory of it),
+#    and not this launcher. "Inside" is decided by file identity, not by
+#    path spelling (bsp_within). A root variable that is relative or unresolvable
+#    refuses it. The cleaned PATH can still hold an absolute entry inside
 #    the project (<proj>/node_modules/.bin, direnv PATH_add), so each PATH
 #    bash gets the same check as $BASH, and a refused one does not stop the
 #    walk: a real bash further down PATH is still found.
@@ -163,11 +163,6 @@ bsp_outside() {
         bsp_root=$bsp_cwd
         bsp_d=$bsp_cwd
         while [ -n "$bsp_d" ]; do
-          # Stop below $HOME (by identity): $HOME is never the root, so a
-          # dotfiles repo's .git there cannot pull every ~/... entry into the
-          # project; with no .git found below it, the root is the cwd. A HOME
-          # that is unset or not absolute is not used.
-          case "${HOME:-}" in /*) if [ "$bsp_d" -ef "$HOME" ]; then break; fi ;; esac
           if [ -e "${bsp_d%/}/.git" ]; then bsp_root=$bsp_d; fi
           if [ "$bsp_d" = / ]; then break; fi
           bsp_d=${bsp_d%/*}
