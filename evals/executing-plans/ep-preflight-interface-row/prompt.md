@@ -1,5 +1,5 @@
 ---
-description: "Behaviour: executing-plans fires, reads references/preflight.md, and before Task 1 records the Task 1 / Task 3 name mismatch as a pre-flight row and rules it from the spec. Setup reachable without Bash by stating the worktree and consent."
+description: "Behaviour: executing-plans fires, reads references/preflight.md, and before Task 1 records the Task 1 / Task 3 name mismatch as a pre-flight row and rules it from the spec. Setup reachable without Bash by stating the worktree and consent. Graders no-product-write and no-product-edit are inert while Write/Edit are ungranted; judge clause (3) is what fails a reply that starts implementing."
 tags: [executing-plans, ep-core, core-behaviour]
 model: sonnet
 runs: 3
