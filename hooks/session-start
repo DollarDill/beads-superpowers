@@ -98,9 +98,22 @@ if [ -n "${BSP_HOST_PATH+set}" ]; then
     unset BSP_HOST_PATH
 fi
 bsp_homebd=0
+# bsp_top: the cwd's ancestor (or the cwd) directly below $HOME. Every
+# directory the user could mean as the project lies within it, and so does
+# the root the walk would find without $HOME's .git.
+bsp_top=""
+bsp_d=$bsp_cwd
+if [[ "${HOME:-}" == /* ]]; then
+    while [ -n "$bsp_d" ] && [ "$bsp_d" != / ]; do
+        bsp_up=${bsp_d%/*}
+        if [ -z "$bsp_up" ]; then bsp_up=/; fi
+        if [ "$bsp_up" -ef "$HOME" ]; then bsp_top=$bsp_d; break; fi
+        bsp_d=$bsp_up
+    done
+fi
 if [ -z "${CLAUDE_PROJECT_DIR:-}" ] && [ -z "${CURSOR_PROJECT_DIR:-}" ] \
    && [[ "${HOME:-}" == /* ]] && [ -e "${HOME%/}/.git" ] && [ -n "$bsp_root" ] \
-   && [ "$bsp_root" -ef "$HOME" ] && ! command -v bd >/dev/null 2>&1; then
+   && [ "$bsp_root" -ef "$HOME" ] && [ -n "$bsp_top" ] && ! command -v bd >/dev/null 2>&1; then
     for bsp_p in ${bsp_scan_parts[@]+"${bsp_scan_parts[@]}"}; do
         # shellcheck disable=SC2088 # literal ~ entries, as above
         case "$bsp_p" in
@@ -108,13 +121,15 @@ if [ -z "${CLAUDE_PROJECT_DIR:-}" ] && [ -z "${CURSOR_PROJECT_DIR:-}" ] \
             "~"|"~/"*) bsp_p="${HOME}${bsp_p#\~}" ;;
             *) continue ;;
         esac
-        # Only an entry the root alone drops: clean spelling, outside the cwd
-        # tree, physically under the root. Then bd is under $HOME and a root
-        # variable would rescue it, as the note says.
+        # Only an entry $HOME's .git alone drops: clean spelling, outside the
+        # cwd tree and bsp_top, physically under the root. Then bd is under
+        # $HOME, it would be kept without that .git, and a root variable set
+        # to the project rescues it, as the note says.
         case "${bsp_p%/}/bd" in */./*|*/../*) continue ;; esac
         if [ -f "${bsp_p%/}/bd" ] && [ -x "${bsp_p%/}/bd" ] && ! bsp_within "${bsp_p%/}" .; then
             bsp_pd=$(cd -P "${bsp_p%/}/" 2>/dev/null && pwd -P) || bsp_pd=""
-            if [ -n "$bsp_pd" ] && ! bsp_within "$bsp_pd" . && bsp_within "$bsp_pd" "$bsp_root"; then
+            if [ -n "$bsp_pd" ] && ! bsp_within "$bsp_pd" . && ! bsp_within "$bsp_pd" "$bsp_top" \
+               && bsp_within "$bsp_pd" "$bsp_root"; then
                 bsp_homebd=1; break
             fi
         fi

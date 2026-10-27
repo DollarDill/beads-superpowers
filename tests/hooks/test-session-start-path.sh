@@ -130,22 +130,26 @@ check "tilde entry kept (~/bin/bd runs)" "$tilde"
 # the project. The injected text and the stderr hint name the cause and both
 # fixes. The bd is only ever stat'ed, never run. When bd is simply absent, or
 # a root variable is set, the note does not appear. Nor does it when the
-# entry is dropped for another reason (a . component, the cwd tree), since
-# then it is not that bd lives under HOME, or a root variable would not
-# rescue it: every claim the note makes holds whenever it fires.
+# entry is dropped for another reason (a . component, the cwd tree, a
+# project below HOME that holds it), since then it is not that bd lives under
+# HOME, or a root variable would not rescue it: every claim the note makes
+# holds whenever it fires.
 HOMEBD_NOTE='set CLAUDE_PROJECT_DIR (or CURSOR_PROJECT_DIR) to your project directory, or install bd outside your home directory'
 injected() { # the additionalContext of $out, parsed outside the hook's env
   python3 -I -c 'import json,sys; print(json.load(sys.stdin)["hookSpecificOutput"]["additionalContext"])' <"$out" 2>/dev/null
 }
 homebd_case() { # name | want note (0 yes, 1 no) | bd planted (0 no, 1 in ~/.local/bin, or a dir) | PATH | extra env...
-  # __H__ is HOME, __O__ a directory outside it.
+  # __H__ is HOME, __O__ a directory outside it. HOMEBD_CWD (default sub) is
+  # the cwd below HOME; HOMEBD_GIT, if set, a directory below HOME given its
+  # own .git.
   local name="$1" want="$2" plant="$3" p="$4" ctx has_ctx=1 has_err=1 planted prc kv bdir
   local -a extra=()
   shift 4
   fresh
   p=${p//__H__/$h}; p=${p//__O__/$T/opt$n}
   for kv in "$@"; do extra+=("${kv//__H__/$h}"); done
-  mkdir -p "$h/.git" "$h/sub" "$h/.local/bin"
+  mkdir -p "$h/.git" "$h/${HOMEBD_CWD:-sub}" "$h/.local/bin"
+  if [ -n "${HOMEBD_GIT:-}" ]; then mkdir -p "$h/$HOMEBD_GIT/.git"; fi
   bdir="$h/.local/bin"
   case "$plant" in 0|1) ;; *) bdir=${plant//__H__/$h}; bdir=${bdir//__O__/$T/opt$n}; plant=1 ;; esac
   if [ "$plant" = 1 ]; then
@@ -153,7 +157,7 @@ homebd_case() { # name | want note (0 yes, 1 no) | bd planted (0 no, 1 in ~/.loc
     printf '#!/bin/sh\n: > "%s/ran-homebd"\necho "Memories (1):"\n' "$T" >"$bdir/bd"
     chmod +x "$bdir/bd"
   fi
-  (cd "$h/sub" && env -i HOME="$h" XDG_RUNTIME_DIR="$rt" CLAUDE_PLUGIN_ROOT="$ROOT" PATH="$p" ${extra[@]+"${extra[@]}"} \
+  (cd "$h/${HOMEBD_CWD:-sub}" && env -i HOME="$h" XDG_RUNTIME_DIR="$rt" CLAUDE_PLUGIN_ROOT="$ROOT" PATH="$p" ${extra[@]+"${extra[@]}"} \
     "$bash_bin" "$ROOT/hooks/session-start" </dev/null >"$out" 2>"$err")
   rc=$?
   ctx=$(injected)
@@ -174,6 +178,15 @@ homebd_case "git HOME is the root, bd simply absent: no HOME note" 1 0 '__H__/.l
 homebd_case "bd under HOME dropped with a root variable set: no HOME note" 1 1 '__H__/.local/bin:/usr/bin:/bin' CLAUDE_PROJECT_DIR=__H__
 homebd_case "bd outside HOME, reached only through a /./ entry: no HOME note" 1 '__O__/bin' '__O__/./bin:/usr/bin:/bin'
 homebd_case "bd in a dropped entry inside the cwd tree: no HOME note" 1 '__H__/sub/node_modules/.bin' '__H__/sub/node_modules/.bin:/usr/bin:/bin'
+# A project below HOME with its own .git, the cwd a subdirectory of it. A bd
+# outside that project is dropped only because of HOME's .git, and setting
+# CLAUDE_PROJECT_DIR to the project rescues it: the note. A bd inside the
+# project would still be dropped without HOME's .git, and with the project as
+# the root: no note. Nor without a project .git, when the bd shares the cwd's
+# top directory under HOME, since that directory may be the project.
+HOMEBD_CWD=proj/sub HOMEBD_GIT=proj homebd_case "git HOME and a project .git below it, bd in ~/.local/bin: injection names the cause and fixes" 0 1 '__H__/.local/bin:/usr/bin:/bin'
+HOMEBD_CWD=proj/sub HOMEBD_GIT=proj homebd_case "git HOME and a project .git below it, bd inside the project outside the cwd tree: no HOME note" 1 '__H__/proj/node_modules/.bin' '__H__/proj/node_modules/.bin:/usr/bin:/bin'
+HOMEBD_CWD=proj/sub homebd_case "git HOME, no project .git, bd beside the cwd in its top directory under HOME: no HOME note" 1 '__H__/proj/tools/bin' '__H__/proj/tools/bin:/usr/bin:/bin'
 # BSP_HOST_PATH, the uncut PATH a plugin passes along, is read by the note
 # scan only: no child of the hook inherits it. bd here is outside HOME and the
 # cwd, so the hook runs it and it records what it saw.
