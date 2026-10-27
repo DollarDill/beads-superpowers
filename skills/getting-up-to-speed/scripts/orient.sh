@@ -34,7 +34,7 @@ else
         printf 'search: bd memories <keyword> · fetch: bd recall <key>\n'
     else
 # shellcheck disable=SC2016  # the markdown-style backticks around {k} are literal Python print output, not bash command substitution; single quotes are intentional to keep the whole python3 -c script opaque to bash
-bd memories --json 2>/dev/null | python3 -c '
+bd memories --json 2>/dev/null | python3 -I -c '
 import json,sys,re
 d=json.load(sys.stdin); items={}
 def absorb(o):
