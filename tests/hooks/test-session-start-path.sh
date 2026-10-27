@@ -187,6 +187,13 @@ homebd_case "bd in a dropped entry inside the cwd tree: no HOME note" 1 '__H__/s
 HOMEBD_CWD=proj/sub HOMEBD_GIT=proj homebd_case "git HOME and a project .git below it, bd in ~/.local/bin: injection names the cause and fixes" 0 1 '__H__/.local/bin:/usr/bin:/bin'
 HOMEBD_CWD=proj/sub HOMEBD_GIT=proj homebd_case "git HOME and a project .git below it, bd inside the project outside the cwd tree: no HOME note" 1 '__H__/proj/node_modules/.bin' '__H__/proj/node_modules/.bin:/usr/bin:/bin'
 HOMEBD_CWD=proj/sub homebd_case "git HOME, no project .git, bd beside the cwd in its top directory under HOME: no HOME note" 1 '__H__/proj/tools/bin' '__H__/proj/tools/bin:/usr/bin:/bin'
+# With a project .git, the project, not the cwd's top directory under HOME,
+# bounds what a root variable rescues: a bd outside the project in that same
+# top directory (go install's ~/go/bin, a sibling ~/code/bin) gets the note.
+HOMEBD_CWD=go/src/github.com/me/proj HOMEBD_GIT=go/src/github.com/me/proj homebd_case "git HOME, project .git at ~/go/src/github.com/me/proj, bd in ~/go/bin: injection names the cause and fixes" 0 '__H__/go/bin' '__H__/go/bin:/usr/bin:/bin'
+HOMEBD_CWD=code/proj/sub HOMEBD_GIT=code/proj homebd_case "git HOME, project .git at ~/code/proj, cwd below it, bd in ~/code/bin: injection names the cause and fixes" 0 '__H__/code/bin' '__H__/code/bin:/usr/bin:/bin'
+# The cwd is HOME itself: no directory below HOME is the project, so no note.
+HOMEBD_CWD=. homebd_case "git HOME, cwd is HOME itself, bd in ~/.local/bin: no HOME note" 1 1 '__H__/.local/bin:/usr/bin:/bin'
 # BSP_HOST_PATH, the uncut PATH a plugin passes along, is read by the note
 # scan only: no child of the hook inherits it. bd here is outside HOME and the
 # cwd, so the hook runs it and it records what it saw.
