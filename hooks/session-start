@@ -101,8 +101,15 @@ if [ -z "${CLAUDE_PROJECT_DIR:-}" ] && [ -z "${CURSOR_PROJECT_DIR:-}" ] \
             "~"|"~/"*) bsp_p="${HOME}${bsp_p#\~}" ;;
             *) continue ;;
         esac
-        if [ -f "${bsp_p%/}/bd" ] && [ -x "${bsp_p%/}/bd" ] && ! bsp_entry_outside "$bsp_p"; then
-            bsp_homebd=1; break
+        # Only an entry the root alone drops: clean spelling, outside the cwd
+        # tree, physically under the root. Then bd is under $HOME and a root
+        # variable would rescue it, as the note says.
+        case "${bsp_p%/}/bd" in */./*|*/../*) continue ;; esac
+        if [ -f "${bsp_p%/}/bd" ] && [ -x "${bsp_p%/}/bd" ] && ! bsp_within "${bsp_p%/}" .; then
+            bsp_pd=$(cd -P "${bsp_p%/}/" 2>/dev/null && pwd -P) || bsp_pd=""
+            if [ -n "$bsp_pd" ] && ! bsp_within "$bsp_pd" . && bsp_within "$bsp_pd" "$bsp_root"; then
+                bsp_homebd=1; break
+            fi
         fi
     done
 fi

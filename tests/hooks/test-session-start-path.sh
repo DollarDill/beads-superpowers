@@ -129,22 +129,29 @@ check "tilde entry kept (~/bin/bd runs)" "$tilde"
 # (user decision 2026-10-28) and a bd under it is dropped with the rest of
 # the project. The injected text and the stderr hint name the cause and both
 # fixes. The bd is only ever stat'ed, never run. When bd is simply absent, or
-# a root variable is set, the note does not appear.
+# a root variable is set, the note does not appear. Nor does it when the
+# entry is dropped for another reason (a . component, the cwd tree), since
+# then it is not that bd lives under HOME, or a root variable would not
+# rescue it: every claim the note makes holds whenever it fires.
 HOMEBD_NOTE='set CLAUDE_PROJECT_DIR (or CURSOR_PROJECT_DIR) to your project directory, or install bd outside your home directory'
 injected() { # the additionalContext of $out, parsed outside the hook's env
   python3 -I -c 'import json,sys; print(json.load(sys.stdin)["hookSpecificOutput"]["additionalContext"])' <"$out" 2>/dev/null
 }
-homebd_case() { # name | want note (0 yes, 1 no) | bd planted (0/1) | PATH | extra env... (__H__ is HOME)
-  local name="$1" want="$2" plant="$3" p="$4" ctx has_ctx=1 has_err=1 planted prc kv
+homebd_case() { # name | want note (0 yes, 1 no) | bd planted (0 no, 1 in ~/.local/bin, or a dir) | PATH | extra env...
+  # __H__ is HOME, __O__ a directory outside it.
+  local name="$1" want="$2" plant="$3" p="$4" ctx has_ctx=1 has_err=1 planted prc kv bdir
   local -a extra=()
   shift 4
   fresh
-  p=${p//__H__/$h}
+  p=${p//__H__/$h}; p=${p//__O__/$T/opt$n}
   for kv in "$@"; do extra+=("${kv//__H__/$h}"); done
   mkdir -p "$h/.git" "$h/sub" "$h/.local/bin"
+  bdir="$h/.local/bin"
+  case "$plant" in 0|1) ;; *) bdir=${plant//__H__/$h}; bdir=${bdir//__O__/$T/opt$n}; plant=1 ;; esac
   if [ "$plant" = 1 ]; then
-    printf '#!/bin/sh\n: > "%s/ran-homebd"\necho "Memories (1):"\n' "$T" >"$h/.local/bin/bd"
-    chmod +x "$h/.local/bin/bd"
+    mkdir -p "$bdir"
+    printf '#!/bin/sh\n: > "%s/ran-homebd"\necho "Memories (1):"\n' "$T" >"$bdir/bd"
+    chmod +x "$bdir/bd"
   fi
   (cd "$h/sub" && env -i HOME="$h" XDG_RUNTIME_DIR="$rt" CLAUDE_PLUGIN_ROOT="$ROOT" PATH="$p" ${extra[@]+"${extra[@]}"} \
     "$bash_bin" "$ROOT/hooks/session-start" </dev/null >"$out" 2>"$err")
@@ -165,6 +172,8 @@ homebd_case "git HOME is the root, bd under it dropped (absolute entry): injecti
 homebd_case "git HOME is the root, bd under it dropped (~ entry): injection names the cause and fixes" 0 1 '~/.local/bin:/usr/bin:/bin'
 homebd_case "git HOME is the root, bd simply absent: no HOME note" 1 0 '__H__/.local/bin:/usr/bin:/bin'
 homebd_case "bd under HOME dropped with a root variable set: no HOME note" 1 1 '__H__/.local/bin:/usr/bin:/bin' CLAUDE_PROJECT_DIR=__H__
+homebd_case "bd outside HOME, reached only through a /./ entry: no HOME note" 1 '__O__/bin' '__O__/./bin:/usr/bin:/bin'
+homebd_case "bd in a dropped entry inside the cwd tree: no HOME note" 1 '__H__/sub/node_modules/.bin' '__H__/sub/node_modules/.bin:/usr/bin:/bin'
 
 # --- golden: a normal PATH emits the same bytes as the pre-change hook ---
 # Base: GOLDEN_BASE (0c5127c), the last commit before sub-project A. Rule: when a
