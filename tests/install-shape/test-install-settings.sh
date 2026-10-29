@@ -177,6 +177,25 @@ ok = ok and any("beads-superpowers" in json.dumps(e) for e in d["hooks"]["Sessio
 sys.exit(0 if ok else 1)
 ' "$h/.claude/settings.json"; then echo "FAIL [malformed reminder entries]: settings not as expected: $(head -c 400 "$h/.claude/settings.json")"; fail=1; fi
 
+# More non-dict shapes in UserPromptSubmit and its inner hooks (nested lists,
+# numbers, a dict "hooks", a list "command"): no traceback, every malformed
+# element kept as it was, the one real stale reminder still removed.
+new_home
+cat >"$h/.claude/settings.json" <<'EOF2'
+{"hooks": {"UserPromptSubmit": [1, null, [["x"]], {"hooks": {"a": 1}}, "superpowers-reminder", {"hooks": [[1], {"command": ["superpowers-reminder"]}, {"type": "command", "command": "/x/superpowers-reminder.sh"}, {"command": "echo keep"}]}]}}
+EOF2
+install_in
+if [ "$rc" != 0 ]; then echo "FAIL [malformed reminder shapes]: exit $rc"; sed -n '1,25p' "$log"; fail=1; fi
+no_exception_text "malformed reminder shapes"
+if ! "$REAL_PY" -I -c '
+import json, sys
+d = json.load(open(sys.argv[1]))
+ups = d["hooks"]["UserPromptSubmit"]
+want = [1, None, [["x"]], {"hooks": {"a": 1}}, "superpowers-reminder",
+        {"hooks": [[1], {"command": ["superpowers-reminder"]}, {"command": "echo keep"}]}]
+sys.exit(0 if ups == want else 1)
+' "$h/.claude/settings.json"; then echo "FAIL [malformed reminder shapes]: settings not as expected: $(head -c 400 "$h/.claude/settings.json")"; fail=1; fi
+
 # A non-object top level mentioning the reminder: left untouched, no crash.
 new_home
 printf '["superpowers-reminder"]\n' >"$h/.claude/settings.json"
