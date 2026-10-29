@@ -95,6 +95,8 @@ async function runTests() {
   cleanup();
 
   const server = startServer();
+  // process.exit() skips `finally`; this net kills the server on every exit path.
+  process.on('exit', () => { server.kill(); });
   let stdoutAccum = '';
   server.stdout.on('data', (data) => { stdoutAccum += data.toString(); });
 

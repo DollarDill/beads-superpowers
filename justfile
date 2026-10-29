@@ -46,7 +46,7 @@ lint:
 
 # Opt-in (extra deps)
 server:
-    cd tests/brainstorm-server && npm install --no-audit --no-fund && npm test && bash windows-lifecycle.test.sh
+    cd tests/brainstorm-server && npm install --no-audit --no-fund && npm test && bash windows-lifecycle.test.sh && bash teardown.test.sh
 
 docker:
     bash tests/installer/run-tests.sh
