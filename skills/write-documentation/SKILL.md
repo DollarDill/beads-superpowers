@@ -1,6 +1,6 @@
 ---
 name: write-documentation
-description: "Use when writing or substantially rewriting human-facing prose: documentation, README, guides, blog posts, emails, Slack messages, PR descriptions, release notes, or any text a human will read. Not for code comments, commit messages, or agent-to-agent communication."
+description: "Use when writing or substantially rewriting human-facing prose: documentation, README, guides, blog posts, emails, Slack messages, PR descriptions, release notes, CHANGELOG entries, or any text a human will read. Not for code comments, commit messages, or agent-to-agent communication."
 ---
 
 # Write Documentation
@@ -125,6 +125,8 @@ Done when: the user has approved the text and the bead is closed with evidence o
 ## Medium Routing
 
 **Read `references/medium-routing.md` (in this skill's directory) before choosing a format** — format follows the medium.
+
+For release notes and CHANGELOG entries, never state a version number or release date you were not given. Head the entry `[Unreleased]` with no date, or mark the version as proposed.
 
 ## Safety Rails
 
