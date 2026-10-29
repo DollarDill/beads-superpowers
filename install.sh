@@ -470,11 +470,14 @@ install_agents_from() {
 }
 
 # hook_setup_failed <setup_hooks rc> [context]: a setup_hooks caller's warning,
-# naming the cause: rc 2 is hook_bash finding no usable bash, anything else
-# is python3 missing.
+# naming the cause: rc 2 is hook_bash finding no usable bash, rc 3 is
+# register_hook failing to update the settings file, anything else is python3
+# missing.
 hook_setup_failed() {
   if [ "$1" = 2 ]; then
     warn "Hook setup failed${2:+ $2} — no usable bash outside the project was found; re-run install.sh once one is on PATH"
+  elif [ "$1" = 3 ]; then
+    warn "Hook setup failed${2:+ $2} — settings.json was not updated, so the SessionStart hook is NOT registered (see the warning above); fix it and re-run install.sh"
   else
     warn "Hook setup failed${2:+ $2} — re-run install.sh once python3 is available"
   fi
@@ -501,12 +504,13 @@ setup_hooks() {
   cleanup_stale_reminder "$SETTINGS_FILE"
 
   info "Registering hooks in settings.json..."
-  register_hook
+  local rc=0
+  register_hook || rc=$?
   if [ -n "$SETTINGS_BACKUP" ]; then
     info "Settings backup: ${SETTINGS_BACKUP/$HOME/\~}"
   fi
 
-  return 0
+  return "$rc"
 }
 
 try_local_install() {
@@ -1452,6 +1456,7 @@ register_hook() {
     # Said now and again in the summary.
     SETTINGS_WARNING=$(settings_problem "$rc" "$SETTINGS_FILE" "$kept" "the SessionStart hook was NOT registered" "re-run the installer")
     printf 'beads-superpowers: %s\n' "$SETTINGS_WARNING" >&2
+    return 3
   fi
   return 0
 }

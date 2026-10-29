@@ -87,5 +87,21 @@ while IFS= read -r line; do
   fi
 done <<<"$callers"
 
+# A register_hook failure is reported by every caller with its real cause (the
+# settings file was not updated), not as a missing bash or python3; a
+# register_hook that succeeds is not reported at all.
+while IFS= read -r line; do
+  # shellcheck disable=SC2016 # $1/$2 are expanded by the inner bash
+  msg=$(HAS_PYTHON3=1 HOOKS_DIR="$SANDBOX/hooks-dir" bash -c 'warn() { echo "warn $1"; }; info() { :; }; hook_bash() { echo /bin/bash; }; write_hook_script() { :; }; cleanup_stale_reminder() { :; }; register_hook() { return 3; }; STAGING_DIR=/nonexistent; . "$1"; eval "$2"' _ "$SANDBOX/setup.sh" "$line" 2>&1)
+  if [[ "$msg" == *"Hook setup failed"*"settings.json"* ]] && [[ "$msg" != *python3* ]] && [[ "$msg" != *"no usable bash"* ]]; then :; else
+    echo "FAIL [register_hook failure]: caller '${line#"${line%%[![:space:]]*}"}' printed: $msg"; fail=1
+  fi
+  # shellcheck disable=SC2016 # $1/$2 are expanded by the inner bash
+  msg=$(HAS_PYTHON3=1 HOOKS_DIR="$SANDBOX/hooks-dir" bash -c 'warn() { echo "warn $1"; }; info() { :; }; hook_bash() { echo /bin/bash; }; write_hook_script() { :; }; cleanup_stale_reminder() { :; }; register_hook() { return 0; }; STAGING_DIR=/nonexistent; . "$1"; eval "$2"' _ "$SANDBOX/setup.sh" "$line" 2>&1)
+  if [[ "$msg" == *"Hook setup failed"* ]]; then
+    echo "FAIL [register_hook success]: caller '${line#"${line%%[![:space:]]*}"}' reported a failure: $msg"; fail=1
+  fi
+done <<<"$callers"
+
 if [ "$fail" -eq 0 ]; then echo "PASS: the registered hook never runs a bash from inside the project"; fi
 exit "$fail"
