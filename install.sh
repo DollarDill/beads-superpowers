@@ -1611,6 +1611,9 @@ do_uninstall() {
           elif [ "$rc" != 4 ]; then
             warn "$(settings_problem "$rc" "$SETTINGS_FILE" "$kept" "the beads-superpowers hook entries were NOT removed" "re-run --uninstall")"
           fi
+        else
+          warn "python3 not found — the beads-superpowers hook entries in $SETTINGS_FILE were NOT removed"
+          warn "Manual fix: delete every SessionStart and UserPromptSubmit entry whose command contains beads-superpowers from $SETTINGS_FILE, or re-run --uninstall once python3 is available"
         fi
       fi
       ;;

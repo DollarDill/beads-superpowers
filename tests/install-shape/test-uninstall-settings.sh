@@ -592,5 +592,33 @@ if [ "$(uname -s)" = Darwin ]; then
   if [ -z "$full" ] || [ -z "$first_write" ] || [ "$full" -gt "$first_write" ]; then echo "FAIL [$name]: the backup did not get F_FULLFSYNC before the first write"; fail=1; fi
 fi
 
+# No python3 on PATH: the settings cleanup cannot run, and --uninstall says so
+# instead of skipping it silently: a warning naming the settings file, that the
+# hook entries were NOT removed, and how to remove them by hand. The file is
+# untouched and the rest of the uninstall runs. The PATH is built from
+# symlinks to every system tool but python (not the host lacking it).
+nopy="$SANDBOX/nopy-bin"
+mkdir -p "$nopy"
+for d in /bin /usr/bin /usr/sbin /sbin; do
+  for t in "$d"/*; do
+    case "${t##*/}" in python*|pip*) continue ;; esac
+    [ -x "$t" ] && ln -sf "$t" "$nopy/${t##*/}" 2>/dev/null
+  done
+done
+setup
+printf '{"hooks": {"SessionStart": [{"hooks": [%s, %s]}]}}' "$BSP" "$FOREIGN" >"$h/.claude/settings.json"
+before=$(sha "$h/.claude/settings.json")
+if PATH="$nopy" command -v python3 >/dev/null 2>&1; then echo "FAIL [no python3]: the test PATH still has python3"; fail=1; fi
+HOME="$h" BEADS_SUPERPOWERS_SKILLS_DIR="$h/skills" PATH="$nopy" \
+  bash "$REPO_ROOT/install.sh" --uninstall >"$log" 2>&1
+rc=$?
+name="uninstall without python3"
+if [ "$rc" != 0 ]; then echo "FAIL [$name]: exit $rc"; sed -n '1,25p' "$log"; fail=1; fi
+if ! grep -q "^warn .*python3.*$h/.claude/settings.json.*NOT removed" "$log"; then echo "FAIL [$name]: no warning naming python3, the settings file and 'NOT removed'"; fail=1; fi
+if ! grep -q "Manual fix: .*beads-superpowers.*$h/.claude/settings.json" "$log"; then echo "FAIL [$name]: no manual removal instruction"; fail=1; fi
+if grep -q "Removed hooks from settings.json" "$log"; then echo "FAIL [$name]: claimed hooks were removed"; fail=1; fi
+if [ "$before" != "$(sha "$h/.claude/settings.json")" ]; then echo "FAIL [$name]: settings file was modified"; fail=1; fi
+if [ -e "$h/skills/.beads-superpowers-version" ] || ! grep -q "beads-superpowers uninstalled" "$log"; then echo "FAIL [$name]: rest of the uninstall did not run"; fail=1; fi
+
 if [ "$fail" -eq 0 ]; then echo "PASS: --uninstall handles the settings file safely"; fi
 exit "$fail"
