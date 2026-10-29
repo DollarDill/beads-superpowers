@@ -284,26 +284,25 @@ detect_tools() {
 
 detect_upstream_conflict() {
   if [ -f "$PLUGINS_FILE" ]; then
+    # SystemExit is not an Exception: the exit sits outside the try so a
+    # detected plugin is not swallowed. An unreadable or odd file is "not found".
     if python3 -I -c '
 import json, sys
 try:
     d = json.load(open(sys.argv[1]))
-    if "superpowers@claude-plugins-official" in d.get("plugins", {}):
-        sys.exit(0)
-    sys.exit(1)
-except:
-    sys.exit(1)
+    found = "superpowers@claude-plugins-official" in d.get("plugins", {})
+except Exception:
+    found = False
+sys.exit(0 if found else 1)
 ' "$PLUGINS_FILE" 2>/dev/null; then
-      error "Upstream superpowers plugin detected."
+      warn "Upstream superpowers plugin detected — continuing the install."
       echo
       echo "  beads-superpowers supersedes the upstream superpowers plugin."
       echo "  Having both installed causes duplicate skill loading."
       echo
-      echo "  Uninstall it first:"
+      echo "  To remove the upstream plugin:"
       echo "    claude plugin uninstall superpowers@claude-plugins-official"
       echo
-      echo "  Then re-run this installer."
-      exit 1
     fi
   fi
 }
