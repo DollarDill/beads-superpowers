@@ -74,6 +74,14 @@ expect_fail "unknown-core-tag" '^EVAL-GATE ERROR: evals/x/d/prompt\.md: unknown 
 stage; case_md d 'tags: [x, core_fire]'
 expect_fail "underscore-typo (core_fire)" '^EVAL-GATE ERROR: evals/x/d/prompt\.md: unknown core tag core_fire$' 1
 
+stage; printf -- '---\ndescription: "fixture"\ntags: [x, core-fire]\nruns: 3\nDo the thing.\ntags: [x]\n' > "$FIX/evals/x/d.md"
+mkdir -p "$FIX/evals/x/d"; mv -f "$FIX/evals/x/d.md" "$FIX/evals/x/d/prompt.md"
+expect_fail "unclosed-frontmatter" '^EVAL-GATE ERROR: evals/x/d/prompt\.md: frontmatter has no closing ---$' 1
+
+stage; case_md d 'tags: [x, core-fire]
+tags: [x, core-nofire]'
+expect_fail "duplicate-tags-key" '^EVAL-GATE ERROR: evals/x/d/prompt\.md: duplicate tags key$' 1
+
 stage; case_md d 'tags:
   - core-fire'
 expect_fail "block-style-tags" '^EVAL-GATE ERROR: evals/x/d/prompt\.md: unsupported tags format$' 1

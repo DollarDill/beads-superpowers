@@ -131,6 +131,7 @@ for f in "${files[@]}"; do
   awk -v F="$label" '
     function bad(reason) { printf "EVAL-SCAFFOLD: %s:%d: %s\n", F, NR, reason; err = 1 }
     function path_ok(p) {
+      if (p ~ /^-/) { bad("option-shaped path"); return 0 }
       if (p ~ /[$`]/) { bad("expansion in path"); return 0 }
       if (p ~ /^\//) { bad("absolute path"); return 0 }
       if (p ~ /(^|\/)\.\.(\/|$)/) { bad("parent-dir segment"); return 0 }

@@ -28,19 +28,27 @@ if [ -z "$gated" ]; then
   exit 0
 fi
 
-# Prints one tag per line from prompt.md's frontmatter, or the single line
-# "!unsupported" when a tags key is present but not in flow style.
+# Prints one tag per line from prompt.md's frontmatter, or one of the single
+# lines "!unsupported" (a tags key not in flow style), "!unclosed" (frontmatter
+# with no closing ---) or "!duplicate" (a second tags key).
 frontmatter_tags() {
   awk '
-    NR == 1 { if ($0 != "---") exit; next }
-    $0 == "---" { exit }
+    NR == 1 { if ($0 != "---") exit; open = 1; next }
+    $0 == "---" { open = 0; exit }
     /^tags:/ {
+      if (seen) { dup = 1; next }
+      seen = 1
       v = $0; sub(/^tags:[ \t]*/, "", v)
-      if (v !~ /^\[.*\][ \t]*$/) { print "!unsupported"; exit }
+      if (v !~ /^\[.*\][ \t]*$/) { bad = 1; next }
       sub(/^\[/, "", v); sub(/\][ \t]*$/, "", v)
       n = split(v, t, ",")
-      for (i = 1; i <= n; i++) { gsub(/^[ \t"'\'']+|[ \t"'\'']+$/, "", t[i]); if (t[i] != "") print t[i] }
-      exit
+      for (i = 1; i <= n; i++) { gsub(/^[ \t"\047]+|[ \t"\047]+$/, "", t[i]); if (t[i] != "") out = out t[i] "\n" }
+    }
+    END {
+      if (open) { print "!unclosed"; exit }
+      if (dup) { print "!duplicate"; exit }
+      if (bad) { print "!unsupported"; exit }
+      printf "%s", out
     }' "$1"
 }
 
@@ -52,6 +60,8 @@ while IFS= read -r skill; do
     rel="${prompt#"$ROOT"/}"
     while IFS= read -r tag; do
       case "$tag" in
+        '!unclosed') echo "EVAL-GATE ERROR: $rel: frontmatter has no closing ---"; rc=1 ;;
+        '!duplicate') echo "EVAL-GATE ERROR: $rel: duplicate tags key"; rc=1 ;;
         '!unsupported') echo "EVAL-GATE ERROR: $rel: unsupported tags format"; rc=1 ;;
         core-fire) fire=1 ;;
         core-nofire) nofire=1 ;;
