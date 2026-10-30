@@ -130,6 +130,8 @@ async function runTests() {
   fs.writeFileSync(path.join(CONTENT_DIR, 'asset.txt'), 'secret asset');
 
   const server = startServer();
+  // process.exit() skips `finally`; this net kills the server on every exit path.
+  process.on('exit', () => { server.kill(); });
   let stdoutAccum = '';
   server.stdout.on('data', (d) => { stdoutAccum += d.toString(); });
 
