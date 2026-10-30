@@ -286,22 +286,30 @@ detect_upstream_conflict() {
   if [ -f "$PLUGINS_FILE" ]; then
     # SystemExit is not an Exception: the exit sits outside the try so a
     # detected plugin is not swallowed. An unreadable or odd file is "not found".
-    if python3 -I -c '
+    # Exactly the two keys upstream's README installs under (an exact set, not
+    # a prefix: beads-superpowers@... must not match); prints each one found.
+    local found
+    if found=$(python3 -I -c '
 import json, sys
+KEYS = ("superpowers@claude-plugins-official", "superpowers@superpowers-marketplace")
 try:
-    d = json.load(open(sys.argv[1]))
-    found = "superpowers@claude-plugins-official" in d.get("plugins", {})
+    plugins = json.load(open(sys.argv[1])).get("plugins")
+    hits = [k for k in KEYS if isinstance(plugins, dict) and k in plugins]
 except Exception:
-    found = False
-sys.exit(0 if found else 1)
-' "$PLUGINS_FILE" 2>/dev/null; then
+    hits = []
+if hits:
+    print("\n".join(hits))
+sys.exit(0 if hits else 1)
+' "$PLUGINS_FILE" 2>/dev/null); then
       warn "Upstream superpowers plugin detected — continuing the install."
       echo
       echo "  beads-superpowers supersedes the upstream superpowers plugin."
       echo "  Having both installed causes duplicate skill loading."
       echo
       echo "  To remove the upstream plugin:"
-      echo "    claude plugin uninstall superpowers@claude-plugins-official"
+      while IFS= read -r key; do
+        echo "    claude plugin uninstall $key"
+      done <<<"$found"
       echo
     fi
   fi
