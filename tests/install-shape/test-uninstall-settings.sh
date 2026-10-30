@@ -608,7 +608,9 @@ done
 setup
 printf '{"hooks": {"SessionStart": [{"hooks": [%s, %s]}]}}' "$BSP" "$FOREIGN" >"$h/.claude/settings.json"
 before=$(sha "$h/.claude/settings.json")
-if PATH="$nopy" command -v python3 >/dev/null 2>&1; then echo "FAIL [no python3]: the test PATH still has python3"; fail=1; fi
+# A subshell assignment, not a PATH= prefix: bash 3.2 keeps its command hash
+# (python3 already ran above) across a prefix and would still find it.
+if ( PATH="$nopy"; command -v python3 ) >/dev/null 2>&1; then echo "FAIL [no python3]: the test PATH still has python3"; fail=1; fi
 HOME="$h" BEADS_SUPERPOWERS_SKILLS_DIR="$h/skills" PATH="$nopy" \
   bash "$REPO_ROOT/install.sh" --uninstall >"$log" 2>&1
 rc=$?
