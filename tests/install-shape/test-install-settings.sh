@@ -61,7 +61,7 @@ unchanged_check() {
   if [ "$rc" != 0 ]; then echo "FAIL [$name]: exit $rc"; sed -n '1,25p' "$log"; fail=1; fi
   if [ "$before" != "$(sha "$h/.claude/settings.json")" ]; then echo "FAIL [$name]: settings file was modified ($(wc -c <"$h/.claude/settings.json") bytes now)"; fail=1; fi
   if ! grep -q "$h/.claude/settings.json.*NOT registered" "$log"; then echo "FAIL [$name]: no warning naming the file and 'NOT registered'"; fail=1; fi
-  if ! grep -q "Hook setup failed.*settings.json was not updated" "$log"; then echo "FAIL [$name]: setup_hooks' caller did not report the registration failure"; fail=1; fi
+  if ! grep -q "Hook setup failed.*SessionStart hook could not be registered" "$log"; then echo "FAIL [$name]: setup_hooks' caller did not report the registration failure"; fail=1; fi
   no_exception_text "$name"
   if [ "$(backups "$h")" != 0 ]; then echo "FAIL [$name]: a stray backup was left"; fail=1; fi
   if [ ! -f "$h/skills/.beads-superpowers-version" ]; then echo "FAIL [$name]: rest of the install missing"; fail=1; fi

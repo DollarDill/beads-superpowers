@@ -471,13 +471,13 @@ install_agents_from() {
 
 # hook_setup_failed <setup_hooks rc> [context]: a setup_hooks caller's warning,
 # naming the cause: rc 2 is hook_bash finding no usable bash, rc 3 is
-# register_hook failing to update the settings file, anything else is python3
+# register_hook failing to register the hook, anything else is python3
 # missing.
 hook_setup_failed() {
   if [ "$1" = 2 ]; then
     warn "Hook setup failed${2:+ $2} — no usable bash outside the project was found; re-run install.sh once one is on PATH"
   elif [ "$1" = 3 ]; then
-    warn "Hook setup failed${2:+ $2} — settings.json was not updated, so the SessionStart hook is NOT registered (see the warning above); fix it and re-run install.sh"
+    warn "Hook setup failed${2:+ $2} — the SessionStart hook could not be registered (see the warning above); fix the cause and re-run install.sh"
   else
     warn "Hook setup failed${2:+ $2} — re-run install.sh once python3 is available"
   fi
