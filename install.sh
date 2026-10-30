@@ -284,26 +284,33 @@ detect_tools() {
 
 detect_upstream_conflict() {
   if [ -f "$PLUGINS_FILE" ]; then
-    if python3 -I -c '
+    # SystemExit is not an Exception: the exit sits outside the try so a
+    # detected plugin is not swallowed. An unreadable or odd file is "not found".
+    # Exactly the two keys upstream's README installs under (an exact set, not
+    # a prefix: beads-superpowers@... must not match); prints each one found.
+    local found
+    if found=$(python3 -I -c '
 import json, sys
+KEYS = ("superpowers@claude-plugins-official", "superpowers@superpowers-marketplace")
 try:
-    d = json.load(open(sys.argv[1]))
-    if "superpowers@claude-plugins-official" in d.get("plugins", {}):
-        sys.exit(0)
-    sys.exit(1)
-except:
-    sys.exit(1)
-' "$PLUGINS_FILE" 2>/dev/null; then
-      error "Upstream superpowers plugin detected."
+    plugins = json.load(open(sys.argv[1])).get("plugins")
+    hits = [k for k in KEYS if isinstance(plugins, dict) and k in plugins]
+except Exception:
+    hits = []
+if hits:
+    print("\n".join(hits))
+sys.exit(0 if hits else 1)
+' "$PLUGINS_FILE" 2>/dev/null); then
+      warn "Upstream superpowers plugin detected — continuing the install."
       echo
       echo "  beads-superpowers supersedes the upstream superpowers plugin."
       echo "  Having both installed causes duplicate skill loading."
       echo
-      echo "  Uninstall it first:"
-      echo "    claude plugin uninstall superpowers@claude-plugins-official"
+      echo "  To remove the upstream plugin:"
+      while IFS= read -r key; do
+        echo "    claude plugin uninstall $key"
+      done <<<"$found"
       echo
-      echo "  Then re-run this installer."
-      exit 1
     fi
   fi
 }
@@ -471,11 +478,14 @@ install_agents_from() {
 }
 
 # hook_setup_failed <setup_hooks rc> [context]: a setup_hooks caller's warning,
-# naming the cause: rc 2 is hook_bash finding no usable bash, anything else
-# is python3 missing.
+# naming the cause: rc 2 is hook_bash finding no usable bash, rc 3 is
+# register_hook failing to register the hook, anything else is python3
+# missing.
 hook_setup_failed() {
   if [ "$1" = 2 ]; then
     warn "Hook setup failed${2:+ $2} — no usable bash outside the project was found; re-run install.sh once one is on PATH"
+  elif [ "$1" = 3 ]; then
+    warn "Hook setup failed${2:+ $2} — the SessionStart hook could not be registered (see the warning above); fix the cause and re-run install.sh"
   else
     warn "Hook setup failed${2:+ $2} — re-run install.sh once python3 is available"
   fi
@@ -502,12 +512,13 @@ setup_hooks() {
   cleanup_stale_reminder "$SETTINGS_FILE"
 
   info "Registering hooks in settings.json..."
-  register_hook
+  local rc=0
+  register_hook || rc=$?
   if [ -n "$SETTINGS_BACKUP" ]; then
     info "Settings backup: ${SETTINGS_BACKUP/$HOME/\~}"
   fi
 
-  return 0
+  return "$rc"
 }
 
 try_local_install() {
@@ -1453,6 +1464,7 @@ register_hook() {
     # Said now and again in the summary.
     SETTINGS_WARNING=$(settings_problem "$rc" "$SETTINGS_FILE" "$kept" "the SessionStart hook was NOT registered" "re-run the installer")
     printf 'beads-superpowers: %s\n' "$SETTINGS_WARNING" >&2
+    return 3
   fi
   return 0
 }
@@ -1612,6 +1624,9 @@ do_uninstall() {
           elif [ "$rc" != 4 ]; then
             warn "$(settings_problem "$rc" "$SETTINGS_FILE" "$kept" "the beads-superpowers hook entries were NOT removed" "re-run --uninstall")"
           fi
+        else
+          warn "python3 not found — the beads-superpowers hook entries in $SETTINGS_FILE were NOT removed"
+          warn "Manual fix: delete every SessionStart and UserPromptSubmit entry whose command contains beads-superpowers from $SETTINGS_FILE, or re-run --uninstall once python3 is available"
         fi
       fi
       ;;

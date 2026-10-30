@@ -33,6 +33,9 @@ if [ "$TARGET" = "all" ]; then
   echo "═══ uninstall-settings"
   if bash "$HERE/test-uninstall-settings.sh"; then echo "═══ uninstall-settings PASS"; else echo "═══ uninstall-settings FAIL"; total_rc=1; fi
   echo
+  echo "═══ upstream-conflict"
+  if bash "$HERE/test-upstream-conflict.sh"; then echo "═══ upstream-conflict PASS"; else echo "═══ upstream-conflict FAIL"; total_rc=1; fi
+  echo
   echo "═══ install-settings"
   if bash "$HERE/test-install-settings.sh"; then echo "═══ install-settings PASS"; else echo "═══ install-settings FAIL"; total_rc=1; fi
   echo

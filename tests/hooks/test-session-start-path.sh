@@ -565,14 +565,15 @@ sys.exit(0 if eval(check) else 1)' "$sf" "$hs" "$3" 2>>"$T/reg$reg_n.out"; then
   reg_case '"hooks" of the wrong type is left untouched' '{"hooks": []}' 'd == {"hooks": []}'
   reg_case '"SessionStart" of the wrong type is left untouched' '{"hooks": {"SessionStart": {"x": 1}}}' 'd == {"hooks": {"SessionStart": {"x": 1}}}'
   reg_case 'a non-object top level is left untouched' '[]' 'd == []'
-  # Not valid JSON: rc 0, file byte-identical (cmp against a pristine copy;
+  # Not valid JSON: rc 3 (register_hook's failure rc, propagated by setup_hooks),
+  # file byte-identical (cmp against a pristine copy;
   # $(cat) would strip trailing newlines), warning names the file.
   for bad in '{"hooks": ' 'not json' '' '  ' '{"hooks": 
 '; do
     bsf="$T/bad.json"; printf '%s' "$bad" >"$bsf"; cp -f "$bsf" "$T/bad.pristine"
     SETTINGS_FILE="$bsf" HOOK_SCRIPT="$T/bad-hs.sh" HOOK_BASH=/bin/bash register_hook >"$T/bad.out" 2>&1
     brc=$?
-    if [ "$brc" = 0 ] && cmp -s "$bsf" "$T/bad.pristine" && grep -q "$bsf.*NOT registered" "$T/bad.out" && ! grep -q Traceback "$T/bad.out"; then
+    if [ "$brc" = 3 ] && cmp -s "$bsf" "$T/bad.pristine" && grep -q "$bsf.*NOT registered" "$T/bad.out" && ! grep -q Traceback "$T/bad.out"; then
       report "register_hook: invalid JSON ($bad) left untouched with a warning" 0 ""
     else
       report "register_hook: invalid JSON ($bad) left untouched with a warning" 1 "rc=$brc out=$(head -c 300 "$T/bad.out")"
@@ -582,21 +583,23 @@ sys.exit(0 if eval(check) else 1)' "$sf" "$hs" "$3" 2>>"$T/reg$reg_n.out"; then
   mkdir -p "$T/bad-dir.json"
   SETTINGS_FILE="$T/bad-dir.json" HOOK_SCRIPT="$T/bad-hs.sh" HOOK_BASH=/bin/bash register_hook >"$T/bad.out" 2>&1
   brc=$?
-  if [ "$brc" = 0 ] && [ -d "$T/bad-dir.json" ] && grep -q "$T/bad-dir.json.*NOT registered" "$T/bad.out" && ! grep -q Traceback "$T/bad.out"; then
+  if [ "$brc" = 3 ] && [ -d "$T/bad-dir.json" ] && grep -q "$T/bad-dir.json.*NOT registered" "$T/bad.out" && ! grep -q Traceback "$T/bad.out"; then
     report "register_hook: unreadable settings path left untouched with a warning" 0 ""
   else
     report "register_hook: unreadable settings path left untouched with a warning" 1 "rc=$brc out=$(head -c 300 "$T/bad.out")"
   fi
-  # The exit-3 capture must survive errexit: a bare call under set -e continues.
+  # The exit-3 capture must survive errexit: a `|| rc=$?` call under set -e
+  # continues (as setup_hooks calls it) and sees register_hook's rc 3.
   cp -f "$T/bad.pristine" "$T/bad.json"
   eo=$( set -e
         export SETTINGS_FILE="$T/bad.json" HOOK_SCRIPT="$T/bad-hs.sh" HOOK_BASH=/bin/bash
-        register_hook >/dev/null 2>&1
-        echo reached )
-  if [ "$eo" = reached ]; then
-    report "register_hook: bare call under set -e survives invalid JSON" 0 ""
+        rc=0
+        register_hook >/dev/null 2>&1 || rc=$?
+        echo "reached $rc" )
+  if [ "$eo" = "reached 3" ]; then
+    report "register_hook: guarded call under set -e survives invalid JSON and returns 3" 0 ""
   else
-    report "register_hook: bare call under set -e survives invalid JSON" 1 "got: $eo"
+    report "register_hook: guarded call under set -e survives invalid JSON and returns 3" 1 "got: $eo"
   fi
 else
   report "extract hook_bash, rewrite_settings, settings_problem and register_hook from install.sh" 1 "function body not found"
